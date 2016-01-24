@@ -192,12 +192,8 @@ console.log('no firebox room, load the translator');
         }
       }
       console.log(xml, room);
-      var assets = elation.utils.arrayget(xml, 'fireboxroom._children.assets', {}); 
-      var objectassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetobject", [])); 
-      var soundassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetsound", [])); 
-      var imageassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetimage", [])); 
-      var videoassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetvideo", [])); 
-      var websurfaceassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetwebsurface", [])); 
+
+      var assets = this.parseAssets(xml, room);
 
       var objects = this.getAsArray(elation.utils.arrayget(room, '_children.object', [])); 
       var links = this.getAsArray(elation.utils.arrayget(room, '_children.link', [])); 
@@ -206,43 +202,31 @@ console.log('no firebox room, load the translator');
       var texts = this.getAsArray(elation.utils.arrayget(room, '_children.text', [])); 
       var videos = this.getAsArray(elation.utils.arrayget(room, '_children.video', [])); 
 
-      var assetlist = [];
-      imageassets.forEach(function(n) { assetlist.push({ assettype:'image', name:n.id, src: n.src }); });
-      videoassets.forEach(function(n) { assetlist.push({ assettype:'video', name:n.id, src: n.src }); });
-      websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
-      elation.engine.assets.loadJSON(assetlist, this.baseurl); 
+      var roomnode = this.parseNode(room);
+    
+      // set player position based on room info
+      this.engine.client.player.properties.position.set(roomnode.pos[0], roomnode.pos[1], roomnode.pos[2]);
+      this.engine.client.player.properties.orientation.copy(roomnode.orientation);
 
-      var objlist = []; 
-      objectassets.forEach(function(n) { 
-        if (n.src) {
-          var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, '/media/janusweb/') : n.src);
-          var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, '/media/janusweb/') : n.mtl);
-          var srcparts = src.split(' ');
-          src = srcparts[0];
-          objlist.push({assettype: 'model', name: n.id, src: src, mtl: mtlsrc, tex0: n.tex || n.tex0 || srcparts[1], tex1: n.tex1 || srcparts[2], tex2: n.tex2 || srcparts[3], tex3: n.tex3 || srcparts[4]}); 
-        }
-      }); 
-      elation.engine.assets.loadJSON(objlist, this.baseurl); 
+      // HACK - we actually want the angle opposite to this
+      this.engine.client.player.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
 
       if (room.use_local_asset && room.visible != 'false') {
-        root.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
+        var localasset = this.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
           'room': this,
           'render.model': room.use_local_asset,
-          'visible': room.visible ,
-          'col': room.col
+          'col': room.col,
         }); 
       }
       objects.forEach(elation.bind(this, function(n) { 
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
-        var scale = (n.scale ? n.scale.split(' ') : [1,1,1]); 
-        var orientation = this.getOrientation(n.xdir, n.ydir, n.zdir);
+        var node = this.parseNode(n);
         var thingname = n.id + (n.js_id ? '_' + n.js_id : '_' + Math.round(Math.random() * 1000000));
         var thing = root.spawn('janusobject', thingname, { 
           'room': this,
           'render.model': n.id, 
-          'position': pos,
-          'orientation': orientation,
-          'scale': scale,
+          'position': node.pos,
+          'orientation': node.orientation,
+          'scale': node.scale,
           'image_id': n.image_id,
           'video_id': n.video_id,
           'websurface_id': n.websurface_id,
@@ -256,17 +240,15 @@ console.log('no firebox room, load the translator');
         }
       }));
       links.forEach(elation.bind(this, function(n) {
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
-        var scale = (n.scale ? n.scale.split(' ') : [1,1,1]); 
-        var orientation = this.getOrientation(n.xdir, n.ydir, n.zdir);
+        var node = this.parseNode(n);
 
         var linkurl = (n.url.match(/^https?:/) ? n.url : this.baseurl + n.url);
         var portalargs = { 
           'room': this,
           'janus': this.properties.janus,
-          'position': pos,
-          'orientation': orientation,
-          'scale': scale,
+          'position': node.pos,
+          'orientation': node.orientation,
+          'scale':node. scale,
           'url': linkurl,
           'title': n.title,
         }; 
@@ -281,15 +263,13 @@ console.log('no firebox room, load the translator');
       
       }));
       images.forEach(elation.bind(this, function(n) {
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
-        var scale = (n.scale ? n.scale.split(' ') : [1,1,1]); 
-        var orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
+        var node = this.parseNode(n);
         var imageargs = { 
           'room': this,
           'janus': this.properties.janus,
-          'position': pos,
-          'orientation': orientation,
-          'scale': scale,
+          'position': node.pos,
+          'orientation': node.orientation,
+          'scale': node.scale,
           'image_id': n.id,
           'color': n.col,
         }; 
@@ -297,16 +277,14 @@ console.log('no firebox room, load the translator');
       
       }));
       texts.forEach(elation.bind(this, function(n) {
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
-        var scale = (n.scale ? n.scale.split(' ') : [1,1,1]); 
-        var orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
+        var node = this.parseNode(n);
         var col = (n.col ? n.col.split(' ') : [1,1,1]);
         var labelargs = { 
           'room': this,
           'janus': this.properties.janus,
-          'position': pos,
-          'orientation': orientation,
-          'scale': scale,
+          'position': node.pos,
+          'orientation': node.orientation,
+          'scale': node.scale,
           'text': n._content,
           'color': new THREE.Color().setRGB(col[0], col[1], col[2]),
         }; 
@@ -314,14 +292,14 @@ console.log('no firebox room, load the translator');
         
       }));
       var soundmap = {};
-      soundassets.forEach(function(n) { soundmap[n.id] = n; });
+      assets.sound.forEach(function(n) { soundmap[n.id] = n; });
       sounds.forEach(elation.bind(this, function(n) {
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
+        var node = this.parseNode(n);
         var soundargs = soundmap[n.id];
         var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
         var sound = root.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
           'room': this,
-          'position': pos,
+          'position': node.pos,
           'src': soundurl,
           'autoplay': true,
           'loop': true,
@@ -329,18 +307,16 @@ console.log('no firebox room, load the translator');
       }));
 
       var videoassetmap = {};
-      videoassets.forEach(function(n) { videoassetmap[n.id] = n; });
+      assets.video.forEach(function(n) { videoassetmap[n.id] = n; });
       videos.forEach(elation.bind(this, function(n) {
+        var node = this.parseNode(n);
         var asset = videoassetmap[n.id];
-        var pos = (n.pos ? n.pos.split(' ') : [0,0,0]); 
-        var scale = (n.scale ? n.scale.split(' ') : [1,1,1]); 
-        var orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
         var videourl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
         var video = root.spawn('janusvideo', n.id + '_' + Math.round(Math.random() * 10000), {
           'room': this,
-          position: pos,
-          orientation: orientation,
-          scale: scale,
+          position: node.pos,
+          orientation: node.orientation,
+          scale: node.scale,
           src: videourl,
           loop: asset.loop,
           autoplay: asset.auto_play || false
@@ -363,8 +339,6 @@ console.log('no firebox room, load the translator');
       this.properties.fog_col = room.fog_col || room.fog_color;
       this.setFog();
 
-console.log('ALL WEBSURFACES:', this.websurfaces);
-console.log('ALL JS OBJECTS:', this.jsobjects);
       elation.events.fire({type: 'janus_room_load', element: this});
       //this.showDebug();
     }
@@ -375,6 +349,15 @@ console.log('ALL JS OBJECTS:', this.jsobjects);
       if (xdir) xdir = new THREE.Vector3().fromArray(xdir.split(' ')).normalize();
       if (ydir) ydir = new THREE.Vector3().fromArray(ydir.split(' ')).normalize();
       if (zdir) zdir = new THREE.Vector3().fromArray(zdir.split(' ')).normalize();
+
+      if (xdir && !ydir && !zdir) {
+        ydir = new THREE.Vector3(0,1,0);
+        zdir = new THREE.Vector3().crossVectors(xdir, ydir);
+      }
+      if (!xdir && !ydir && zdir) {
+        ydir = new THREE.Vector3(0,1,0);
+        xdir = new THREE.Vector3().crossVectors(zdir, ydir);
+      }
 
       if (!xdir && ydir && zdir) {
         xdir = new THREE.Vector3().crossVectors(ydir, zdir);
@@ -388,6 +371,7 @@ console.log('ALL JS OBJECTS:', this.jsobjects);
       if (!xdir) xdir = new THREE.Vector3(1,0,0);
       if (!ydir) ydir = new THREE.Vector3(0,1,0);
       if (!zdir) zdir = new THREE.Vector3(0,0,-1);
+
       var mat4 = new THREE.Matrix4().makeBasis(xdir, ydir, zdir);
       var quat = new THREE.Quaternion();
       var pos = new THREE.Vector3();
@@ -397,6 +381,52 @@ console.log('ALL JS OBJECTS:', this.jsobjects);
       quat.normalize();
       //quat.normalize();
       return quat;
+    }
+    this.parseAssets = function(xml) {
+      var assetxml = elation.utils.arrayget(xml, 'fireboxroom._children.assets', {}); 
+      var objectassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetobject", [])); 
+      var soundassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetsound", [])); 
+      var imageassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetimage", [])); 
+      var videoassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetvideo", [])); 
+      var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
+      var assetlist = [];
+      imageassets.forEach(function(n) { assetlist.push({ assettype:'image', name:n.id, src: n.src }); });
+      videoassets.forEach(function(n) { assetlist.push({ assettype:'video', name:n.id, src: n.src }); });
+      websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
+      elation.engine.assets.loadJSON(assetlist, this.baseurl); 
+
+      var objlist = []; 
+      objectassets.forEach(function(n) { 
+        if (n.src) {
+          var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, '/media/janusweb/') : n.src);
+          var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, '/media/janusweb/') : n.mtl);
+          var srcparts = src.split(' ');
+          src = srcparts[0];
+          objlist.push({assettype: 'model', name: n.id, src: src, mtl: mtlsrc, tex0: n.tex || n.tex0 || srcparts[1], tex1: n.tex1 || srcparts[2], tex2: n.tex2 || srcparts[3], tex3: n.tex3 || srcparts[4]}); 
+        }
+      }); 
+      elation.engine.assets.loadJSON(objlist, this.baseurl); 
+      var assets = {
+        image: imageassets,
+        sound: soundassets,
+        video: videoassets
+      };
+      return assets;
+    }
+    this.parseNode = function(n) {
+      var nodeinfo = {
+        pos: (n.pos ? n.pos.split(' ') : [0,0,0]),
+        scale: (n.scale ? n.scale.split(' ') : [1,1,1]),
+        orientation: this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd),
+        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16), parseInt(n.col.substr(3, 2), 16), parseInt(n.col.substr(5, 2), 16)] : n.col.split(' ')) : [1,1,1])
+      };
+
+      var minscale = 1e-6;
+      nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
+      nodeinfo.scale[1] = Math.max(minscale, nodeinfo.scale[1]);
+      nodeinfo.scale[2] = Math.max(minscale, nodeinfo.scale[2]);
+
+      return nodeinfo;
     }
     this.enable = function() {
     }
