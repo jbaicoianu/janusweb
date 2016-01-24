@@ -150,7 +150,7 @@ elation.require(['engine.things.portal'], function() {
     this.click = function(ev) {
       if (ev.data.distance < 4 && this.properties.url) {
         this.frame.material.emissive.setHex(0x662222);
-        this.properties.janus.setActiveRoom(this.properties.url);
+        this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
       }
     }
