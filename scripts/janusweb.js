@@ -7,8 +7,8 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
     this.postinit = function() {
       this.defineProperties({
         url: { type: 'string', default: false },
-        //homepage: { type: 'string', default: "http://www.janusvr.com/" }
-        homepage: { type: 'string', default: "http://www.dgp.toronto.edu/~mccrae/projects/firebox/home2/home.html" },
+        homepage: { type: 'string', default: "http://www.janusvr.com/" }
+        //homepage: { type: 'string', default: "http://www.dgp.toronto.edu/~mccrae/projects/firebox/home2/home.html" },
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
