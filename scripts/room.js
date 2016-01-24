@@ -1,13 +1,13 @@
 elation.require([
     'ui.textarea', 'ui.window', 
-    'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
-    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video'
+     'engine.external.xmldom', 'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
+    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
       this.defineProperties({
         'janus': { type: 'object' },
-        'url': { type: 'string', default: "http://www.dgp.toronto.edu/~mccrae/projects/firebox/home2/home.html" },
+        'url': { type: 'string', default: false },
         'skybox_left': { type: 'string', default: 'skyrender_left' },
         'skybox_right': { type: 'string', default: 'skyrender_right' },
         'skybox_up': { type: 'string', default: 'skyrender_up' },
@@ -177,9 +177,21 @@ console.log('no firebox room, load the translator');
       var root = this;
 
       var xml = elation.utils.parseXML(fireboxsrc, false, true); 
+
       var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
-      var room = rooms[0];
-console.log(xml, room);
+      var room = {_children: {}};
+      for (var i = 0; i < rooms.length; i++) {
+        var attrs = Object.keys(rooms[i]).filter(function(k) { return (k[0] != '_'); });
+        attrs.forEach(function(k) {
+          room[k] = rooms[i][k];
+        });
+        if (rooms[i]._children) {
+          Object.keys(rooms[i]._children).forEach(function(k) {
+            room._children[k] = rooms[i]._children[k];
+          });
+        }
+      }
+      console.log(xml, room);
       var assets = elation.utils.arrayget(xml, 'fireboxroom._children.assets', {}); 
       var objectassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetobject", [])); 
       var soundassets = this.getAsArray(elation.utils.arrayget(assets, "_children.assetsound", [])); 
@@ -296,12 +308,9 @@ console.log(xml, room);
           'orientation': orientation,
           'scale': scale,
           'text': n._content,
-          'size': .045,
-          'thickness': .01,
-          'align': 'center',
           'color': new THREE.Color().setRGB(col[0], col[1], col[2]),
         }; 
-        var label = root.spawn('label', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
+        var label = root.spawn('janustext', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
         
       }));
       var soundmap = {};
@@ -385,6 +394,7 @@ console.log('ALL JS OBJECTS:', this.jsobjects);
       var scale = new THREE.Vector3();
       //quat.setFromRotationMatrix(mat4);
       mat4.decompose(pos, quat, scale);
+      quat.normalize();
       //quat.normalize();
       return quat;
     }
