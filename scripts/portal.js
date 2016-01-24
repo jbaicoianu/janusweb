@@ -52,7 +52,7 @@ elation.require(['engine.things.portal'], function() {
         });
         elation.events.add(this.child, 'mouseover,mouseout,click', this);
       }
-      if (false && this.properties.title) {
+      if (this.properties.title) {
         this.label = this.spawn('label', this.id + '_label', { 
           text: this.properties.title, 
           size: .1,
