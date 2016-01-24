@@ -1,5 +1,8 @@
 elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], function() {
   elation.component.add('janusweb.client', function() {
+    this.initEngine = function() {
+      //this.enginecfg.systems.push('admin');
+    }
     this.initWorld = function() {
       var things = this.world.load({
         name: 'janusweb',
@@ -11,7 +14,7 @@ elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], f
             name: 'ambient',
             type: 'light_ambient',
             properties: {
-              color: 0x222222
+              color: 0x444444
             }
           },
           sun: {
