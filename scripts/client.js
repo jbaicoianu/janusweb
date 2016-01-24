@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], function() {
+elation.require(['engine.engine', 'engine.things.player', 'engine.things.light', 'janusweb.janusweb'], function() {
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
       //this.enginecfg.systems.push('admin');
@@ -22,7 +22,7 @@ elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], f
             type: 'light_directional',
             properties: {
               position: [-20,50,25],
-              intensity: 0.2
+              intensity: 0.1
             }
           },
           point: {
@@ -30,7 +30,7 @@ elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], f
             type: 'light_point',
             properties: {
               position: [22,19,-15],
-              intensity: 0.2
+              intensity: 0.1
             }
           },
           player: {
@@ -43,6 +43,7 @@ elation.require(['engine.engine', 'engine.things.light', 'janusweb.janusweb'], f
           },
         }
       });
+      this.player = things.children.janusweb.children.player;
     }
   }, elation.engine.client);
 });
