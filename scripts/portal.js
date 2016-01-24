@@ -53,13 +53,9 @@ elation.require(['engine.things.portal'], function() {
         elation.events.add(this.child, 'mouseover,mouseout,click', this);
       }
       if (this.properties.title) {
-        this.label = this.spawn('label', this.id + '_label', { 
+        this.label = this.spawn('janustext', this.id + '_label', { 
           text: this.properties.title, 
-          size: .1,
-          thickness: .01,
           position: [0, .75, .15],
-          align: 'center',
-          verticalalign: 'top',
           persist: false,
           color: 0x0000ee,
           emissive: 0x222266,
