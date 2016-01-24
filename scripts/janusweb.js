@@ -61,7 +61,7 @@ console.log('made new room', url, room);
         this.setActiveRoom(url);
       }
     }
-    this.setActiveRoom = function(url) {
+    this.setActiveRoom = function(url, pos) {
       this.clear();
       if (!url) {
         url = this.properties.homepage || this.properties.url;
@@ -80,6 +80,10 @@ console.log('made new room', url, room);
       } else {
         this.load(url, true);
       }
+      if (pos) {
+        this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
+        this.engine.client.player.properties.orientation.set(0,0,1,0);
+      }
       var hashargs = elation.url();
       hashargs['janus.url'] = url;
       document.location.hash = elation.utils.encodeURLParams(hashargs);
@@ -87,7 +91,6 @@ console.log('made new room', url, room);
     this.handlePopstate = function(ev) {
       var hashargs = elation.url();
       var hashurl = hashargs['janus.url'];
-console.log(hashurl, this.properties.url);
       if (hashurl != this.properties.url && !this.loading) {
         this.setActiveRoom(hashurl);
       }
@@ -96,7 +99,7 @@ console.log(hashurl, this.properties.url);
       if (ev.value == 1) {
         var url = prompt('url?');
         if (url) {
-          this.setActiveRoom(url);
+          this.setActiveRoom(url, [0,0,0]);
         }
       }
     }
