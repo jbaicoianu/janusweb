@@ -21,6 +21,8 @@ elation.require([
         'fog_end': { type: 'float', default: 100.0 },
         'fog_col': { type: 'color', default: 0x000000 },
       });
+      this.playerstartposition = [0,0,0];
+      this.playerstartorientation = new THREE.Quaternion();
       this.load();
       this.roomsrc = '';
       //this.showDebug();
@@ -28,6 +30,21 @@ elation.require([
     this.setActive = function() {
       this.setSkybox();
       this.setFog();
+      this.setNearFar();
+      this.setPlayerPosition();
+    }
+    this.setPlayerPosition = function(pos, orientation) {
+      if (!pos) {
+        pos = this.playerstartposition;
+        orientation = this.playerstartorientation;
+      }
+        
+      if (pos && orientation) {
+        this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
+        this.engine.client.player.properties.orientation.copy(orientation);
+        // HACK - we actually want the angle opposite to this
+        this.engine.client.player.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+      }
     }
     this.setSkybox = function() {
       if (this.skyboxtexture) {
@@ -109,6 +126,10 @@ elation.require([
         this.engine.systems.world.disableFog();
       }
     }
+    this.setNearFar = function() {
+      this.engine.client.player.camera.camera.near = this.properties.near_dist;
+      this.engine.client.player.camera.camera.far = this.properties.far_dist;
+    }
     this.showDebug = function() {
       var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
       if (!this.debugwindow) {
@@ -139,8 +160,18 @@ elation.require([
 
       this.setTitle('loading...');
 
-      elation.net.get(url, null, { 
-        //headers: {'User-Agent':'FireBox 1.0'},
+      var proxyurl = this.properties.janus.properties.corsproxy;
+
+      var fullurl = url;
+      if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
+      if (!fullurl.match(/^https?:/)) fullurl = self.location.origin + fullurl;
+      fullurl = proxyurl + fullurl;
+
+      elation.net.get(fullurl, null, { 
+        headers: {
+          //'User-Agent':'FireBox 1.0'
+          //'X-Requested-With':'JanusWeb Client'
+        },
         callback: elation.bind(this, function(data, xhr) { 
           this.fullsource = data;
           var titlere = /<title>([\s\S]*?)<\/title>/mi; 
@@ -152,9 +183,12 @@ elation.require([
             this.setTitle(null);
           }
           
-          var m = data.match(re); 
-          if (xhr.responseURL != this.properties.url) {
-            var url = xhr.responseURL;
+          var responseURL = xhr.getResponseHeader('X-Final-URL');
+          if (!responseURL) {
+            responseURL = xhr.responseURL.replace(proxyurl, '');
+          }
+          if (responseURL != this.properties.url) {
+            var url = responseURL;
             var baseurl = url.split('/'); 
                 baseurl.pop(); 
                 baseurl = baseurl.join('/') + '/'; 
@@ -163,12 +197,13 @@ elation.require([
             this.properties.url = url;
           }
 
+          var m = data.match(re); 
           if (m) { 
             this.roomsrc = m[0];
             this.parseFireBox(this.roomsrc);
           } else {
-console.log('no firebox room, load the translator');
-            this.load('/media/janusweb/assets/translator/web/Parallelogram.html');
+            console.log('no firebox room, load the translator');
+            this.load(self.location.origin + '/media/janusweb/assets/translator/web/Parallelogram.html');
           }
         })
       }); 
@@ -199,23 +234,31 @@ console.log('no firebox room, load the translator');
       var links = this.getAsArray(elation.utils.arrayget(room, '_children.link', [])); 
       var sounds = this.getAsArray(elation.utils.arrayget(room, '_children.sound', [])); 
       var images = this.getAsArray(elation.utils.arrayget(room, '_children.image', [])); 
+      var image3ds = this.getAsArray(elation.utils.arrayget(room, '_children.image3d', [])); 
       var texts = this.getAsArray(elation.utils.arrayget(room, '_children.text', [])); 
       var videos = this.getAsArray(elation.utils.arrayget(room, '_children.video', [])); 
 
+      var orphanobjects = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.object')); 
+      var orphanlinks = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.link')); 
+      var orphansounds = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.sound')); 
+      var orphanvideos = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.video')); 
+      var orphanimages = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.image')); 
+      var orphantexts = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.text')); 
+
+      if (orphanobjects && orphanobjects[0]) objects.push.apply(objects, orphanobjects);
+      if (links && orphanlinks[0]) links.push.apply(links, orphanlinks);
+      if (images && orphanimages[0]) images.push.apply(images, orphanimages);
+      if (videos && orphanvideos[0]) videos.push.apply(videos, orphanvideos);
+      if (sounds && orphansounds[0]) sounds.push.apply(sounds, orphansounds);
+      if (texts && orphantexts[0]) texts.push.apply(texts, orphantexts);
+
       var roomnode = this.parseNode(room);
     
-      // set player position based on room info
-      this.engine.client.player.properties.position.set(roomnode.pos[0], roomnode.pos[1], roomnode.pos[2]);
-      this.engine.client.player.properties.orientation.copy(roomnode.orientation);
-
-      // HACK - we actually want the angle opposite to this
-      this.engine.client.player.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
-
       if (room.use_local_asset && room.visible != 'false') {
         var localasset = this.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
           'room': this,
           'render.model': room.use_local_asset,
-          'col': room.col,
+          'col': roomnode.col,
         }); 
       }
       objects.forEach(elation.bind(this, function(n) { 
@@ -230,10 +273,13 @@ console.log('no firebox room, load the translator');
           'image_id': n.image_id,
           'video_id': n.video_id,
           'websurface_id': n.websurface_id,
-          'col': n.col,
+          'col': node.col,
+          'blend_src': n.blend_src,
+          'blend_dest': n.blend_dest,
           'rotate_axis': n.rotate_axis,
           'rotate_deg_per_sec': n.rotate_deg_per_sec,
-          'props': n 
+          'props': n,
+          'visible': node.visible
         }); 
         if (n.js_id) {
           this.jsobjects[n.js_id] = thing;
@@ -241,7 +287,6 @@ console.log('no firebox room, load the translator');
       }));
       links.forEach(elation.bind(this, function(n) {
         var node = this.parseNode(n);
-
         var linkurl = (n.url.match(/^https?:/) ? n.url : this.baseurl + n.url);
         var portalargs = { 
           'room': this,
@@ -260,7 +305,6 @@ console.log('no firebox room, load the translator');
         if (n.js_id) {
           this.jsobjects[n.js_id] = portal;
         }
-      
       }));
       images.forEach(elation.bind(this, function(n) {
         var node = this.parseNode(n);
@@ -271,25 +315,35 @@ console.log('no firebox room, load the translator');
           'orientation': node.orientation,
           'scale': node.scale,
           'image_id': n.id,
-          'color': n.col,
+          'color': node.col,
         }; 
         var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
-      
+      }));
+      image3ds.forEach(elation.bind(this, function(n) {
+        var node = this.parseNode(n);
+        var imageargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'position': node.pos,
+          'orientation': node.orientation,
+          'scale': node.scale,
+          'image_id': n.left_id,
+          'color': node.col,
+        }; 
+        var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
       }));
       texts.forEach(elation.bind(this, function(n) {
         var node = this.parseNode(n);
-        var col = (n.col ? n.col.split(' ') : [1,1,1]);
         var labelargs = { 
           'room': this,
           'janus': this.properties.janus,
           'position': node.pos,
           'orientation': node.orientation,
           'scale': node.scale,
-          'text': n._content,
-          'color': new THREE.Color().setRGB(col[0], col[1], col[2]),
+          'text': n._content || ' ',
+          'color': new THREE.Color().setRGB(node.col[0], node.col[1], node.col[2]),
         }; 
         var label = root.spawn('janustext', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
-        
       }));
       var soundmap = {};
       assets.sound.forEach(function(n) { soundmap[n.id] = n; });
@@ -323,21 +377,27 @@ console.log('no firebox room, load the translator');
         });
       }));
       
+      // set player position based on room info
+      this.playerstartposition = roomnode.pos;
+      this.playerstartorientation = roomnode.orientation;
+
       if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
       if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
       if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
       if (room.skybox_down_id) this.properties.skybox_down = room.skybox_down_id;
       if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
       if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
-      this.setSkybox();
   
+      this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
+      this.properties.far_dist = parseFloat(room.far_dist) || 1000;
       this.properties.fog = room.fog;
       this.properties.fog_mode = room.fog_mode;
       this.properties.fog_density = room.fog_density;
-      this.properties.fog_start = room.fog_start || room.near_dist;
-      this.properties.fog_end = room.fog_end || room.far_dist;
+      this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
+      this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
       this.properties.fog_col = room.fog_col || room.fog_color;
-      this.setFog();
+
+      this.setActive();
 
       elation.events.fire({type: 'janus_room_load', element: this});
       //this.showDebug();
@@ -356,11 +416,11 @@ console.log('no firebox room, load the translator');
       }
       if (!xdir && !ydir && zdir) {
         ydir = new THREE.Vector3(0,1,0);
-        xdir = new THREE.Vector3().crossVectors(zdir, ydir);
+        xdir = new THREE.Vector3().crossVectors(ydir, zdir);
       }
 
       if (!xdir && ydir && zdir) {
-        xdir = new THREE.Vector3().crossVectors(ydir, zdir);
+        xdir = new THREE.Vector3().crossVectors(zdir, ydir);
       }
       if (xdir && !ydir && zdir) {
         ydir = new THREE.Vector3().crossVectors(xdir, zdir).multiplyScalar(-1);
@@ -370,7 +430,7 @@ console.log('no firebox room, load the translator');
       }
       if (!xdir) xdir = new THREE.Vector3(1,0,0);
       if (!ydir) ydir = new THREE.Vector3(0,1,0);
-      if (!zdir) zdir = new THREE.Vector3(0,0,-1);
+      if (!zdir) zdir = new THREE.Vector3(0,0,1);
 
       var mat4 = new THREE.Matrix4().makeBasis(xdir, ydir, zdir);
       var quat = new THREE.Quaternion();
@@ -379,7 +439,7 @@ console.log('no firebox room, load the translator');
       //quat.setFromRotationMatrix(mat4);
       mat4.decompose(pos, quat, scale);
       quat.normalize();
-      //quat.normalize();
+      //quat.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)));
       return quat;
     }
     this.parseAssets = function(xml) {
@@ -391,15 +451,25 @@ console.log('no firebox room, load the translator');
       var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
       var assetlist = [];
       imageassets.forEach(function(n) { assetlist.push({ assettype:'image', name:n.id, src: n.src }); });
-      videoassets.forEach(function(n) { assetlist.push({ assettype:'video', name:n.id, src: n.src }); });
+      videoassets.forEach(function(n) { 
+        assetlist.push({ 
+          assettype:'video', 
+          name:n.id, 
+          src: this.properties.janus.properties.corsproxy + n.src, 
+          sbs3d: n.sbs3d == 'true',  
+          auto_play: n.auto_play == 'true',  
+        }); 
+      });
       websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
       elation.engine.assets.loadJSON(assetlist, this.baseurl); 
 
       var objlist = []; 
+      var baseurl = this.baseurl;
       objectassets.forEach(function(n) { 
         if (n.src) {
           var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, '/media/janusweb/') : n.src);
           var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, '/media/janusweb/') : n.mtl);
+          if (mtlsrc && !mtlsrc.match(/^https?:/)) mtlsrc = baseurl + mtlsrc;
           var srcparts = src.split(' ');
           src = srcparts[0];
           objlist.push({assettype: 'model', name: n.id, src: src, mtl: mtlsrc, tex0: n.tex || n.tex0 || srcparts[1], tex1: n.tex1 || srcparts[2], tex2: n.tex2 || srcparts[3], tex3: n.tex3 || srcparts[4]}); 
@@ -418,9 +488,9 @@ console.log('no firebox room, load the translator');
         pos: (n.pos ? n.pos.split(' ') : [0,0,0]),
         scale: (n.scale ? n.scale.split(' ') : [1,1,1]),
         orientation: this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd),
-        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16), parseInt(n.col.substr(3, 2), 16), parseInt(n.col.substr(5, 2), 16)] : n.col.split(' ')) : [1,1,1])
+        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2)/255, 16)] : n.col.split(' ')) : [1,1,1]),
+        visible: (n.visible !== false && n.visible !== 0 && n.visible !== 'false')
       };
-
       var minscale = 1e-6;
       nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
       nodeinfo.scale[1] = Math.max(minscale, nodeinfo.scale[1]);
