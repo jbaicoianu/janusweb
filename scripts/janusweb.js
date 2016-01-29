@@ -7,11 +7,14 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
     this.postinit = function() {
       this.defineProperties({
         url: { type: 'string', default: false },
-        homepage: { type: 'string', default: "http://www.janusvr.com/" }
-        //homepage: { type: 'string', default: "http://www.dgp.toronto.edu/~mccrae/projects/firebox/home2/home.html" },
+        homepage: { type: 'string', default: "http://www.janusvr.com/" },
+        corsproxy: { type: 'string', default: '' }
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
+      if (this.properties.corsproxy != '') {
+        elation.engine.assets.setCORSProxy(this.properties.corsproxy);
+      }
       elation.engine.assets.loadAssetPack('/media/janusweb/assets.json');
 
       this.engine.systems.controls.addContext('janus', {
@@ -40,22 +43,16 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
     }
     this.load = function(url, makeactive) {
       var roomname = url;//.replace(/[^\w]/g, "_");
-/*
-      var room = false;
-      if (this.rooms[url]) {
-        room = this.currentroom = this.rooms[url];
-        this.add(room);
-      } else {
-*/
-        var room = this.spawn('janusroom', roomname, {
-          url: url,
-          janus: this
-        });
-        this.remove(room);
-//        this.currentroom = this.rooms[url] = room;
-//      }
+
+      var room = this.spawn('janusroom', roomname, {
+        url: url,
+        janus: this
+      });
+      // FIXME - should be able to spawn without adding to the heirarchy yet
+      this.remove(room);
+
       this.rooms[url] = room;
-console.log('made new room', url, room);
+      console.log('made new room', url, room);
       this.loading = false;
       if (room && makeactive) {
         this.setActiveRoom(url);
