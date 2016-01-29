@@ -14,6 +14,8 @@ elation.require(['engine.things.generic'], function() {
         lighting: { type: 'boolean', default: true },
         col: { type: 'string' },
         cull_face: { type: 'string', default: 'back' },
+        blend_src: { type: 'string', default: 'src_alpha' },
+        blend_dest: { type: 'string', default: 'one_minus_src_alpha' },
         rotate_axis: { type: 'string', default: '0 1 0' },
         rotate_deg_per_sec: { type: 'string' },
         props: { type: 'object' },
@@ -48,9 +50,10 @@ elation.require(['engine.things.generic'], function() {
               height = websurface.height || 768;
 
           var iframe = elation.html.create('iframe');
+          iframe.src = 'http://www.github.com/';//websurface.src;
           var div = elation.html.create('div');
-          div.className = 'janusweb_websurface state_uninitialized';
-          //div.appendChild(iframe);
+          div.className = 'janusweb_websurface ';
+          div.appendChild(iframe);
 
           div.style.width = width + 'px';
           div.style.height = height + 'px';
@@ -64,37 +67,64 @@ elation.require(['engine.things.generic'], function() {
       }
     }
     this.assignTextures = function() {
-      var image = false,
+      var texture = false,
           color = false,
+          blend_src = false,
+          blend_dest = false,
           side = this.sidemap[this.properties.cull_face];
 
-      side = THREE.DoubleSide;
       if (this.properties.image_id) {
-        image = elation.engine.assets.find('image', this.properties.image_id);
+        texture = elation.engine.assets.find('image', this.properties.image_id);
       }
       if (this.properties.video_id) {
-        image = elation.engine.assets.find('video', this.properties.video_id);
+        var videoasset = elation.engine.assets.find('video', this.properties.video_id, true);
+        if (videoasset) {
+          texture = videoasset.getAsset();
+          if (videoasset.sbs3d) {
+            // TODO - to really support 3d video, we need to set offset based on which eye is being rendered
+            texture.repeat.x = 0.5;
+          }
+          if (videoasset.auto_play) {
+            texture.image.play();
+          }
+          elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+        }
       }
       if (this.properties.col) {
         color = new THREE.Color();
-        if (this.properties.col[0] == '#') {
-          color = color.setHex(parseInt(this.properties.col.substr(1), 16));  
-        } else {
-          var col = this.properties.col.split(' ');
-          color = color.setRGB(col[0], col[1], col[2]);  
-        } 
+        var col = this.properties.col;
+        color.setRGB(col[0], col[1], col[2]);  
+      }
+      if (this.properties.blend_src == 'src_color') {
+        blend_src = THREE.SrcColorFactor;
+      }
+      if (this.properties.blend_dest == 'one_minus_src_alpha') {
+        blend_dest = THREE.OneMinusSrcAlphaFactor;
+      } else if (this.properties.blend_dest == 'one_minus_constant_color') {
+        blend_dest = THREE.OneMinusConstantColorFactor;
       }
       this.objects['3d'].traverse(function(n) { 
         if (n.material) {
-          if (image) {
-            n.material.map = image; 
+          var materials = [n.material];
+          if (n.material instanceof THREE.MeshFaceMaterial) {
+            //materials = [n.material.materials[1]];
+            materials = n.material.materials;
           }
-          if (color && n.material.color) {
-            n.material.color.copy(color);
-          }
-          if (side) {
-            n.material.side = side;
-          }
+          materials.forEach(function(m) {
+            if (texture) {
+              m.map = texture; 
+              m.transparent = true;
+            }
+            if (color && m.color) {
+              m.color.copy(color);
+            }
+            if (side) {
+              m.side = side;
+            }
+            if (blend_src) m.blendSrc = blend_src;
+            if (blend_dest) m.blendDst = blend_dest;
+            //m.needsUpdate = true;
+          });
           if (n.geometry) {
 /*
             if ((n.geometry instanceof THREE.BufferGeometry && !n.geometry.attributes.normals) ||
