@@ -451,7 +451,7 @@ elation.require([
       var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
       var assetlist = [];
       imageassets.forEach(function(n) { assetlist.push({ assettype:'image', name:n.id, src: n.src }); });
-      videoassets.forEach(function(n) { 
+      videoassets.forEach(elation.bind(this, function(n) { 
         assetlist.push({ 
           assettype:'video', 
           name:n.id, 
@@ -459,7 +459,7 @@ elation.require([
           sbs3d: n.sbs3d == 'true',  
           auto_play: n.auto_play == 'true',  
         }); 
-      });
+      }));
       websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
       elation.engine.assets.loadJSON(assetlist, this.baseurl); 
 
