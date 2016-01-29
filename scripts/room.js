@@ -164,8 +164,11 @@ elation.require([
 
       var fullurl = url;
       if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
-      if (!fullurl.match(/^https?:/)) fullurl = self.location.origin + fullurl;
-      fullurl = proxyurl + fullurl;
+      if (!fullurl.match(/^https?:/)) {
+        fullurl = self.location.origin + fullurl;
+      } else {
+        fullurl = proxyurl + fullurl;
+      }
 
       elation.net.get(fullurl, null, { 
         headers: {
@@ -455,7 +458,7 @@ elation.require([
         assetlist.push({ 
           assettype:'video', 
           name:n.id, 
-          src: this.properties.janus.properties.corsproxy + n.src, 
+          src: n.src, 
           sbs3d: n.sbs3d == 'true',  
           auto_play: n.auto_play == 'true',  
         }); 
