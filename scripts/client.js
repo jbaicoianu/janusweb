@@ -1,9 +1,10 @@
-elation.require(['engine.engine', 'engine.things.player', 'engine.things.light', 'janusweb.janusweb'], function() {
+elation.require(['engine.engine', 'engine.things.ballplayer', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb'], function() {
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
       var hashargs = elation.url();
        
       this.enginecfg.systems = [];
+      this.enginecfg.systems.push("controls");
       this.enginecfg.systems.push("physics");
       this.enginecfg.systems.push("world");
       this.enginecfg.systems.push("ai");
@@ -12,20 +13,20 @@ elation.require(['engine.engine', 'engine.things.player', 'engine.things.light',
       } 
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
-      this.enginecfg.systems.push("controls");
     }
     this.initWorld = function() {
       var things = this.world.load({
         name: 'janusweb',
         type: 'janusweb',
         properties: {
+          corsproxy: 'http://meobets.com:8089/'
         },
         things: {
           ambient: {
             name: 'ambient',
             type: 'light_ambient',
             properties: {
-              color: 0x444444
+              color: 0x222222
             }
           },
           sun: {
@@ -46,10 +47,12 @@ elation.require(['engine.engine', 'engine.things.player', 'engine.things.light',
           },
           player: {
             name: 'player',
-            type: 'player',
+            type: 'ballplayer',
             properties: {
               position: [0,0,0],
-              mass: 10
+              mass: 10,
+              movespeed: 100,
+              collidable: false
             }
           },
         }
