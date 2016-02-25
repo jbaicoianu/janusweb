@@ -10,6 +10,7 @@ elation.require(['engine.things.generic'], function() {
         room: { type: 'object' },
         image_id: { type: 'string' },
         video_id: { type: 'string' },
+        collision_id: { type: 'string' },
         websurface_id: { type: 'string' },
         lighting: { type: 'boolean', default: true },
         col: { type: 'string' },
@@ -38,6 +39,16 @@ elation.require(['engine.things.generic'], function() {
         var q = new THREE.Quaternion().setFromAxisAngle(axis, speed);
         var vel = new THREE.Euler().setFromQuaternion(q);
         this.objects.dynamics.setAngularVelocity(vel);
+      }
+
+      if (this.properties.collision_id) {
+        var collider = elation.engine.assets.find('model', this.properties.collision_id);
+        if (collider.userData.loaded) {
+          this.extractColliders(collider, true);
+        } else {
+          elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) { this.extractColliders(collider, true); }) );
+        }
+        
       }
     }
     this.createObjectDOM = function() {
@@ -113,7 +124,10 @@ elation.require(['engine.things.generic'], function() {
           materials.forEach(function(m) {
             if (texture) {
               m.map = texture; 
-              m.transparent = true;
+              // FIXME - hack for transparent PNGs
+              if (m.map && m.map.sourceFile && m.map.sourceFile.match(/[^0-9]\.(png|tga)$/)) {
+                m.transparent = true;
+              }
             }
             if (color && m.color) {
               m.color.copy(color);
