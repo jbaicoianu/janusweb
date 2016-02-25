@@ -20,6 +20,8 @@ elation.require([
         'fog_start': { type: 'float', default: 0.0 },
         'fog_end': { type: 'float', default: 100.0 },
         'fog_col': { type: 'color', default: 0x000000 },
+        'walk_speed': { type: 'float', default: 1.8 },
+        'run_speed': { type: 'float', default: 5.4 },
       });
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
@@ -39,12 +41,15 @@ elation.require([
         orientation = this.playerstartorientation;
       }
         
+      var player = this.engine.client.player;
       if (pos && orientation) {
-        this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
-        this.engine.client.player.properties.orientation.copy(orientation);
+        player.properties.position.set(pos[0], pos[1], pos[2]);
+        player.properties.orientation.copy(orientation);
         // HACK - we actually want the angle opposite to this
         this.engine.client.player.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
       }
+      player.properties.movespeed = this.properties.walk_speed * 60;
+      player.properties.runspeed = this.properties.run_speed * 60;
     }
     this.setSkybox = function() {
       if (this.skyboxtexture) {
@@ -275,6 +280,7 @@ elation.require([
           'scale': node.scale,
           'image_id': n.image_id,
           'video_id': n.video_id,
+          'collision_id': n.collision_id,
           'websurface_id': n.websurface_id,
           'col': node.col,
           'blend_src': n.blend_src,
@@ -353,14 +359,21 @@ elation.require([
       sounds.forEach(elation.bind(this, function(n) {
         var node = this.parseNode(n);
         var soundargs = soundmap[n.id];
-        var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
-        var sound = root.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
-          'room': this,
-          'position': node.pos,
-          'src': soundurl,
-          'autoplay': true,
-          'loop': true,
-        }); 
+        if (soundargs) {
+          var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
+
+          var proxyurl = this.properties.janus.properties.corsproxy;
+          soundurl = proxyurl + soundurl;
+          var sound = root.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
+            'room': this,
+            'position': node.pos,
+            'src': soundurl,
+            'autoplay': true,
+            'loop': true,
+          }); 
+        } else {
+          console.log("Couldn't find sound: " + n.id);
+        }
       }));
 
       var videoassetmap = {};
@@ -399,6 +412,9 @@ elation.require([
       this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
       this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
       this.properties.fog_col = room.fog_col || room.fog_color;
+
+      this.properties.walk_speed = room.walk_speed || 1.8;
+      this.properties.run_speed = room.run_speed || 5.4;
 
       this.setActive();
 
