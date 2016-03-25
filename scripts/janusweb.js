@@ -1,5 +1,5 @@
-elation.requireCSS('janusweb.janusweb');
 elation.require(['engine.things.generic', 'janusweb.room'], function() {
+  elation.requireCSS('janusweb.janusweb');
 
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = [];
