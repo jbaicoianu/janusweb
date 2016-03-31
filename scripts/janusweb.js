@@ -1,5 +1,5 @@
 elation.requireCSS('janusweb.janusweb');
-elation.require(['engine.things.generic', 'janusweb.room'], function() {
+elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.JanusClientConnection'], function() {
 
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = [];
@@ -22,13 +22,36 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ]
       });
       this.engine.systems.controls.activateContext('janus');
-
+      this.remotePlayers = {};
+      this.lastUpdate = Date.now();
+      this.tmpMat = new THREE.Matrix4();
+      this.tmpVecX = new THREE.Vector3();
+      this.tmpVecY = new THREE.Vector3();
+      this.tmpVecZ = new THREE.Vector3();
+      this.sentUpdates = 0;
+      this.updateRate = 15;
     }
     this.createChildren = function() {
       var hashargs = elation.url();
       var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
       this.load(starturl, true);
+      // connect to presence server
+      this.userId = Date.now().toString();
+      janusOptions = {
+        host: 'ws://ec2-54-148-60-8.us-west-2.compute.amazonaws.com:9001',
+        userId: this.userId,
+        version: '23.4',
+        roomUrl: starturl
+      }
+      this.jcc = new JanusClientConnection(janusOptions);
+      this.jcc.addEventListener('message', function(msg) {
+        this.onJanusMessage(msg);
+      }.bind(this));
+      this.jcc.addEventListener('connect', function() {
+        this.sendPlayerUpdate({first: true});
+        elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
+      }.bind(this));
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -63,6 +86,7 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
       if (!url) {
         url = this.properties.homepage || this.properties.url;
       } else {
+        if (this.jcc) this.jcc.unsubscribe(url);
         this.properties.url = url;
       }
       this.loading = true;
@@ -72,6 +96,7 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
+          if (this.jcc) this.jcc.enter_room(url);
           this.loading = false;
         }
       } else {
@@ -84,6 +109,11 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
       var hashargs = elation.url();
       hashargs['janus.url'] = url;
       document.location.hash = elation.utils.encodeURLParams(hashargs);
+      if (this.jcc) {
+        this.jcc.subscribe(url);
+        this.jcc.enter_room(url);
+      }
+      elation.events.add(this.currentroom, 'thing_remove', elation.bind(this, this.unsubscribe));
     }
     this.handlePopstate = function(ev) {
       var hashargs = elation.url();
@@ -104,6 +134,79 @@ elation.require(['engine.things.generic', 'janusweb.room'], function() {
       if (ev.value == 1) {
         this.currentroom.showDebug();
       }
+    }
+    this.unsubscribe = function(ev) {
+      console.log('unsub fired:', ev);
+    }
+    this.onJanusMessage = function(msg) {
+      if (msg.data.method == 'user_moved') {
+        //console.log('user conn', msg.data.data.position._userId);
+        if (!this.remotePlayers.hasOwnProperty(msg.data.data.position._userId)) {
+          this.spawnRemotePlayer(msg.data.data);
+        }
+        else {
+          this.moveRemotePlayer(msg.data.data);
+        }
+      }
+      else if (msg.data.method == 'user_disconnected') {
+        this.remotePlayers[msg.data.data.userId].die();
+      }
+    }
+    this.quaternionToJanus = function(quat) {
+      // takes a quaternion, returns an object OTF {dir: "0 0 0", up_dir: "0 0 0", view_dir: "0 0 0"}
+      this.tmpMat.makeRotationFromQuaternion(quat);
+      this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
+      var ret = {
+        dir: this.tmpVecZ.toArray().join(' '),
+        up_dir: this.tmpVecY.toArray().join(' '),
+        view_dir: this.tmpVecX.toArray().join(' ')
+      }
+      return ret;
+    }
+    this.spawnRemotePlayer = function(data) {
+      var userId = data.position._userId;
+      var spawnpos = data.position.pos.split(" ").map(parseFloat);
+      var remote = this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId});
+      remote.janusDirs = {
+        tmpVec1: new THREE.Vector3(),
+        tmpVec2: new THREE.Vector3(),
+        tmpVec3: new THREE.Vector3(),
+        tmpMat4: new THREE.Matrix4()
+      }
+    }
+    this.moveRemotePlayer = function(data) {
+      var movepos = data.position.pos.split(" ").map(parseFloat);
+      var remote = this.remotePlayers[data.position._userId];
+      remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
+      remote.janusDirs.tmpVec2.fromArray(data.position.view_dir.split(" "));
+      remote.janusDirs.tmpVec3.fromArray(data.position.up_dir.split(" "));
+      remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
+      remote.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+      remote.set('position', movepos, true);
+      
+    }
+    this.sendPlayerUpdate = function(opts) {
+      // opts.first is a bool, if true then we are sending our avatar along with the move update
+      // else, we send the avatar on every 15th update
+      if (Date.now() - this.lastUpdate < 20) return;
+      var player = this.engine.client.player;
+      var dirs = this.quaternionToJanus(player.properties.orientation)
+      var moveData = {
+        "pos": this.engine.client.player.properties.position.toArray().join(" "),
+        "dir": dirs.dir,
+        "up_dir": dirs.up_dir,
+        "view_dir": dirs.view_dir,
+        "head_pos": "0 0 0",
+        "anim_id": "idle"
+      }
+      //console.log('movedata update', moveData);
+      if (opts.first || this.sentUpdates == this.updateRate) {
+        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^jump^ src=^http://www.janusvr.com/avatars/animated/Beta/jump.fbx.gz^ /><AssetObject id=^fly^ src=^http://www.janusvr.com/avatars/animated/Beta/fly.fbx.gz^ /><AssetObject id=^speak^ src=^http://www.janusvr.com/avatars/animated/Beta/speak.fbx.gz^ /><AssetObject id=^walk^ src=^http://www.janusvr.com/avatars/animated/Beta/walk.fbx.gz^ /><AssetObject id=^type^ src=^http://www.janusvr.com/avatars/animated/Beta/type.fbx.gz^ /><AssetObject id=^portal^ src=^http://www.janusvr.com/avatars/animated/Beta/portal.fbx.gz^ /><AssetObject id=^run^ src=^http://www.janusvr.com/avatars/animated/Beta/run.fbx.gz^ /><AssetObject id=^idle^ src=^http://www.janusvr.com/avatars/animated/Beta/idle.fbx.gz^ /><AssetObject id=^body^ src=^http://www.janusvr.com/avatars/animated/Beta/Beta.fbx.gz^ /><AssetObject id=^walk_back^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_back.fbx.gz^ /><AssetObject id=^walk_left^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_left.fbx.gz^ /><AssetObject id=^walk_right^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_right.fbx.gz^ /><AssetObject id=^head_id^ /></Assets><Room><Ghost id=^" + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^0.993769 0 -0.111464^ ydir=^0 1 0^ zdir=^0.111464 0 0.993769^ scale=^0.0095 0.0095 0.0095^ col=^#a1e0c0^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^head_id^ head_pos=^0 0 0^ body_id=^body^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
+      this.sentUpdates = 0;
+      }
+      this.jcc.send({'method': 'move', 'data': moveData});
+      this.lastUpdate = Date.now();
+      this.sentUpdates++;
     }
   }, elation.engine.things.generic);
 });
