@@ -51,6 +51,9 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       this.jcc.addEventListener('connect', function() {
         this.sendPlayerUpdate({first: true});
         elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
+        setInterval(function() {
+          this.sendPlayerUpdate({first: false});
+        }.bind(this), 1000);
       }.bind(this));
       elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
       elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
