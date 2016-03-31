@@ -34,6 +34,7 @@ elation.require([
       this.setFog();
       this.setNearFar();
       this.setPlayerPosition();
+      elation.events.fire({type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
       if (!pos) {
@@ -536,6 +537,7 @@ elation.require([
           n.stop();
         }
       });
+      elation.events.fire({type: 'room_disable', data: this});
     }
     this.setTitle = function(title) {
       if (!title) title = 'Untitled Page';
