@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.things.ballplayer', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb'], function() {
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
       var hashargs = elation.url();

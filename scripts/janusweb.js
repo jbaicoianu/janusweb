@@ -1,6 +1,5 @@
-elation.requireCSS('janusweb.janusweb');
 elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.JanusClientConnection'], function() {
-
+  elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = [];
 

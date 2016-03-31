@@ -1,6 +1,6 @@
 elation.require([
     'ui.textarea', 'ui.window', 
-     'engine.external.xmldom', 'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
+     'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
@@ -324,8 +324,19 @@ elation.require([
           'orientation': node.orientation,
           'scale': node.scale,
           'image_id': n.id,
-          'color': node.col,
+          'color': node.col
         }; 
+        var asset = false;
+        assets.image.forEach(function(img) {
+          if (img.id == n.id) {
+            asset = img;
+          }
+        });
+
+        if (asset) {
+          imageargs.sbs3d = asset.sbs3d;
+          imageargs.reverse3d = asset.reverse3d;
+        }
         var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
       }));
       image3ds.forEach(elation.bind(this, function(n) {
