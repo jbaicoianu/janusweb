@@ -7,14 +7,15 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       this.defineProperties({
         url: { type: 'string', default: false },
         homepage: { type: 'string', default: "http://www.janusvr.com/" },
-        corsproxy: { type: 'string', default: '' }
+        corsproxy: { type: 'string', default: '' },
+        datapath: { type: 'string', default: '/media/janusweb' }
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
       if (this.properties.corsproxy != '') {
         elation.engine.assets.setCORSProxy(this.properties.corsproxy);
       }
-      elation.engine.assets.loadAssetPack('/media/janusweb/assets.json');
+      elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json');
 
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
