@@ -19,7 +19,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', '
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: 'http://meobets.com:8089/'
+          corsproxy: 'http://meobets.com:8089/',
+          datapath: '/media/janusweb/'
         },
         things: {
           ambient: {
