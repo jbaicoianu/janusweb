@@ -51,6 +51,8 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
         this.sendPlayerUpdate({first: true});
         elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
       }.bind(this));
+      elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
+      elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -85,7 +87,6 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       if (!url) {
         url = this.properties.homepage || this.properties.url;
       } else {
-        if (this.jcc) this.jcc.unsubscribe(url);
         this.properties.url = url;
       }
       this.loading = true;
@@ -95,7 +96,6 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
-          if (this.jcc) this.jcc.enter_room(url);
           this.loading = false;
         }
       } else {
@@ -108,11 +108,6 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       var hashargs = elation.url();
       hashargs['janus.url'] = url;
       document.location.hash = elation.utils.encodeURLParams(hashargs);
-      if (this.jcc) {
-        this.jcc.subscribe(url);
-        this.jcc.enter_room(url);
-      }
-      elation.events.add(this.currentroom, 'thing_remove', elation.bind(this, this.unsubscribe));
     }
     this.handlePopstate = function(ev) {
       var hashargs = elation.url();
@@ -134,21 +129,30 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
         this.currentroom.showDebug();
       }
     }
+    this.subscribe = function(ev) {
+      console.log('sub fired:', ev);
+      this.jcc.subscribe(ev.data.properties.url);
+      this.jcc.enter_room(ev.data.properties.url);
+    }
     this.unsubscribe = function(ev) {
       console.log('unsub fired:', ev);
+      this.jcc.unsubscribe(ev.data.properties.url);
     }
     this.onJanusMessage = function(msg) {
-      if (msg.data.method == 'user_moved') {
-        //console.log('user conn', msg.data.data.position._userId);
-        if (!this.remotePlayers.hasOwnProperty(msg.data.data.position._userId)) {
+      var method = msg.data.method
+      if (method == 'user_moved') {
+        var userId = msg.data.data.position._userId;
+        if (!this.remotePlayers.hasOwnProperty(userId)) {
           this.spawnRemotePlayer(msg.data.data);
         }
         else {
           this.moveRemotePlayer(msg.data.data);
         }
       }
-      else if (msg.data.method == 'user_disconnected') {
+      else if (method == 'user_disconnected' || method == 'user_leave') {
+        console.log("removing player", msg.data.data.userId);
         this.remotePlayers[msg.data.data.userId].die();
+        delete this.remotePlayers[msg.data.data.userId];
       }
     }
     this.quaternionToJanus = function(quat) {
@@ -156,8 +160,9 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       this.tmpMat.makeRotationFromQuaternion(quat);
       this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
       var ret = {
-        dir: this.tmpVecZ.toArray().join(' '),
-        up_dir: this.tmpVecY.toArray().join(' '),
+        dir: this.tmpVecY.toArray().join(' '),
+        //up_dir: this.tmpVecY.toArray().join(' '),
+        up_dir: '0 1 0',
         view_dir: this.tmpVecX.toArray().join(' ')
       }
       return ret;
@@ -165,7 +170,8 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
     this.spawnRemotePlayer = function(data) {
       var userId = data.position._userId;
       var spawnpos = data.position.pos.split(" ").map(parseFloat);
-      var remote = this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId});
+      this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId});
+      var remote = this.remotePlayers[userId];
       remote.janusDirs = {
         tmpVec1: new THREE.Vector3(),
         tmpVec2: new THREE.Vector3(),
