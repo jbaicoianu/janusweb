@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.JanusClientConnection'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.JanusClientConnection'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = [];
@@ -38,8 +38,8 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       this.load(starturl, true);
       // connect to presence server
       this.userId = Date.now().toString();
-      janusOptions = {
-        host: 'ws://ec2-54-148-60-8.us-west-2.compute.amazonaws.com:9001',
+      var janusOptions = {
+        host: elation.config.get('janusweb.network.host'),
         userId: this.userId,
         version: '23.4',
         roomUrl: starturl
@@ -155,26 +155,43 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       }
       else if (method == 'user_disconnected' || method == 'user_leave') {
         console.log("removing player", msg.data.data.userId);
-        this.remotePlayers[msg.data.data.userId].die();
+        //this.remotePlayers[msg.data.data.userId].die();
         delete this.remotePlayers[msg.data.data.userId];
       }
     }
-    this.quaternionToJanus = function(quat) {
+    this.getJanusOrientation = function(player, head) {
       // takes a quaternion, returns an object OTF {dir: "0 0 0", up_dir: "0 0 0", view_dir: "0 0 0"}
-      this.tmpMat.makeRotationFromQuaternion(quat);
+      this.tmpMat.makeRotationFromQuaternion(player.properties.orientation);
       this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
       var ret = {
-        dir: this.tmpVecY.toArray().join(' '),
+        dir: this.tmpVecZ.clone().negate().toArray().join(' '),
         //up_dir: this.tmpVecY.toArray().join(' '),
         up_dir: '0 1 0',
-        view_dir: this.tmpVecX.toArray().join(' ')
+        //view_dir: this.tmpVecZ.toArray().join(' ')
       }
+      if (head) {
+//console.log(head);
+        //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
+        this.tmpMat.copy(head.objects['3d'].matrixWorld);
+        this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
+        ret.view_dir = this.tmpVecZ.clone().negate().toArray().join(' ');
+        ret.up_dir = this.tmpVecY.toArray().join(' ');
+        var headpos = head.properties.position.clone().sub(new THREE.Vector3(0,1.3,0));
+        headpos.x *= -1;
+        headpos.z *= -1;
+        ret.head_pos = headpos.toArray().join(' '); //this.tmpMat.getPosition().toArray().join(' ');
+      } else {
+        ret.view_dir = '0 0 1';
+        ret.head_pos = '0 0 0';
+      }
+//console.log(player, head);
       return ret;
     }
     this.spawnRemotePlayer = function(data) {
       var userId = data.position._userId;
       var spawnpos = data.position.pos.split(" ").map(parseFloat);
-      this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId});
+console.log('new player!', userId);
+      this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, 'render.collada': '/media/vrcade/models/noface/noface-body.dae'});
       var remote = this.remotePlayers[userId];
       remote.janusDirs = {
         tmpVec1: new THREE.Vector3(),
@@ -187,11 +204,25 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       var movepos = data.position.pos.split(" ").map(parseFloat);
       var remote = this.remotePlayers[data.position._userId];
       remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
+      remote.janusDirs.tmpVec2.fromArray(data.position.dir.split(" "));
+      remote.janusDirs.tmpVec3.fromArray([0,1,0]);
+      remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
+      //remote.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+
+      remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
       remote.janusDirs.tmpVec2.fromArray(data.position.view_dir.split(" "));
       remote.janusDirs.tmpVec3.fromArray(data.position.up_dir.split(" "));
       remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-      remote.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
-      remote.set('position', movepos, true);
+      remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+      if (data.position.head_pos) {
+        remote.head.properties.position.fromArray(data.position.head_pos.split(" "));
+      }
+
+
+      //remote.set('position', movepos, true);
+      remote.properties.position.fromArray(movepos);
+      remote.objects.dynamics.updateState();
+      remote.refresh();
       
     }
     this.sendPlayerUpdate = function(opts) {
@@ -199,13 +230,13 @@ elation.require(['engine.things.generic','engine.things.remoteplayer', 'janusweb
       // else, we send the avatar on every 15th update
       if (Date.now() - this.lastUpdate < 20) return;
       var player = this.engine.client.player;
-      var dirs = this.quaternionToJanus(player.properties.orientation)
+      var dirs = this.getJanusOrientation(player, player.head)
       var moveData = {
         "pos": this.engine.client.player.properties.position.toArray().join(" "),
         "dir": dirs.dir,
         "up_dir": dirs.up_dir,
         "view_dir": dirs.view_dir,
-        "head_pos": "0 0 0",
+        "head_pos": dirs.head_pos,
         "anim_id": "idle"
       }
       //console.log('movedata update', moveData);
