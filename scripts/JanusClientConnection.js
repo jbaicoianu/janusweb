@@ -315,7 +315,7 @@ var JanusClientConnection = function(opts)
 EventDispatcher.prototype.apply(JanusClientConnection.prototype);
 
 JanusClientConnection.prototype.sendLogon = function() {
-  msgData = {
+  var msgData = {
     'method': 'logon',
     'data': {
       'userId': this._userId,
