@@ -43,6 +43,7 @@ elation.require(['engine.things.generic'], function() {
         image_id: { type: 'string' },
         color: { type: 'color', default: 0xffffff },
         sbs3d: { type: 'boolean', default: false },
+        ou3d: { type: 'boolean', default: false },
         reverse3d: { type: 'boolean', default: false },
         lighting: { type: 'boolean', default: true },
       });
@@ -67,6 +68,7 @@ elation.require(['engine.things.generic'], function() {
         aspect = this.texture.image.height / this.texture.image.width;
       }
       if (this.properties.sbs3d) aspect *= 2;
+      if (this.properties.ou3d) aspect /= 2;
       var box = new THREE.BoxGeometry(2, 2 * aspect, thickness);
       box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness / 2));
       return box;
