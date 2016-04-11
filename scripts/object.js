@@ -114,20 +114,41 @@ elation.require(['engine.things.generic'], function() {
       } else if (this.properties.blend_dest == 'one_minus_constant_color') {
         blend_dest = THREE.OneMinusConstantColorFactor;
       }
-      this.objects['3d'].traverse(function(n) { 
+      this.objects['3d'].traverse(elation.bind(this, function(n) { 
         if (n.material) {
-          var materials = [n.material];
+          var materials = [];
           if (n.material instanceof THREE.MeshFaceMaterial) {
             //materials = [n.material.materials[1]];
-            materials = n.material.materials;
+            for (var i = 0; i < n.material.materials.length; i++) {
+              var oldm = n.material.materials[i];
+              var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              m.map = oldm.map;
+              m.normalMap = oldm.normalMap;
+              m.lightMap = oldm.lightMap;
+              m.color.copy(oldm.color);
+              m.transparent = oldm.transparent;
+              materials.push(m); 
+            }
+            //materials = n.material.materials;
+            n.material.materials = materials;
+          } else {
+              var oldm = n.material;
+              var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              m.map = oldm.map;
+              m.normalMap = oldm.normalMap;
+              m.lightMap = oldm.lightMap;
+              m.color.copy(oldm.color);
+              m.transparent = oldm.transparent;
+              materials.push(m); 
+              n.material = m;
           }
-          materials.forEach(function(m) {
+          materials.forEach(elation.bind(this, function(m) {
             if (texture) {
               m.map = texture; 
-              // FIXME - hack for transparent PNGs
-              if (m.map && m.map.sourceFile && m.map.sourceFile.match(/[^0-9]\.(png|tga)$/)) {
-                m.transparent = true;
-              }
+            }
+            // FIXME - hack for transparent PNGs
+            if (m.map && m.map.sourceFile && m.map.sourceFile.match(/[^0-9]\.(png|tga)$/)) {
+              m.transparent = true;
             }
             if (color && m.color) {
               m.color.copy(color);
@@ -137,8 +158,8 @@ elation.require(['engine.things.generic'], function() {
             }
             if (blend_src) m.blendSrc = blend_src;
             if (blend_dest) m.blendDst = blend_dest;
-            //m.needsUpdate = true;
-          });
+            m.needsUpdate = true;
+          }));
           if (n.geometry) {
 /*
             if ((n.geometry instanceof THREE.BufferGeometry && !n.geometry.attributes.normals) ||
@@ -148,8 +169,8 @@ elation.require(['engine.things.generic'], function() {
             }
 */
           }
-        }
-      });
+        };
+      }));
       this.refresh();
     }
   }, elation.engine.things.generic);
