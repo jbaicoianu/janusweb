@@ -1,4 +1,4 @@
-elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.JanusClientConnection'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.JanusClientConnection'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = [];
@@ -6,7 +6,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
     this.postinit = function() {
       this.defineProperties({
         url: { type: 'string', default: false },
-        homepage: { type: 'string', default: "http://www.janusvr.com/" },
+        homepage: { type: 'string', default: "http://www.janusvr.com/index.html" },
         corsproxy: { type: 'string', default: '' },
         datapath: { type: 'string', default: '/media/janusweb' }
       });
@@ -19,7 +19,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
 
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
-        'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ]
+        'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
+        'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ]
       });
       this.engine.systems.controls.activateContext('janus');
       this.remotePlayers = {};
@@ -37,14 +38,17 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
       this.load(starturl, true);
       // connect to presence server
-      this.userId = Date.now().toString();
+      //this.userId = Date.now().toString();
+      this.userId = this.getUsername();
       var janusOptions = {
         host: elation.config.get('janusweb.network.host'),
         userId: this.userId,
-        version: '23.4',
+        version: '49.54',
         roomUrl: starturl
       }
       this.jcc = new JanusClientConnection(janusOptions);
+      this.chat = elation.janusweb.chat({append: document.body, client: this.jcc, player: this.engine.client.player});
+
       this.jcc.addEventListener('message', function(msg) {
         this.onJanusMessage(msg);
       }.bind(this));
@@ -54,6 +58,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         setInterval(function() {
           this.sendPlayerUpdate({first: false});
         }.bind(this), 1000);
+        elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
+        this.chat.addmessage({userId: ' ! ', message: { data: 'Connected as ' + this.userId} });
       }.bind(this));
       elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
       elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
@@ -70,7 +76,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       this.refresh();
     }
     this.load = function(url, makeactive) {
-      var roomname = url;//.replace(/[^\w]/g, "_");
+      var roomname = url;
 
       var room = this.spawn('janusroom', roomname, {
         url: url,
@@ -88,6 +94,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
     }
     this.setActiveRoom = function(url, pos) {
       this.clear();
+      var changed = this.properties.url != url;
       if (!url) {
         url = this.properties.homepage || this.properties.url;
       } else {
@@ -101,17 +108,25 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
           this.currentroom.setActive();
           this.properties.url = url;
           this.loading = false;
+          elation.events.fire({element: this, type: 'room_change', data: url});
+        }
+        if (pos) {
+          this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
+          this.engine.client.player.properties.orientation.set(0,0,1,0);
+        }
+        var hashargs = elation.url();
+        if (url == this.properties.homepage) {
+          delete hashargs['janus.url'];
+        } else {
+          hashargs['janus.url'] = url;
+        }
+        var newhash = '#' + elation.utils.encodeURLParams(hashargs);
+        if (changed || document.location.hash != newhash) {
+          document.location.hash = (newhash == '#' ? '' : newhash);
         }
       } else {
         this.load(url, true);
       }
-      if (pos) {
-        this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
-        this.engine.client.player.properties.orientation.set(0,0,1,0);
-      }
-      var hashargs = elation.url();
-      hashargs['janus.url'] = url;
-      document.location.hash = elation.utils.encodeURLParams(hashargs);
     }
     this.handlePopstate = function(ev) {
       var hashargs = elation.url();
@@ -124,6 +139,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       if (ev.value == 1) {
         var url = prompt('url?');
         if (url) {
+          elation.events.fire({element: this, type: 'janusweb_load_url', data: url});
           this.setActiveRoom(url, [0,0,0]);
         }
       }
@@ -131,6 +147,11 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
     this.showRoomDebug = function(ev) {
       if (ev.value == 1) {
         this.currentroom.showDebug();
+      }
+    }
+    this.showChat = function(ev) {
+      if (ev.value == 1) {
+        this.chat.focus();
       }
     }
     this.subscribe = function(ev) {
@@ -147,16 +168,25 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       if (method == 'user_moved') {
         var userId = msg.data.data.position._userId;
         if (!this.remotePlayers.hasOwnProperty(userId)) {
-          this.spawnRemotePlayer(msg.data.data);
+          var remoteplayer = this.spawnRemotePlayer(msg.data.data);
+          elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
+          this.chat.addmessage({userId: ' ! ', message: { data: userId + ' entered room'} });
         }
         else {
           this.moveRemotePlayer(msg.data.data);
         }
       }
       else if (method == 'user_disconnected' || method == 'user_leave') {
-        console.log("removing player", msg.data.data.userId);
-        //this.remotePlayers[msg.data.data.userId].die();
+        var remoteplayer = this.remotePlayers[msg.data.data.userId];
+        console.log("removing player", msg.data.data.userId, remoteplayer);
+        elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
+        this.chat.addmessage({userId: ' ! ', message: { data: msg.data.data.userId + ' left room'} });
+        if (remoteplayer && remoteplayer.parent) {
+          remoteplayer.die();
+        }
         delete this.remotePlayers[msg.data.data.userId];
+      } else if (method == 'user_chat') {
+        this.chat.addmessage(msg.data.data);
       }
     }
     this.getJanusOrientation = function(player, head) {
@@ -176,7 +206,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
         ret.view_dir = this.tmpVecZ.clone().negate().toArray().join(' ');
         ret.up_dir = this.tmpVecY.toArray().join(' ');
-        var headpos = head.properties.position.clone().sub(new THREE.Vector3(0,1.3,0));
+        var headpos = head.properties.position.clone();//.sub(new THREE.Vector3(0,1.3,0));
         headpos.x *= -1;
         headpos.z *= -1;
         ret.head_pos = headpos.toArray().join(' '); //this.tmpMat.getPosition().toArray().join(' ');
@@ -191,7 +221,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       var userId = data.position._userId;
       var spawnpos = data.position.pos.split(" ").map(parseFloat);
 console.log('new player!', userId);
-      this.remotePlayers[userId] = this.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, 'render.collada': '/media/vrcade/models/noface/noface-body.dae'});
+      this.remotePlayers[userId] = this.currentroom.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId});
       var remote = this.remotePlayers[userId];
       remote.janusDirs = {
         tmpVec1: new THREE.Vector3(),
@@ -199,6 +229,7 @@ console.log('new player!', userId);
         tmpVec3: new THREE.Vector3(),
         tmpMat4: new THREE.Matrix4()
       }
+      return remote;
     }
     this.moveRemotePlayer = function(data) {
       var movepos = data.position.pos.split(" ").map(parseFloat);
@@ -213,9 +244,11 @@ console.log('new player!', userId);
       remote.janusDirs.tmpVec2.fromArray(data.position.view_dir.split(" "));
       remote.janusDirs.tmpVec3.fromArray(data.position.up_dir.split(" "));
       remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-      remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
-      if (data.position.head_pos) {
-        remote.head.properties.position.fromArray(data.position.head_pos.split(" "));
+      if (remote.head) {
+        remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+        if (data.position.head_pos) {
+          remote.head.properties.position.fromArray(data.position.head_pos.split(" "));
+        }
       }
 
 
@@ -247,6 +280,29 @@ console.log('new player!', userId);
       this.jcc.send({'method': 'move', 'data': moveData});
       this.lastUpdate = Date.now();
       this.sentUpdates++;
+    }
+    this.getUsername = function() {
+      var adjectives = [
+				"Adorable", "Beautiful", "Clean", "Drab", "Elegant", "Fancy", "Glamorous", "Handsome", "Long", "Magnificent",
+				"Plain", "Quaint", "Sparkling", "Ugliest", "Unsightly", "Agreeable", "Brave", "Calm", "Delightful", "Eager",
+				"Faithful", "Gentle", "Happy", "Jolly", "Kind", "Lively", "Nice", "Obedient", "Proud", "Relieved", "Silly",
+				"Thankful", "Victorious", "Witty", "Zealous", "Angry", "Bewildered", "Clumsy", "Defeated", "Embarrassed",
+				"Fierce", "Grumpy", "Helpless", "Itchy", "Jealous", "Lazy", "Mysterious", "Nervous", "Obnoxious", "Panicky",
+				"Repulsive", "Scary", "Thoughtless", "Uptight", "Worried"
+      ];
+      var nouns = [
+				"Alligator", "Ant", "Bear", "Bee", "Bird", "Camel", "Cat", "Cheetah", "Chicken", "Chimpanzee", "Cow",
+				"Crocodile", "Deer", "Dog", "Dolphin", "Duck", "Eagle", "Elephant", "Fish", "Fly", "Fox", "Frog", "Giraffe",
+				"Goat", "Goldfish", "Hamster", "Hippopotamus", "Horse", "Kangaroo", "Kitten", "Lion", "Lobster", "Monkey",
+				"Octopus", "Owl", "Panda", "Pig", "Puppy", "Rabbit", "Rat", "Scorpion", "Seal", "Shark", "Sheep", "Snail",
+				"Snake", "Spider", "Squirrel", "Tiger", "Turtle", "Wolf", "Zebra"
+      ];
+
+      var adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      var noun = nouns[Math.floor(Math.random() * nouns.length)];
+      var num = Math.floor(Math.random() * 1000);
+
+      return adj + noun + num
     }
   }, elation.engine.things.generic);
 });
