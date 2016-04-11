@@ -1,4 +1,13 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat'], function() {
+  elation.extend('janusweb.init', function(args) {
+    var link = document.createElement('link');
+    var host = elation.config.get('dependencies.path', 'http://janusweb.metacade.com/');
+    link.rel = 'stylesheet';
+    link.href = host + 'janusweb.css';
+    document.head.appendChild(link);
+    var janusweb = elation.janusweb.client({append: document.body, homepage: document.location.href});
+    return janusweb;
+  });
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
       var hashargs = elation.url();
@@ -19,8 +28,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', '
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: 'http://meobets.com:8089/',
-          datapath: '/media/janusweb/'
+          corsproxy: elation.config.get('janusweb.network.corsproxy'),
+          datapath: elation.config.get('janusweb.datapath'),
+          homepage: this.args.homepage
         },
         things: {
           ambient: {
@@ -48,7 +58,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', '
           },
           player: {
             name: 'player',
-            type: 'ballplayer',
+            type: 'player',
             properties: {
               position: [0,0,0],
               mass: 10,
@@ -58,7 +68,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.ballplayer', '
           },
         }
       });
-      this.player = things.children.janusweb.children.player;
+      this.janusweb = things.children.janusweb;
+      this.player = this.janusweb.children.player;
     }
     this.showAbout = function() {
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});
