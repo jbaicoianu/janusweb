@@ -1,0 +1,31 @@
+.janusweb_chat_messages {
+  height: 10em;
+  width: 30em;
+  font-size: .8em;
+  overflow-y: scroll;
+  border: 0;
+}
+
+.janusweb_chat_input input.ui_input_element {
+  width: 100%;
+  background: #aaa;
+}
+.janusweb_chat_input input.ui_input_element::-webkit-input-placeholder {
+  color: #333;
+}
+.janusweb_chat_input input.ui_input_element:focus {
+  background: #fff;
+}
+.janusweb_chat_input input.ui_input_element:focus::-webkit-input-placeholder {
+  color: #999;
+}
+
+.dark .ui_window .ui_window_titlebar {
+  font-size: .7em;
+}
+.ui_window .ui_window_content.janusweb_chat_panel {
+  padding: 0;
+}
+.ui_window .ui_window_content.janusweb_chat_panel .janusweb_chat_messages {
+  border: 0;
+}
