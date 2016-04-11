@@ -154,9 +154,8 @@ elation.require([
         this.properties.url = url;
       }
       var baseurl = url.split('/'); 
-          baseurl.pop(); 
-          baseurl = baseurl.join('/') + '/'; 
-          //root = elation.engine.instances.default.systems.world.children.default; 
+      if (baseurl.length > 3) baseurl.pop(); 
+      baseurl = baseurl.join('/') + '/'; 
       this.baseurl = baseurl;
 
       this.jsobjects = {};
@@ -176,47 +175,58 @@ elation.require([
         fullurl = proxyurl + fullurl;
       }
 
-      elation.net.get(fullurl, null, { 
-        headers: {
-          //'User-Agent':'FireBox 1.0'
-          //'X-Requested-With':'JanusWeb Client'
-        },
-        callback: elation.bind(this, function(data, xhr) { 
-          this.fullsource = data;
-          var titlere = /<title>([\s\S]*?)<\/title>/mi; 
-          var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi; 
-          var mtitle = data.match(titlere); 
-          if (mtitle) {
-            this.setTitle(mtitle[1]);
-          } else {
-            this.setTitle(null);
-          }
-          
-          var responseURL = xhr.getResponseHeader('X-Final-URL');
-          if (!responseURL) {
-            responseURL = xhr.responseURL.replace(proxyurl, '');
-          }
-          if (responseURL != this.properties.url) {
-            var url = responseURL;
-            var baseurl = url.split('/'); 
-                baseurl.pop(); 
-                baseurl = baseurl.join('/') + '/'; 
-                //root = elation.engine.instances.default.systems.world.children.default; 
-            this.baseurl = baseurl;
-            this.properties.url = url;
-          }
+      if (url == document.location.href) {
+        setTimeout(elation.bind(this, function() {
+          this.parseSource(document.documentElement.outerHTML);
+        }), 0);
+      } else {
+        elation.net.get(fullurl, null, { 
+          headers: {
+            //'User-Agent':'FireBox 1.0'
+            //'X-Requested-With':'JanusWeb Client'
+          },
+          callback: elation.bind(this, function(data, xhr) { 
+            this.parseSource(data);
 
-          var m = data.match(re); 
-          if (m) { 
-            this.roomsrc = m[0];
-            this.parseFireBox(this.roomsrc);
-          } else {
-            console.log('no firebox room, load the translator');
-            this.load(self.location.origin + '/media/janusweb/assets/translator/web/Parallelogram.html');
-          }
-        })
-      }); 
+            var responseURL = xhr.getResponseHeader('X-Final-URL');
+            if (!responseURL) {
+              responseURL = xhr.responseURL.replace(proxyurl, '');
+            }
+            if (responseURL != this.properties.url) {
+              var url = responseURL;
+              var baseurl = url.split('/'); 
+                  baseurl.pop(); 
+                  baseurl = baseurl.join('/') + '/'; 
+                  //root = elation.engine.instances.default.systems.world.children.default; 
+              this.baseurl = baseurl;
+              this.properties.url = url;
+            }
+
+          })
+        }); 
+      }
     }
+    this.parseSource = function(data) { 
+      this.fullsource = data;
+      var titlere = /<title>([\s\S]*?)<\/title>/mi; 
+      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi; 
+      var mtitle = data.match(titlere); 
+      if (mtitle) {
+        this.setTitle(mtitle[1]);
+      } else {
+        this.setTitle(null);
+      }
+      
+      var m = data.match(re); 
+      if (m) { 
+        this.roomsrc = m[0];
+        this.parseFireBox(this.roomsrc);
+      } else {
+        console.log('no firebox room, load the translator');
+        this.load(self.location.origin + '/media/janusweb/assets/translator/web/Parallelogram.html');
+      }
+    }
+
     this.parseFireBox = function(fireboxsrc) {
       var root = this;
 
@@ -284,12 +294,14 @@ elation.require([
           'collision_id': n.collision_id,
           'websurface_id': n.websurface_id,
           'col': node.col,
+          'cull_face': n.cull_face,
           'blend_src': n.blend_src,
           'blend_dest': n.blend_dest,
           'rotate_axis': n.rotate_axis,
           'rotate_deg_per_sec': n.rotate_deg_per_sec,
           'props': n,
-          'visible': node.visible
+          'visible': node.visible,
+          'lighting': node.lighting
         }); 
         if (n.js_id) {
           this.jsobjects[n.js_id] = thing;
@@ -325,7 +337,8 @@ elation.require([
           'orientation': node.orientation,
           'scale': node.scale,
           'image_id': n.id,
-          'color': node.col
+          'color': node.col,
+          'lighting': node.lighting
         }; 
         var asset = false;
         assets.image.forEach(function(img) {
@@ -336,6 +349,7 @@ elation.require([
 
         if (asset) {
           imageargs.sbs3d = asset.sbs3d;
+          imageargs.ou3d = asset.ou3d;
           imageargs.reverse3d = asset.reverse3d;
         }
         var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
@@ -350,6 +364,7 @@ elation.require([
           'scale': node.scale,
           'image_id': n.left_id,
           'color': node.col,
+          'lighting': node.lighting
         }; 
         var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
       }));
@@ -399,9 +414,11 @@ elation.require([
           position: node.pos,
           orientation: node.orientation,
           scale: node.scale,
-          src: videourl,
+          //src: videourl,
+          video_id: n.id,
           loop: asset.loop,
-          autoplay: asset.auto_play || false
+          autoplay: asset.auto_play || false,
+          'lighting': node.lighting
         });
       }));
       
@@ -488,6 +505,7 @@ elation.require([
           name:n.id, 
           src: n.src, 
           sbs3d: n.sbs3d == 'true',  
+          ou3d: n.ou3d == 'true',  
           auto_play: n.auto_play == 'true',  
         }); 
       }));
@@ -519,8 +537,9 @@ elation.require([
         pos: (n.pos ? n.pos.split(' ') : [0,0,0]),
         scale: (n.scale ? n.scale.split(' ') : [1,1,1]),
         orientation: this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd),
-        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2)/255, 16)] : n.col.split(' ')) : [1,1,1]),
-        visible: (n.visible !== false && n.visible !== 0 && n.visible !== 'false')
+        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col.split(' ')) : [1,1,1]),
+        visible: (n.visible !== false && n.visible !== 0 && n.visible !== 'false'),
+        lighting: (n.lighting !== false && n.lighting !== 0 && n.lighting !== 'false')
       };
       var minscale = 1e-6;
       nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
