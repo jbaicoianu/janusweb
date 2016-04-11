@@ -152,6 +152,7 @@ elation.require(['engine.things.portal'], function() {
         this.frame.material.emissive.setHex(0x662222);
         this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
+        elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
     }
   }, elation.engine.things.portal);
