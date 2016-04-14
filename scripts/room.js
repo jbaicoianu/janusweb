@@ -29,6 +29,19 @@ elation.require([
       this.roomsrc = '';
       //this.showDebug();
     }
+    this.createChildren = function() {
+      this.spawn('light_ambient', this.id + '_ambient', {
+        color: 0x222222
+      });
+      this.spawn('light_directional', this.id + '_sun', {
+        position: [-20,50,25],
+        intensity: 0.2
+      });
+      this.spawn('light_point', this.id + '_point', {
+        position: [22,19,-15],
+        intensity: 0.2
+      });
+    }
     this.setActive = function() {
       this.setSkybox();
       this.setFog();
@@ -423,7 +436,7 @@ elation.require([
       }));
       
       // set player position based on room info
-      this.playerstartposition = roomnode.pos;
+      this.playerstartposition = roomnode.pos.map(parseFloat);
       this.playerstartorientation = roomnode.orientation;
 
       if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;

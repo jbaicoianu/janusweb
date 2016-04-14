@@ -5,6 +5,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engi
     link.rel = 'stylesheet';
     link.href = host + 'janusweb.css';
     document.head.appendChild(link);
+    elation.html.addclass(document.body, 'dark');
     var janusweb = elation.janusweb.client({append: document.body, homepage: document.location.href});
     return janusweb;
   });
@@ -33,29 +34,6 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engi
           homepage: this.args.homepage
         },
         things: {
-          ambient: {
-            name: 'ambient',
-            type: 'light_ambient',
-            properties: {
-              color: 0x222222
-            }
-          },
-          sun: {
-            name: 'sun',
-            type: 'light_directional',
-            properties: {
-              position: [-20,50,25],
-              intensity: 0.2
-            }
-          },
-          point: {
-            name: 'point01',
-            type: 'light_point',
-            properties: {
-              position: [22,19,-15],
-              intensity: 0.2
-            }
-          },
           player: {
             name: 'player',
             type: 'player',
