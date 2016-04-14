@@ -9,14 +9,15 @@ elation.require(['engine.things.theaterscreen'], function() {
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
       });
+      elation.events.add(this, 'click', elation.bind(this, this.click));
     }
     this.createObject3D = function() {
       this.asset = elation.engine.assets.find('video', this.properties.video_id, true);
       if (this.asset) {
-        elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
 
         var geo = this.createGeometry();
         var mat = this.createMaterial();
+        elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
         return new THREE.Mesh(geo, mat);
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
@@ -53,6 +54,18 @@ elation.require(['engine.things.theaterscreen'], function() {
       //plane.applyMatrix(new THREE.Matrix4().makeTranslation(.5,-.5,0));
       var mat = (this.properties.lighting ? new THREE.MeshPhongMaterial(matargs) : new THREE.MeshBasicMaterial(matargs));
       return mat;
+    }
+    this.getSize = function(image) {
+      return {width: image.videoWidth, height: image.videoHeight};
+    }
+    this.click = function() {
+      var texture = this.asset.getAsset();
+      var video = texture.image;
+      if (video.currentTime > 0 && !video.paused && !video.ended) {
+        video.pause();
+      } else {
+        video.play();
+      }
     }
   }, elation.engine.things.janusimage);
 });
