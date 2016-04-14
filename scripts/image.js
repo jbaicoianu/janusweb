@@ -97,8 +97,8 @@ elation.require(['engine.things.generic'], function() {
         var size = this.getSize(this.texture.image);
         aspect = size.height / size.width;
       }
-      if (this.properties.sbs3d || this.asset.sbs3d) aspect *= 2;
-      if (this.properties.ou3d || this.asset.ou3d) aspect /= 2;
+      if (this.properties.sbs3d || (this.asset && this.asset.sbs3d)) aspect *= 2;
+      if (this.properties.ou3d || (this.asset && this.asset.ou3d)) aspect /= 2;
       return aspect;
     }
     this.getSize = function(image) {
