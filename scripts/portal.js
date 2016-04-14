@@ -2,9 +2,12 @@ elation.require(['engine.things.portal'], function() {
   elation.component.add('engine.things.janusportal', function() {
     this.postinit = function() {
       this.defineProperties({
+        'url': { type: 'string' },
+        'title': { type: 'string' },
         'janus': { type: 'object' },
         'thumbnail': { type: 'texture' }
       });
+      this.janus = this.properties.janus;
       elation.engine.things.janusportal.extendclass.postinit.call(this);
     }
     this.createObject3D = function() {
@@ -37,6 +40,7 @@ elation.require(['engine.things.portal'], function() {
       var frame = new THREE.Mesh(framegeo, framemat);
       this.frame = frame;
       mesh.add(frame);
+      this.material = mat;
       return mesh;
     }
     this.createChildren = function() {
@@ -148,12 +152,72 @@ elation.require(['engine.things.portal'], function() {
       this.unhover();
     }
     this.click = function(ev) {
+/*
       if (ev.data.distance < 4 && this.properties.url) {
         this.frame.material.emissive.setHex(0x662222);
         this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
         elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
+*/
+      this.open();
+    }
+    this.open = function() {
+console.log('open room!', this.room);
+      if (!this.room) {
+        this.room = this.janus.load(this.properties.url);
+        console.log('load that room', this.room);
+        var rt = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBAFormat });
+        var scene = new THREE.Scene();
+        scene.add(this.room.objects['3d']);
+console.log(this.engine);
+        var userdata = this.engine.client.player.camera.camera.userData;
+        this.engine.client.player.camera.camera.userData = {};
+        var cam = new THREE.PerspectiveCamera();//.copy(this.engine.client.player.camera.camera);
+        this.engine.client.player.camera.camera.userData = userdata;
+cam.position.set(0,1.6,-3);
+scene.add(cam);
+    
+        var renderer = this.engine.systems.render.renderer;
+        console.log('dude yeah', rt, scene, cam, renderer);
+renderer.autoClear = false;
+
+        this.material.map = rt;
+        this.portalrender = {
+          scene: scene,
+          camera: cam,
+          rendertarget: rt
+        };
+
+        this.updatePortal();
+        elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortal));
+      }
+      this.portalstate = 'open';
+    }
+    this.updatePortal = function() {
+      var renderer = this.engine.systems.render.renderer;
+
+      var player = this.engine.client.player;
+      var playerpos = player.parent.localToWorld(player.properties.position.clone());
+      var portalpos = this.parent.localToWorld(this.properties.position.clone());
+      var startpos = new THREE.Vector3().fromArray(this.room.playerstartposition);
+
+      var diff = playerpos.clone().sub(portalpos).add(startpos);
+
+      //this.portalrender.camera.position.copy(this.engine.client.player.properties.position);
+      //this.portalrender.camera.position.copy(diff);
+      this.portalrender.camera.updateProjectionMatrix();
+      this.portalrender.camera.position.copy(diff);
+      //this.portalrender.camera.position.fromArray(this.room.playerstartposition);
+      this.portalrender.camera.lookAt(startpos);
+
+
+      renderer.render(this.portalrender.scene, this.portalrender.camera, this.portalrender.rendertarget, true);
+      renderer.setRenderTarget(null);
+//this.material.needsUpdate = true;
+    }
+    this.close = function() {
+      this.portalstate = 'closed';
     }
   }, elation.engine.things.portal);
 });
