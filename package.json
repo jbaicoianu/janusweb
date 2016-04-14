@@ -6,7 +6,7 @@
   "author": "James Baicoianu",
   "license": "MIT",
   "scripts": {
-    "build": ""
+    "build": "cd ../../; elation component runjs utils.pack -config janusweb.config -bundle janusweb ui.themes.dark janusweb.client engine.assetworker"
   },
   "repository": {
     "type": "git",
