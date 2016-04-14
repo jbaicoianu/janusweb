@@ -62,13 +62,8 @@ elation.require(['engine.things.generic'], function() {
       }
     }
     this.createGeometry = function() {
-      var aspect = 1,
+      var aspect = this.getAspect(),
           thickness = .1;
-      if (this.texture && this.texture.image) {
-        aspect = this.texture.image.height / this.texture.image.width;
-      }
-      if (this.properties.sbs3d) aspect *= 2;
-      if (this.properties.ou3d) aspect /= 2;
       var box = new THREE.BoxGeometry(2, 2 * aspect, thickness);
       box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness / 2));
       return box;
@@ -95,6 +90,19 @@ elation.require(['engine.things.generic'], function() {
       this.facematerial = mat;
       this.sidematerial = sidemat;
       return facemat;
+    }
+    this.getAspect = function() {
+      var aspect = 1;
+      if (this.texture && this.texture.image) {
+        var size = this.getSize(this.texture.image);
+        aspect = size.height / size.width;
+      }
+      if (this.properties.sbs3d || this.asset.sbs3d) aspect *= 2;
+      if (this.properties.ou3d || this.asset.ou3d) aspect /= 2;
+      return aspect;
+    }
+    this.getSize = function(image) {
+      return {width: image.width, height: image.height};
     }
     this.adjustAspectRatio = function() {
       var img = this.texture.image;
