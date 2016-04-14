@@ -91,6 +91,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       if (room && makeactive) {
         this.setActiveRoom(url);
       }
+      return room;
     }
     this.setActiveRoom = function(url, pos) {
       this.clear();
