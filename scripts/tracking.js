@@ -113,12 +113,18 @@ var el = document.pointerLockElement || document.mozPointerLockElement
       }, 1000);
 
       // report FPS every 15 seconds
-      setInterval(function() {
-        var fpstxt = document.getElementById('fpsText').innerHTML; 
-        var fps = fpstxt.substr(0, fpstxt.indexOf(' '))
-        ga('send', 'event', 'engine', 'fps', fps);
-      }, 15000);
+      var stats = document.getElementById('fpsText');
+      if (stats) {
+        setInterval(function() {
+          var fpstxt = document.getElementById('fpsText').innerHTML; 
+          var fps = fpstxt.substr(0, fpstxt.indexOf(' '))
+          ga('send', 'event', 'engine', 'fps', fps);
+        }, 15000);
+      }
       
+    });
+    elation.events.add(window, 'error', function(msg) {
+      ga('send', 'event', 'client', 'error', msg);
     });
   }
 });
