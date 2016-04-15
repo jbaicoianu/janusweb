@@ -13,6 +13,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engi
     this.initEngine = function() {
       var hashargs = elation.url();
        
+      this.enginecfg.stats = false;
+
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
       this.enginecfg.systems.push("physics");
