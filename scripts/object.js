@@ -121,7 +121,9 @@ elation.require(['engine.things.generic'], function() {
             //materials = [n.material.materials[1]];
             for (var i = 0; i < n.material.materials.length; i++) {
               var oldm = n.material.materials[i];
-              var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              //var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              //var m = new THREE.MeshPhongMaterial();
+              var m = new THREE.MeshStandardMaterial();
               m.map = oldm.map;
               m.normalMap = oldm.normalMap;
               m.lightMap = oldm.lightMap;
@@ -133,7 +135,8 @@ elation.require(['engine.things.generic'], function() {
             n.material.materials = materials;
           } else {
               var oldm = n.material;
-              var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              //var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+              var m = new THREE.MeshStandardMaterial();
               m.map = oldm.map;
               m.normalMap = oldm.normalMap;
               m.lightMap = oldm.lightMap;
