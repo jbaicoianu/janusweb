@@ -328,7 +328,7 @@ elation.require([
           'janus': this.properties.janus,
           'position': node.pos,
           'orientation': node.orientation,
-          'scale':node. scale,
+          'scale':node.scale,
           'url': linkurl,
           'title': n.title,
         }; 
