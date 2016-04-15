@@ -1,7 +1,7 @@
 elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.JanusClientConnection'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
-    this.rooms = [];
+    this.rooms = {};
 
     this.postinit = function() {
       this.defineProperties({
@@ -59,7 +59,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
           this.sendPlayerUpdate({first: false});
         }.bind(this), 1000);
         elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
-        this.chat.addmessage({userId: ' ! ', message: { data: 'Connected as ' + this.userId} });
+        this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
       }.bind(this));
       elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
       elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
@@ -85,7 +85,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
 
-      this.rooms[url] = room;
+      var roomid = md5(url);
+      this.rooms[roomid] = room;
       console.log('made new room', url, room);
       this.loading = false;
       if (room && makeactive) {
@@ -102,9 +103,11 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         this.properties.url = url;
       }
       this.loading = true;
-      if (this.rooms[url]) {
-        if (this.currentroom !== this.rooms[url]) {
-          this.currentroom = this.rooms[url];
+
+      var roomid = md5(url);
+      if (this.rooms[roomid]) {
+        if (this.currentroom !== this.rooms[roomid]) {
+          this.currentroom = this.rooms[roomid];
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
@@ -186,6 +189,21 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
           remoteplayer.die();
         }
         delete this.remotePlayers[msg.data.data.userId];
+      } else if (method == 'user_portal') {
+        var data = msg.data.data;
+        var portalname = 'portal_' + data.userId + '_' + md5(data.url);
+        var node = this.currentroom.parseNode(data);
+        var room = this.rooms[data.roomId];
+        if (room) {
+          room.spawn('janusportal', portalname, {
+            url: data.url,
+            janus: this,
+            room: room,
+            title: data.url,
+            position: node.pos,
+            orientation: node.orientation,
+          });
+        }
       } else if (method == 'user_chat') {
         this.chat.addmessage(msg.data.data);
       }
@@ -251,7 +269,6 @@ console.log('new player!', userId);
           remote.head.properties.position.fromArray(data.position.head_pos.split(" "));
         }
       }
-
 
       //remote.set('position', movepos, true);
       remote.properties.position.fromArray(movepos);
