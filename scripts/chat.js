@@ -1,6 +1,6 @@
 elation.requireCSS('janusweb.chat');
 elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], function() {
-  elation.template.add('janusweb.chat.message', '[{userId}] {message.data}');
+  elation.template.add('janusweb.chat.message', '[{userId}] {message}');
 
   elation.component.add('janusweb.chat', function() {
     this.init = function() {
@@ -40,7 +40,7 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
     }
     this.sendmessage = function() {
       this.client.send({'method': 'chat', data: this.input.value});
-      var msg = {userId: 'me', message: { data: this.input.value }, self: true};
+      var msg = {userId: 'me', message: this.input.value, self: true};
       this.addmessage(msg);
       elation.events.fire({element: this, type: 'janusweb_chat_send', data: msg});
       this.input.value = '';

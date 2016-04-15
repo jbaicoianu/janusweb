@@ -171,7 +171,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         if (!this.remotePlayers.hasOwnProperty(userId)) {
           var remoteplayer = this.spawnRemotePlayer(msg.data.data);
           elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
-          this.chat.addmessage({userId: ' ! ', message: { data: userId + ' entered room'} });
+          this.chat.addmessage({userId: ' ! ', message: userId + ' entered room' });
         }
         else {
           this.moveRemotePlayer(msg.data.data);
@@ -181,7 +181,7 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         var remoteplayer = this.remotePlayers[msg.data.data.userId];
         console.log("removing player", msg.data.data.userId, remoteplayer);
         elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
-        this.chat.addmessage({userId: ' ! ', message: { data: msg.data.data.userId + ' left room'} });
+        this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
         if (remoteplayer && remoteplayer.parent) {
           remoteplayer.die();
         }
