@@ -273,6 +273,10 @@ console.log('new player!', userId);
         }
       }
 
+      if (data.position.speaking && data.position.audio) {
+        remote.speak(data.position.audio);
+      }
+
       //remote.set('position', movepos, true);
       remote.properties.position.fromArray(movepos);
       remote.objects.dynamics.updateState();
