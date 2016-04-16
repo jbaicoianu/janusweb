@@ -40,8 +40,11 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       // connect to presence server
       //this.userId = Date.now().toString();
       this.userId = this.getUsername();
+      var host = elation.utils.any(hashargs['janus.server'], elation.config.get('janusweb.network.host')),
+          port = elation.utils.any(hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
       var janusOptions = {
-        host: elation.config.get('janusweb.network.host'),
+        host: host,
+        port: port,
         userId: this.userId,
         version: '49.54',
         roomUrl: starturl
