@@ -160,15 +160,18 @@ elation.require([
       this.debugwindow.settitle(this.properties.url);
       this.debugwindow.setcontent(content);
     }
-    this.load = function(url) {
+    this.load = function(url, baseurloverride) {
       if (!url) {
         url = this.properties.url;
       } else {
         this.properties.url = url;
       }
-      var baseurl = url.split('/'); 
-      if (baseurl.length > 3) baseurl.pop(); 
-      baseurl = baseurl.join('/') + '/'; 
+      var baseurl = baseurloverride;
+      if (!baseurl) {
+        baseurl = url.split('/'); 
+        if (baseurl.length > 3) baseurl.pop(); 
+        baseurl = baseurl.join('/') + '/'; 
+      }
       this.baseurl = baseurl;
 
       this.jsobjects = {};
@@ -199,22 +202,22 @@ elation.require([
             //'X-Requested-With':'JanusWeb Client'
           },
           callback: elation.bind(this, function(data, xhr) { 
-            this.parseSource(data);
-
-            var responseURL = xhr.getResponseHeader('X-Final-URL');
-            if (!responseURL) {
-              responseURL = xhr.responseURL.replace(proxyurl, '');
-            }
-            if (responseURL != this.properties.url) {
-              var url = responseURL;
-              var baseurl = url.split('/'); 
+            if (this.parseSource(data)) {
+              var responseURL = xhr.getResponseHeader('X-Final-URL');
+              if (!responseURL) {
+                responseURL = xhr.responseURL.replace(proxyurl, '');
+              }
+              if (responseURL != this.properties.url) {
+                var url = responseURL;
+                if (false && !baseurloverride) {
+                  baseurl = url.split('/'); 
                   baseurl.pop(); 
                   baseurl = baseurl.join('/') + '/'; 
-                  //root = elation.engine.instances.default.systems.world.children.default; 
-              this.baseurl = baseurl;
-              this.properties.url = url;
+                  this.baseurl = baseurl;
+                }
+                //this.properties.url = url;
+              }
             }
-
           })
         }); 
       }
@@ -229,15 +232,18 @@ elation.require([
       } else {
         this.setTitle(null);
       }
-      
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var m = data.match(re); 
       if (m) { 
         this.roomsrc = m[0];
         this.parseFireBox(this.roomsrc);
+        return true;
       } else {
         console.log('no firebox room, load the translator');
-        this.load(self.location.origin + '/media/janusweb/assets/translator/web/Parallelogram.html');
+        var transpath = datapath + 'assets/translator/web/';
+        this.load(transpath + 'Parallelogram.html', transpath );
       }
+      return false;
     }
 
     this.parseFireBox = function(fireboxsrc) {
@@ -511,12 +517,17 @@ elation.require([
       var videoassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetvideo", [])); 
       var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
       var assetlist = [];
-      imageassets.forEach(function(n) { assetlist.push({ assettype:'image', name:n.id, src: n.src }); });
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+      imageassets.forEach(function(n) { 
+        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+        assetlist.push({ assettype:'image', name:n.id, src: src }); 
+      });
       videoassets.forEach(elation.bind(this, function(n) { 
+        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
         assetlist.push({ 
           assettype:'video', 
           name:n.id, 
-          src: n.src, 
+          src: src, 
           sbs3d: n.sbs3d == 'true',  
           ou3d: n.ou3d == 'true',  
           auto_play: n.auto_play == 'true',  
@@ -529,8 +540,8 @@ elation.require([
       var baseurl = this.baseurl;
       objectassets.forEach(function(n) { 
         if (n.src) {
-          var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, '/media/janusweb/') : n.src);
-          var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, '/media/janusweb/') : n.mtl);
+          var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+          var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, datapath) : n.mtl);
           if (mtlsrc && !mtlsrc.match(/^https?:/)) mtlsrc = baseurl + mtlsrc;
           var srcparts = src.split(' ');
           src = srcparts[0];
