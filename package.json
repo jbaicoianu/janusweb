@@ -6,7 +6,7 @@
   "author": "James Baicoianu",
   "license": "MIT",
   "scripts": {
-    "build": "cd ../../; elation component runjs utils.pack -config janusweb.config -bundle janusweb ui.themes.dark janusweb.client engine.assetworker"
+    "build": "[ ! -e build ] && mkdir build; cp media/index.html build; [ -e build/media ] && rm -r build/media; cp -r `pwd`/media build/media; cd ../../; elation component runjs utils.pack -config janusweb.config -bundle janusweb ui.themes.dark janusweb.client engine.assetworker; mv janusweb.css janusweb.js components/janusweb/build; echo 'Built new release in ./build/'"
   },
   "repository": {
     "type": "git",
