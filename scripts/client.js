@@ -3,11 +3,12 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engi
     if (!args) args = {};
     var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), document.location.protocol);
     var host = elation.utils.any(args.host, elation.config.get('dependencies.host'), document.location.host);
-    var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.path);
+    var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.pathname);
     var path = elation.utils.any(args.path, elation.config.get('dependencies.path'), '/');
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
 
     var fullpath = proto + '//' + host + rootdir;
+    elation.config.set('dependencies.path', fullpath);
 
     var link = document.createElement('link');
     link.rel = 'stylesheet';
