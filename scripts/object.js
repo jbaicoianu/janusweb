@@ -153,6 +153,7 @@ elation.require(['engine.things.generic'], function() {
             if (m.map && m.map.sourceFile && m.map.sourceFile.match(/[^0-9]\.(png|tga)$/)) {
               m.transparent = true;
             }
+            m.roughness = 0.75;
             if (color && m.color) {
               m.color.copy(color);
             }
