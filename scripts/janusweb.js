@@ -304,9 +304,9 @@ console.log('new player!', userId);
         this.sentUpdates = 0;
       }
 
-      if (player.VOIPbuffers && player.VOIPbuffers.length > 4) {
+      if (player.VOIPbuffers && player.VOIPbuffers.length > 0) {
         var binary = '';
-        while (player.VOIPbuffers.length > 4) {
+        while (player.VOIPbuffers.length > 0) {
           var buf = player.VOIPbuffers.shift();
           var bytes = new Uint8Array(buf.buffer);
           for (var i = 0; i < bytes.byteLength; i++) {
@@ -317,7 +317,12 @@ console.log('new player!', userId);
         moveData.audio = window.btoa(binary);
         moveData.anim_id = "speak";
       }
-      if (player.controlstate.move_forward) {
+      if (document.activeElement && document.activeElement === this.chat.input.inputelement) {
+        moveData.anim_id = 'type';
+      }
+      if (player.controlstate.run) {
+        moveData.anim_id = 'run';
+      } else if (player.controlstate.move_forward) {
         moveData.anim_id = 'walk';
       } else if (player.controlstate.move_left) {
         moveData.anim_id = 'walk_left';
