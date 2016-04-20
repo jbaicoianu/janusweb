@@ -1,10 +1,10 @@
-elation.config.set('dependencies.protocol', 'http:');               // "http:" or "https:"
+elation.config.set('dependencies.protocol', 'https:');              // "http:" or "https:"
 elation.config.set('dependencies.host', 'janusweb.metacade.com');   // Hostname this release will live on
 elation.config.set('dependencies.rootdir', '/');                    // Directory this release will live in
 elation.config.set('dependencies.main', 'janusweb.js');             // The main script file for this release
 
-elation.config.set('janusweb.network.host', 'ws://janusweb.lnq.to:5566');         // Default presence server
-elation.config.set('janusweb.network.corsproxy', 'http://janusweb.lnq.to:8089/'); // CORS proxy URL
+elation.config.set('janusweb.network.host', 'wss://janusweb.lnq.to:5567');        // Default presence server
+elation.config.set('janusweb.network.corsproxy', 'https://janusweb.lnq.to:8089/'); // CORS proxy URL
 
 elation.config.set('janusweb.tracking.enabled', false);
 elation.config.set('janusweb.tracking.clientid', '');
