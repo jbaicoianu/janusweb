@@ -1,17 +1,20 @@
 elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat'], function() {
   elation.extend('janusweb.init', function(args) {
-    var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), 'http:');
-    var host = elation.utils.any(args.host, elation.config.get('dependencies.host'), 'janusweb.metacade.com');
+    if (!args) args = {};
+    var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), document.location.protocol);
+    var host = elation.utils.any(args.host, elation.config.get('dependencies.host'), document.location.host);
+    var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.path);
     var path = elation.utils.any(args.path, elation.config.get('dependencies.path'), '/');
+    var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
 
-    var fullpath = proto + '//' + host + path;
+    var fullpath = proto + '//' + host + rootdir;
 
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = fullpath + 'janusweb.css';
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
-    var janusweb = elation.janusweb.client({append: document.body, homepage: document.location.href});
+    var janusweb = elation.janusweb.client({append: document.body, homepage: homepage});
     return janusweb;
   });
   elation.component.add('janusweb.client', function() {
