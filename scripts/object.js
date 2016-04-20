@@ -150,7 +150,7 @@ elation.require(['engine.things.generic'], function() {
               m.map = texture; 
             }
             // FIXME - hack for transparent PNGs
-            if (m.map && m.map.image && m.map.image.src.match(/[^0-9]\.(png|tga)$/)) {
+            if (m.map && m.map.image && m.map.image.src && m.map.image.src.match(/[^0-9]\.(png|tga)$/)) {
               m.transparent = true;
             }
             m.roughness = 0.75;
