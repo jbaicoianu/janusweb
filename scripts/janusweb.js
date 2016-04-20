@@ -117,9 +117,10 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
           this.loading = false;
           elation.events.fire({element: this, type: 'room_change', data: url});
         }
+        if (!pos) pos = this.currentroom.playerstartposition;
         if (pos) {
-          this.engine.client.player.properties.position.set(pos[0], pos[1], pos[2]);
-          this.engine.client.player.properties.orientation.set(0,0,1,0);
+          this.engine.client.player.properties.position.fromArray(pos);
+          this.engine.client.player.properties.orientationfromArray(this.currentroom.playerstartorientation);
         }
         var hashargs = elation.url();
         if (url == this.properties.homepage) {
