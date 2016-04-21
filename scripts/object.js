@@ -36,9 +36,8 @@ elation.require(['engine.things.generic'], function() {
         var speed = (rotate_speed * Math.PI/180);
         var axisparts = rotate_axis.split(' ');
         var axis = new THREE.Vector3().set(axisparts[0], axisparts[1], axisparts[2]);
-        var q = new THREE.Quaternion().setFromAxisAngle(axis, speed);
-        var vel = new THREE.Euler().setFromQuaternion(q);
-        this.objects.dynamics.setAngularVelocity(vel);
+        axis.multiplyScalar(speed);
+        this.objects.dynamics.setAngularVelocity(axis);
       }
 
       if (this.properties.collision_id) {
