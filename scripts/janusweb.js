@@ -167,11 +167,13 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
     }
     this.addBookmark = function(ev) {
       if (ev.value == 1) {
-        this.bookmarks.add({
+        var room = {
           url: this.currentroom.properties.url, 
           title: this.currentroom.title,
           time: (new Date().getTime() / 1000)
-        });
+        };
+        this.bookmarks.add(room);
+        elation.events.fire({type: 'janusweb_bookmark_add', element: this, data: room});
       }
     }
     this.subscribe = function(ev) {

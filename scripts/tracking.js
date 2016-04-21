@@ -62,6 +62,10 @@ var el = document.pointerLockElement || document.mozPointerLockElement
       console.log('[tracking] user left', ev);
       ga('send', 'event', 'user', 'left', ev.data.name);
     });
+    elation.events.add(null, 'janusweb_bookmark_add', function(ev) {
+      console.log('[tracking] bookmark added', ev);
+      ga('send', 'event', 'bookmark', 'add', ev.data.url);
+    });
     elation.events.add(null, 'engine_render_view_vr_detected', function(ev) {
       console.log('[tracking] vr display detected', ev);
       ga('send', 'event', 'vr', 'detected', ev.data.deviceName);
