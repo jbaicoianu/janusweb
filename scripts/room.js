@@ -1,7 +1,8 @@
 elation.require([
     'ui.textarea', 'ui.window', 
      'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
-    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text'
+    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text',
+    'janusweb.translators.bookmarks'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
@@ -23,6 +24,9 @@ elation.require([
         'walk_speed': { type: 'float', default: 1.8 },
         'run_speed': { type: 'float', default: 5.4 },
       });
+      this.translators = {
+        bookmarks: elation.janusweb.translators.bookmarks({}),
+      };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
       this.load();
@@ -195,6 +199,11 @@ elation.require([
         setTimeout(elation.bind(this, function() {
           this.parseSource(document.documentElement.outerHTML);
         }), 0);
+      } else if (url in this.translators) {
+        setTimeout(elation.bind(this, function() {
+          var roomdata = this.translators[url].exec({url: url, janus: this.properties.janus});
+          this.createRoomObjects(roomdata);
+        }), 0);
       } else {
         elation.net.get(fullurl, null, { 
           headers: {
@@ -247,8 +256,6 @@ elation.require([
     }
 
     this.parseFireBox = function(fireboxsrc) {
-      var root = this;
-
       var xml = elation.utils.parseXML(fireboxsrc, false, true); 
 
       var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
@@ -264,10 +271,195 @@ elation.require([
           });
         }
       }
-      console.log(xml, room);
 
+      var roomdata = this.getRoomData(xml, room);
+      this.createRoomObjects(roomdata);
+    }
+    
+    this.createRoomObjects = function(roomdata) {
+      var room = roomdata.room,
+          assets = roomdata.assets || [],
+          objects = roomdata.objects || [],
+          links = roomdata.links || [],
+          sounds = roomdata.sounds || [],
+          images = roomdata.images || [],
+          image3ds = roomdata.image3ds || [],
+          texts = roomdata.texts || [],
+          videos = roomdata.videos || [];
+
+      if (room.use_local_asset && room.visible != 'false') {
+        var localasset = this.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
+          'room': this,
+          'render.model': room.use_local_asset,
+          'col': room.col,
+        }); 
+      }
+      objects.forEach(elation.bind(this, function(n) { 
+        var thingname = n.id + (n.js_id ? '_' + n.js_id : '_' + Math.round(Math.random() * 1000000));
+        var thing = this.spawn('janusobject', thingname, { 
+          'room': this,
+          'render.model': n.id, 
+          'position': n.pos,
+          'orientation': n.orientation,
+          'scale': n.scale,
+          'image_id': n.image_id,
+          'video_id': n.video_id,
+          'collision_id': n.collision_id,
+          'websurface_id': n.websurface_id,
+          'col': n.col,
+          'cull_face': n.cull_face,
+          'blend_src': n.blend_src,
+          'blend_dest': n.blend_dest,
+          'rotate_axis': n.rotate_axis,
+          'rotate_deg_per_sec': n.rotate_deg_per_sec,
+          'props': n,
+          'visible': n.visible,
+          'lighting': n.lighting
+        }); 
+        if (n.js_id) {
+          this.jsobjects[n.js_id] = thing;
+        }
+      }));
+      if (links) links.forEach(elation.bind(this, function(n) {
+        var linkurl = (n.url.match(/^https?:/) || n.url in this.translators ? n.url : this.baseurl + n.url);
+        var portalargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'position': n.pos,
+          'orientation': n.orientation,
+          'scale':n.scale,
+          'url': linkurl,
+          'title': n.title,
+        }; 
+        if (n.thumb_id) {
+          portalargs.thumbnail = elation.engine.assets.find('image', n.thumb_id);
+        }
+        var portal = this.spawn('janusportal', 'portal_' + n.url + '_' + Math.round(Math.random() * 10000), portalargs);
+        //console.log('herp', portal); 
+        if (n.js_id) {
+          this.jsobjects[n.js_id] = portal;
+        }
+      }));
+      if (images) images.forEach(elation.bind(this, function(n) {
+        var imageargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'position': n.pos,
+          'orientation': n.orientation,
+          'scale': n.scale,
+          'image_id': n.id,
+          'color': n.col,
+          'lighting': n.lighting
+        }; 
+        var asset = false;
+        assets.image.forEach(function(img) {
+          if (img.id == n.id) {
+            asset = img;
+          }
+        });
+
+        if (asset) {
+          imageargs.sbs3d = asset.sbs3d;
+          imageargs.ou3d = asset.ou3d;
+          imageargs.reverse3d = asset.reverse3d;
+        }
+        var image = this.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
+      }));
+      if (image3ds) image3ds.forEach(elation.bind(this, function(n) {
+        var imageargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'position': n.pos,
+          'orientation': n.orientation,
+          'scale': n.scale,
+          'image_id': n.left_id,
+          'color': n.col,
+          'lighting': n.lighting
+        }; 
+        var image = this.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
+      }));
+      if (texts) texts.forEach(elation.bind(this, function(n) {
+        var labelargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'position': n.pos,
+          'orientation': n.orientation,
+          'scale': n.scale,
+          'text': n._content || ' ',
+          'color': new THREE.Color().setRGB(n.col[0], n.col[1], n.col[2]),
+        }; 
+        var label = this.spawn('janustext', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
+      }));
+      var soundmap = {};
+      if (assets.sound) assets.sound.forEach(function(n) { soundmap[n.id] = n; });
+      if (sounds) sounds.forEach(elation.bind(this, function(n) {
+        var soundargs = soundmap[n.id];
+        if (soundargs) {
+          var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
+
+          var proxyurl = this.properties.janus.properties.corsproxy;
+          soundurl = proxyurl + soundurl;
+          var sound = this.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
+            'room': this,
+            'position': n.pos,
+            'src': soundurl,
+            'autoplay': true,
+            'loop': true,
+          }); 
+        } else {
+          console.log("Couldn't find sound: " + n.id);
+        }
+      }));
+
+      var videoassetmap = {};
+      if (assets.video) assets.video.forEach(function(n) { videoassetmap[n.id] = n; });
+      if (videos) videos.forEach(elation.bind(this, function(n) {
+        var asset = videoassetmap[n.id];
+        var videourl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
+        var video = this.spawn('janusvideo', n.id + '_' + Math.round(Math.random() * 10000), {
+          room: this,
+          position: n.pos,
+          orientation: n.orientation,
+          scale: n.scale,
+          //src: videourl,
+          video_id: n.id,
+          loop: asset.loop,
+          autoplay: asset.auto_play || false,
+          lighting: n.lighting
+        });
+      }));
+      
+      // set player position based on room info
+      this.playerstartposition = room.pos;
+      this.playerstartorientation = room.orientation;
+
+      if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
+      if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
+      if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
+      if (room.skybox_down_id) this.properties.skybox_down = room.skybox_down_id;
+      if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
+      if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
+  
+console.log('room', room);
+      this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
+      this.properties.far_dist = parseFloat(room.far_dist) || 1000;
+      this.properties.fog = room.fog;
+      this.properties.fog_mode = room.fog_mode;
+      this.properties.fog_density = room.fog_density;
+      this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
+      this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
+      this.properties.fog_col = room.fog_col || room.fog_color;
+
+      this.properties.walk_speed = room.walk_speed || 1.8;
+      this.properties.run_speed = room.run_speed || 5.4;
+
+      this.setActive();
+
+      elation.events.fire({type: 'janus_room_load', element: this});
+      //this.showDebug();
+    }
+    this.getRoomData = function(xml, room) {
       var assets = this.parseAssets(xml, room);
-
       var objects = this.getAsArray(elation.utils.arrayget(room, '_children.object', [])); 
       var links = this.getAsArray(elation.utils.arrayget(room, '_children.link', [])); 
       var sounds = this.getAsArray(elation.utils.arrayget(room, '_children.sound', [])); 
@@ -290,184 +482,17 @@ elation.require([
       if (sounds && orphansounds[0]) sounds.push.apply(sounds, orphansounds);
       if (texts && orphantexts[0]) texts.push.apply(texts, orphantexts);
 
-      var roomnode = this.parseNode(room);
-    
-      if (room.use_local_asset && room.visible != 'false') {
-        var localasset = this.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
-          'room': this,
-          'render.model': room.use_local_asset,
-          'col': roomnode.col,
-        }); 
-      }
-      objects.forEach(elation.bind(this, function(n) { 
-        var node = this.parseNode(n);
-        var thingname = n.id + (n.js_id ? '_' + n.js_id : '_' + Math.round(Math.random() * 1000000));
-        var thing = root.spawn('janusobject', thingname, { 
-          'room': this,
-          'render.model': n.id, 
-          'position': node.pos,
-          'orientation': node.orientation,
-          'scale': node.scale,
-          'image_id': n.image_id,
-          'video_id': n.video_id,
-          'collision_id': n.collision_id,
-          'websurface_id': n.websurface_id,
-          'col': node.col,
-          'cull_face': n.cull_face,
-          'blend_src': n.blend_src,
-          'blend_dest': n.blend_dest,
-          'rotate_axis': n.rotate_axis,
-          'rotate_deg_per_sec': n.rotate_deg_per_sec,
-          'props': n,
-          'visible': node.visible,
-          'lighting': node.lighting
-        }); 
-        if (n.js_id) {
-          this.jsobjects[n.js_id] = thing;
-        }
-      }));
-      links.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var linkurl = (n.url.match(/^https?:/) ? n.url : this.baseurl + n.url);
-        var portalargs = { 
-          'room': this,
-          'janus': this.properties.janus,
-          'position': node.pos,
-          'orientation': node.orientation,
-          'scale':node.scale,
-          'url': linkurl,
-          'title': n.title,
-        }; 
-        if (n.thumb_id) {
-          portalargs.thumbnail = elation.engine.assets.find('image', n.thumb_id);
-        }
-        var portal = root.spawn('janusportal', 'portal_' + n.url + '_' + Math.round(Math.random() * 10000), portalargs);
-        //console.log('herp', portal); 
-        if (n.js_id) {
-          this.jsobjects[n.js_id] = portal;
-        }
-      }));
-      images.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var imageargs = { 
-          'room': this,
-          'janus': this.properties.janus,
-          'position': node.pos,
-          'orientation': node.orientation,
-          'scale': node.scale,
-          'image_id': n.id,
-          'color': node.col,
-          'lighting': node.lighting
-        }; 
-        var asset = false;
-        assets.image.forEach(function(img) {
-          if (img.id == n.id) {
-            asset = img;
-          }
-        });
-
-        if (asset) {
-          imageargs.sbs3d = asset.sbs3d;
-          imageargs.ou3d = asset.ou3d;
-          imageargs.reverse3d = asset.reverse3d;
-        }
-        var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
-      }));
-      image3ds.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var imageargs = { 
-          'room': this,
-          'janus': this.properties.janus,
-          'position': node.pos,
-          'orientation': node.orientation,
-          'scale': node.scale,
-          'image_id': n.left_id,
-          'color': node.col,
-          'lighting': node.lighting
-        }; 
-        var image = root.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
-      }));
-      texts.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var labelargs = { 
-          'room': this,
-          'janus': this.properties.janus,
-          'position': node.pos,
-          'orientation': node.orientation,
-          'scale': node.scale,
-          'text': n._content || ' ',
-          'color': new THREE.Color().setRGB(node.col[0], node.col[1], node.col[2]),
-        }; 
-        var label = root.spawn('janustext', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
-      }));
-      var soundmap = {};
-      assets.sound.forEach(function(n) { soundmap[n.id] = n; });
-      sounds.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var soundargs = soundmap[n.id];
-        if (soundargs) {
-          var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
-
-          var proxyurl = this.properties.janus.properties.corsproxy;
-          soundurl = proxyurl + soundurl;
-          var sound = root.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
-            'room': this,
-            'position': node.pos,
-            'src': soundurl,
-            'autoplay': true,
-            'loop': true,
-          }); 
-        } else {
-          console.log("Couldn't find sound: " + n.id);
-        }
-      }));
-
-      var videoassetmap = {};
-      assets.video.forEach(function(n) { videoassetmap[n.id] = n; });
-      videos.forEach(elation.bind(this, function(n) {
-        var node = this.parseNode(n);
-        var asset = videoassetmap[n.id];
-        var videourl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
-        var video = root.spawn('janusvideo', n.id + '_' + Math.round(Math.random() * 10000), {
-          'room': this,
-          position: node.pos,
-          orientation: node.orientation,
-          scale: node.scale,
-          //src: videourl,
-          video_id: n.id,
-          loop: asset.loop,
-          autoplay: asset.auto_play || false,
-          'lighting': node.lighting
-        });
-      }));
-      
-      // set player position based on room info
-      this.playerstartposition = roomnode.pos.map(parseFloat);
-      this.playerstartorientation = roomnode.orientation;
-
-      if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
-      if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
-      if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
-      if (room.skybox_down_id) this.properties.skybox_down = room.skybox_down_id;
-      if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
-      if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
-  
-      this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
-      this.properties.far_dist = parseFloat(room.far_dist) || 1000;
-      this.properties.fog = room.fog;
-      this.properties.fog_mode = room.fog_mode;
-      this.properties.fog_density = room.fog_density;
-      this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
-      this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
-      this.properties.fog_col = room.fog_col || room.fog_color;
-
-      this.properties.walk_speed = room.walk_speed || 1.8;
-      this.properties.run_speed = room.run_speed || 5.4;
-
-      this.setActive();
-
-      elation.events.fire({type: 'janus_room_load', element: this});
-      //this.showDebug();
+      return {
+        assets: assets,
+        room: this.parseNode(room),
+        objects: objects.map(elation.bind(this, this.parseNode)),
+        links: links.map(elation.bind(this, this.parseNode)),
+        sounds: sounds.map(elation.bind(this, this.parseNode)),
+        images: images.map(elation.bind(this, this.parseNode)),
+        image3ds: image3ds.map(elation.bind(this, this.parseNode)),
+        texts: texts.map(elation.bind(this, this.parseNode)),
+        videos: videos.map(elation.bind(this, this.parseNode)),
+      };
     }
     this.getAsArray = function(arr) {
       return (elation.utils.isArray(arr) ? arr : [arr]);
@@ -558,13 +583,27 @@ elation.require([
     }
     this.parseNode = function(n) {
       var nodeinfo = {
-        pos: (n.pos ? n.pos.split(' ') : [0,0,0]),
-        scale: (n.scale ? n.scale.split(' ') : [1,1,1]),
+/*
+        pos: (n.pos ? n.pos.split(' ').map(parseFloat) : [0,0,0]),
+        scale: (n.scale ? n.scale.split(' ').map(parseFloat) : [1,1,1]),
         orientation: this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd),
         col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col.split(' ')) : [1,1,1]),
         visible: (n.visible !== false && n.visible !== 0 && n.visible !== 'false'),
         lighting: (n.lighting !== false && n.lighting !== 0 && n.lighting !== 'false')
+*/
       };
+      var attrs = Object.keys(n);
+      attrs.forEach(elation.bind(this, function(k) {
+        nodeinfo[k] = n[k];
+      }));
+
+      nodeinfo.pos = (n.pos ? (elation.utils.isArray(n.pos) ? n.pos : n.pos.split(' ')).map(parseFloat) : [0,0,0]);
+      nodeinfo.scale = (n.scale ? (elation.utils.isArray(n.scale) ? n.scale : n.scale.split(' ')).map(parseFloat) : [1,1,1]);
+      nodeinfo.orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
+      nodeinfo.col = (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : (elation.utils.isArray(n.col) ? n.col : n.col.split(' '))) : [1,1,1]);
+      nodeinfo.visible = (n.visible !== false && n.visible !== 0 && n.visible !== 'false');
+      nodeinfo.lighting = (n.lighting !== false && n.lighting !== 0 && n.lighting !== 'false');
+      
       var minscale = 1e-6;
       nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
       nodeinfo.scale[1] = Math.max(minscale, nodeinfo.scale[1]);
