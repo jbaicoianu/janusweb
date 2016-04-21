@@ -2,7 +2,7 @@ elation.require([
     'ui.textarea', 'ui.window', 
      'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text',
-    'janusweb.translators.bookmarks'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
@@ -25,7 +25,8 @@ elation.require([
         'run_speed': { type: 'float', default: 5.4 },
       });
       this.translators = {
-        bookmarks: elation.janusweb.translators.bookmarks({}),
+        '^bookmarks$': elation.janusweb.translators.bookmarks({}),
+        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({})
       };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
@@ -195,14 +196,18 @@ elation.require([
         fullurl = proxyurl + fullurl;
       }
 
+      var translator = this.getTranslator(url);
+
       if (url == document.location.href) {
         setTimeout(elation.bind(this, function() {
-          this.parseSource(document.documentElement.outerHTML);
-        }), 0);
-      } else if (url in this.translators) {
-        setTimeout(elation.bind(this, function() {
-          var roomdata = this.translators[url].exec({url: url, janus: this.properties.janus});
+          this.roomsrc = this.parseSource(document.documentElement.outerHTML);
+          var roomdata = this.parseFireBox(this.roomsrc.source);
           this.createRoomObjects(roomdata);
+        }), 0);
+      } else if (translator) {
+        setTimeout(elation.bind(this, function() {
+          translator.exec({url: url, janus: this.properties.janus, room: this})
+                    .then(elation.bind(this, this.createRoomObjects));
         }), 0);
       } else {
         elation.net.get(fullurl, null, { 
@@ -211,7 +216,10 @@ elation.require([
             //'X-Requested-With':'JanusWeb Client'
           },
           callback: elation.bind(this, function(data, xhr) { 
-            if (this.parseSource(data)) {
+            var source = this.parseSource(data);
+            if (source) {
+              var roomdata = this.parseFireBox(source.source);
+              this.createRoomObjects(roomdata);
               var responseURL = xhr.getResponseHeader('X-Final-URL');
               if (!responseURL) {
                 responseURL = xhr.responseURL.replace(proxyurl, '');
@@ -236,7 +244,12 @@ elation.require([
       var titlere = /<title>([\s\S]*?)<\/title>/mi; 
       var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi; 
       var mtitle = data.match(titlere); 
+      var parsed = {
+        title: 'Untitled Room',
+        source: ''
+      }
       if (mtitle) {
+        parsed.title = mtitle[1];
         this.setTitle(mtitle[1]);
       } else {
         this.setTitle(null);
@@ -244,20 +257,17 @@ elation.require([
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var m = data.match(re); 
       if (m) { 
-        this.roomsrc = m[0];
-        this.parseFireBox(this.roomsrc);
-        return true;
+        parsed.source = m[0];
       } else {
         console.log('no firebox room, load the translator');
         var transpath = datapath + 'assets/translator/web/';
         this.load(transpath + 'Parallelogram.html', transpath );
       }
-      return false;
+      return parsed;
     }
 
     this.parseFireBox = function(fireboxsrc) {
       var xml = elation.utils.parseXML(fireboxsrc, false, true); 
-
       var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
       var room = {_children: {}};
       for (var i = 0; i < rooms.length; i++) {
@@ -273,7 +283,7 @@ elation.require([
       }
 
       var roomdata = this.getRoomData(xml, room);
-      this.createRoomObjects(roomdata);
+      return roomdata;
     }
     
     this.createRoomObjects = function(roomdata) {
@@ -287,7 +297,7 @@ elation.require([
           texts = roomdata.texts || [],
           videos = roomdata.videos || [];
 
-      if (room.use_local_asset && room.visible != 'false') {
+      if (room.use_local_asset && room.visible !== false) {
         var localasset = this.spawn('janusobject', 'local_asset_' + Math.round(Math.random() * 10000), { 
           'room': this,
           'render.model': room.use_local_asset,
@@ -321,7 +331,7 @@ elation.require([
         }
       }));
       if (links) links.forEach(elation.bind(this, function(n) {
-        var linkurl = (n.url.match(/^https?:/) || n.url in this.translators ? n.url : this.baseurl + n.url);
+        var linkurl = (n.url.match(/^https?:/) || this.getTranslator(n.url) ? n.url : this.baseurl + n.url);
         var portalargs = { 
           'room': this,
           'janus': this.properties.janus,
@@ -440,7 +450,6 @@ elation.require([
       if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
       if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
   
-console.log('room', room);
       this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
       this.properties.far_dist = parseFloat(room.far_dist) || 1000;
       this.properties.fog = room.fog;
@@ -582,27 +591,16 @@ console.log('room', room);
       return assets;
     }
     this.parseNode = function(n) {
-      var nodeinfo = {
-/*
-        pos: (n.pos ? n.pos.split(' ').map(parseFloat) : [0,0,0]),
-        scale: (n.scale ? n.scale.split(' ').map(parseFloat) : [1,1,1]),
-        orientation: this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd),
-        col: (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col.split(' ')) : [1,1,1]),
-        visible: (n.visible !== false && n.visible !== 0 && n.visible !== 'false'),
-        lighting: (n.lighting !== false && n.lighting !== 0 && n.lighting !== 'false')
-*/
-      };
+      var nodeinfo = {};
       var attrs = Object.keys(n);
       attrs.forEach(elation.bind(this, function(k) {
-        nodeinfo[k] = n[k];
+        nodeinfo[k] = (n[k] == 'false' ? false : n[k]);
       }));
 
       nodeinfo.pos = (n.pos ? (elation.utils.isArray(n.pos) ? n.pos : n.pos.split(' ')).map(parseFloat) : [0,0,0]);
       nodeinfo.scale = (n.scale ? (elation.utils.isArray(n.scale) ? n.scale : n.scale.split(' ')).map(parseFloat) : [1,1,1]);
       nodeinfo.orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
       nodeinfo.col = (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : (elation.utils.isArray(n.col) ? n.col : n.col.split(' '))) : [1,1,1]);
-      nodeinfo.visible = (n.visible !== false && n.visible !== 0 && n.visible !== 'false');
-      nodeinfo.lighting = (n.lighting !== false && n.lighting !== 0 && n.lighting !== 'false');
       
       var minscale = 1e-6;
       nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
@@ -610,6 +608,17 @@ console.log('room', room);
       nodeinfo.scale[2] = Math.max(minscale, nodeinfo.scale[2]);
 
       return nodeinfo;
+    }
+    this.getTranslator = function(url) {
+      var keys = Object.keys(this.translators);
+      for (var i = 0; i < keys.length; i++) {
+        var re = new RegExp(keys[i]);
+        if (url.match(re)) {
+          return this.translators[keys[i]];
+        }
+      }
+      // TODO - implement default page handling as translator
+      return false;
     }
     this.enable = function() {
     }
