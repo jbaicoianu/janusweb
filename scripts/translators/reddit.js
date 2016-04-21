@@ -78,7 +78,7 @@ console.log('dud');
         //texts[textid]._content = item.title;
         texts[textid]._content = (i+1);
         texts[textid+1]._content = item.title;
-        texts[textid+2]._content = this.getRelativeDate(item.created) + ' by';
+        texts[textid+2]._content = this.getRelativeDate(item.created_utc) + ' by';
         texts[textid+3]._content = item.author;
         //texts[textid+3]._content = item.user;
         texts[textid+4]._content = item.score + ' upvotes';
@@ -92,7 +92,7 @@ console.log('dud');
     this.getRelativeDate = function(ts) {
       var now = new Date().getTime() / 1000;
       var diff = now - ts;
-      var str = diff + ' seconds ago';
+      var str = Math.floor(diff) + ' seconds ago';
       if (diff > 60) str = Math.floor(diff / 60) + ' minutes ago';
       if (diff > 3600) str = Math.floor(diff / 3600) + ' hours ago';
       if (diff > 86400) str = Math.floor(diff / 86400) + ' days ago';
