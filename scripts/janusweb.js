@@ -12,6 +12,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
+      this.bookmarks = elation.collection.localindexed({index: 'url', storagekey: 'janusweb.bookmarks'});
+
       if (this.properties.corsproxy != '') {
         elation.engine.assets.setCORSProxy(this.properties.corsproxy);
       }
@@ -20,7 +22,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
-        'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ]
+        'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
+        'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ]
       });
       this.engine.systems.controls.activateContext('janus');
       this.remotePlayers = {};
@@ -51,7 +54,6 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       }
       this.jcc = new JanusClientConnection(janusOptions);
       this.chat = elation.janusweb.chat({append: document.body, client: this.jcc, player: this.engine.client.player});
-
       this.jcc.addEventListener('message', function(msg) {
         this.onJanusMessage(msg);
       }.bind(this));
@@ -120,7 +122,8 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
         if (!pos) pos = this.currentroom.playerstartposition;
         if (pos) {
           this.engine.client.player.properties.position.fromArray(pos);
-          this.engine.client.player.properties.orientationfromArray(this.currentroom.playerstartorientation);
+          this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
+console.log('set position!', pos, this.currentroom.playerstartorientation);
         }
         var hashargs = elation.url();
         if (url == this.properties.homepage) {
@@ -160,6 +163,15 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
     this.showChat = function(ev) {
       if (ev.value == 1) {
         this.chat.focus();
+      }
+    }
+    this.addBookmark = function(ev) {
+      if (ev.value == 1) {
+        this.bookmarks.add({
+          url: this.currentroom.properties.url, 
+          title: this.currentroom.title,
+          time: (new Date().getTime() / 1000)
+        });
       }
     }
     this.subscribe = function(ev) {
