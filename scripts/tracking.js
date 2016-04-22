@@ -74,6 +74,22 @@ var el = document.pointerLockElement || document.mozPointerLockElement
       console.log('[tracking] vr display activated', ev);
       ga('send', 'event', 'vr', 'start');
     });
+    elation.events.add(null, 'voip_init', function(ev) {
+      console.log('[tracking] voip init', ev);
+      ga('send', 'event', 'voip', 'init');
+    });
+    elation.events.add(null, 'voip_start', function(ev) {
+      console.log('[tracking] voip start', ev);
+      ga('send', 'event', 'voip', 'start');
+    });
+    elation.events.add(null, 'voip_stop', function(ev) {
+      console.log('[tracking] voip stop', ev);
+      ga('send', 'event', 'voip', 'stop');
+    });
+    elation.events.add(null, 'voip_error', function(ev) {
+      console.log('[tracking] voip error', ev);
+      ga('send', 'event', 'voip', 'error', ev.data.name + ' : ' + ev.data.message);
+    });
     elation.events.add(null, 'engine_render_view_vr_end', function(ev) {
       console.log('[tracking] vr display ended', ev);
       ga('send', 'event', 'vr', 'end');
