@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer'], function() {
   elation.extend('janusweb.init', function(args) {
     if (!args) args = {};
     var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), document.location.protocol);
@@ -47,11 +47,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.player', 'engi
         things: {
           player: {
             name: 'player',
-            type: 'player',
+            type: 'janusplayer',
             properties: {
               position: [0,0,0],
               mass: 10,
-              movespeed: 100,
+              movespeed: 5000,
               collidable: false
             }
           },
