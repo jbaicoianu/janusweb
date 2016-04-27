@@ -1,4 +1,4 @@
-elation.require(['engine.things.player', 'janusweb.JanusVOIP', 'ui.button'], function() {
+elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.button'], function() {
   elation.requireCSS('janusweb.janusplayer');
 
   elation.component.add('engine.things.janusplayer', function() {
