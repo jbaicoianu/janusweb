@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic'], function() {
+elation.require(['janusweb.janusbase'], function() {
 
   THREE.SBSTexture = function ( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy ) {
     THREE.Texture.call( this, image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
@@ -39,6 +39,7 @@ elation.require(['engine.things.generic'], function() {
 
   elation.component.add('engine.things.janusimage', function() {
     this.postinit = function() {
+      elation.engine.things.janusimage.extendclass.postinit.call(this);
       this.defineProperties({
         image_id: { type: 'string' },
         color: { type: 'color', default: 0xffffff },
@@ -51,7 +52,6 @@ elation.require(['engine.things.generic'], function() {
     this.createObject3D = function() {
       this.texture = elation.engine.assets.find('image', this.properties.image_id);
       if (this.texture) {
-        
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
 
         var geo = this.createGeometry();
@@ -65,7 +65,7 @@ elation.require(['engine.things.generic'], function() {
       var aspect = this.getAspect(),
           thickness = .1;
       var box = new THREE.BoxGeometry(2, 2 * aspect, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness / 2));
+      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, .1 / this.properties.scale.z));
       return box;
     }
     this.createMaterial = function() {
@@ -73,6 +73,7 @@ elation.require(['engine.things.generic'], function() {
         map: this.texture,
         color: this.properties.color,
         transparent: true,
+        alphaTest: 0.2
       };
 
       var sidemattex = this.texture.clone();
@@ -81,7 +82,8 @@ elation.require(['engine.things.generic'], function() {
       var sidematargs = {
         map: sidemattex,
         color: this.properties.color,
-        transparent: true
+        transparent: true,
+        alphaTest: 0.2
       };
 
       var mat = (this.properties.lighting ? new THREE.MeshPhongMaterial(matargs) : new THREE.MeshBasicMaterial(matargs));
@@ -97,7 +99,7 @@ elation.require(['engine.things.generic'], function() {
         var size = this.getSize(this.texture.image);
         aspect = size.height / size.width;
       }
-      if (this.properties.sbs3d || (this.asset && this.asset.sbs3d)) aspect /= 2;
+      if (this.properties.sbs3d || (this.asset && this.asset.sbs3d)) aspect *= 2;
       if (this.properties.ou3d || (this.asset && this.asset.ou3d)) aspect /= 2;
       return aspect;
     }
@@ -130,5 +132,5 @@ elation.require(['engine.things.generic'], function() {
 
       this.refresh();
     }
-  }, elation.engine.things.generic);
+  }, elation.engine.things.janusbase);
 });
