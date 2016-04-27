@@ -1,0 +1,27 @@
+Apr ?? 2016 - 0.3a
+------------------
+Bookmark your favorite rooms with ctrl+b, then view them later in the bookmarks room
+Browse Reddit in VR
+Preliminary edit mode support
+Improved gamepad support
+VOIP improvements
+Proper 3d sound distance falloff
+Fixed transparency
+Fixed rotate_axis
+Fixed giraffe-head
+
+
+Apr 19 2016 - 0.2a
+------------------
+Added VOIP support between web and native users
+Switched to HTTPS by default.
+Lighting fixes
+Fixed video textures
+Improved build script
+
+
+Apr  7 2016 - 0.1a
+------------------
+First public release
+Basic JanusVR room viewer with simple networking and chat support
+Supports gamepads, 3D positional audio, WebVR
