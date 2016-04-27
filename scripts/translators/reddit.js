@@ -66,7 +66,7 @@ console.log('dud');
       var texts = {};
       roomdata.texts.forEach(function(t) { texts[t.js_id] = t; });
       var offset = 3;
-      for (var i = 0; i < numlinks; i++) {
+      for (var i = 0; i < numlinks && i < items.length && i < roomdata.links.length; i++) {
         var item = items[i];
         var link = roomdata.links[i];
         if (item && link) {
