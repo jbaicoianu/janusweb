@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic'], function() {
+elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.janusobject', function() {
     this.sidemap = {
       'back': THREE.FrontSide,
@@ -6,6 +6,7 @@ elation.require(['engine.things.generic'], function() {
       'none': THREE.DoubleSide
     };
     this.postinit = function() {
+      elation.engine.things.janusobject.extendclass.postinit.call(this);
       this.defineProperties({
         room: { type: 'object' },
         image_id: { type: 'string' },
@@ -21,10 +22,11 @@ elation.require(['engine.things.generic'], function() {
         rotate_deg_per_sec: { type: 'string' },
         props: { type: 'object' },
       });
+      elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
     }
     this.createChildren = function() {
       if (this.objects['3d'].userData.loaded) {
-        this.assignTextures();
+        //this.assignTextures();
       } else {
         elation.events.add(this.objects['3d'], 'asset_load', elation.bind(this, this.assignTextures));
       }
@@ -77,21 +79,26 @@ elation.require(['engine.things.generic'], function() {
       }
     }
     this.assignTextures = function() {
-      var texture = false,
+console.log('assign textures', this.name, this);
+      var modelasset = false,
+          texture = false,
           color = false,
           blend_src = false,
           blend_dest = false,
           side = this.sidemap[this.properties.cull_face];
 
+      if (this.properties.render.model) {
+        modelasset = elation.engine.assets.find('model', this.properties.render.model, true);
+      }
       if (this.properties.image_id) {
         texture = elation.engine.assets.find('image', this.properties.image_id);
+        elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
       }
       if (this.properties.video_id) {
         var videoasset = elation.engine.assets.find('video', this.properties.video_id, true);
         if (videoasset) {
           texture = videoasset.getAsset();
           if (videoasset.sbs3d) {
-            // TODO - to really support 3d video, we need to set offset based on which eye is being rendered
             texture.repeat.x = 0.5;
           }
           if (videoasset.auto_play) {
@@ -103,54 +110,79 @@ elation.require(['engine.things.generic'], function() {
       if (this.properties.col) {
         color = new THREE.Color();
         var col = this.properties.col;
+        if (!col && modelasset && modelasset.col) {
+          col = modelasset.col;
+        }
         color.setRGB(col[0], col[1], col[2]);  
       }
-      if (this.properties.blend_src == 'src_color') {
-        blend_src = THREE.SrcColorFactor;
+      var srcfactors = {
+        'src_alpha': THREE.SrcAlphaFactor,
+        'zero': THREE.ZeroFactor,
+        'one': THREE.OneFactor,
+        'src_color': THREE.SrcColorFactor,
+        'one_minus_src_color': THREE.OneMinusSrcColorFactor,
+        'dst_color': THREE.DstColorFactor,
+        'one_minus_dst_color': THREE.OneMinusDstColorFactor,
       }
-      if (this.properties.blend_dest == 'one_minus_src_alpha') {
-        blend_dest = THREE.OneMinusSrcAlphaFactor;
-      } else if (this.properties.blend_dest == 'one_minus_constant_color') {
-        blend_dest = THREE.OneMinusConstantColorFactor;
+      if (srcfactors[this.properties.blend_src]) {
+        blend_src = srcfactors[this.properties.blend_src];
       }
+      if (srcfactors[this.properties.blend_dst]) {
+        blend_dst = srcfactors[this.properties.blend_dst];
+      }
+
+      var hasalpha = {};
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
         if (n.material) {
           var materials = [];
           if (n.material instanceof THREE.MeshFaceMaterial) {
             //materials = [n.material.materials[1]];
             for (var i = 0; i < n.material.materials.length; i++) {
-              var oldm = n.material.materials[i];
-              //var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
-              //var m = new THREE.MeshPhongMaterial();
-              var m = new THREE.MeshStandardMaterial();
-              m.map = oldm.map;
-              m.normalMap = oldm.normalMap;
-              m.lightMap = oldm.lightMap;
-              m.color.copy(oldm.color);
-              m.transparent = oldm.transparent;
+              var m = this.copyMaterial(n.material.materials[i]);
               materials.push(m); 
             }
-            //materials = n.material.materials;
             n.material.materials = materials;
           } else {
-              var oldm = n.material;
-              //var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
-              var m = new THREE.MeshStandardMaterial();
-              m.map = oldm.map;
-              m.normalMap = oldm.normalMap;
-              m.lightMap = oldm.lightMap;
-              m.color.copy(oldm.color);
-              m.transparent = oldm.transparent;
-              materials.push(m); 
-              n.material = m;
+            var m = this.copyMaterial(n.material);
+            materials.push(m); 
+            n.material = m;
           }
           materials.forEach(elation.bind(this, function(m) {
             if (texture) {
               m.map = texture; 
             }
-            // FIXME - hack for transparent PNGs
-            if (m.map && m.map.image && m.map.image.src && m.map.image.src.match(/[^0-9]\.(png|tga)$/)) {
-              m.transparent = true;
+            if (m.map && m.map.image) {
+              if (m.map.image instanceof HTMLCanvasElement) {
+console.log('go canvas');
+                // FIXME - don't think this works
+                hasalpha[m.map.image.src] = this.canvasHasAlpha(m.map.image);
+                if (hasalpha[m.map.image.src]) {
+                  m.transparent = true;
+                  m.alphaTest = 0.1;
+                  m.needsUpdate = true;
+                }
+              } else if (m.map.image.src && m.map.image.src.match(/\.(png|tga)$/)) {
+                // If the image is a PNG, check to see if it's got an alpha channel
+                // If it does, set the proper material parameters
+                elation.events.add(m.map.image, 'load', elation.bind(this, function(ev) {
+                  if (typeof hasalpha[ev.target.src] == 'undefined') {
+    console.log('CHECK IT?', m.map.image.src);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = m.map.image.width;
+                    canvas.height = m.map.image.height;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(m.map.image, 0, 0);
+
+                    hasalpha[ev.target.src] = this.canvasHasAlpha(canvas);
+                  }
+    //console.log(m.map, this, ev.target.src + '? ', hasalpha);
+                  if (hasalpha[ev.target.src]) {
+                    m.transparent = true;
+                    m.alphaTest = 0.1;
+                    m.needsUpdate = true;
+                  }
+                }));
+              }
             }
             m.roughness = 0.75;
             if (color && m.color) {
@@ -176,5 +208,26 @@ elation.require(['engine.things.generic'], function() {
       }));
       this.refresh();
     }
-  }, elation.engine.things.generic);
+    this.copyMaterial = function(oldmat) {
+      var m = (this.properties.lighting != false || oldmat.lightMap ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
+      m.map = oldmat.map;
+      m.normalMap = oldmat.normalMap;
+      m.lightMap = oldmat.lightMap;
+      m.color.copy(oldmat.color);
+      m.transparent = oldmat.transparent;
+
+      return m;
+    }
+    this.canvasHasAlpha = function(canvas) {
+      var ctx = canvas.getContext('2d');
+      var pixeldata = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var hasalpha = false;
+      for (var i = 3; i < pixeldata.data.length; i+=4) {
+        if (pixeldata.data[i] != 255) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }, elation.engine.things.janusbase);
 });
