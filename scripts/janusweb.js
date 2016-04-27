@@ -1,4 +1,4 @@
-elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.JanusClientConnection'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','engine.things.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
@@ -34,6 +34,11 @@ elation.require(['janusweb.config', 'engine.things.generic','engine.things.remot
       this.tmpVecZ = new THREE.Vector3();
       this.sentUpdates = 0;
       this.updateRate = 15;
+      this.changes = {};
+
+      if (this.engine.systems.admin) {
+        elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.handleRoomEditSelf));
+      }
     }
     this.createChildren = function() {
       var hashargs = elation.url();
@@ -256,8 +261,7 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
     }
     this.spawnRemotePlayer = function(data) {
       var userId = data.position._userId;
-      var spawnpos = data.position.pos.split(" ").map(parseFloat);
-console.log('new player!', userId);
+      var spawnpos = (data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
       this.remotePlayers[userId] = this.currentroom.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId});
       var remote = this.remotePlayers[userId];
       remote.janusDirs = {
@@ -269,34 +273,43 @@ console.log('new player!', userId);
       return remote;
     }
     this.moveRemotePlayer = function(data) {
-      var movepos = data.position.pos.split(" ").map(parseFloat);
       var remote = this.remotePlayers[data.position._userId];
-      remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
-      remote.janusDirs.tmpVec2.fromArray(data.position.dir.split(" "));
-      remote.janusDirs.tmpVec3.fromArray([0,1,0]);
-      remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-      //remote.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+      var movedata = data.position;
+      if (movedata.dir) {
+        remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
+        remote.janusDirs.tmpVec2.fromArray(movedata.dir.split(" "));
+        remote.janusDirs.tmpVec3.fromArray([0,1,0]);
+        remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
+      }
 
-      remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
-      remote.janusDirs.tmpVec2.fromArray(data.position.view_dir.split(" "));
-      remote.janusDirs.tmpVec3.fromArray(data.position.up_dir.split(" "));
-      remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-      if (remote.head) {
-        remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
-        if (data.position.head_pos) {
-          remote.head.properties.position.fromArray(data.position.head_pos.split(" "));
+      if (movedata.view_dir && movedata.up_dir) {
+        remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
+        remote.janusDirs.tmpVec2.fromArray(movedata.view_dir.split(" "));
+        remote.janusDirs.tmpVec3.fromArray(movedata.up_dir.split(" "));
+        remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
+        if (remote.head) {
+          remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
+          if (movedata.head_pos) {
+            remote.head.properties.position.fromArray(movedata.head_pos.split(" "));
+          }
         }
       }
 
-      if (data.position.speaking && data.position.audio) {
-        remote.speak(data.position.audio);
+      if (movedata.speaking && movedata.audio) {
+        remote.speak(movedata.audio);
+      }
+
+      if (movedata.room_edit || movedata.room_delete) {
+        this.handleRoomEditOther(data);
       }
 
       //remote.set('position', movepos, true);
-      remote.properties.position.fromArray(movepos);
+      if (movedata.pos) {
+        var movepos = movedata.pos.split(" ").map(parseFloat);
+        remote.properties.position.fromArray(movepos);
+      }
       remote.objects.dynamics.updateState();
       remote.refresh();
-      
     }
     this.sendPlayerUpdate = function(opts) {
       // opts.first is a bool, if true then we are sending our avatar along with the move update
@@ -319,10 +332,10 @@ console.log('new player!', userId);
         this.sentUpdates = 0;
       }
 
-      if (player.VOIPbuffers && player.VOIPbuffers.length > 0) {
+      if (player.voipqueue && player.voipqueue.length > 0) {
         var binary = '';
-        while (player.VOIPbuffers.length > 0) {
-          var buf = player.VOIPbuffers.shift();
+        while (player.voipqueue.length > 0) {
+          var buf = player.voipqueue.shift();
           var bytes = new Uint8Array(buf.buffer);
           for (var i = 0; i < bytes.byteLength; i++) {
             binary += String.fromCharCode(bytes[i]);
@@ -331,6 +344,16 @@ console.log('new player!', userId);
         moveData.speaking = true;
         moveData.audio = window.btoa(binary);
         moveData.anim_id = "speak";
+      }
+      var changeids = Object.keys(this.changes);
+      var changestr = '';
+      changeids.forEach(elation.bind(this, function(id) {
+        changestr += this.changes[id];
+        delete this.changes[id];
+      }));
+      if (changestr != '') {
+        moveData.room_edit = changestr;
+console.log(changestr);
       }
       if (document.activeElement && document.activeElement === this.chat.input.inputelement) {
         moveData.anim_id = 'type';
@@ -374,6 +397,32 @@ console.log('new player!', userId);
       var num = Math.floor(Math.random() * 1000);
 
       return adj + noun + num
+    }
+    this.handleRoomEditOther = function(data) {
+      var roomId = data.roomId,
+          movedata = data.position;
+          edit = movedata.room_edit,
+          del = movedata.room_delete;
+
+      var room = this.rooms[roomId];
+      if (room) {
+        if (edit) {
+          var editxml = edit.replace(/\^/g, '"');
+          room.applyEditXML(editxml);
+        }
+        if (del) {
+          var deletexml = del.replace(/\^/g, '"');
+          room.applyDeleteXML(deletexml);
+        }
+      } 
+    }
+    this.handleRoomEditSelf = function(ev) {
+      console.log('edited a thing', ev.data);
+      var thing = ev.data;
+      var change = thing.summarizeXML();
+      if (thing.properties.js_id) {
+        this.changes[thing.properties.js_id] = change;
+      }
     }
   }, elation.engine.things.generic);
 });
