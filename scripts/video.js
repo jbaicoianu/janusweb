@@ -32,7 +32,10 @@ elation.require(['engine.things.theaterscreen'], function() {
         if (this.asset.ou3d) {
           texture.repeat.y = 0.5;
         }
-        if (true || this.asset.auto_play) {
+        if (this.properties.loop) {
+          texture.image.loop = true;
+        }
+        if (this.asset.auto_play) {
           texture.image.play();
         }
         elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
