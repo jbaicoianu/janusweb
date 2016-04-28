@@ -4,6 +4,7 @@ elation.require(['engine.things.label'], function() {
       elation.engine.things.janustext.extendclass.postinit.call(this);
       this.defineProperties({
         room: { type: 'object' },
+        js_id: { type: 'string' },
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
       });
@@ -27,6 +28,7 @@ elation.require(['engine.things.label'], function() {
         this.material.opacity = this.properties.opacity;
         this.material.transparent = true;
       }
+
       var mesh = new THREE.Mesh(geometry, this.material);
       
       return mesh;
