@@ -2,7 +2,7 @@ elation.require([
     'ui.textarea', 'ui.window', 
      'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
@@ -26,7 +26,8 @@ elation.require([
       });
       this.translators = {
         '^bookmarks$': elation.janusweb.translators.bookmarks({}),
-        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({})
+        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({}),
+        '^error$': elation.janusweb.translators.error({})
       };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
@@ -36,7 +37,7 @@ elation.require([
     }
     this.createChildren = function() {
       this.spawn('light_ambient', this.id + '_ambient', {
-        color: 0x222222
+        color: 0x333333
       });
       this.spawn('light_directional', this.id + '_sun', {
         position: [-20,50,25],
@@ -242,8 +243,14 @@ elation.require([
               console.log('no firebox room, load the translator', transpath);
               this.load(transpath + 'Parallelogram.html', transpath );
             }
+          }), 
+          failurecallback: elation.bind(this, function() {
+            var translator = this.translators['^error$'];
+            translator.exec({janus: this.properties.janus, room: this})
+                      .then(elation.bind(this, this.createRoomObjects));
+            
           })
-        }); 
+        });
       }
     }
     this.parseSource = function(data) { 
@@ -310,6 +317,7 @@ setTimeout(elation.bind(this, function() {
           //'scale': n.scale,
           'image_id': n.image_id,
           'video_id': n.video_id,
+          'loop': n.loop,
           'collision_id': n.collision_id,
           'websurface_id': n.websurface_id,
           'col': n.col,
@@ -599,6 +607,7 @@ setTimeout(elation.bind(this, function() {
           assettype:'video', 
           name:n.id, 
           src: src, 
+          loop: n.loop,
           sbs3d: n.sbs3d == 'true',  
           ou3d: n.ou3d == 'true',  
           auto_play: n.auto_play == 'true',  
@@ -613,7 +622,7 @@ setTimeout(elation.bind(this, function() {
         if (n.src) {
           var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
           var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, datapath) : n.mtl);
-          if (mtlsrc && !mtlsrc.match(/^https?:/)) mtlsrc = baseurl + mtlsrc;
+          if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = baseurl + mtlsrc;
           var srcparts = src.split(' ');
           src = srcparts[0];
           objlist.push({assettype: 'model', name: n.id, src: src, mtl: mtlsrc, tex_linear: n.tex_linear, tex0: n.tex || n.tex0 || srcparts[1], tex1: n.tex1 || srcparts[2], tex2: n.tex2 || srcparts[3], tex3: n.tex3 || srcparts[4]}); 
