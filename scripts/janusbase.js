@@ -1,6 +1,6 @@
 elation.require(['engine.things.generic', 'utils.template'], function() {
   elation.template.add('janusweb.edit.object', 
-      '<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col.0} {col.1} {col.2}^ lighting=^{lighting}^ visible=^{visible}^ />');
+      '<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
   elation.component.add('engine.things.janusbase', function() {
     this.postinit = function() {
@@ -37,17 +37,28 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     this.summarizeXML = function() {
       //'<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{color}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
-      var xml = elation.template.get('janusweb.edit.object', {
+      var matrix = new THREE.Matrix4().makeRotationFromQuaternion(this.properties.orientation);
+      var xdir = new THREE.Vector3(),
+          ydir = new THREE.Vector3(),
+          zdir = new THREE.Vector3();
+      matrix.extractBasis(xdir, ydir, zdir);
+
+      var objdef = {
         id: this.properties.render.model,
         js_id: this.properties.js_id,
         pos: this.properties.position,
         vel: this.properties.velocity,
         accel: this.properties.acceleration,
         scale: this.properties.scale,
+        xdir: xdir.toArray().join(' '),
+        ydir: ydir.toArray().join(' '),
+        zdir: zdir.toArray().join(' '),
         col: this.properties.col,
         lighting: this.properties.lighting,
         visible: this.properties.visible,
-      });
+      };
+
+      var xml = elation.template.get('janusweb.edit.object', objdef);
       return xml;
     }
     
