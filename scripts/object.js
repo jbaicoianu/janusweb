@@ -11,6 +11,7 @@ elation.require(['janusweb.janusbase'], function() {
         room: { type: 'object' },
         image_id: { type: 'string' },
         video_id: { type: 'string' },
+        loop: { type: 'boolean' },
         collision_id: { type: 'string' },
         websurface_id: { type: 'string' },
         lighting: { type: 'boolean', default: true },
@@ -101,10 +102,17 @@ console.log('assign textures', this.name, this);
           if (videoasset.sbs3d) {
             texture.repeat.x = 0.5;
           }
+          if (videoasset.loop || this.properties.loop) {
+            texture.image.loop = true;
+          }
           if (videoasset.auto_play) {
             texture.image.play();
           }
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
           elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+          elation.events.add(this, 'click', elation.bind(this, this.pauseVideo));
+          this.videotexture = texture;
         }
       }
       if (this.properties.col) {
@@ -121,14 +129,16 @@ console.log('assign textures', this.name, this);
         'one': THREE.OneFactor,
         'src_color': THREE.SrcColorFactor,
         'one_minus_src_color': THREE.OneMinusSrcColorFactor,
+        'one_minus_src_alpha': THREE.OneMinusSrcAlphaFactor,
         'dst_color': THREE.DstColorFactor,
         'one_minus_dst_color': THREE.OneMinusDstColorFactor,
+        'one_minus_dst_alpha': THREE.OneMinusDstAlphaFactor,
       }
       if (srcfactors[this.properties.blend_src]) {
         blend_src = srcfactors[this.properties.blend_src];
       }
-      if (srcfactors[this.properties.blend_dst]) {
-        blend_dst = srcfactors[this.properties.blend_dst];
+      if (srcfactors[this.properties.blend_dest]) {
+        blend_dest = srcfactors[this.properties.blend_dest];
       }
 
       var hasalpha = {};
@@ -174,6 +184,7 @@ console.log('go canvas');
                     ctx.drawImage(m.map.image, 0, 0);
 
                     hasalpha[ev.target.src] = this.canvasHasAlpha(canvas);
+                    m.map.image = canvas;
                   }
     //console.log(m.map, this, ev.target.src + '? ', hasalpha);
                   if (hasalpha[ev.target.src]) {
@@ -193,7 +204,7 @@ console.log('go canvas');
             }
             if (blend_src) m.blendSrc = blend_src;
             if (blend_dest) m.blendDst = blend_dest;
-            m.needsUpdate = true;
+            //m.needsUpdate = true;
           }));
           if (n.geometry) {
 /*
@@ -228,6 +239,17 @@ console.log('go canvas');
         }
       }
       return false;
+    }
+    this.pauseVideo = function() {
+      if (this.videotexture) {
+        var video = this.videotexture.image;
+        if (video.paused) {
+        if (video.currentTime > 0 && !video.paused && !video.ended) {
+          video.pause();
+        } else {
+          video.play();
+        }
+      }
     }
   }, elation.engine.things.janusbase);
 });
