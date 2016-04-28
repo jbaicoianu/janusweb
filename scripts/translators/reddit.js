@@ -2,11 +2,17 @@ elation.require(['elation.collection'], function() {
   elation.component.add('janusweb.translators.reddit', function() {
     this.init = function() {
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-      var fullfile = datapath + 'assets/translator/reddit/RedditRoomConcept.html';
+      var assetpath = datapath + 'assets/translator/reddit/';
+      var fullfile = assetpath + 'RedditRoomConcept.html';
       this.queue = [];
       this.promise = false;
       this.roomsource = '<fireboxroom><room use_local_asset="room2"></room></fireboxroom>';
       elation.net.get(fullfile, null, { callback: elation.bind(this, this.handleLoad) });
+
+      elation.engine.assets.loadJSON([
+        { assettype: 'image', name: 'reddit_default', src: 'default.png' },
+        { assettype: 'image', name: 'reddit_over18', src: 'over18.png' }
+      ], assetpath); 
     }
     this.handleLoad = function(source) {
       this.roomsource = source;
@@ -55,7 +61,6 @@ elation.require(['elation.collection'], function() {
       }));
     }
     this.translate = function(args, ev) {
-console.log('dud');
       var room = args.room;
       var source = room.parseSource(this.roomsource);
       var roomdata = room.parseFireBox(source.source);
@@ -70,8 +75,21 @@ console.log('dud');
         var item = items[i];
         var link = roomdata.links[i];
         if (item && link) {
+          var thumb = 'reddit_default';
+          if (item.over_18) {
+            thumb = 'reddit_over18';
+          } else if (item.thumbnail) {
+            if (item.thumbnail.match(/^(https?:)?\/\//)) {
+              elation.engine.assets.loadJSON([{ assettype: 'image', name: item.thumbnail, src: item.thumbnail }]);
+              thumb = item.thumbnail;
+            } else {
+              thumb = 'reddit_' + item.thumbnail;
+            }
+          }
+          
           link.title = item.title;
           link.url = item.url;
+          link.thumb_id = thumb,
           lastid = item.name;
         }
         var textid = offset + (i * 6);
