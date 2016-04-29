@@ -244,9 +244,9 @@ elation.require([
               this.load(transpath + 'Parallelogram.html', transpath );
             }
           }), 
-          failurecallback: elation.bind(this, function() {
+          failurecallback: elation.bind(this, function(xhr) {
             var translator = this.translators['^error$'];
-            translator.exec({janus: this.properties.janus, room: this})
+            translator.exec({janus: this.properties.janus, room: this, error: xhr.status || 404})
                       .then(elation.bind(this, this.createRoomObjects));
             
           })

@@ -5,6 +5,7 @@ Browse Reddit in VR
 Preliminary edit mode support
 Improved gamepad support
 VOIP improvements
+Better HTTP error handling
 Proper 3d sound distance falloff
 Fixed transparency
 Fixed rotate_axis

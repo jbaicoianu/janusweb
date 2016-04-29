@@ -1,30 +1,27 @@
 elation.require([], function() {
   elation.component.add('janusweb.translators.error', function() {
+    this.init = function() {
+      this.errortypes = {
+        404: {color1: '#ff0000', color2: '#190000', text: '404 - Are you lost?'},
+        410: {color1: '#ff0000', color2: '#190000', text: '410 - Are you lost?'},
+        403: {color1: '#0000ff', color2: '#000019', text: '403 - Forbidden'},
+        500: {color1: '#ff00ff', color2: '#190019', text: '500 - Server error'},
+        'unknown': {color1: '#ffff00', color2: '#191900', text: 'Unknown error'},
+      };
+    }
     this.exec = function(args) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(elation.bind(this, function(resolve, reject) {
 
         var room = args.room;
-/*
-<AssetObject id="stand" src="file:./assets/translator/errors/error.obj" tex0="file:./assets/translator/errors/lightmap.png" />
-<AssetImage id="static" src="file:./assets/translator/errors/static.gif" tex_linear="false" />
-</Assets>
-
-<Room server="janusweb.lnq.to" port="5566" pos="0.8 -0.2 0" xdir="1 0 0" ydir="0 1 0" zdir="0 0 1">
-<Object id="stand" js_id="0" locked="true" pos="1 -0.1 4" xdir="-1 0 0" zdir="0 0 -1" col="#ff0000" lighting="false" collision_id="stand" />
-<Object id="sphere" js_id="1" locked="true" pos="4 350 -1" xdir="0 0 1" ydir="0 -1 0" zdir="1 0 0" scale="400 400 400" col="#190000" lighting="false" cull_face="front" image_id="static" />
-<Text js_id="2" pos="1.3 1.4 12.5" xdir="-1 0 0" zdir="0 0 -1" scale="6 6 1" col="#ff0000">404 - Are you lost?</Text>
-</Room>
-</FireBoxRoom>
-</body>
-</html>
-*/
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
         var assetpath = datapath + 'assets/translator/errors/';
 
         elation.engine.assets.loadJSON([
-          {assettype: 'model', name: 'stand', src: 'error.obj'},
+          {assettype: 'model', name: 'stand', src: 'error.obj', tex: 'lightmap.png'},
           {assettype: 'image', name: 'static', src: 'static.gif'}
         ], assetpath);
+
+        var error = this.errortypes[args.error] || this.errortypes['unknown'];
 
         var roomdata = {
           room: {
@@ -32,16 +29,16 @@ elation.require([], function() {
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
           },
           objects: [
-            room.parseNode({id: 'stand', js_id: 0, pos: "1 -0.1 4", xdir: "-1 0 0", zdir: "0 0 -1", col: "#ff0000", lighting: "false"}),
-            room.parseNode({id: 'sphere', js_id: 1, pos: "4 350 -1", xdir: "0 0 1", ydir: "0 -1 0", zdir: "1 0 0", scale: "400 400 400", col: "#190000", lighting: "false", cull_face: 'front', image_id: 'static'})
+            room.parseNode({id: 'stand', js_id: 0, pos: "1 -0.1 4", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"}),
+            room.parseNode({id: 'sphere', js_id: 1, pos: "4 350 -1", xdir: "0 0 1", ydir: "0 -1 0", zdir: "1 0 0", scale: "400 400 400", col: error.color2, lighting: "false", cull_face: 'front', image_id: 'static'})
           ],
           texts: [
-            room.parseNode({ js_id: 2, pos: "1.3 1.4 12.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: "#ff0000", '_content': '404 - Are you lost?' })
+            room.parseNode({ js_id: 2, pos: "1.3 1.4 12.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: error.color1, '_content': error.text})
           ],
           links: []
         };
         resolve(roomdata);
-      });
+      }));
     }
   });
 });
