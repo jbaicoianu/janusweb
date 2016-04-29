@@ -243,7 +243,6 @@ console.log('go canvas');
     this.pauseVideo = function() {
       if (this.videotexture) {
         var video = this.videotexture.image;
-        if (video.paused) {
         if (video.currentTime > 0 && !video.paused && !video.ended) {
           video.pause();
         } else {
