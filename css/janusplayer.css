@@ -1,0 +1,18 @@
+.ui_button.janusweb_voip {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 5px;
+  z-index: 50;
+}
+.janusweb_voip.state_recording,
+.janusweb_voip.state_recording:active {
+  background: #090;
+}
+.janusweb_voip.state_error,
+.janusweb_voip.state_error:hover,
+.janusweb_voip.state_error:active {
+  background: #900;
+}
