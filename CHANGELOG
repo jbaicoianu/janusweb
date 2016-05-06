@@ -1,4 +1,4 @@
-Apr ?? 2016 - 0.3a
+May  6 2016 - 0.3a
 ------------------
 Bookmark your favorite rooms with ctrl+b, then view them later in the bookmarks room
 Browse Reddit in VR
@@ -6,6 +6,7 @@ Preliminary edit mode support
 Improved gamepad support
 VOIP improvements
 Better HTTP error handling
+Improved texture blending support
 Proper 3d sound distance falloff
 Fixed transparency
 Fixed rotate_axis
