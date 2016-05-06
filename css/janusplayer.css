@@ -1,4 +1,4 @@
-.ui_button.janusweb_voip {
+.dark .ui_button.janusweb_voip {
   position: absolute;
   right: 5px;
   bottom: 5px;
@@ -7,12 +7,12 @@
   border-radius: 5px;
   z-index: 50;
 }
-.janusweb_voip.state_recording,
-.janusweb_voip.state_recording:active {
+.dark .janusweb_voip.state_recording,
+.dark .janusweb_voip.state_recording:active {
   background: #090;
 }
-.janusweb_voip.state_error,
-.janusweb_voip.state_error:hover,
-.janusweb_voip.state_error:active {
+.dark .janusweb_voip.state_error,
+.dark .janusweb_voip.state_error:hover,
+.dark .janusweb_voip.state_error:active {
   background: #900;
 }
