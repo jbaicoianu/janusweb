@@ -50,9 +50,8 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.voip.start(context);
     this.audiobuffer = new THREE.AudioBuffer(this.mouth.audio.context);
     this.audiobuffer.buffer = this.voip.rawbuffer;
-console.log(this.audiobuffer, this.voip.rawbuffer);
 
-elation.events.add(this.voip, 'voip_player_data', function(ev) { console.log('got voip data', ev); });
+    //elation.events.add(this.voip, 'voip_player_data', function(ev) { console.log('got voip data', ev); });
     this.audiobuffer.ready = true;
     for ( var i = 0; i < this.audiobuffer.readyCallbacks.length; i ++ ) {
 
@@ -63,8 +62,6 @@ elation.events.add(this.voip, 'voip_player_data', function(ev) { console.log('go
     this.mouth.audio.setBuffer(this.audiobuffer);
   };
   this.speak = function(noise) {
-console.log('someone said something', noise);
-
     this.voip.speak(noise);
 
     if (!this.mouth.audio.playing) {
