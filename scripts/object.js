@@ -80,7 +80,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.assignTextures = function() {
-console.log('assign textures', this.name, this);
+      //console.log('assign textures', this.name, this);
       var modelasset = false,
           texture = false,
           color = false,
@@ -163,7 +163,6 @@ console.log('assign textures', this.name, this);
             }
             if (m.map && m.map.image) {
               if (m.map.image instanceof HTMLCanvasElement) {
-console.log('go canvas');
                 // FIXME - don't think this works
                 hasalpha[m.map.image.src] = this.canvasHasAlpha(m.map.image);
                 if (hasalpha[m.map.image.src]) {
@@ -176,7 +175,6 @@ console.log('go canvas');
                 // If it does, set the proper material parameters
                 elation.events.add(m.map.image, 'load', elation.bind(this, function(ev) {
                   if (typeof hasalpha[ev.target.src] == 'undefined') {
-    console.log('CHECK IT?', m.map.image.src);
                     var canvas = document.createElement('canvas');
                     canvas.width = m.map.image.width;
                     canvas.height = m.map.image.height;
