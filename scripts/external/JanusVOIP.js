@@ -225,12 +225,9 @@
     // Create a new view into the decoded data which gives us the data as int16_t instead of unsigned chars
     var audiodata16 = new Int16Array(audiodata.buffer);
 
-  console.log('decoded', audiodata, audiodata16);
-
     var startoffset = this.writeoffset;
     // Write the scaled data into our buffer, treating it as a looping ring buffer
     for (var i = 0; i < audiodata16.length; i++) {
-  console.log(audiodata[i] / this.audioScale);
       var idx = (startoffset + i) % this.bufferLength;
       bufferLeft[idx] = bufferRight[idx] = (audiodata16[i] / this.audioScale);
     }
