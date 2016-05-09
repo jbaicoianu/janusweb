@@ -16,7 +16,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
     var janusweb = elation.janusweb.client({append: document.body, homepage: homepage});
-    return janusweb;
+    return new Promise(function(resolve, reject) {
+      elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
+    });
   });
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
