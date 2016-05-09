@@ -304,9 +304,12 @@ var JanusClientConnection = function(opts)
   this._roomUrl = opts.roomUrl;
   this._version = opts.version;
   this._websocket = new WebSocket(opts.host, 'binary');
+  this.msgQueue = [];
   this._websocket.onopen = function() {
     this.sendLogon();
-    this.subscribe(this._roomUrl);
+    while (this.msgQueue.length > 0) {
+      this.send(this.msgQueue.shift());
+    }
     this.dispatchEvent({type: 'connect'});
   }.bind(this)
   this._websocket.onmessage = this.onMessage.bind(this)  
@@ -327,7 +330,11 @@ JanusClientConnection.prototype.sendLogon = function() {
 };
 
 JanusClientConnection.prototype.send = function(msg) {
-  this._websocket.send(JSON.stringify(msg) + '\r\n');
+  if (this._websocket.readyState == 0) {
+    this.msgQueue.push(msg);
+  } else if (this._websocket.readyState == 1) {
+    this._websocket.send(JSON.stringify(msg) + '\r\n');
+  }
 };
 
 JanusClientConnection.prototype.onMessage = function(msg) {
