@@ -94,6 +94,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.properties.image_id) {
         texture = elation.engine.assets.find('image', this.properties.image_id);
         elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
+        elation.events.add(texture, 'update', elation.bind(this, this.refresh));
       }
       if (this.properties.video_id) {
         var videoasset = elation.engine.assets.find('video', this.properties.video_id, true);
