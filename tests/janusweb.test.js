@@ -1,10 +1,10 @@
-describe("initialize engine", function() {
+describe("JanusWeb", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 20000;
   var client, canvas;
   beforeEach(function(done) {
     done();
   });
-  it("should initialize JanusWeb client", function(done) {
+  it("should initialize client", function(done) {
     elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html'}).then(function(newclient) { 
       client = newclient;
       expect(client).toBeDefined();
@@ -29,7 +29,7 @@ describe("initialize engine", function() {
     setTimeout(function() {
       expect(canvas).toBeDefined();
       var shot = canvas.toDataURL('image/png');
-      console.log(shot);
+      //console.log(shot);
       done();
     }, 5000);
   });
