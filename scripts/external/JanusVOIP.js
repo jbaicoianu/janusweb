@@ -195,7 +195,7 @@
     if (!args) var args = {};
     this.sampleRate = args.sampleRate || 11000;
     this.bufferTime = args.bufferTime || 1.0;
-    this.audioScale = args.audioScale || 32768;
+    this.audioScale = args.audioScale || 8192;
 
     this.bufferLength = this.sampleRate * this.bufferTime;
   }
