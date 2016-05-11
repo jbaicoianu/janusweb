@@ -1,6 +1,6 @@
 elation.require([
     'ui.textarea', 'ui.window', 
-     'engine.things.generic', 'engine.things.sound', 'engine.things.label', 
+     'engine.things.generic', 'engine.things.sound', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text',
     'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error'
   ], function() {
@@ -47,9 +47,12 @@ elation.require([
         position: [22,19,-15],
         intensity: 0.2
       });
+      this.skybox = this.spawn('skybox', this.id + '_sky', {
+        position: [0,0,0],
+        collidable: false
+      });
     }
     this.setActive = function() {
-      this.setSkybox();
       this.setFog();
       this.setNearFar();
       this.setPlayerPosition();
@@ -74,7 +77,7 @@ elation.require([
     }
     this.setSkybox = function() {
       if (this.skyboxtexture) {
-        this.engine.systems.world.setSky(this.skyboxtexture);
+        this.skybox.setTexture(this.skyboxtexture);
         return;
       }
       var textures = [
@@ -126,7 +129,7 @@ elation.require([
           var texture = new THREE.CubeTexture( images );
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
-          this.engine.systems.world.setSky(texture);
+          this.skybox.setTexture(this.skyboxtexture);
           return true;
         }
       }
@@ -492,6 +495,8 @@ setTimeout(elation.bind(this, function() {
         if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
         if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
     
+        this.setSkybox();
+
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
         this.properties.fog = room.fog;
