@@ -43,6 +43,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       orientation: [0,1,0,0]
     });
     this.mouth = this.face.spawn('sound', this.properties.player_name + '_voice', {
+      //loop: true
     });
     this.mouth.createAudio();
     var context = this.mouth.audio.context;
@@ -51,7 +52,7 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.audiobuffer = new THREE.AudioBuffer(this.mouth.audio.context);
     this.audiobuffer.buffer = this.voip.rawbuffer;
 
-    //elation.events.add(this.voip, 'voip_player_data', function(ev) { console.log('got voip data', ev); });
+    //elation.events.add(this.voip, 'voip_player_data', elation.bind(this, this.handleVoipData));
     this.audiobuffer.ready = true;
     for ( var i = 0; i < this.audiobuffer.readyCallbacks.length; i ++ ) {
 
@@ -88,6 +89,14 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.bufferoffset = 0;
 */
     this.label.material.color.setHex(0xcccccc);
+  }
+  this.handleVoipData = function(ev) {
+    //this.mouth.audio.source.loopEnd = ev.data.end;
+    if (!this.mouth.audio.isPlaying) {
+      //this.mouth.audio.play(ev.data.start, ev.data.end);
+    } else {
+      //console.log('already playing');
+    }
   }
 }, elation.engine.things.generic);
 
