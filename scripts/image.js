@@ -53,6 +53,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.texture = elation.engine.assets.find('image', this.properties.image_id);
       if (this.texture) {
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
+        elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
 
         var geo = this.createGeometry();
         var mat = this.createMaterial();
