@@ -1,0 +1,8 @@
+Colliders 2
+CIRCLE 0 -10 10 IN
+CIRCLE 0 -10 1 OUT
+Mountpoints 4
+0 0 0 0 0 -1
+-10 0 -10 1 0 0
+0 0 -20 0 0 1
+10 0 -10 -1 0 0
