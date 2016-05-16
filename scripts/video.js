@@ -1,4 +1,4 @@
-elation.require(['engine.things.theaterscreen'], function() {
+elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.janusvideo', function() {
     this.postinit = function() {
       elation.engine.things.janusvideo.extendclass.postinit.call(this);
@@ -14,14 +14,15 @@ elation.require(['engine.things.theaterscreen'], function() {
     this.createObject3D = function() {
       this.asset = elation.engine.assets.find('video', this.properties.video_id, true);
       if (this.asset) {
-
         var geo = this.createGeometry();
         var mat = this.createMaterial();
+        this.video = this.texture.image;
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
         return new THREE.Mesh(geo, mat);
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
       }
+      return new THREE.Object3D();
     }
     this.createMaterial = function() {
       if (this.asset) {
@@ -68,6 +69,23 @@ elation.require(['engine.things.theaterscreen'], function() {
         video.pause();
       } else {
         video.play();
+      }
+    }
+    this.start = function() {
+      if (this.video) {
+        if (this.video.originalSrc) {
+          this.video.src = this.video.originalSrc;
+        }
+      }
+    }
+    this.stop = function() {
+      console.log('stop the video!', this, this.video);
+      if (this.video) {
+        this.video.pause();
+        // FIXME - this stops the video from loading any more data, but means we can't easily restart
+        //         so we're hackishly working around that
+        this.video.originalSrc = this.video.src;
+        this.video.src = '';
       }
     }
   }, elation.engine.things.janusimage);
