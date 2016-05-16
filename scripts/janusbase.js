@@ -61,6 +61,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       var xml = elation.template.get('janusweb.edit.object', objdef);
       return xml;
     }
-    
+    this.start = function() {
+    }    
+    this.stop = function() {
+    }    
   }, elation.engine.things.generic);
 });
