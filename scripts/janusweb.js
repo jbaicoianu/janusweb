@@ -140,6 +140,7 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
         if (changed || document.location.hash != newhash) {
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
+        this.currentroom.enable();
       } else {
         this.load(url, true);
       }
