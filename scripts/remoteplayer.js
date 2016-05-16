@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic', 'engine.things.maskgenerator', 'janusweb.external.JanusVOIP'], function() {
+elation.require(['engine.things.generic', 'engine.things.maskgenerator', 'engine.things.sound', 'janusweb.external.JanusVOIP'], function() {
 elation.component.add('engine.things.remoteplayer', function() {
   this.postinit = function() {
     this.defineProperties({
