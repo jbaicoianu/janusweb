@@ -158,7 +158,9 @@ elation.require(['janusweb.janusbase'], function() {
             materials.push(m); 
             n.material = m;
           }
-          materials.forEach(elation.bind(this, function(m) {
+
+          for (var i = 0; i < materials.length; i++) {
+            var m = materials[i];
             if (texture) {
               m.map = texture; 
             }
@@ -185,7 +187,6 @@ elation.require(['janusweb.janusbase'], function() {
                     hasalpha[ev.target.src] = this.canvasHasAlpha(canvas);
                     m.map.image = canvas;
                   }
-    //console.log(m.map, this, ev.target.src + '? ', hasalpha);
                   if (hasalpha[ev.target.src]) {
                     m.transparent = true;
                     m.alphaTest = 0.1;
@@ -204,15 +205,6 @@ elation.require(['janusweb.janusbase'], function() {
             if (blend_src) m.blendSrc = blend_src;
             if (blend_dest) m.blendDst = blend_dest;
             //m.needsUpdate = true;
-          }));
-          if (n.geometry) {
-/*
-            if ((n.geometry instanceof THREE.BufferGeometry && !n.geometry.attributes.normals) ||
-                (n.geometry instanceof THREE.Geometry && !n.geometry.faceVertexNormals)) {
-              n.geometry.computeFaceNormals();
-              n.geometry.computeVertexNormals();
-            }
-*/
           }
         };
       }));
@@ -247,6 +239,16 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
           video.play();
         }
+      }
+    }
+    this.stop = function() {
+      if (this.properties.image_id) {
+        var texture = elation.engine.assets.find('image', this.properties.image_id);
+        console.log('stop the image!', texture);
+      }
+      if (this.properties.video_id) {
+        var texture = elation.engine.assets.find('video', this.properties.video_id);
+        console.log('stop the video!', texture);
       }
     }
   }, elation.engine.things.janusbase);
