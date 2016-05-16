@@ -1,4 +1,8 @@
 elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer'], function() {
+
+  // If getCurrentScript returns non-null here, then it means we're in release mode
+  var clientScript = elation.utils.getCurrentScript();
+
   elation.extend('janusweb.init', function(args) {
     if (!args) args = {};
     var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), document.location.protocol);
@@ -8,6 +12,22 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
 
     var fullpath = proto + '//' + host + rootdir;
+    if (clientScript) { // && clientScript.src.match(/\/janusweb.js^/)) {
+      var parts = clientScript.src.split('/');
+      var fname = parts.pop();
+      fullpath = parts.join('/') + '/';
+      parts.shift();
+      parts.shift();
+      parts.shift();
+      var rootdir = '/' + parts.join('/') + '/';
+
+      elation.config.set('dependencies.main', fname);
+      elation.config.set('dependencies.rootdir', rootdir);
+      elation.config.set('dependencies.host', document.location.host);
+      elation.config.set('dependencies.protocol', document.location.protocol);
+      elation.config.set('janusweb.datapath', fullpath + 'media/');
+      elation.config.set('engine.assets.font.path', fullpath + 'media/fonts/');
+    }
     elation.config.set('dependencies.path', fullpath);
 
     var link = document.createElement('link');
@@ -42,7 +62,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: elation.config.get('janusweb.network.corsproxy'),
+          corsproxy: elation.config.get('engine.assets.corsproxy'),
           datapath: elation.config.get('janusweb.datapath'),
           homepage: this.args.homepage
         },
