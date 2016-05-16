@@ -1,7 +1,7 @@
 elation.require([
     'ui.textarea', 'ui.window', 
-     'engine.things.generic', 'engine.things.sound', 'engine.things.label', 'engine.things.skybox',
-    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text',
+     'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
+    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.sound',
     'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
@@ -47,10 +47,6 @@ elation.require([
         position: [22,19,-15],
         intensity: 0.2
       });
-      this.skybox = this.spawn('skybox', this.id + '_sky', {
-        position: [0,0,0],
-        collidable: false
-      });
     }
     this.setActive = function() {
       this.setFog();
@@ -76,6 +72,12 @@ elation.require([
       player.properties.runspeed = this.properties.run_speed * 100;
     }
     this.setSkybox = function() {
+      if (!this.skybox) {
+        this.skybox = this.spawn('skybox', this.id + '_sky', {
+          position: [0,0,0],
+          collidable: false
+        });
+      }
       if (this.skyboxtexture) {
         this.skybox.setTexture(this.skyboxtexture);
         return;
@@ -434,7 +436,7 @@ setTimeout(elation.bind(this, function() {
 
           var proxyurl = this.properties.janus.properties.corsproxy;
           soundurl = proxyurl + soundurl;
-          var sound = this.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
+          var sound = this.spawn('janussound', n.id + '_' + Math.round(Math.random() * 10000), { 
             'room': this,
             'js_id': n.js_id,
             'position': n.pos,
@@ -677,13 +679,23 @@ setTimeout(elation.bind(this, function() {
       return false;
     }
     this.enable = function() {
+      var keys = Object.keys(this.children);
+      for (var i = 0; i < keys.length; i++) {
+        var obj = this.children[keys[i]];
+        if (obj.start) {
+          obj.start();
+        }
+      }
+      elation.events.fire({type: 'room_enable', data: this});
     }
     this.disable = function() {
-      this.objects['3d'].traverse(function(n) {
-        if (n instanceof THREE.Audio && n.isPlaying) {
-          n.stop();
+      var keys = Object.keys(this.children);
+      for (var i = 0; i < keys.length; i++) {
+        var obj = this.children[keys[i]];
+        if (obj.stop) {
+          obj.stop();
         }
-      });
+      }
       elation.events.fire({type: 'room_disable', data: this});
     }
     this.setTitle = function(title) {
