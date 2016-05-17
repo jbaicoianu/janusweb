@@ -49610,10 +49610,7 @@ if (!ENV_IS_BROWSER) return;
           newcanvas.width = newcanvas.width;
           ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, newcanvas.width, newcanvas.height);
           texture.needsUpdate = true;
-          newcanvas.width = newcanvas.width;
-          ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, newcanvas.width, newcanvas.height);
-          texture.needsUpdate = true;
-          elation.events.fire({type: 'update', target: texture});
+          elation.events.fire({type: 'update', element: texture});
 
           if (!static) {
             var frame = gif.get_frame(gif.get_current_frame());
