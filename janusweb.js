@@ -95403,6 +95403,7 @@ function () {
         }
       }
       this.loader = new elation.engine.assets.loaders.model();
+      elation.engine.assets.init();
     },
     onmessage: function(ev) {
       var msg = ev.data;
