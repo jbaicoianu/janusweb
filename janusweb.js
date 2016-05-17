@@ -48217,6 +48217,7 @@ function () {
       ];
 
       var scriptsrc = script.join('\n');
+console.log(scriptsrc);
       var blob = new Blob([scriptsrc], {type: 'application/javascript'});
       bloburl = URL.createObjectURL(blob);
 
