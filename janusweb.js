@@ -2907,7 +2907,7 @@ if (objCtr.defineProperty) {
 }
 }
 
-elation.requireactivebatchjs = new elation.require.batch("js", "/scripts"); elation.requireactivebatchjs.fulfill(["utils.elation","janusweb.config","utils.events","utils.dust","utils.template","engine.external.three.three","engine.materials","utils.worker","utils.workerpool","engine.external.libgif","engine.assets","engine.geometries","engine.things.generic","engine.things.label","engine.things.menu","engine.things.manipulator","engine.things.camera","engine.things.camera_admin","ui.base","ui.accordion","ui.button","ui.togglebutton","ui.buttonbar","ui.label","ui.input","utils.math","ui.slider","ui.list","ui.infinilist","ui.content","ui.panel","elation.collection","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","ui.contextmenu","engine.external.three.FlyControls","engine.external.three.OrbitControls","engine.external.three.TransformControls","ui.indicator","ui.toolbox","engine.systems.admin","engine.things.controller","engine.systems.ai","ui.toggle","ui.tabbedcontent","engine.systems.controls","physics.processors","physics.rigidbody","physics.forces","physics.collisions","physics.constraints","physics.cyclone","engine.systems.physics","engine.external.three.stats","engine.external.threex.renderstats","engine.external.three.render.CSS3DRenderer","engine.external.three.render.EffectComposer","engine.external.three.render.RenderPass","engine.external.three.render.OculusRiftEffect","engine.external.three.render.OculusRenderPass","engine.external.three.render.VREffect","engine.external.three.render.ShaderPass","engine.external.three.render.MaskPass","engine.external.three.render.CopyShader","engine.external.three.render.RecordingPass","engine.external.threecap.threecap","engine.external.three.render.ConvolutionShader","engine.external.three.render.BloomPass","engine.external.three.render.SSAOShader","engine.external.three.render.FXAAShader","engine.systems.render","engine.systems.sound","engine.systems.world","ui.iframe","ui.image","share.picker","share.targets.oauth","share.targets.imgur","share.targets.dropbox","share.targets.google","share.targets.googledrive","share.targets.youtube","share.targets.file","engine.parts","engine.engine","engine.things.light","engine.things.light_ambient","engine.things.light_directional","engine.things.light_point","engine.external.md5","engine.things.maskgenerator","engine.things.sound","janusweb.external.JanusVOIP","janusweb.remoteplayer","ui.textarea","engine.things.skybox","janusweb.janusbase","janusweb.object","engine.things.portal","janusweb.portal","janusweb.image","janusweb.video","janusweb.text","janusweb.translators.bookmarks","janusweb.translators.reddit","janusweb.translators.error","janusweb.sound","janusweb.room","janusweb.tracking","janusweb.external.JanusClientConnection","janusweb.janusweb","janusweb.chat","ui.progressbar","engine.things.label2d","engine.things.player","janusweb.janusplayer","janusweb.client","engine.external.pako","engine.external.three.FBXLoader","engine.external.three.ColladaLoader","engine.external.xmldom","engine.external.three.OBJLoader","engine.external.three.OBJMTLLoader","engine.external.three.MTLLoader","engine.external.three.VRMLLoader","engine.assetworker","ANONYMOUS","root"]);
+elation.requireactivebatchjs = new elation.require.batch("js", "/scripts"); elation.requireactivebatchjs.fulfill(["utils.elation","janusweb.config","utils.events","utils.dust","utils.template","engine.external.three.three","engine.materials","utils.worker","utils.workerpool","engine.external.libgif","engine.assets","engine.geometries","engine.things.generic","engine.things.label","engine.things.menu","engine.things.manipulator","engine.things.camera","engine.things.camera_admin","ui.base","ui.accordion","ui.button","ui.togglebutton","ui.buttonbar","ui.label","ui.input","utils.math","ui.slider","ui.list","ui.infinilist","ui.content","ui.panel","elation.collection","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","ui.contextmenu","engine.external.three.FlyControls","engine.external.three.OrbitControls","engine.external.three.TransformControls","ui.indicator","ui.toolbox","engine.systems.admin","engine.things.controller","engine.systems.ai","ui.toggle","ui.tabbedcontent","engine.systems.controls","physics.processors","physics.rigidbody","physics.forces","physics.collisions","physics.constraints","physics.cyclone","engine.systems.physics","engine.external.three.stats","engine.external.threex.renderstats","engine.external.three.render.CSS3DRenderer","engine.external.three.render.EffectComposer","engine.external.three.render.RenderPass","engine.external.three.render.OculusRiftEffect","engine.external.three.render.OculusRenderPass","engine.external.three.render.VREffect","engine.external.three.render.ShaderPass","engine.external.three.render.MaskPass","engine.external.three.render.CopyShader","engine.external.three.render.RecordingPass","engine.external.threecap.threecap","engine.external.three.render.ConvolutionShader","engine.external.three.render.BloomPass","engine.external.three.render.SSAOShader","engine.external.three.render.FXAAShader","engine.systems.render","engine.systems.sound","engine.systems.world","ui.iframe","ui.image","share.picker","share.targets.oauth","share.targets.imgur","share.targets.dropbox","share.targets.google","share.targets.googledrive","share.targets.youtube","share.targets.file","engine.parts","engine.engine","engine.things.light","engine.things.light_ambient","engine.things.light_directional","engine.things.light_point","engine.external.md5","engine.things.maskgenerator","engine.things.sound","janusweb.external.JanusVOIP","janusweb.remoteplayer","ui.textarea","engine.things.skybox","janusweb.janusbase","janusweb.object","engine.things.portal","janusweb.portal","janusweb.image","janusweb.video","janusweb.text","janusweb.sound","janusweb.translators.bookmarks","janusweb.translators.reddit","janusweb.translators.error","janusweb.room","janusweb.tracking","janusweb.external.JanusClientConnection","janusweb.janusweb","janusweb.chat","ui.progressbar","engine.things.label2d","engine.things.player","janusweb.janusplayer","janusweb.client","engine.external.pako","engine.external.three.FBXLoader","engine.external.three.ColladaLoader","engine.external.xmldom","engine.external.three.OBJLoader","engine.external.three.OBJMTLLoader","engine.external.three.MTLLoader","engine.external.three.VRMLLoader","engine.assetworker","ANONYMOUS","root"]);
 elation.requireactivebatchcss = new elation.require.batch("css", "/css"); elation.requireactivebatchcss.fulfill(["engine.systems.controls","share.share","share.picker","janusweb.chat","engine.materials","ui.accordion","ui.button","ui.input","ui.slider","ui.list","ui.infinilist","ui.panel","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","engine.systems.admin","ui.toggle","engine.systems.render","engine.engine","ui.themes.dark","janusweb.janusweb","janusweb.janusplayer","engine.things.label2d","utils.elation","utils.events","janusweb.client","engine.assetworker","engine.external.three.VRMLLoader","root"]);
 elation.config.set('dependencies.protocol', 'https:');              // "http:" or "https:"
 elation.config.set('dependencies.host', 'janusweb.metacade.com');   // Hostname this release will live on
@@ -73597,6 +73597,91 @@ function () {
   }, elation.engine.things.label);
 })();
 // ===== END FILE: janusweb.text =====
+
+// ===== BEGIN FILE: janusweb.sound ====
+(
+function () {
+  elation.component.add('engine.things.janussound', function() {
+    this.postinit = function() {
+      elation.engine.things.janussound.extendclass.postinit.call(this);
+      this.defineProperties({
+        id: { type: 'string' },
+        src: { type: 'string' },
+        rect: { type: 'string', default: "0 0 0 0" },
+        loop: { type: 'boolean', default: false },
+        autoplay: { type: 'boolean', default: true },
+        play_once: { type: 'boolean', default: false },
+        dist: { type: 'float', default: 1.0 },
+        pitch: { type: 'float', default: 1.0 },
+        gain: { type: 'float', default: 1.0 }
+      });
+      Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
+    }
+    this.createObject3D = function() {
+      return new THREE.Object3D();
+    }
+    this.createChildren = function() {
+      if (!this.audio) {
+        this.createAudio(this.properties.src);
+      }
+    }
+    this.createAudio = function() {
+      if (this.audio) {
+        if (this.audio.isPlaying) {
+          this.audio.stop();
+        }
+        this.objects['3d'].remove(this.audio);
+      }
+      var listener = this.engine.systems.sound.getRealListener();
+      if (listener) {
+        this.audio = new THREE.PositionalAudio(listener);
+        if (this.properties.distanceModel) {
+          this.audio.panner.distanceModel = this.properties.distanceModel;
+        }
+        //this.audio.panner.maxDistance = this.properties.distance;
+        if (this.properties.distance) {
+          this.audio.setRefDistance(this.properties.distance);
+        } else {
+          this.audio.panner.distanceModel = 'linear';
+        }
+        this.audio.autoplay = this.properties.autoplay;
+        this.audio.setLoop(this.properties.loop);
+        this.audio.setVolume(this.properties.gain);
+        if (this.properties.src) {
+          this.audio.load(this.properties.src);
+        }
+        this.objects['3d'].add(this.audio);
+console.log('MADE AUDIO', this.audio);
+      }
+    }
+    this.load = function(url) {
+      this.properties.src = url;
+      if (this.audio.isPlaying) {
+        this.audio.stop();
+      }
+      this.createAudio(url);
+    }
+    this.play = function() {
+      if (this.audio && this.audio.source.buffer) {
+        this.audio.play();
+      }
+    }
+    this.pause = function() {
+      if (this.audio && this.audio.isPlaying) {
+        this.audio.pause();
+      }
+    }
+    this.start = function() {
+      this.play();
+    }
+    this.stop = function() {
+      if (this.audio && this.audio.isPlaying) {
+        this.audio.stop();
+      }
+    }
+  }, elation.engine.things.janusbase);
+})();
+// ===== END FILE: janusweb.sound =====
 
 // ===== BEGIN FILE: janusweb.translators.bookmarks ====
 (
