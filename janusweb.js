@@ -2143,12 +2143,7 @@ elation.extend('require.batch', function(type, webroot) {
     }
 
     var modname = false;
-    // Gets the currently-executing script, (hopefully) in a cross-browser way
-    var script = (typeof document != 'undefined' ? document.currentScript : false);
-    if (typeof script == 'undefined') {
-      var scripts = document.getElementsByTagName('script');
-      script = scripts[scripts.length - 1];
-    }
+    var script = elation.utils.getCurrentScript();
     if (script) {
       var scriptsrc = script.src,
           webroot = '/scripts', // FIXME - hardcode script webroot, because this method only works for JS
@@ -2667,6 +2662,15 @@ elation.extend('net.handlereadystatechange', function(ev) {
 });
 //elation.requireCSS('utils.elation');
 
+elation.extend('utils.getCurrentScript', function() {
+  // Gets the currently-executing script, (hopefully) in a cross-browser way
+  var script = (typeof document != 'undefined' ? document.currentScript : false);
+  if (typeof script == 'undefined') {
+    var scripts = document.getElementsByTagName('script');
+    script = scripts[scripts.length - 1];
+  }
+  return script;
+});
 /* 
  * classList.js: Cross-browser full element.classList implementation.
  * 2014-07-23
@@ -2903,33 +2907,25 @@ if (objCtr.defineProperty) {
 }
 }
 
-elation.requireactivebatchjs = new elation.require.batch("js", "/scripts"); elation.requireactivebatchjs.fulfill(["utils.elation","janusweb.config","utils.events","utils.dust","utils.template","engine.external.three.three","engine.materials","utils.worker","utils.workerpool","engine.external.libgif","engine.assets","engine.geometries","engine.things.generic","engine.things.label","engine.things.menu","engine.things.manipulator","engine.things.camera","engine.things.camera_admin","ui.base","ui.accordion","ui.button","ui.togglebutton","ui.buttonbar","ui.label","ui.input","utils.math","ui.slider","ui.list","ui.infinilist","ui.content","ui.panel","elation.collection","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","ui.contextmenu","engine.external.three.FlyControls","engine.external.three.OrbitControls","engine.external.three.TransformControls","ui.indicator","ui.toolbox","engine.systems.admin","engine.things.controller","engine.systems.ai","ui.toggle","ui.tabbedcontent","engine.systems.controls","physics.processors","physics.rigidbody","physics.forces","physics.collisions","physics.constraints","physics.cyclone","engine.systems.physics","engine.external.three.stats","engine.external.threex.renderstats","engine.external.three.render.CSS3DRenderer","engine.external.three.render.EffectComposer","engine.external.three.render.RenderPass","engine.external.three.render.OculusRiftEffect","engine.external.three.render.OculusRenderPass","engine.external.three.render.VREffect","engine.external.three.render.ShaderPass","engine.external.three.render.MaskPass","engine.external.three.render.CopyShader","engine.external.three.render.RecordingPass","engine.external.threecap.threecap","engine.external.three.render.ConvolutionShader","engine.external.three.render.BloomPass","engine.external.three.render.SSAOShader","engine.external.three.render.FXAAShader","engine.systems.render","engine.systems.sound","engine.systems.world","ui.iframe","ui.image","share.picker","share.targets.oauth","share.targets.imgur","share.targets.dropbox","share.targets.google","share.targets.googledrive","share.targets.youtube","share.targets.file","engine.parts","engine.engine","engine.things.light","engine.things.light_ambient","engine.things.light_directional","engine.things.light_point","engine.external.md5","engine.things.maskgenerator","janusweb.external.JanusVOIP","janusweb.remoteplayer","ui.textarea","engine.things.sound","engine.things.skybox","janusweb.janusbase","janusweb.object","engine.things.portal","janusweb.portal","janusweb.image","engine.things.theaterscreen","janusweb.video","janusweb.text","janusweb.translators.bookmarks","janusweb.translators.reddit","janusweb.translators.error","janusweb.room","janusweb.tracking","janusweb.external.JanusClientConnection","janusweb.janusweb","janusweb.chat","ui.progressbar","engine.things.label2d","engine.things.player","janusweb.janusplayer","janusweb.client","engine.external.pako","engine.external.three.FBXLoader","engine.external.three.ColladaLoader","engine.external.xmldom","engine.external.three.OBJLoader","engine.external.three.OBJMTLLoader","engine.external.three.MTLLoader","engine.external.three.VRMLLoader","engine.assetworker","ANONYMOUS","root"]);
+elation.requireactivebatchjs = new elation.require.batch("js", "/scripts"); elation.requireactivebatchjs.fulfill(["utils.elation","janusweb.config","utils.events","utils.dust","utils.template","engine.external.three.three","engine.materials","utils.worker","utils.workerpool","engine.external.libgif","engine.assets","engine.geometries","engine.things.generic","engine.things.label","engine.things.menu","engine.things.manipulator","engine.things.camera","engine.things.camera_admin","ui.base","ui.accordion","ui.button","ui.togglebutton","ui.buttonbar","ui.label","ui.input","utils.math","ui.slider","ui.list","ui.infinilist","ui.content","ui.panel","elation.collection","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","ui.contextmenu","engine.external.three.FlyControls","engine.external.three.OrbitControls","engine.external.three.TransformControls","ui.indicator","ui.toolbox","engine.systems.admin","engine.things.controller","engine.systems.ai","ui.toggle","ui.tabbedcontent","engine.systems.controls","physics.processors","physics.rigidbody","physics.forces","physics.collisions","physics.constraints","physics.cyclone","engine.systems.physics","engine.external.three.stats","engine.external.threex.renderstats","engine.external.three.render.CSS3DRenderer","engine.external.three.render.EffectComposer","engine.external.three.render.RenderPass","engine.external.three.render.OculusRiftEffect","engine.external.three.render.OculusRenderPass","engine.external.three.render.VREffect","engine.external.three.render.ShaderPass","engine.external.three.render.MaskPass","engine.external.three.render.CopyShader","engine.external.three.render.RecordingPass","engine.external.threecap.threecap","engine.external.three.render.ConvolutionShader","engine.external.three.render.BloomPass","engine.external.three.render.SSAOShader","engine.external.three.render.FXAAShader","engine.systems.render","engine.systems.sound","engine.systems.world","ui.iframe","ui.image","share.picker","share.targets.oauth","share.targets.imgur","share.targets.dropbox","share.targets.google","share.targets.googledrive","share.targets.youtube","share.targets.file","engine.parts","engine.engine","engine.things.light","engine.things.light_ambient","engine.things.light_directional","engine.things.light_point","engine.external.md5","engine.things.maskgenerator","engine.things.sound","janusweb.external.JanusVOIP","janusweb.remoteplayer","ui.textarea","engine.things.skybox","janusweb.janusbase","janusweb.object","engine.things.portal","janusweb.portal","janusweb.image","janusweb.video","janusweb.text","janusweb.translators.bookmarks","janusweb.translators.reddit","janusweb.translators.error","janusweb.sound","janusweb.room","janusweb.tracking","janusweb.external.JanusClientConnection","janusweb.janusweb","janusweb.chat","ui.progressbar","engine.things.label2d","engine.things.player","janusweb.janusplayer","janusweb.client","engine.external.pako","engine.external.three.FBXLoader","engine.external.three.ColladaLoader","engine.external.xmldom","engine.external.three.OBJLoader","engine.external.three.OBJMTLLoader","engine.external.three.MTLLoader","engine.external.three.VRMLLoader","engine.assetworker","ANONYMOUS","root"]);
 elation.requireactivebatchcss = new elation.require.batch("css", "/css"); elation.requireactivebatchcss.fulfill(["engine.systems.controls","share.share","share.picker","janusweb.chat","engine.materials","ui.accordion","ui.button","ui.input","ui.slider","ui.list","ui.infinilist","ui.panel","ui.combobox","ui.select","ui.tabs","ui.grid","ui.treeview","ui.window","engine.systems.admin","ui.toggle","engine.systems.render","engine.engine","ui.themes.dark","janusweb.janusweb","janusweb.janusplayer","engine.things.label2d","utils.elation","utils.events","janusweb.client","engine.assetworker","engine.external.three.VRMLLoader","root"]);
-/*
 elation.config.set('dependencies.protocol', 'https:');              // "http:" or "https:"
 elation.config.set('dependencies.host', 'janusweb.metacade.com');   // Hostname this release will live on
 elation.config.set('dependencies.rootdir', '/');                    // Directory this release will live in
 elation.config.set('dependencies.main', 'janusweb.js');             // The main script file for this release
-*/
 
 elation.config.set('janusweb.network.host', 'wss://janusweb.lnq.to:5567');        // Default presence server
-elation.config.set('janusweb.network.corsproxy', 'https://janusweb.lnq.to:8089/'); // CORS proxy URL
+elation.config.set('engine.assets.corsproxy', 'https://janusweb.lnq.to:8089/'); // CORS proxy URL
 
-elation.config.set('janusweb.tracking.enabled', true);
-elation.config.set('janusweb.tracking.clientid', 'UA-49582649-2');
-
-elation.config.set('dependencies.protocol', 'https:');              // "http:" or "https:"
-elation.config.set('dependencies.host', 'bai.dev.supcrit.com');   // Hostname this release will live on
-elation.config.set('dependencies.rootdir', '/');                    // Directory this release will live in
-elation.config.set('dependencies.main', 'scripts/utils/elation.js');             // The main script file for this release
-
+elation.config.set('janusweb.tracking.enabled', false);
+elation.config.set('janusweb.tracking.clientid', '');
 
 // You probably don't want to edit past this line unless you know what you're doing
 // --------------------------------------------------------------------------------
 // These settings can be changed if you want to host your .js and media in non-standard locations
 
 elation.config.set('dependencies.path', elation.config.get('dependencies.protocol') + '//' + elation.config.get('dependencies.host') + elation.config.get('dependencies.rootdir'));
-elation.config.set('janusweb.datapath', elation.config.get('dependencies.path') + 'media/janusweb/');
+elation.config.set('janusweb.datapath', elation.config.get('dependencies.path') + 'media/');
 elation.config.set('engine.assets.font.path', elation.config.get('janusweb.datapath') + 'fonts/');
 
 // if (typeof require == 'function') var elation = require("utils/elation");
@@ -48200,24 +48196,20 @@ function () {
   elation.define('worker.thread', {
     _construct: function(component) {
       var bloburl = "";
-      //var root = document.location.protocol + '//' + document.location.host;
-      //var file = '/scripts/utils/elation.js';
-      //var root = document.location.protocol + '//' + document.location.host + document.location.pathname;
-      //var file = '/bundle.js';
-      //var root = elation.config.get('dependencies.path', document.location.protocol + '//' + document.location.host);
-      var root = document.location.origin + '/';
-console.log('aduasduf', JSON.stringify(document.location));
+      var origin = document.location.origin;
+      var root = elation.config.get('dependencies.rootdir', '/');
       var file = elation.config.get('dependencies.main', '/scripts/utils/elation.js');
       var script = [
-        "importScripts('" + root + file + "');",
+        "importScripts('" + origin + root + file + "');",
         "if (elation.requireactivebatchjs) {",
-        "  elation.requireactivebatchjs.webroot = '" + root + "/scripts';",
+        "  elation.requireactivebatchjs.webroot = '" + origin + root + "scripts';",
         "} else {",
-        "  elation.requireactivebatchjs = new elation.require.batch('js', '" + root + "/scripts');",
+        "  elation.requireactivebatchjs = new elation.require.batch('js', '" + origin + root + "scripts');",
         "}",
         "var msgqueue = [];",
         "onmessage = function(ev) { msgqueue.push(ev); };",
         "elation.require('" + component + "', function() {",
+        "  elation.config.merge(" + JSON.stringify(elation.config.data) + ");",
         "  var handler = new elation." + component + "();",
         "  onmessage = handler.onmessage.bind(handler);",
         "  msgqueue.forEach(function(msg) { handler.onmessage(msg); });",
@@ -49390,6 +49382,12 @@ function () {
     assets: {},
     types: {},
     corsproxy: '',
+    init: function() {
+      var corsproxy = elation.config.get('engine.assets.corsproxy', '');
+      if (corsproxy != '') {
+        this.setCORSProxy(corsproxy);
+      }
+    },
     loadAssetPack: function(url) {
       this.assetroot = new elation.engine.assets.pack({name: url, src: url});
       this.assetroot.load()
@@ -49437,7 +49435,7 @@ if (!ENV_IS_BROWSER) return;
         elation.engine.assets.loaderpool.sendMessage('setcorsproxy', proxy);
       }
     },
-    loaderpool: (ENV_IS_BROWSER ? new elation.utils.workerpool({component: 'engine.assetworker', num: 4}) : {})
+    loaderpool: false
   });
 
   elation.define('engine.assets.corsproxyloader', {
@@ -49849,6 +49847,9 @@ if (!ENV_IS_BROWSER) return;
     loadWithWorker: function(jobdata) {
       this._model = new THREE.Group();
       this._model.userData.loaded = false;
+      if (!elation.engine.assets.loaderpool) {
+        elation.engine.assets.loaderpool = new elation.utils.workerpool({component: 'engine.assetworker', num: 4});
+      }
       elation.engine.assets.loaderpool.addJob(jobdata)
         .then(elation.bind(this, this.handleLoadJSON));
     },
@@ -64233,8 +64234,8 @@ function () {
     this.position = this.positionWorld = new THREE.Vector3();
     this.orientation = this.orientationWorld = new THREE.Quaternion();
     this.substep = elation.utils.any(this.args.substep, true);
-    this.substepMaxDelta = elation.utils.any(this.args.substepMaxDelta, 1/10);
-    this.substepMaxSteps = elation.utils.any(this.args.substepMaxSteps, 6);
+    this.substepMaxDelta = elation.utils.any(this.args.substepMaxDelta, 1/30);
+    this.substepMaxSteps = elation.utils.any(this.args.substepMaxSteps, 12);
     
 
     this.init = function() {
@@ -68698,7 +68699,6 @@ console.log('toggle render mode: ' + this.rendermode + ' => ' + mode, passidx, l
 
         elation.events.fire({type: 'render_view_prerender', element: this});
 
-        //var dims = elation.html.dimensions(this.container);
         if (this.picking && this.pickingactive) {
           //if (this.pickingdebug || this.picknum++ % 3 == 0 || delta > 0.05) {
             this.updatePickingTarget();
@@ -71038,6 +71038,7 @@ function () {
       var target = null;
       if (elation.env.isBrowser) target = window
       elation.events.add(target, "unload", elation.bind(this, this.stop)); 
+      elation.engine.assets.init();
     }
     this.start = function() {
       this.started = this.running = true;
@@ -71314,7 +71315,7 @@ function () {
       this.controlstate = this.engine.systems.controls.addContext(this.name, {
         'menu': ['keyboard_esc,gamepad_0_button_9', elation.bind(this, this.toggleMenu)],
         //'share_screenshot': ['keyboard_comma', elation.bind(this, this.shareScreenshot)],
-        'share_gif': ['keyboard_period', elation.bind(this, this.shareMP4)],
+        //'share_gif': ['keyboard_period', elation.bind(this, this.shareMP4)],
         'pointerlock': ['pointerlock', elation.bind(this, this.togglePointerLock)],
         'vr_toggle': ['keyboard_ctrl_rightsquarebracket', elation.bind(this, this.toggleVR)],
         'vr_calibrate': ['keyboard_ctrl_leftsquarebracket', elation.bind(this, this.calibrateVR)],
@@ -71991,6 +71992,88 @@ function () {
 })();
 // ===== END FILE: engine.things.maskgenerator =====
 
+// ===== BEGIN FILE: engine.things.sound ====
+(
+function () {
+  elation.component.add('engine.things.sound', function() {
+    this.postinit = function() {
+      this.defineProperties({
+        src: { type: 'string' },
+        autoplay: { type: 'boolean', default: true },
+        loop: { type: 'boolean', default: true },
+        distanceModel: { type: 'string' },
+        distance: { type: 'float', default: 100 },
+        volume: { type: 'float', default: 1 },
+      });
+      elation.events.add(this, 'thing_destroy', elation.bind(this, this.stop));
+
+      Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
+    }
+    this.createObject3D = function() {
+      //var geo = new THREE.BoxGeometry(.25, .25, .25);
+      //var mat = new THREE.MeshLambertMaterial({color: 0x009900, emissive: 0x222222});
+      //return new THREE.Mesh(geo, mat);
+      return new THREE.Object3D();
+    }
+    this.createChildren = function() {
+      if (!this.audio) {
+        this.createAudio(this.properties.src);
+      }
+    }
+    this.createAudio = function() {
+      if (this.audio) {
+        if (this.audio.isPlaying) {
+          this.audio.stop();
+        }
+        this.objects['3d'].remove(this.audio);
+      }
+      var listener = this.engine.systems.sound.getRealListener();
+      if (listener) {
+        this.audio = new THREE.PositionalAudio(listener);
+        if (this.properties.distanceModel) {
+          this.audio.panner.distanceModel = this.properties.distanceModel;
+        }
+        //this.audio.panner.maxDistance = this.properties.distance;
+        if (this.properties.distance) {
+          this.audio.setRefDistance(this.properties.distance);
+        } else {
+          this.audio.panner.distanceModel = 'linear';
+        }
+        this.audio.autoplay = this.properties.autoplay;
+        this.audio.setLoop(this.properties.loop);
+        this.audio.setVolume(this.properties.volume);
+        if (this.properties.src) {
+          this.audio.load(this.properties.src);
+        }
+        this.objects['3d'].add(this.audio);
+      }
+    }
+    this.load = function(url) {
+      this.properties.src = url;
+      if (this.audio.isPlaying) {
+        this.audio.stop();
+      }
+      this.createAudio(url);
+    }
+    this.play = function() {
+      if (this.audio && this.audio.source.buffer) {
+        this.audio.play();
+      }
+    }
+    this.pause = function() {
+      if (this.audio && this.audio.isPlaying) {
+        this.audio.pause();
+      }
+    }
+    this.stop = function() {
+      if (this.audio && this.audio.isPlaying) {
+        this.audio.stop();
+      }
+    }
+  }, elation.engine.things.generic);
+})();
+// ===== END FILE: engine.things.sound =====
+
 (function() {
   // event dispatcher by mrdoob https://github.com/mrdoob/eventdispatcher.js
   var EventDispatcher = function () {}
@@ -72581,88 +72664,6 @@ function () {
 })();
 // ===== END FILE: ui.textarea =====
 
-// ===== BEGIN FILE: engine.things.sound ====
-(
-function () {
-  elation.component.add('engine.things.sound', function() {
-    this.postinit = function() {
-      this.defineProperties({
-        src: { type: 'string' },
-        autoplay: { type: 'boolean', default: true },
-        loop: { type: 'boolean', default: true },
-        distanceModel: { type: 'string' },
-        distance: { type: 'float', default: 100 },
-        volume: { type: 'float', default: 1 },
-      });
-      elation.events.add(this, 'thing_destroy', elation.bind(this, this.stop));
-
-      Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
-    }
-    this.createObject3D = function() {
-      //var geo = new THREE.BoxGeometry(.25, .25, .25);
-      //var mat = new THREE.MeshLambertMaterial({color: 0x009900, emissive: 0x222222});
-      //return new THREE.Mesh(geo, mat);
-      return new THREE.Object3D();
-    }
-    this.createChildren = function() {
-      if (!this.audio) {
-        this.createAudio(this.properties.src);
-      }
-    }
-    this.createAudio = function() {
-      if (this.audio) {
-        if (this.audio.isPlaying) {
-          this.audio.stop();
-        }
-        this.objects['3d'].remove(this.audio);
-      }
-      var listener = this.engine.systems.sound.getRealListener();
-      if (listener) {
-        this.audio = new THREE.PositionalAudio(listener);
-        if (this.properties.distanceModel) {
-          this.audio.panner.distanceModel = this.properties.distanceModel;
-        }
-        //this.audio.panner.maxDistance = this.properties.distance;
-        if (this.properties.distance) {
-          this.audio.setRefDistance(this.properties.distance);
-        } else {
-          this.audio.panner.distanceModel = 'linear';
-        }
-        this.audio.autoplay = this.properties.autoplay;
-        this.audio.setLoop(this.properties.loop);
-        this.audio.setVolume(this.properties.volume);
-        if (this.properties.src) {
-          this.audio.load(this.properties.src);
-        }
-        this.objects['3d'].add(this.audio);
-      }
-    }
-    this.load = function(url) {
-      this.properties.src = url;
-      if (this.audio.isPlaying) {
-        this.audio.stop();
-      }
-      this.createAudio(url);
-    }
-    this.play = function() {
-      if (this.audio && this.audio.source.buffer) {
-        this.audio.play();
-      }
-    }
-    this.pause = function() {
-      if (this.audio && this.audio.isPlaying) {
-        this.audio.pause();
-      }
-    }
-    this.stop = function() {
-      if (this.audio && this.audio.isPlaying) {
-        this.audio.stop();
-      }
-    }
-  }, elation.engine.things.generic);
-})();
-// ===== END FILE: engine.things.sound =====
-
 // ===== BEGIN FILE: engine.things.skybox ====
 (
 function () {
@@ -72773,7 +72774,10 @@ function () {
       var xml = elation.template.get('janusweb.edit.object', objdef);
       return xml;
     }
-    
+    this.start = function() {
+    }    
+    this.stop = function() {
+    }    
   }, elation.engine.things.generic);
 })();
 // ===== END FILE: janusweb.janusbase =====
@@ -72940,7 +72944,9 @@ function () {
             materials.push(m); 
             n.material = m;
           }
-          materials.forEach(elation.bind(this, function(m) {
+
+          for (var i = 0; i < materials.length; i++) {
+            var m = materials[i];
             if (texture) {
               m.map = texture; 
             }
@@ -72967,7 +72973,6 @@ function () {
                     hasalpha[ev.target.src] = this.canvasHasAlpha(canvas);
                     m.map.image = canvas;
                   }
-    //console.log(m.map, this, ev.target.src + '? ', hasalpha);
                   if (hasalpha[ev.target.src]) {
                     m.transparent = true;
                     m.alphaTest = 0.1;
@@ -72986,15 +72991,6 @@ function () {
             if (blend_src) m.blendSrc = blend_src;
             if (blend_dest) m.blendDst = blend_dest;
             //m.needsUpdate = true;
-          }));
-          if (n.geometry) {
-/*
-            if ((n.geometry instanceof THREE.BufferGeometry && !n.geometry.attributes.normals) ||
-                (n.geometry instanceof THREE.Geometry && !n.geometry.faceVertexNormals)) {
-              n.geometry.computeFaceNormals();
-              n.geometry.computeVertexNormals();
-            }
-*/
           }
         };
       }));
@@ -73029,6 +73025,16 @@ function () {
         } else {
           video.play();
         }
+      }
+    }
+    this.stop = function() {
+      if (this.properties.image_id) {
+        var texture = elation.engine.assets.find('image', this.properties.image_id);
+        console.log('stop the image!', texture);
+      }
+      if (this.properties.video_id) {
+        var texture = elation.engine.assets.find('video', this.properties.video_id);
+        console.log('stop the video!', texture);
       }
     }
   }, elation.engine.things.janusbase);
@@ -73455,90 +73461,6 @@ function () {
 })();
 // ===== END FILE: janusweb.image =====
 
-// ===== BEGIN FILE: engine.things.theaterscreen ====
-(
-function () {
-  elation.component.add('engine.things.theaterscreen', function() {
-    this.postinit = function() {
-      this.defineProperties({
-        autoplay: { type: 'boolean', default: false },
-        loop: { type: 'boolean', default: true },
-        curved: { type: 'boolean', default: false },
-        clickable: { type: 'boolean', default: true },
-        aspectratio: { type: 'float', default: 16/9 },
-        screensize: { type: 'float', default: 25 },
-        src: { type: 'string', default: '/media/space/textures/videos/sintel.mp4' },
-      });
-    }
-    this.createVideo = function() {
-      this.video = document.createElement('video');
-      this.video.src = this.properties.src;
-      this.video.autoplay = this.properties.autoplay;
-      this.video.loop = this.properties.loop;
-      this.video.crossOrigin = 'anonymous';
-
-      //elation.events.add(this.video, 'ended', elation.bind(this, this.play));
-      if (this.properties.clickable) {
-        elation.events.add(this, 'click', elation.bind(this, this.play));
-      }
-      if (this.properties.autoplay) {
-        elation.events.add(this.video, 'load', function() { alert('adsfadsf'); });
-      }
-    }
-    this.createObject3D = function() {
-      var screensize = this.properties.screensize;
-      if (this.properties.curved) {
-        var halfpi = Math.PI/2;
-        var screenwidth = 3/4 * Math.PI;
-        var screenheight = 1/4 * Math.PI;
-        var geo = new THREE.SphereGeometry(screensize, 16, 8, 0 - (Math.PI - screenwidth) / 2, -screenwidth, (Math.PI - screenheight) / 2, screenheight);
-      //geo.applyMatrix(new THREE.Matrix4().makeScale(1,1,.5));
-        geo.applyMatrix(new THREE.Matrix4().makeTranslation(0, screensize * screenheight / 2, 0));
-      } else {
-        var geo = new THREE.PlaneGeometry(screensize * this.properties.aspectratio, screensize);
-      }
-
-      //document.body.appendChild(video);
-      if (!this.video) {
-        this.createVideo();
-      }
-
-      this.texture = new THREE.Texture( this.video );
-      this.texture.minFilter = THREE.LinearFilter;
-      this.texture.magFilter = THREE.LinearFilter;
-      this.texture.format = THREE.RGBFormat;
-      this.texture.generateMipmaps = false;
-      var mat = new THREE.MeshBasicMaterial({emissive: 0x111111, side: THREE.DoubleSide, map: this.texture});
-
-      this.refresh();
-
-      return new THREE.Mesh(geo, mat);
-    }
-    this.play = function() {
-  console.log(this.video.currentTime, this.video.paused, this.video.ended);
-      if (this.video.currentTime > 0 && !this.video.paused && !this.video.ended) {
-        this.video.pause();
-      } else {
-        this.video.play();
-      }
-    }
-    this.preframe = function(ev) {
-    }
-    this.refresh = function() {
-      if (!this.video) return;
-      if ( this.video.readyState === this.video.HAVE_ENOUGH_DATA && this.lasttime != this.video.currentTime) {
-        if ( this.texture ) this.texture.needsUpdate = true;
-        elation.events.fire({element: this, type: 'thing_change'});
-        this.lasttime = this.video.currentTime;
-      }
-      if (this.video.readyState != 4 || (!this.video.paused && !this.video.ended)) {
-        requestAnimationFrame(elation.bind(this, this.refresh));
-      }
-    }
-  }, elation.engine.things.generic);
-})();
-// ===== END FILE: engine.things.theaterscreen =====
-
 // ===== BEGIN FILE: janusweb.video ====
 (
 function () {
@@ -73557,14 +73479,15 @@ function () {
     this.createObject3D = function() {
       this.asset = elation.engine.assets.find('video', this.properties.video_id, true);
       if (this.asset) {
-
         var geo = this.createGeometry();
         var mat = this.createMaterial();
+        this.video = this.texture.image;
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
         return new THREE.Mesh(geo, mat);
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
       }
+      return new THREE.Object3D();
     }
     this.createMaterial = function() {
       if (this.asset) {
@@ -73611,6 +73534,23 @@ function () {
         video.pause();
       } else {
         video.play();
+      }
+    }
+    this.start = function() {
+      if (this.video) {
+        if (this.video.originalSrc) {
+          this.video.src = this.video.originalSrc;
+        }
+      }
+    }
+    this.stop = function() {
+      console.log('stop the video!', this, this.video);
+      if (this.video) {
+        this.video.pause();
+        // FIXME - this stops the video from loading any more data, but means we can't easily restart
+        //         so we're hackishly working around that
+        this.video.originalSrc = this.video.src;
+        this.video.src = '';
       }
     }
   }, elation.engine.things.janusimage);
@@ -74308,7 +74248,7 @@ setTimeout(elation.bind(this, function() {
 
           var proxyurl = this.properties.janus.properties.corsproxy;
           soundurl = proxyurl + soundurl;
-          var sound = this.spawn('sound', n.id + '_' + Math.round(Math.random() * 10000), { 
+          var sound = this.spawn('janussound', n.id + '_' + Math.round(Math.random() * 10000), { 
             'room': this,
             'js_id': n.js_id,
             'position': n.pos,
@@ -74551,13 +74491,23 @@ setTimeout(elation.bind(this, function() {
       return false;
     }
     this.enable = function() {
+      var keys = Object.keys(this.children);
+      for (var i = 0; i < keys.length; i++) {
+        var obj = this.children[keys[i]];
+        if (obj.start) {
+          obj.start();
+        }
+      }
+      elation.events.fire({type: 'room_enable', data: this});
     }
     this.disable = function() {
-      this.objects['3d'].traverse(function(n) {
-        if (n instanceof THREE.Audio && n.isPlaying) {
-          n.stop();
+      var keys = Object.keys(this.children);
+      for (var i = 0; i < keys.length; i++) {
+        var obj = this.children[keys[i]];
+        if (obj.stop) {
+          obj.stop();
         }
-      });
+      }
       elation.events.fire({type: 'room_disable', data: this});
     }
     this.setTitle = function(title) {
@@ -75296,6 +75246,7 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
         if (changed || document.location.hash != newhash) {
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
+        this.currentroom.enable();
       } else {
         this.load(url, true);
       }
@@ -75360,7 +75311,6 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
         }
       }
       else if (method == 'user_disconnected' || method == 'user_leave') {
-console.log('someone left', msg, this.remotePlayers[msg.data.data.userId]);
         var remoteplayer = this.remotePlayers[msg.data.data.userId];
         console.log("removing player", msg.data.data.userId, remoteplayer);
         elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
@@ -76306,6 +76256,10 @@ function () {
 // ===== BEGIN FILE: janusweb.client ====
 (
 function () {
+
+  // If getCurrentScript returns non-null here, then it means we're in release mode
+  var clientScript = elation.utils.getCurrentScript();
+
   elation.extend('janusweb.init', function(args) {
     if (!args) args = {};
     var proto = elation.utils.any(args.protocol, elation.config.get('dependencies.protocol'), document.location.protocol);
@@ -76315,6 +76269,22 @@ function () {
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
 
     var fullpath = proto + '//' + host + rootdir;
+    if (clientScript) { // && clientScript.src.match(/\/janusweb.js^/)) {
+      var parts = clientScript.src.split('/');
+      var fname = parts.pop();
+      fullpath = parts.join('/') + '/';
+      parts.shift();
+      parts.shift();
+      parts.shift();
+      var rootdir = '/' + parts.join('/') + '/';
+
+      elation.config.set('dependencies.main', fname);
+      elation.config.set('dependencies.rootdir', rootdir);
+      elation.config.set('dependencies.host', document.location.host);
+      elation.config.set('dependencies.protocol', document.location.protocol);
+      elation.config.set('janusweb.datapath', fullpath + 'media/');
+      elation.config.set('engine.assets.font.path', fullpath + 'media/fonts/');
+    }
     elation.config.set('dependencies.path', fullpath);
 
     var link = document.createElement('link');
@@ -76349,7 +76319,7 @@ function () {
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: elation.config.get('janusweb.network.corsproxy'),
+          corsproxy: elation.config.get('engine.assets.corsproxy'),
           datapath: elation.config.get('janusweb.datapath'),
           homepage: this.args.homepage
         },
@@ -95472,9 +95442,7 @@ function () {
           }
         }
         var loader = (mtl ? new THREE.OBJMTLLoader() : new THREE.OBJLoader());
-        //var loader = new THREE.OBJLoader();
-        //var modeldata = loader.parse(data);
-        var modeldata = false;
+        var modeldata = loader.parse(data);
 
         if (mtl) {
           mtl = this.getFullURL(mtl, baseurl); 
@@ -95482,36 +95450,23 @@ function () {
             mtl = elation.engine.assets.corsproxy + mtl;
           }
           var mtlLoader = new THREE.MTLLoader( );
-
           mtlLoader.setBaseUrl( mtl.substr( 0, mtl.lastIndexOf( "/" ) + 1 ) );
           mtlLoader.setCrossOrigin( 'anonymous' );
           mtlLoader.load( mtl, 
             elation.bind(this, function ( materials ) {
-              materials.preload();
-              modeldata = loader.parse(data);
-
-console.log('obj loaded with materials', job.data.src, modeldata);
-
-if (false) {
-              loader.setMaterials( materials );
-} else {
-              materials.preload();
+              var materialsCreator = materials;
+              materialsCreator.preload();
 
               modeldata.traverse( function ( object ) {
 
                 if ( object instanceof THREE.Mesh ) {
-
-                  if (object.geometry instanceof THREE.Geometry) {
-                    var geo = new THREE.BufferGeometry().fromGeometry(object.geometry);
-                    object.geometry = geo;
-                  }
 
                   if (object.material instanceof THREE.MeshFaceMaterial) {
                     var newmaterials = [];
                     object.material.materials.forEach(function(m) {
                       if ( m.name ) {
 
-                        var material = materials.create( m.name );
+                        var material = materialsCreator.create( m.name );
 
                         if ( material ) {
                           newmaterials.push(material);
@@ -95526,7 +95481,7 @@ if (false) {
                   } else {
                     if ( object.material.name ) {
 
-                      var material = materials.create( object.material.name );
+                      var material = materialsCreator.create( object.material.name );
 
                       if ( material ) object.material = material;
 
@@ -95536,19 +95491,14 @@ if (false) {
                 }
 
               } );
-}
               resolve(modeldata.toJSON());
             }),
             undefined,
             elation.bind(this, function() {
-              modeldata = loader.parse(data);
-console.log('obj wwas supposed to have materials but didnt', job.data.src, modeldata);
               resolve(modeldata.toJSON());
             })
           );
         } else {
-          modeldata = loader.parse(data);
-console.log('obj loaded WITHOUT materials', job.data.src, modeldata);
           resolve(modeldata.toJSON());
         }
         return modeldata;
