@@ -51732,13 +51732,6 @@ console.log(thispos.toArray(), otherpos.toArray(), dir.toArray(), axis.toArray()
 // ===== BEGIN FILE: engine.things.label ====
 (
 function () {
-
-  elation.engine.assets.get({
-    'assettype':'font', 
-    'name':'helvetiker', 
-    'src': elation.config.get('engine.assets.font.path', '/media/engine/fonts/') + 'helvetiker_regular.typeface.js'
-  });
-
   elation.component.add("engine.things.label", function() {
     this.postinit = function() {
       this.defineProperties({
@@ -71243,6 +71236,14 @@ function () {
       this.setEngineConfig(this.args);
       this.initEngine();
       this.loadEngine();
+
+      // Preload the default font
+      elation.engine.assets.get({
+        'assettype':'font', 
+        'name':'helvetiker', 
+        'src': elation.config.get('engine.assets.font.path', '/media/engine/fonts/') + 'helvetiker_regular.typeface.js'
+      });
+
     }
     // Set up engine parameters before creating.  To be overridden by extending class
     this.initEngine = function() {
