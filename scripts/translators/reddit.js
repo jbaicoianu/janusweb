@@ -1,11 +1,12 @@
 elation.require(['elation.collection'], function() {
   elation.component.add('janusweb.translators.reddit', function() {
     this.init = function() {
+      this.queue = [];
+    }
+    this.loadTranslator = function() {
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var assetpath = datapath + 'assets/translator/reddit/';
       var fullfile = assetpath + 'RedditRoomConcept.html';
-      this.queue = [];
-      this.promise = false;
       this.roomsource = '<fireboxroom><room use_local_asset="room2"></room></fireboxroom>';
       elation.net.get(fullfile, null, { callback: elation.bind(this, this.handleLoad) });
 
@@ -23,9 +24,14 @@ elation.require(['elation.collection'], function() {
     }
     this.exec = function(args) {
       return new Promise(elation.bind(this, function(resolve, reject) {
-        args.resolve = resolve;
-        args.reject = reject;
+        // Store the resolve/reject functions so we can call them later, from other functions
+        if (!(args.resolve && args.reject)) {
+          args.resolve = resolve;
+          args.reject = reject;
+        }
         if (!this.roomsource) {
+          // Translator isn't loaded yet, so load it up and add thiss request back to the queue
+          this.loadTranslator();
           this.queue.push(args);
         } else {
           var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
@@ -56,7 +62,8 @@ elation.require(['elation.collection'], function() {
               collection_load: elation.bind(this, this.translate, args)
             }
           });
-          console.log(collection.items);
+          // FIXME - this forces a load, we should really just have a parameter for collections to do this by default
+          var items = collection.items;
         }
       }));
     }
