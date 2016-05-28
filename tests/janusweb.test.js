@@ -5,7 +5,7 @@ describe("JanusWeb", function() {
     done();
   });
   it("should initialize client", function(done) {
-    elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html'}).then(function(newclient) { 
+    elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: '640x480'}).then(function(newclient) { 
       client = newclient;
       expect(client).toBeDefined();
       done();
