@@ -6,7 +6,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     this.postinit = function() {
       this.defineProperties({
         url: { type: 'string', default: false },
-        homepage: { type: 'string', default: "http://www.janusvr.com/index.html" },
+        homepage: { type: 'string', default: "" },
         corsproxy: { type: 'string', default: '' },
         datapath: { type: 'string', default: '/media/janusweb' }
       });
