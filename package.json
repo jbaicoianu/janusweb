@@ -8,7 +8,14 @@
   "scripts": {
     "postinstall": "./utils/init.sh",
     "build": "./utils/build.sh"
+    "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run "
   },
+
+  'devDependencies': {
+    'karma': '~0.13',
+    'jasmine': '>=2.0'
+  },
+
   "repository": {
     "type": "git",
     "url": "https://github.com/jbaicoianu/janusweb"
