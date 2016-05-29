@@ -11,9 +11,9 @@
     "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
 
-  'devDependencies': {
-    'karma': '~0.13',
-    'jasmine': '>=2.0'
+  "devDependencies": {
+    "karma": "~0.13",
+    "jasmine": ">=2.0"
   },
 
   "repository": {
