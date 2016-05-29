@@ -1,10 +1,5 @@
 #!/bin/bash
 
-echo "Installing dependencies..."
-npm install
-echo "done"
-echo
-
 echo "Creating directory tree..."
 DEPENDENCYPATHS=$(npm ls -parseable)
 
