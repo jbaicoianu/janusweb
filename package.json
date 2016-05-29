@@ -1,7 +1,7 @@
 {
   "name": "janusweb",
   "description": "Web client for JanusVR worlds",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "scripts/client.js",
   "author": "James Baicoianu",
   "license": "MIT",
@@ -12,10 +12,16 @@
     "type": "git",
     "url": "https://github.com/jbaicoianu/janusweb"
   },
+  "dependencies": {
+    "elation-engine": ">=0.9.0"
+  },
   "keywords": [
     "elation",
     "three.js",
     "3d",
-    "webgl"
+    "webgl",
+    "webvr",
+    "janusvr",
+    "metaverse"
   ]
 }
