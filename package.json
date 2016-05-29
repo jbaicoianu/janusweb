@@ -17,7 +17,8 @@
     "jasmine-core": "*",
     "karma-jasmine": "*",
     "canvas": "*",
-    "karma-jasmine-imagediff": "*"
+    "karma-jasmine-imagediff": "*",
+    "karma-chrome-launcher": "*"
   },
 
   "repository": {
