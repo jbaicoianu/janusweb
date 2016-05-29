@@ -1,13 +1,31 @@
-#!/bin/sh
+#!/bin/bash
+
+echo "Installing dependencies..."
+npm install
+echo "done"
+echo
+
+echo "Creating directory tree..."
+DEPENDENCYPATHS=$(npm ls -parseable)
+
+declare -A dependencies
+
+for DEP in $DEPENDENCYPATHS; do
+  DEPNAME=$(basename $DEP)
+  dependencies[$DEPNAME]=$DEP
+done
 
 if [ ! -d elation ]; then
-  git clone https://github.com/jbaicoianu/elation.git
-  cd elation
-  git clone https://github.com/jbaicoianu/elation-engine.git components/engine
-  git clone https://github.com/jbaicoianu/cyclone-physics-js.git components/physics
-  git clone https://github.com/jbaicoianu/elation-share.git components/share
-  #git clone https://github.com/jbaicoianu/janusweb.git components/janusweb
-  ln -s `pwd`/.. components/janusweb
+  ln -s ${dependencies["elation"]}
+
+  cd elation/components
+  ln -s ${dependencies["elation-engine"]} engine
+  ln -s ${dependencies["elation-share"]} share
+  ln -s ${dependencies["cyclone-physics"]} physics
+  ln -s ${dependencies["janusweb"]} janusweb
+
+  cd ..
   ./elation web init
   ./elation component enable engine physics share janusweb
 fi
+echo "done"
