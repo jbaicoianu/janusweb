@@ -14,7 +14,9 @@
   "devDependencies": {
     "karma": "~0.13",
     "jasmine": ">=2.0",
+    "jasmine-core": "*",
     "karma-jasmine": "*",
+    "canvas": "*",
     "karma-jasmine-imagediff": "*"
   },
 
