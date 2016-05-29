@@ -7,8 +7,8 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "./utils/init.sh",
-    "build": "./utils/build.sh"
-    "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run "
+    "build": "./utils/build.sh",
+    "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
 
   'devDependencies': {
