@@ -5,7 +5,7 @@ describe("JanusWeb", function() {
     done();
   });
   it('succeeds at running at least one test', function(done) {
-    expect(true).toBeTrue();
+    expect(true).toBe(true);
     done();
   });
 /*
