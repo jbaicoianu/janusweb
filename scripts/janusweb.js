@@ -97,7 +97,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       var roomid = md5(url);
       this.rooms[roomid] = room;
-      console.log('made new room', url, room);
+      //console.log('made new room', url, room);
       this.loading = false;
       if (room && makeactive) {
         this.setActiveRoom(url);
@@ -128,7 +128,6 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         if (pos) {
           this.engine.client.player.properties.position.fromArray(pos);
           this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
-console.log('set position!', pos, this.currentroom.playerstartorientation);
         }
         var hashargs = elation.url();
         if (url == this.properties.homepage) {
@@ -183,12 +182,10 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
       }
     }
     this.subscribe = function(ev) {
-      console.log('sub fired:', ev);
       this.jcc.subscribe(ev.data.properties.url);
       this.jcc.enter_room(ev.data.properties.url);
     }
     this.unsubscribe = function(ev) {
-      console.log('unsub fired:', ev);
       this.jcc.unsubscribe(ev.data.properties.url);
     }
     this.onJanusMessage = function(msg) {
@@ -206,7 +203,7 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
       }
       else if (method == 'user_disconnected' || method == 'user_leave') {
         var remoteplayer = this.remotePlayers[msg.data.data.userId];
-        console.log("removing player", msg.data.data.userId, remoteplayer);
+        //console.log("removing player", msg.data.data.userId, remoteplayer);
         elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
         this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
         if (remoteplayer && remoteplayer.parent) {
@@ -243,7 +240,6 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
         //view_dir: this.tmpVecZ.toArray().join(' ')
       }
       if (head) {
-//console.log(head);
         //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
         this.tmpMat.copy(head.objects['3d'].matrixWorld);
         this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
@@ -257,7 +253,6 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
         ret.view_dir = '0 0 1';
         ret.head_pos = '0 0 0';
       }
-//console.log(player, head);
       return ret;
     }
     this.spawnRemotePlayer = function(data) {
@@ -354,7 +349,6 @@ console.log('set position!', pos, this.currentroom.playerstartorientation);
       }));
       if (changestr != '') {
         moveData.room_edit = changestr;
-console.log(changestr);
       }
       if (document.activeElement && document.activeElement === this.chat.input.inputelement) {
         moveData.anim_id = 'type';
@@ -418,7 +412,6 @@ console.log(changestr);
       } 
     }
     this.handleRoomEditSelf = function(ev) {
-      console.log('edited a thing', ev.data);
       var thing = ev.data;
       var change = thing.summarizeXML();
       if (thing.properties.js_id) {
