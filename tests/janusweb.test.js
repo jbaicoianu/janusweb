@@ -5,11 +5,15 @@ describe("JanusWeb", function() {
     done();
   });
   it("should initialize client", function(done) {
-    elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: '640x480'}).then(function(newclient) { 
-      client = newclient;
-      expect(client).toBeDefined();
-      done();
-    });
+    try {
+      elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: '640x480'}).then(function(newclient) { 
+        client = newclient;
+        expect(client).toBeDefined();
+        done();
+      });
+    } catch (e) {
+      console.log('exception happened!', e.stack);
+    }
   });
   it("added canvas to document", function(done) {
     var canvases = document.getElementsByTagName('canvas');
