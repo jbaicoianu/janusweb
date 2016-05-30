@@ -27,5 +27,5 @@ fi
 mv janusweb.css janusweb.js "$BUILDDIR"
 echo Built new release in \"$BUILDDIR/\"
 
-grep "=== BEGIN" components/janusweb/build/janusweb.js
+grep "=== BEGIN" $BUILDDIR/janusweb.js
 
