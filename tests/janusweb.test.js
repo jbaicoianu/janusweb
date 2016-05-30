@@ -7,7 +7,7 @@ describe("JanusWeb", function() {
   it('succeeds at running at least one test', function(done) {
     expect(true).toBeTrue();
     done();
-  }
+  });
 /*
   it("should initialize client", function(done) {
     try {
