@@ -10,7 +10,6 @@ describe("JanusWeb", function() {
       done();
     }, 10000);
   });
-/*
   it("should initialize client", function(done) {
     try {
       elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: '640x480'}).then(function(newclient) { 
@@ -36,6 +35,7 @@ describe("JanusWeb", function() {
       done();
     });
   });
+/*
   it('takes a screenshot', function(done) {
     setTimeout(function() {
       expect(canvas).toBeDefined();
