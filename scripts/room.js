@@ -245,7 +245,7 @@ elation.require([
             } else {
               var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
               var transpath = datapath + 'assets/translator/web/';
-              console.log('no firebox room, load the translator', transpath);
+              //console.log('no firebox room, load the translator', transpath);
               this.load(transpath + 'Parallelogram.html', transpath );
             }
           }), 
