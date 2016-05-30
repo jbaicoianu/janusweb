@@ -1,11 +1,12 @@
 #!/bin/sh
 
-if [ ! -e build ]; then
-  mkdir build
+BUILDDIR=$(pwd)/build
+if [ ! -e "$BUILDDIR" ]; then
+  mkdir "$BUILDDIR"
 fi
 
-if [ -e build/media ]; then
-  rm -r build/media
+if [ -e "$BUILDDIR/media" ]; then
+  rm -r "$BUILDDIR/media"
 fi
 
 CFGNAME="$1"
@@ -13,8 +14,8 @@ if [ -z "$CFGNAME" ]; then
   CFGNAME="config"
 fi
 
-cp -r `pwd`/media build/media
-mv build/media/index.html build/index.html
+cp -r $(pwd)/media "$BUILDDIR/media"
+mv "$BUILDDIR/media/index.html" "$BUILDDIR/index.html"
 if [ -e elation ] && [ -e elation/components/janusweb ]; then
   echo 'Building from project-local elation directory'
   cd elation/
@@ -23,8 +24,8 @@ else
   cd ../../
 fi
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb janusweb.client engine.assetworker
-mv janusweb.css janusweb.js components/janusweb/build
-echo 'Built new release in ./build/'
+mv janusweb.css janusweb.js "$BUILDDIR"
+echo Built new release in \"$BUILDDIR/\"
 
 grep "=== BEGIN" components/janusweb/build/janusweb.js
 
