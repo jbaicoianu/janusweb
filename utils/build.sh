@@ -26,3 +26,5 @@ fi
 mv janusweb.css janusweb.js components/janusweb/build
 echo 'Built new release in ./build/'
 
+grep "=== BEGIN" components/janusweb/build/janusweb.js
+
