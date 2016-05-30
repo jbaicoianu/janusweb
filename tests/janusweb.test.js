@@ -60,6 +60,7 @@ describe("JanusWeb", function() {
       done();
     });
   });
+/*
   it('takes a screenshot', function(done) {
     setTimeout(function() {
       expect(canvas).toBeDefined();
@@ -80,5 +81,6 @@ describe("JanusWeb", function() {
       });
     }, 5000);
   });
+*/
 
 });
