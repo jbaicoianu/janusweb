@@ -11,13 +11,23 @@ for DEP in $DEPENDENCYPATHS; do
 done
 
 if [ ! -d elation ]; then
-  ln -s ${dependencies["elation"]}
+  ln -sf ${dependencies["elation"]}
 
   cd elation/components
-  ln -s ${dependencies["elation-engine"]} engine
-  ln -s ${dependencies["elation-share"]} share
-  ln -s ${dependencies["cyclone-physics"]} physics
-  ln -s ${dependencies["janusweb"]} janusweb
+  #ln -sf ${dependencies["elation-engine"]} engine
+  #ln -sf ${dependencies["elation-share"]} share
+  #ln -sf ${dependencies["cyclone-physics"]} physics
+  #ln -sf ${dependencies["janusweb"]} janusweb
+
+  # FIXME - nodejs require() seems to have problems with symlinked directories, use cp -al to create recursive hard links instead
+  cp -al ${dependencies["elation-engine"]} engine/
+  cp -al ${dependencies["elation-share"]} share/
+  cp -al ${dependencies["cyclone-physics"]} physics/
+
+  # special handling for root dir
+  DIR=${dependencies["janusweb"]}
+  mkdir janusweb
+  cp -al $DIR/css $DIR/scripts $DIR/media $DIR/utils janusweb/
 
   cd ..
   ./elation web init
