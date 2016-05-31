@@ -98,7 +98,7 @@ describe("JanusWeb", function() {
         done();
       });
 */
-    }, 7500);
+    }, 10000);
   });
 
 });
