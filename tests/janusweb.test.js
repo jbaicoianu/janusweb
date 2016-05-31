@@ -60,12 +60,30 @@ describe("JanusWeb", function() {
       done();
     });
   });
-/*
   it('takes a screenshot', function(done) {
     setTimeout(function() {
       expect(canvas).toBeDefined();
       var shot = canvas.toDataURL('image/png');
 
+      elation.net.post('https://api.imgur.com/3/upload.json', 
+        {
+          type: 'base64',
+          name: 'testscreenshot.png',
+          title: 'Test Screenshot',
+          image: shot.split(',')[1]
+        }, 
+        {
+          headers: {
+            Authorization: 'Client-ID 3c6bb1075f20701'
+          },
+          callback: function(data) {
+            var json = JSON.parse(data);
+            console.log('UPLOAD SUCCESS', json.data.link);
+            setTimeout( done, 1000);
+          }
+        });
+
+/*
       var newimg = new Image();
       newimg.src = shot;
       newimg.crossOrigin = '';
@@ -79,8 +97,8 @@ describe("JanusWeb", function() {
         expect(diff).toBe(true);
         done();
       });
+*/
     }, 5000);
   });
-*/
 
 });
