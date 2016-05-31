@@ -79,11 +79,9 @@ describe("JanusWeb", function() {
           callback: function(data) {
             var json = JSON.parse(data);
             console.log('UPLOAD SUCCESS', json.data.link);
-            setTimeout( done, 1000);
           }
         });
 
-/*
       var newimg = new Image();
       newimg.src = shot;
       newimg.crossOrigin = '';
@@ -95,9 +93,8 @@ describe("JanusWeb", function() {
 
         var diff = imagediff.equal(newimg, img, 98);
         expect(diff).toBe(true);
-        done();
+        setTimeout( done, 1000);
       });
-*/
     }, 10000);
   });
 
