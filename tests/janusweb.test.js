@@ -1,40 +1,17 @@
-describe("JanusWeb", function() {
+describe("JanusWeb Init", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   var client, janusweb, canvas;
-  var urljson = "https://raw.githubusercontent.com/jbaicoianu/janusweb/screenshots/urls.json";
-  var rooms, roomnames, room;
+  var resolution = '800x600';
+  var browser = 'chrome'; // FIXME - don't hardcode this
+
   beforeEach(function(done) {
     jasmine.addMatchers(imagediff.jasmine);
     done();
   });
-  
-  it("should fetch list of test URLs", function(done) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", urljson);
-    xhr.addEventListener("load", function(d) {
-      expect(xhr.responseText).toBeDefined();
-      expect(xhr.responseText.length).toBeGreaterThan(0);
-      rooms = JSON.parse(xhr.responseText);
-      expect(rooms).toBeDefined();
-      roomnames = Object.keys(rooms);
-      room = rooms[roomnames[0]];
-      done();
-    });
-    xhr.send();
-  });
-/*
-  it("should initialize client", function(done) {
-    elation.janusweb.init({homepage: 'data:text/html,<fireboxroom></fireboxroom>', resolution: '800x600'}).then(function(newclient) { 
-      client = newclient;
-      janusweb = client.janusweb;
-      expect(client).toBeDefined();
-      done();
-    });
-  });
-*/
+
   it("should initialize client", function(done) {
     try {
-      elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: '640x480'}).then(function(newclient) { 
+      elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html', resolution: resolution}).then(function(newclient) { 
         client = newclient;
         janusweb = client.janusweb;
         expect(client).toBeDefined();
@@ -45,6 +22,7 @@ describe("JanusWeb", function() {
       console.log('exception happened!', e.stack);
     }
   });
+
   it("added canvas to document", function(done) {
     var canvases = document.getElementsByTagName('canvas');
     expect(canvases.length).toEqual(1);
@@ -52,50 +30,70 @@ describe("JanusWeb", function() {
     done();
   });
 
-  it("should load a room", function(done) {
-    expect(janusweb).toBeDefined();
-    janusweb.setActiveRoom(room.url);
-    elation.events.add(janusweb, 'room_change', function(ev) {
-      expect(janusweb.currentroom).toBeDefined();
+  var roomnames = Object.keys(rooms);
+  for (var i = 0; i < roomnames.length; i++) {
+    var roomname = roomnames[i];
+
+    function testRoom(roomname) {
+      var room = rooms[roomname];
+      it("should load a room: " + roomname, function(done) {
+        expect(janusweb).toBeDefined();
+        expect(roomname).toBeDefined();
+        expect(room).toBeDefined();
+        expect(room.url).toBeDefined();
+
+        var handleRoomChange = function(ev) {
+          elation.events.remove(janusweb, 'room_change', handleRoomChange);
+          expect(janusweb.currentroom).toBeDefined();
+
+          setTimeout(function() {
+            expect(canvas).toBeDefined();
+            var shotname = ['janusweb', roomname, browser, resolution].join('-') + '.png';
+            var shot = canvas.toDataURL('image/png');
+
+            elation.net.post('https://api.imgur.com/3/upload.json', 
+              {
+                type: 'base64',
+                name: shotname,
+                title: 'Test Screenshot - ' + roomname,
+                image: shot.split(',')[1]
+              }, 
+              {
+                headers: {
+                  Authorization: 'Client-ID 3c6bb1075f20701'
+                },
+                callback: function(data) {
+                  var json = JSON.parse(data);
+                  console.log('UPLOAD SUCCESS', roomname, shotname, json.data.link);
+                }
+              }
+            );
+
+            var newimg = new Image();
+            newimg.src = shot;
+            newimg.crossOrigin = '';
+            
+            var img = new Image();
+            img.crossOrigin = '';
+            img.src = "https://raw.githubusercontent.com/jbaicoianu/janusweb/screenshots/" + shotname;
+            img.addEventListener('load', function() {
+              var diff = imagediff.equal(newimg, img, 98);
+              expect(diff).toBe(true);
+              setTimeout( done, 1000);
+            });
+          }, 10000);
+        };
+        elation.events.add(janusweb, 'room_change', handleRoomChange);
+        janusweb.setActiveRoom(room.url);
+      });
+    } 
+    testRoom(roomname);
+  }
+  it("should stop when done", function(done) {
+    elation.events.add(client.engine, 'engine_stop', function() {
+      expect(client.running).toBe(false);
       done();
     });
+    client.engine.stop();
   });
-  it('takes a screenshot', function(done) {
-    setTimeout(function() {
-      expect(canvas).toBeDefined();
-      var shot = canvas.toDataURL('image/png');
-
-      elation.net.post('https://api.imgur.com/3/upload.json', 
-        {
-          type: 'base64',
-          name: 'testscreenshot.png',
-          title: 'Test Screenshot',
-          image: shot.split(',')[1]
-        }, 
-        {
-          headers: {
-            Authorization: 'Client-ID 3c6bb1075f20701'
-          },
-          callback: function(data) {
-            var json = JSON.parse(data);
-            console.log('UPLOAD SUCCESS', json.data.link);
-          }
-        });
-
-      var newimg = new Image();
-      newimg.src = shot;
-      newimg.crossOrigin = '';
-      
-      var img = new Image();
-      img.crossOrigin = '';
-      img.src = "https://raw.githubusercontent.com/jbaicoianu/janusweb/screenshots/janusweb-homepage-chrome-800x600.png";
-      img.addEventListener('load', function() {
-
-        var diff = imagediff.equal(newimg, img, 98);
-        expect(diff).toBe(true);
-        setTimeout( done, 1000);
-      });
-    }, 10000);
-  });
-
 });
