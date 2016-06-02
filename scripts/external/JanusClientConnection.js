@@ -342,7 +342,7 @@ JanusClientConnection.prototype.onMessage = function(msg) {
 };
 
 JanusClientConnection.prototype.subscribe = function(roomId) {
-  console.log('subscribing to ', roomId);
+  //console.log('subscribing to ', roomId);
   this.send({
     'method': 'subscribe',
     'data': {
@@ -352,7 +352,7 @@ JanusClientConnection.prototype.subscribe = function(roomId) {
 };
 
 JanusClientConnection.prototype.unsubscribe = function(url) {
-    console.log('unsubscribing from', url);
+    //console.log('unsubscribing from', url);
     this.send({
       'method': 'unsubscribe',
       'data': {
