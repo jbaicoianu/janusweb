@@ -15,7 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      {pattern: '/usr/local/lib/node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js', watched: true, included: true, served: true},
+      {pattern: 'node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js', watched: false, included: true, served: true},
       {pattern: 'tests/boot.js', watched: true, included: true, served: true},
       {pattern: 'build/*', watched: true, included: true, served: true},
       {pattern: 'build/media/**', watched: false, included: false, served: true},
