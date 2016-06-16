@@ -64,7 +64,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         properties: {
           corsproxy: elation.config.get('engine.assets.corsproxy'),
           datapath: elation.config.get('janusweb.datapath'),
-          homepage: this.args.homepage
+          homepage: this.args.homepage,
+          url: this.args.url
         },
         things: {
           player: {
