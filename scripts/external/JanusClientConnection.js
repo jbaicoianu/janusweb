@@ -328,6 +328,10 @@ JanusClientConnection.prototype.sendLogon = function() {
   }
   this.send(msgData);
 };
+JanusClientConnection.prototype.setUserId = function(userId) {
+  this._userId = userId;
+  this.sendLogon();
+};
 
 JanusClientConnection.prototype.send = function(msg) {
   if (this._websocket.readyState == 0) {
