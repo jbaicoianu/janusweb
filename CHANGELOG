@@ -1,3 +1,14 @@
+??? ?? 2016 - 0.4b
+------------------
+AssetScript support
+GIF support
+Improved build process
+Made available via NPM
+Stop and start all assets in a room when entering/leaving
+VIVE and Rift CV1 support
+Improved automated testing
+
+
 May  6 2016 - 0.3a
 ------------------
 Bookmark your favorite rooms with ctrl+b, then view them later in the bookmarks room
