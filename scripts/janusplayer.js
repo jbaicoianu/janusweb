@@ -9,6 +9,20 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         'browse_back': ['gamepad_0_button_4', elation.bind(this, this.browseBack)],
         'browse_forward': ['gamepad_0_button_5', elation.bind(this, this.browseForward)],
       });
+      this.vectors = {
+        xdir: new THREE.Vector3(1, 0, 0),
+        ydir: new THREE.Vector3(0, 1, 0),
+        zdir: new THREE.Vector3(0, 0, 1),
+        view_xdir: new THREE.Vector3(1, 0, 0),
+        view_ydir: new THREE.Vector3(0, 1, 0),
+        view_zdir: new THREE.Vector3(0, 0, 1),
+        hand0_xdir: new THREE.Vector3(1, 0, 0),
+        hand0_ydir: new THREE.Vector3(0, 1, 0),
+        hand0_zdir: new THREE.Vector3(0, 0, 1),
+        hand1_xdir: new THREE.Vector3(1, 0, 0),
+        hand1_ydir: new THREE.Vector3(0, 1, 0),
+        hand1_zdir: new THREE.Vector3(0, 0, 1),
+      };
       this.voip = new JanusVOIPRecorder({audioScale: 1024});
       this.voipqueue = [];
       this.voipbutton = elation.ui.button({append: document.body, classname: 'janusweb_voip', label: 'VOIP'});
@@ -18,6 +32,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.voip, 'voip_stop', elation.bind(this, this.handleVOIPStop));
       elation.events.add(this.voip, 'voip_data', elation.bind(this, this.handleVOIPData));
       elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
+      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateVectors));
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -60,6 +75,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (ev.value == 1) {
         history.go(1);
       }
+    }
+    this.updateVectors = function() {
+      var v = this.vectors;
+      this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
+      this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir)
     }
   }, elation.engine.things.player);
 });
