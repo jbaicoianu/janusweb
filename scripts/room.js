@@ -23,6 +23,9 @@ elation.require([
         'fog_col': { type: 'color', default: 0x000000 },
         'walk_speed': { type: 'float', default: 1.8 },
         'run_speed': { type: 'float', default: 5.4 },
+        'jump_velocity': { type: 'float', default: 5.0 },
+        'gravity': { type: 'float', default: -9.8 },
+        'locked': { type: 'bool', default: false },
       });
       this.translators = {
         '^bookmarks$': elation.janusweb.translators.bookmarks({}),
@@ -187,6 +190,7 @@ elation.require([
       this.baseurl = baseurl;
 
       this.jsobjects = {};
+      this.cookies = {};
       this.websurfaces = {};
       this.images = {};
       this.videos = {};
@@ -281,6 +285,7 @@ elation.require([
     }
 
     this.parseFireBox = function(fireboxsrc) {
+      fireboxsrc = fireboxsrc.replace('scale="1.4 1.4 1" url="http://usagii.net/other/placeholder/jancredits/index.html"', 'url="http://usagii.net/other/placeholder/jancredits/index.html"');
       var xml = elation.utils.parseXML(fireboxsrc, false, true); 
       var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
       var room = {_children: {}};
@@ -337,7 +342,7 @@ setTimeout(elation.bind(this, function() {
         }); 
         thing.setProperties(n);
         if (n.js_id) {
-          this.jsobjects[n.js_id] = thing;
+          this.jsobjects[n.js_id] = thing.getProxyObject();
         }
 }), Math.random() * 500);
       }));
@@ -359,7 +364,7 @@ setTimeout(elation.bind(this, function() {
         }
         var portal = this.spawn('janusportal', 'portal_' + n.url + '_' + Math.round(Math.random() * 10000), portalargs);
         if (n.js_id) {
-          this.jsobjects[n.js_id] = portal;
+          this.jsobjects[n.js_id] = portal.getProxyObject();
         }
 }), Math.random() * 500);
       }));
@@ -390,7 +395,7 @@ setTimeout(elation.bind(this, function() {
         }
         var image = this.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
         if (n.js_id) {
-          this.jsobjects[n.js_id] = image;
+          this.jsobjects[n.js_id] = image.getProxyObject();
         }
 }), Math.random() * 500);
       }));
@@ -408,7 +413,7 @@ setTimeout(elation.bind(this, function() {
         }; 
         var image = this.spawn('janusimage', n.id + '_' + Math.round(Math.random() * 10000), imageargs);
         if (n.js_id) {
-          this.jsobjects[n.js_id] = image;
+          this.jsobjects[n.js_id] = image.getProxyObject();
         }
       }));
       if (texts) texts.forEach(elation.bind(this, function(n) {
@@ -424,7 +429,7 @@ setTimeout(elation.bind(this, function() {
         }; 
         var label = this.spawn('janustext', n.id + '_' + Math.round(Math.random() * 10000), labelargs);
         if (n.js_id) {
-          this.jsobjects[n.js_id] = label;
+          this.jsobjects[n.js_id] = label.getProxyObject();
         }
       }));
       var soundmap = {};
@@ -447,7 +452,7 @@ setTimeout(elation.bind(this, function() {
             'loop': n.loop,
           }); 
           if (n.js_id) {
-            this.jsobjects[n.js_id] = sound;
+            this.jsobjects[n.js_id] = sound.getProxyObject();
           }
         } else {
           console.log("Couldn't find sound: " + n.id);
@@ -472,7 +477,7 @@ setTimeout(elation.bind(this, function() {
           lighting: n.lighting
         });
         if (n.video) {
-          this.jsobjects[n.js_id] = sound;
+          this.jsobjects[n.js_id] = video.getProxyObject();
         }
       }));
       
@@ -510,6 +515,15 @@ setTimeout(elation.bind(this, function() {
 
         this.properties.walk_speed = room.walk_speed || 1.8;
         this.properties.run_speed = room.run_speed || 5.4;
+      }
+
+      if (assets.scripts) {
+        assets.scripts.forEach(function(s) {
+          var script = elation.engine.assets.find('script', s.src);
+          elation.events.add(script, 'asset_load', function() {
+            document.head.appendChild(script);
+          });
+        });
       }
 
       //if (!this.active) {
@@ -601,6 +615,7 @@ setTimeout(elation.bind(this, function() {
       var soundassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetsound", [])); 
       var imageassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetimage", [])); 
       var videoassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetvideo", [])); 
+      var scriptassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetscript", [])); 
       var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
       var assetlist = [];
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
@@ -621,6 +636,14 @@ setTimeout(elation.bind(this, function() {
         }); 
       }));
       websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
+      scriptassets.forEach(elation.bind(this, function(n) { 
+        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+        assetlist.push({ 
+          assettype:'script', 
+          name: src,
+          src: src
+        }); 
+      }));
       elation.engine.assets.loadJSON(assetlist, this.baseurl); 
 
       var objlist = []; 
@@ -639,7 +662,8 @@ setTimeout(elation.bind(this, function() {
       var assets = {
         image: imageassets,
         sound: soundassets,
-        video: videoassets
+        video: videoassets,
+        scripts: scriptassets
       };
       return assets;
     }
@@ -758,6 +782,28 @@ setTimeout(elation.bind(this, function() {
           existing.die();
         }
       }));
+    }
+    this.createObject = function(type, args) {
+      var typemap = {
+        'object': 'janusobject',
+        'link': 'januslink',
+        'text': 'janustext',
+        'image': 'janusimage',
+        'image3d': 'janusimage',
+        'video': 'janusvideo',
+      };
+      var realtype = typemap[type.toLowerCase()] || type;
+      if (elation.engine.things[realtype]) {
+        var object = this.spawn(realtype, args.js_id, args);
+        if (args.js_id) {
+          this.jsobjects[args.js_id] = object.getProxyObject();
+        }
+      } else {
+        console.log('ERROR - unknown type: ', realtype);
+      }
+    }
+    this.addCookie = function(name, value) {
+      this.cookies[name] = value;
     }
   }, elation.engine.things.generic);
 });
