@@ -1,7 +1,38 @@
-elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection', 'utils.proxy'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
+    this.version = 'janusweb-0.4b';
+    this.settings = {
+      multiplayer: true,
+      sessiontracking: true,
+      jsdebugger: false,
+      selfavatar: false,
+      maxmemory: 2048,
+      comfortmode: false,
+      downloadcache: true,
+      antialiasing: true,
+      assetshaders: true,
+      assetimages: true,
+      sounds: true,
+      leapmotionhmd: true,
+      editmode: false,
+      crosshair: false,
+      gamepad: true,
+      portalhotkeys: false,
+      decouplehead: false,
+      mousepitch: true,
+      invertpitch: false,
+      avatarlighting: true,
+      uivoice: true,
+      launchurl: 'http://www.janusvr.com/index.html',
+      server: 'presence.janusvr.com',
+      port: 5566,
+      rate: 200,
+      fov: 70.0,
+      rotationspeed: 50.0,
+      hidemenu: false
+    };
 
     this.postinit = function() {
       this.defineProperties({
@@ -27,6 +58,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       });
       this.engine.systems.controls.activateContext('janus');
       this.remotePlayers = {};
+      this.remotePlayerCount = 0;
       this.lastUpdate = Date.now();
       this.tmpMat = new THREE.Matrix4();
       this.tmpVecX = new THREE.Vector3();
@@ -39,6 +71,81 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.engine.systems.admin) {
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.handleRoomEditSelf));
       }
+
+    }
+    this.initScripting = function() {
+      window.janus = new elation.proxy(this, {
+        version:           ['property', 'version',       { readonly: true}],
+        versiononline:     ['property', 'versiononline', {readonly: true}],
+        currentkey:        ['property', 'currentkey',    {readonly: true}],
+        chat:              ['property', 'chat.messagelist.items', {readonly: true}],
+        networkstatus:     ['property', 'network.status', {readonly: true}],
+        networkerror:      ['property', 'network.error', {readonly: true}],
+        roomserver:        ['property', 'network.server'],
+        playercount:       ['property', 'remotePlayerCount'],
+        bookmarkurl:       ['property', 'bookmarks.items'],
+        bookmarkthumb:     ['property', 'bookmarks.items'], // FIXME - need to filter?
+        playerlist:        ['property', ''],
+        settings:          ['property', 'settings'],
+        userid:            ['property', 'userId'],
+        avatarlighting:    ['property', 'settings.avatarlighting'],
+
+        currenturl:        ['function', 'getCurrentURL'],
+        tricount:          ['function', 'getTriangleCount'],
+        locked:            ['function', 'isLocked'],
+        getsetting:        ['function', 'getSetting'],
+        setsetting:        ['function', 'setSetting'],
+        roomprogress:      ['function', 'currentroom.getProgress'],
+        launchurl:         ['function', 'load'],
+        navback:           ['function', 'navigateBack'],
+        navforward:        ['function', 'navigateForward'],
+        navhome:           ['function', 'navigateHome'],
+        chatsend:          ['function', 'sendChatMessage'],
+        sync:              ['function', 'currentroom.sync'],
+        reset:             ['function', 'reset'],
+        quit:              ['function', 'quit'],
+        focus:             ['function', 'focus'],
+        unfocus:           ['function', 'blur'],
+        saveroom:          ['function', 'saveRoom'],
+        roomcode:          ['function', 'getRoomCode'],
+        setroomcode:       ['function', 'setRoomCode'],
+        setuserid:         ['function', 'setUsername'],
+        getuserid:         ['function', 'getUsername'],
+        setavatarlighting: ['function', 'setAvatarLighting'],
+        getavatarlighting: ['function', 'getAvatarLighting'],
+        resetavatar:       ['function', 'resetAvatar'],
+        hasFocus:          ['function', 'hasFocus']
+      });
+
+      var player = this.engine.client.player;
+      window.player = new elation.proxy(player, {
+        pos:           ['property', 'properties.position'],
+        //eye_pos:       ['property', 'eyes.properties.position'],
+        head_pos:       ['property', 'head.properties.position'],
+        //cursor_pos:    ['property', 'properties.cursor_position'],
+        //cursor_xdir:    ['property', 'properties.cursor_xdir'],
+        //cursor_ydir:    ['property', 'properties.cursor_ydir'],
+        //cursor_zdir:    ['property', 'properties.cursor_zdir'],
+        view_dir:      ['property', 'vectors.view_zdir'],
+        dir:      ['property', 'vectors.zdir'],
+        userid:      ['property', 'properties.player_id'],
+        //url:      ['property', 'currenturl'],
+        //hmd_enabled:      ['property', 'hmd_enabled'],
+        //cursor_active:      ['property', 'cursor_active'],
+        //cursor_object:      ['property', 'cursor_object'],
+        //lookat_object:      ['property', 'lookat_object'],
+        //lookat_pos:    ['property', 'properties.lookat_position'],
+        //lookat_xdir:    ['property', 'properties.lookat_xdir'],
+        //lookat_ydir:    ['property', 'properties.lookat_ydir'],
+        //lookat_zdir:    ['property', 'properties.lookat_zdir'],
+        hand0_xdir:    ['property', 'vectors.hand0_xdir'],
+        hand0_ydir:    ['property', 'vectors.hand0_ydir'],
+        hand0_zdir:    ['property', 'vectors.hand0_zdir'],
+        hand1_xdir:    ['property', 'vectors.hand1_xdir'],
+        hand1_ydir:    ['property', 'vectors.hand1_ydir'],
+        hand1_zdir:    ['property', 'vectors.hand1_zdir'],
+      });
+
     }
     this.createChildren = function() {
       var hashargs = elation.url();
@@ -57,12 +164,12 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         version: '49.54',
         roomUrl: starturl
       }
-      this.jcc = new JanusClientConnection(janusOptions);
-      this.chat = elation.janusweb.chat({append: document.body, client: this.jcc, player: this.engine.client.player});
-      this.jcc.addEventListener('message', function(msg) {
+      this.network = new JanusClientConnection(janusOptions);
+      this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
+      this.network.addEventListener('message', function(msg) {
         this.onJanusMessage(msg);
       }.bind(this));
-      this.jcc.addEventListener('connect', function() {
+      this.network.addEventListener('connect', function() {
         this.sendPlayerUpdate({first: true});
         //elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
         setInterval(function() {
@@ -73,6 +180,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }.bind(this));
       elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
       elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
+      this.initScripting();
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -140,6 +248,31 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
         this.currentroom.enable();
+
+        window.room = new elation.proxy(this.currentroom, {
+          url:           ['property', 'properties.url', { readonly: true}],
+          objects:       ['property', 'jsobjects'],
+          cookies:       ['property', 'cookies'],
+          walk_speed:    ['property', 'properties.walk_speed'],
+          run_speed:     ['property', 'properties.run_speed'],
+          jump_velocity: ['property', 'properties.jump_velocity'],
+          gravity:       ['property', 'properties.gravity'],
+
+          createObject:  ['function', 'createObject'],
+          removeObject:  ['function', 'remove'],
+          addCookie:     ['function', 'addCookie'],
+          playSound:     ['function', 'playSound'],
+          getObjectById: ['function', 'getObjectById'],
+
+          onLoad:        ['callback', 'room_load'],
+          update:        ['callback', 'engine_frame', 'engine'],
+          onCollision:   ['callback', 'physics_collide'],
+          onClick:       ['callback', 'click'],
+          onMouseDown:   ['callback', 'mousedown'],
+          onMouseUp:     ['callback', 'mouseup'],
+          onKeyDown:     ['callback', 'keydown'],
+          onKeyUp:       ['callback', 'keyup']
+        });
       } else {
         this.load(url, true);
       }
@@ -182,11 +315,11 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
     }
     this.subscribe = function(ev) {
-      this.jcc.subscribe(ev.data.properties.url);
-      this.jcc.enter_room(ev.data.properties.url);
+      this.network.subscribe(ev.data.properties.url);
+      this.network.enter_room(ev.data.properties.url);
     }
     this.unsubscribe = function(ev) {
-      this.jcc.unsubscribe(ev.data.properties.url);
+      this.network.unsubscribe(ev.data.properties.url);
     }
     this.onJanusMessage = function(msg) {
       var method = msg.data.method
@@ -210,6 +343,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           remoteplayer.die();
         }
         delete this.remotePlayers[msg.data.data.userId];
+        this.remotePlayerCount = Object.keys(this.remotePlayers).length;
       } else if (method == 'user_portal') {
         var data = msg.data.data;
         var portalname = 'portal_' + data.userId + '_' + md5(data.url);
@@ -266,6 +400,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         tmpVec3: new THREE.Vector3(),
         tmpMat4: new THREE.Matrix4()
       }
+      this.remotePlayerCount = Object.keys(this.remotePlayers).length;
       return remote;
     }
     this.moveRemotePlayer = function(data) {
@@ -366,7 +501,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
 
 
-      this.jcc.send({'method': 'move', 'data': moveData});
+      this.network.send({'method': 'move', 'data': moveData});
       this.lastUpdate = Date.now();
       this.sentUpdates++;
     }
@@ -393,6 +528,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       return adj + noun + num
     }
+    this.setUsername = function(name) {
+      this.network.setUserId(name);
+    }
     this.handleRoomEditOther = function(data) {
       var roomId = data.roomId,
           movedata = data.position;
@@ -417,6 +555,56 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (thing.properties.js_id) {
         this.changes[thing.properties.js_id] = change;
       }
+    }
+    this.getCurrentURL = function() {
+      return this.properties.url;
+    }
+    this.navigateHome = function() {
+      return this.setActiveRoom(this.properties.homepage);
+    }
+    this.navigateBack = function() {
+      history.back();
+    }
+    this.navigateForward = function() {
+      history.forward();
+    }
+    this.getTriangleCount = function() {
+      return this.engine.systems.render.views.main.renderinfo.render.faces;
+    }
+    this.isLocked = function() {
+      return this.currentroom.properties.locked;
+    }
+    this.sendChatMessage = function(text) {
+      this.network.send({'method': 'chat', data: text});
+    }
+    this.getSetting = function(name) {
+      return elation.utils.arrayget(this.settings, name);
+    }
+    this.setSetting = function(name, value) {
+      return elation.utils.arrayset(this.settings, name, value);
+    }
+    this.reset = function() {
+    }
+    this.quit = function() {
+    }
+    this.focus = function() {
+    }
+    this.blur = function() {
+    }
+    this.saveRoom = function() {
+    }
+    this.getRoomCode = function() {
+    }
+    this.setRoomCode = function(code) {
+    }
+    this.setAvatarLighting = function(lighting) {
+    }
+    this.getAvatarLighting = function() {
+    }
+    this.resetAvatar = function() {
+    }
+    this.hasFocus = function() {
+      return true;
     }
   }, elation.engine.things.generic);
 });
