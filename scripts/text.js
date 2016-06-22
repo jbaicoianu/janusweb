@@ -33,5 +33,14 @@ elation.require(['engine.things.label'], function() {
       
       return mesh;
     }
+    this.getProxyObject = function() {
+      return new elation.proxy(this, {
+        id: ['property', 'properties.id'],
+        js_id: ['property', 'properties.js_id'],
+        pos: ['property', 'properties.position'],
+        vel: ['property', 'properties.velocity'],
+        col: ['property', 'properties.color'],
+      });
+    }
   }, elation.engine.things.label);
 });
