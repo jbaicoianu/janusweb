@@ -61,6 +61,16 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       var xml = elation.template.get('janusweb.edit.object', objdef);
       return xml;
     }
+    this.getProxyObject = function() {
+      return new elation.proxy(this, {
+        id: ['property', 'properties.id'],
+        js_id: ['property', 'properties.js_id'],
+        pos: ['property', 'properties.position'],
+        vel: ['property', 'properties.velocity'],
+        scale: ['property', 'properties.scale'],
+        col: ['property', 'properties.col'],
+      });
+    }
     this.start = function() {
     }    
     this.stop = function() {
