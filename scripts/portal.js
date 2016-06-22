@@ -162,5 +162,5 @@ elation.require(['engine.things.portal'], function() {
       console.log('blur:', this.properties.gamename);
       this.unhover();
     }
-  }, elation.engine.things.portal);
+  }, elation.engine.things.janusbase);
 });
