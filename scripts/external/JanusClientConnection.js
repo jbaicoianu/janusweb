@@ -303,9 +303,13 @@ var JanusClientConnection = function(opts)
   this._userId = opts.userId;
   this._roomUrl = opts.roomUrl;
   this._version = opts.version;
+  this.status = 0;
+  this.error = '';
   this._websocket = new WebSocket(opts.host, 'binary');
+  this.status = 1;
   this.msgQueue = [];
   this._websocket.onopen = function() {
+    this.status = 2;
     this.sendLogon();
     while (this.msgQueue.length > 0) {
       this.send(this.msgQueue.shift());
