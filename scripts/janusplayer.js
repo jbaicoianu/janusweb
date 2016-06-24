@@ -22,6 +22,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         hand1_xdir: new THREE.Vector3(1, 0, 0),
         hand1_ydir: new THREE.Vector3(0, 1, 0),
         hand1_zdir: new THREE.Vector3(0, 0, 1),
+        cursor_pos: new THREE.Vector3(0, 0, 0),
       };
       this.voip = new JanusVOIPRecorder({audioScale: 1024});
       this.voipqueue = [];
