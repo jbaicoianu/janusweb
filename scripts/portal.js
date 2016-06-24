@@ -3,6 +3,8 @@ elation.require(['engine.things.portal'], function() {
     this.postinit = function() {
       this.defineProperties({
         'janus': { type: 'object' },
+        'url': { type: 'string' },
+        'title': { type: 'string' },
         'thumbnail': { type: 'texture' }
       });
       this.addTag('usable');
@@ -161,6 +163,19 @@ elation.require(['engine.things.portal'], function() {
     this.useBlur = function(ev) {
       console.log('blur:', this.properties.gamename);
       this.unhover();
+    }
+    this.getProxyObject = function() {
+      return new elation.proxy(this, {
+        id: ['property', 'properties.id'],
+        js_id: ['property', 'properties.js_id'],
+        pos: ['property', 'properties.position'],
+        vel: ['property', 'properties.velocity'],
+        scale: ['property', 'properties.scale'],
+        col: ['property', 'properties.col'],
+        url: ['property', 'properties.url'],
+        title: ['property', 'properties.title'],
+        thumbnail: ['property', 'properties.thumbnail'],
+      });
     }
   }, elation.engine.things.janusbase);
 });
