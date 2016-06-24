@@ -71,7 +71,6 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.engine.systems.admin) {
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.handleRoomEditSelf));
       }
-
     }
     this.initScripting = function() {
       window.janus = new elation.proxy(this, {
@@ -118,11 +117,12 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       });
 
       var player = this.engine.client.player;
+      player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
       window.player = new elation.proxy(player, {
         pos:           ['property', 'properties.position'],
         //eye_pos:       ['property', 'eyes.properties.position'],
         head_pos:       ['property', 'head.properties.position'],
-        //cursor_pos:    ['property', 'properties.cursor_position'],
+        cursor_pos:    ['property', 'vectors.cursor_pos'],
         //cursor_xdir:    ['property', 'properties.cursor_xdir'],
         //cursor_ydir:    ['property', 'properties.cursor_ydir'],
         //cursor_zdir:    ['property', 'properties.cursor_zdir'],
@@ -145,7 +145,18 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         hand1_ydir:    ['property', 'vectors.hand1_ydir'],
         hand1_zdir:    ['property', 'vectors.hand1_zdir'],
       });
-
+      window.Vector = function(x, y, z) {
+        return new THREE.Vector3(x, y, z);
+      }
+      window.distance = function(v1, v2) {
+        return v1.distanceTo(v2);
+      }
+      window.print = function() {
+        console.log.apply(console, arguments);
+      }
+      window.debug = function() {
+        console.log.apply(console, arguments);
+      }
     }
     this.createChildren = function() {
       var hashargs = elation.url();
@@ -264,14 +275,14 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           playSound:     ['function', 'playSound'],
           getObjectById: ['function', 'getObjectById'],
 
-          onLoad:        ['callback', 'room_load'],
+          onLoad:        ['callback', 'janus_room_scriptload'],
           update:        ['callback', 'engine_frame', 'engine'],
           onCollision:   ['callback', 'physics_collide'],
-          onClick:       ['callback', 'click'],
-          onMouseDown:   ['callback', 'mousedown'],
-          onMouseUp:     ['callback', 'mouseup'],
-          onKeyDown:     ['callback', 'keydown'],
-          onKeyUp:       ['callback', 'keyup']
+          onClick:       ['callback', 'click', 'engine.client.container'],
+          onMouseDown:   ['callback', 'mousedown', 'engine.client.container'],
+          onMouseUp:     ['callback', 'mouseup', 'engine.client.container'],
+          onKeyDown:     ['callback', 'janus_room_keydown'],
+          onKeyUp:       ['callback', 'janus_room_keyup']
         });
       } else {
         this.load(url, true);

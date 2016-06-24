@@ -37,6 +37,8 @@ elation.require([
       this.load();
       this.roomsrc = '';
       //this.showDebug();
+      elation.events.add(this.engine.client.container, 'keydown', elation.bind(this, this.onKeyDown));
+      elation.events.add(this.engine.client.container, 'keyup', elation.bind(this, this.onKeyUp));
     }
     this.createChildren = function() {
       this.spawn('light_ambient', this.id + '_ambient', {
@@ -285,7 +287,6 @@ elation.require([
     }
 
     this.parseFireBox = function(fireboxsrc) {
-      fireboxsrc = fireboxsrc.replace('scale="1.4 1.4 1" url="http://usagii.net/other/placeholder/jancredits/index.html"', 'url="http://usagii.net/other/placeholder/jancredits/index.html"');
       var xml = elation.utils.parseXML(fireboxsrc, false, true); 
       var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
       var room = {_children: {}};
@@ -433,14 +434,28 @@ setTimeout(elation.bind(this, function() {
         }
       }));
       var soundmap = {};
-      if (assets.sound) assets.sound.forEach(function(n) { soundmap[n.id] = n; });
+      if (assets.sound) assets.sound.forEach(elation.bind(this, function(n) { 
+        soundmap[n.id] = n; 
+        var soundurl = (n.src.match(/^https?:/) || n.src[0] == '/' ? n.src : this.baseurl + n.src);
+
+        var proxyurl = this.properties.janus.properties.corsproxy;
+        soundurl = proxyurl + soundurl;
+        var sound = this.spawn('janussound', n.id + '_' + Math.round(Math.random() * 10000), { 
+          'room': this,
+          'js_id': n.js_id,
+          'position': n.pos,
+          'src': soundurl,
+          'distance': parseFloat(n.dist),
+          //'volume': n.scale[0],
+          'autoplay': false,
+          'loop': n.loop,
+        }); 
+        this.sounds[n.id] = sound;
+      }));
       if (sounds) sounds.forEach(elation.bind(this, function(n) {
         var soundargs = soundmap[n.id];
         if (soundargs) {
-          var soundurl = (soundargs.src.match(/^https?:/) || soundargs.src[0] == '/' ? soundargs.src : this.baseurl + soundargs.src);
-
-          var proxyurl = this.properties.janus.properties.corsproxy;
-          soundurl = proxyurl + soundurl;
+/*
           var sound = this.spawn('janussound', n.id + '_' + Math.round(Math.random() * 10000), { 
             'room': this,
             'js_id': n.js_id,
@@ -451,9 +466,13 @@ setTimeout(elation.bind(this, function() {
             'autoplay': true,
             'loop': n.loop,
           }); 
+*/
+          var sound = this.sounds[n.id];
+          sound.properties.autoplay = true;
           if (n.js_id) {
             this.jsobjects[n.js_id] = sound.getProxyObject();
           }
+          this.sounds[n.id] = sound;
         } else {
           console.log("Couldn't find sound: " + n.id);
         }
@@ -518,12 +537,13 @@ setTimeout(elation.bind(this, function() {
       }
 
       if (assets.scripts) {
-        assets.scripts.forEach(function(s) {
+        assets.scripts.forEach(elation.bind(this, function(s) {
           var script = elation.engine.assets.find('script', s.src);
-          elation.events.add(script, 'asset_load', function() {
+          elation.events.add(script, 'asset_load', elation.bind(this, function() {
             document.head.appendChild(script);
-          });
-        });
+            script.onload = elation.bind(this, this.doScriptOnload);
+          }));
+        }));
       }
 
       //if (!this.active) {
@@ -793,8 +813,20 @@ setTimeout(elation.bind(this, function() {
         'video': 'janusvideo',
       };
       var realtype = typemap[type.toLowerCase()] || type;
+        var nargs = { 
+          'room': this,
+          'janus': this.properties.janus,
+          'js_id': args.js_id,
+          'position': args.pos || '0 0 0',
+          'orientation': args.orientation || '0 0 0 1',
+          'scale': args.scale || '1 1 1',
+          'image_id': args.id,
+          'color': args.col,
+          'lighting': args.lighting
+        }; 
       if (elation.engine.things[realtype]) {
-        var object = this.spawn(realtype, args.js_id, args);
+console.log('spawn it', realtype, args, nargs);
+        var object = this.spawn(realtype, args.js_id, nargs);
         if (args.js_id) {
           this.jsobjects[args.js_id] = object.getProxyObject();
         }
@@ -804,6 +836,20 @@ setTimeout(elation.bind(this, function() {
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
+    }
+    this.doScriptOnload = function() {
+      elation.events.fire({type: 'janus_room_scriptload', element: this});
+    }
+    this.playSound = function(name) {
+      if (this.sounds[name]) {
+        this.sounds[name].play();
+      }
+    }
+    this.onKeyDown = function(ev) { 
+      elation.events.fire({type: 'janus_room_keydown', element: this, extras: { keyCode: ev.key.toUpperCase() }});
+    }
+    this.onKeyUp = function(ev) { 
+      elation.events.fire({type: 'janus_room_keyup', element: this, extras: { keyCode: ev.key.toUpperCase() }});
     }
   }, elation.engine.things.generic);
 });
