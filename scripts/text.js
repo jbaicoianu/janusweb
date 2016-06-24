@@ -40,6 +40,7 @@ elation.require(['engine.things.label'], function() {
         pos: ['property', 'properties.position'],
         vel: ['property', 'properties.velocity'],
         col: ['property', 'properties.color'],
+        text: ['property', 'properties.text'],
       });
     }
   }, elation.engine.things.label);
