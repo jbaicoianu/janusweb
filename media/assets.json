@@ -45,5 +45,10 @@
   { "assettype":"image", "name":"skyrender_front", "src":"assets/skybox/skyrender_front.png" },
   { "assettype":"image", "name":"skyrender_left", "src":"assets/skybox/skyrender_left.png" },
   { "assettype":"image", "name":"skyrender_right", "src":"assets/skybox/skyrender_right.png" },
-  { "assettype":"image", "name":"skyrender_up", "src":"assets/skybox/skyrender_up.png" }
+  { "assettype":"image", "name":"skyrender_up", "src":"assets/skybox/skyrender_up.png" },
+
+  { "assettype":"model", "name":"cursor3d", "src":"assets/cursor3d.obj", "tex0":"assets/cursor3d.png" },
+  { "assettype":"model", "name":"cursor_crosshair", "src":"assets/cursor_crosshair.obj", "tex0":"assets/cursor_crosshair.png" },
+  { "assettype":"model", "name":"cursor_arrow", "src":"assets/cursor_arrow.obj", "tex0":"assets/cursor_arrow.png" }
+
 ]
