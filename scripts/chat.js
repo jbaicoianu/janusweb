@@ -7,7 +7,7 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
       this.args.title = 'JanusVR Chat';
       this.args.bottom = true;
       this.args.resizable = false;
-      this.args.controls = false;
+      this.args.controls = true;
       this.player = this.args.player;
       this.client = this.args.client;
 
