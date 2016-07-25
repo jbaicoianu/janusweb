@@ -26,6 +26,3 @@ fi
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb janusweb.client engine.assetworker
 mv janusweb.css janusweb.js "$BUILDDIR"
 echo Built new release in \"$BUILDDIR/\"
-
-grep "==== BEGIN" $BUILDDIR/janusweb.js
-
