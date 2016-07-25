@@ -44,18 +44,19 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     this.initEngine = function() {
       var hashargs = elation.url();
        
-      this.enginecfg.stats = false;
+      this.enginecfg.stats = true;
 
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
       this.enginecfg.systems.push("physics");
-      this.enginecfg.systems.push("world");
       this.enginecfg.systems.push("ai");
+      this.enginecfg.systems.push("world");
       if (hashargs.admin == 1) {
         this.enginecfg.systems.push("admin");
       } 
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
+      this.enginecfg.crosshair = false;
     }
     this.initWorld = function() {
       var things = this.world.load({
@@ -75,7 +76,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
               position: [0,0,0],
               mass: 10,
               movespeed: 5000,
-              collidable: false
+              collidable: true
             }
           },
         }
