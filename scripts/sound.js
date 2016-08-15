@@ -3,11 +3,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janussound.extendclass.postinit.call(this);
       this.defineProperties({
-        id: { type: 'string' },
-        src: { type: 'string' },
+        sound_id: { type: 'string' },
         rect: { type: 'string', default: "0 0 0 0" },
         loop: { type: 'boolean', default: false },
-        autoplay: { type: 'boolean', default: true },
+        auto_play: { type: 'boolean', default: true },
         play_once: { type: 'boolean', default: false },
         dist: { type: 'float', default: 1.0 },
         pitch: { type: 'float', default: 1.0 },
@@ -20,10 +19,13 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createChildren = function() {
       if (!this.audio) {
-        this.createAudio(this.properties.src);
+        var sound = elation.engine.assets.find('sound', this.sound_id);
+        if (sound) {
+          this.createAudio(sound.getProxiedURL());
+        }
       }
     }
-    this.createAudio = function() {
+    this.createAudio = function(src) {
       if (this.audio) {
         if (this.audio.isPlaying) {
           this.audio.stop();
@@ -42,18 +44,18 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
           this.audio.panner.distanceModel = 'linear';
         }
-        this.audio.autoplay = this.properties.autoplay;
-        this.audio.setLoop(this.properties.loop);
-        this.audio.setVolume(this.properties.gain);
-        if (this.properties.src) {
-          this.audio.load(this.properties.src);
+        this.audio.autoplay = this.auto_play;
+        this.audio.setLoop(this.loop);
+        this.audio.setVolume(this.gain);
+        if (src) {
+          this.audio.load(src);
+        } else {
         }
         this.objects['3d'].add(this.audio);
-console.log('MADE AUDIO', this.audio);
       }
     }
     this.load = function(url) {
-      this.properties.src = url;
+      this.src = url;
       if (this.audio.isPlaying) {
         this.audio.stop();
       }
@@ -61,7 +63,11 @@ console.log('MADE AUDIO', this.audio);
     }
     this.play = function() {
       if (this.audio && this.audio.source.buffer) {
-        this.audio.play();
+        if (this.audio.isPlaying) {
+          this.audio.source.currentTime = 0;
+        } else {
+          this.audio.play();
+        }
       }
     }
     this.pause = function() {

@@ -26,7 +26,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createMaterial = function() {
       if (this.asset) {
-        var texture = this.texture = this.asset.getAsset();
+        var texture = this.texture = this.asset.getInstance();
         if (this.asset.sbs3d) {
           texture.repeat.x = 0.5;
         }
@@ -63,7 +63,7 @@ elation.require(['janusweb.janusbase'], function() {
       return {width: image.videoWidth, height: image.videoHeight};
     }
     this.click = function() {
-      var texture = this.asset.getAsset();
+      var texture = this.asset.getInstance();
       var video = texture.image;
       if (video.currentTime > 0 && !video.paused && !video.ended) {
         video.pause();

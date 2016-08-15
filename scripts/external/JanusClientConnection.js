@@ -303,9 +303,19 @@ var JanusClientConnection = function(opts)
   this._userId = opts.userId;
   this._roomUrl = opts.roomUrl;
   this._version = opts.version;
+  this._host = opts.host;
+  this.lastattempt = 0;
+  this.reconnectdelay = 10000;
+  this.connect();
+}
+
+EventDispatcher.prototype.apply(JanusClientConnection.prototype);
+
+JanusClientConnection.prototype.connect = function() {
+  this.lastattempt = new Date().getTime();
   this.status = 0;
   this.error = '';
-  this._websocket = new WebSocket(opts.host, 'binary');
+  this._websocket = new WebSocket(this._host, 'binary');
   this.status = 1;
   this.msgQueue = [];
   this._websocket.onopen = function() {
@@ -318,8 +328,13 @@ var JanusClientConnection = function(opts)
   }.bind(this)
   this._websocket.onmessage = this.onMessage.bind(this)  
 };
-
-EventDispatcher.prototype.apply(JanusClientConnection.prototype);
+JanusClientConnection.prototype.reconnect = function() {
+  var now = new Date().getTime();
+  if (this.lastattempt + this.reconnectdelay <= now) {
+    console.log('Reconnecting...');
+    this.connect();
+  }
+}
 
 JanusClientConnection.prototype.sendLogon = function() {
   var msgData = {
@@ -342,6 +357,8 @@ JanusClientConnection.prototype.send = function(msg) {
     this.msgQueue.push(msg);
   } else if (this._websocket.readyState == 1) {
     this._websocket.send(JSON.stringify(msg) + '\r\n');
+  } else {
+    this.reconnect();
   }
 };
 

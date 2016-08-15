@@ -49,6 +49,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         elation.engine.assets.setCORSProxy(this.properties.corsproxy);
       }
       elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json');
+setTimeout(function() {
+        //elation.engine.assets.setPlaceholder('model', 'loading');
+}, 200);
 
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
@@ -59,6 +62,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       this.engine.systems.controls.activateContext('janus');
       this.remotePlayers = {};
       this.remotePlayerCount = 0;
+      this.playerCount = this.remotePlayerCount + 1;
       this.lastUpdate = Date.now();
       this.tmpMat = new THREE.Matrix4();
       this.tmpVecX = new THREE.Vector3();
@@ -66,13 +70,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       this.tmpVecZ = new THREE.Vector3();
       this.sentUpdates = 0;
       this.updateRate = 15;
-      this.changes = {};
-
-      if (this.engine.systems.admin) {
-        elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.handleRoomEditSelf));
-      }
     }
     this.initScripting = function() {
+      window.delta_time = 1000/60;
       window.janus = new elation.proxy(this, {
         version:           ['property', 'version',       { readonly: true}],
         versiononline:     ['property', 'versiononline', {readonly: true}],
@@ -81,7 +81,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         networkstatus:     ['property', 'network.status', {readonly: true}],
         networkerror:      ['property', 'network.error', {readonly: true}],
         roomserver:        ['property', 'network.server'],
-        playercount:       ['property', 'remotePlayerCount'],
+        playercount:       ['property', 'playerCount'],
         bookmarkurl:       ['property', 'bookmarks.items'],
         bookmarkthumb:     ['property', 'bookmarks.items'], // FIXME - need to filter?
         playerlist:        ['property', ''],
@@ -118,44 +118,51 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       var player = this.engine.client.player;
       player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
-      window.player = new elation.proxy(player, {
-        pos:           ['property', 'properties.position'],
-        //eye_pos:       ['property', 'eyes.properties.position'],
-        head_pos:       ['property', 'head.properties.position'],
-        cursor_pos:    ['property', 'vectors.cursor_pos'],
-        //cursor_xdir:    ['property', 'properties.cursor_xdir'],
-        //cursor_ydir:    ['property', 'properties.cursor_ydir'],
-        //cursor_zdir:    ['property', 'properties.cursor_zdir'],
-        view_dir:      ['property', 'vectors.view_zdir'],
-        dir:      ['property', 'vectors.zdir'],
-        userid:      ['property', 'properties.player_id'],
-        //url:      ['property', 'currenturl'],
-        //hmd_enabled:      ['property', 'hmd_enabled'],
-        //cursor_active:      ['property', 'cursor_active'],
-        //cursor_object:      ['property', 'cursor_object'],
-        //lookat_object:      ['property', 'lookat_object'],
-        //lookat_pos:    ['property', 'properties.lookat_position'],
-        //lookat_xdir:    ['property', 'properties.lookat_xdir'],
-        //lookat_ydir:    ['property', 'properties.lookat_ydir'],
-        //lookat_zdir:    ['property', 'properties.lookat_zdir'],
-        hand0_xdir:    ['property', 'vectors.hand0_xdir'],
-        hand0_ydir:    ['property', 'vectors.hand0_ydir'],
-        hand0_zdir:    ['property', 'vectors.hand0_zdir'],
-        hand1_xdir:    ['property', 'vectors.hand1_xdir'],
-        hand1_ydir:    ['property', 'vectors.hand1_ydir'],
-        hand1_zdir:    ['property', 'vectors.hand1_zdir'],
-      });
+      window.player = player.getProxyObject();
+
       window.Vector = function(x, y, z) {
+        if (y === undefined) y = x;
+        if (z === undefined) z = y;
         return new THREE.Vector3(x, y, z);
+      }
+      window.translate = function(v1, v2) {
+        return new THREE.Vector3().addVectors(v1, v2);
       }
       window.distance = function(v1, v2) {
         return v1.distanceTo(v2);
+      }
+      window.scalarMultiply = function(v, s) {
+        var ret = new THREE.Vector3().copy(v);
+        if (s instanceof THREE.Vector3) {
+          ret.x *= s.x;
+          ret.y *= s.y;
+          ret.z *= s.z;
+        } else {
+          ret.multiplyScalar(s);
+        }
+        return ret;
+      }
+      window.cross = function(v1, v2) {
+        return new THREE.Vector3().crossVectors(v1, v2);
+      }
+      window.normalized = function(v) {
+        return new THREE.Vector3().copy(v).normalize();
+      }
+      window.equals = function(v1, v2) {
+        return v1.equals(v2);
       }
       window.print = function() {
         console.log.apply(console, arguments);
       }
       window.debug = function() {
         console.log.apply(console, arguments);
+      }
+      window.removeKey = function(dict, key) {
+        delete dict[key];
+      }
+      var uniqueId = 1;
+      window.uniqueId = function() {
+        return uniqueId++;
       }
     }
     this.createChildren = function() {
@@ -260,27 +267,37 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         }
         this.currentroom.enable();
 
+        this.scriptframeargs = [
+          1000/60
+        ];
         window.room = new elation.proxy(this.currentroom, {
-          url:           ['property', 'properties.url', { readonly: true}],
+          url:           ['property', 'url', { readonly: true}],
           objects:       ['property', 'jsobjects'],
           cookies:       ['property', 'cookies'],
-          walk_speed:    ['property', 'properties.walk_speed'],
-          run_speed:     ['property', 'properties.run_speed'],
-          jump_velocity: ['property', 'properties.jump_velocity'],
-          gravity:       ['property', 'properties.gravity'],
-
+          walk_speed:    ['property', 'walk_speed'],
+          run_speed:     ['property', 'run_speed'],
+          jump_velocity: ['property', 'jump_velocity'],
+          gravity:       ['property', 'gravity'],
+          fog:           ['property', 'fog'],
+          fog_mode:      ['property', 'fog_mode'], 
+          fog_density:   ['property', 'fog_density'],
+          fog_start:     ['property', 'fog_start'],
+          fog_end:       ['property', 'fog_end'],
+          fog_col:       ['property', 'fog_col'],
+  
           createObject:  ['function', 'createObject'],
-          removeObject:  ['function', 'remove'],
+          removeObject:  ['function', 'removeObject'],
           addCookie:     ['function', 'addCookie'],
           playSound:     ['function', 'playSound'],
+          stopSound:     ['function', 'stopSound'],
           getObjectById: ['function', 'getObjectById'],
 
           onLoad:        ['callback', 'janus_room_scriptload'],
-          update:        ['callback', 'engine_frame', 'engine'],
-          onCollision:   ['callback', 'physics_collide'],
+          update:        ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
+          onCollision:   ['callback', 'physics_collide', 'objects.dynamics'],
           onClick:       ['callback', 'click', 'engine.client.container'],
-          onMouseDown:   ['callback', 'mousedown', 'engine.client.container'],
-          onMouseUp:     ['callback', 'mouseup', 'engine.client.container'],
+          onMouseDown:   ['callback', 'janus_room_mousedown'],
+          onMouseUp:     ['callback', 'janus_room_mouseup'],
           onKeyDown:     ['callback', 'janus_room_keydown'],
           onKeyUp:       ['callback', 'janus_room_keyup']
         });
@@ -355,6 +372,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         }
         delete this.remotePlayers[msg.data.data.userId];
         this.remotePlayerCount = Object.keys(this.remotePlayers).length;
+        this.playerCount = this.remotePlayerCount + 1;
       } else if (method == 'user_portal') {
         var data = msg.data.data;
         var portalname = 'portal_' + data.userId + '_' + md5(data.url);
@@ -403,7 +421,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     this.spawnRemotePlayer = function(data) {
       var userId = data.position._userId;
       var spawnpos = (data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
-      this.remotePlayers[userId] = this.currentroom.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId});
+      this.remotePlayers[userId] = this.currentroom.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false});
       var remote = this.remotePlayers[userId];
       remote.janusDirs = {
         tmpVec1: new THREE.Vector3(),
@@ -412,6 +430,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         tmpMat4: new THREE.Matrix4()
       }
       this.remotePlayerCount = Object.keys(this.remotePlayers).length;
+      this.playerCount = this.remotePlayerCount + 1;
       return remote;
     }
     this.moveRemotePlayer = function(data) {
@@ -487,13 +506,52 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         moveData.audio = window.btoa(binary);
         moveData.anim_id = "speak";
       }
-      var changeids = Object.keys(this.changes);
+      var changeids = Object.keys(this.currentroom.changes);
       var changestr = '';
-      changeids.forEach(elation.bind(this, function(id) {
-        changestr += this.changes[id];
-        delete this.changes[id];
-      }));
+      if (changeids.length > 0) {
+        var xmldoc = document.implementation.createDocument(null, 'edit', null);
+        var editroot = xmldoc.documentElement;
+
+        var typemap = {
+          janustext: 'Text',
+          janusobject: 'Object',
+        };
+
+        changeids.forEach(elation.bind(this, function(id) {
+          //changestr += this.currentroom.changes[id];
+          var change = this.currentroom.changes[id];
+          var real = this.currentroom.getObjectFromProxy(change);
+          if (real) {
+            var xmltype = typemap[real.type] || 'Object';
+            xmlnode = xmldoc.createElement(xmltype); // FIXME - determine object's type
+            
+            var attrs = Object.keys(change);
+            for (var i = 0; i < attrs.length; i++) {
+              var k = attrs[i];
+              var val = change[k];
+              if (val instanceof THREE.Vector2 ||
+                  val instanceof THREE.Vector3) {
+                val = val.toArray().join(',');
+              } else if (val instanceof THREE.Color) {
+                val = val.toArray().join(',');
+              }
+              if (val !== null && val !== undefined && typeof val != 'function') {
+                xmlnode.setAttribute(k, val);
+              }
+            }
+            editroot.appendChild(xmlnode);
+          }
+          delete this.currentroom.changes[id];
+        }));
+        this.currentroom.appliedchanges = {};
+        var serializer = new XMLSerializer();
+        changestr = serializer.serializeToString(xmldoc);
+        changestr = changestr.replace(/"/g, '^');
+        changestr = changestr.replace(/^<edit\/?>/, '');
+        changestr = changestr.replace(/<\/edit>\s*$/, '');
+      }
       if (changestr != '') {
+        //console.log('SEND', changestr);
         moveData.room_edit = changestr;
       }
       if (document.activeElement && document.activeElement === this.chat.input.inputelement) {
@@ -552,6 +610,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (room) {
         if (edit) {
           var editxml = edit.replace(/\^/g, '"');
+//console.log('RECV', editxml);
           room.applyEditXML(editxml);
         }
         if (del) {
@@ -559,13 +618,6 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           room.applyDeleteXML(deletexml);
         }
       } 
-    }
-    this.handleRoomEditSelf = function(ev) {
-      var thing = ev.data;
-      var change = thing.summarizeXML();
-      if (thing.properties.js_id) {
-        this.changes[thing.properties.js_id] = change;
-      }
     }
     this.getCurrentURL = function() {
       return this.properties.url;
@@ -616,6 +668,16 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     }
     this.hasFocus = function() {
       return true;
+    }
+    this.sendScriptFrame = function(ev) {
+/*
+      this.engine.systems.world.scene['world-3d'].updateMatrixWorld(true);
+      this.scriptframeargs[0] = ev.data.delta * 1000;
+      //elation.events.fire({element: this.currentroom, type: 'janusweb_script_frame'});
+      if (this.currentroom.update) {
+        this.currentroom.update(1000/60);
+      }
+*/
     }
   }, elation.engine.things.generic);
 });

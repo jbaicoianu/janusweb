@@ -1,3 +1,4 @@
+/*
 describe("JanusWeb Init", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   var client, janusweb, canvas;
@@ -97,3 +98,4 @@ describe("JanusWeb Init", function() {
     client.engine.stop();
   });
 });
+*/

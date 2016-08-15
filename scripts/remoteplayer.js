@@ -3,6 +3,8 @@ elation.component.add('engine.things.remoteplayer', function() {
   this.postinit = function() {
     this.defineProperties({
       startposition: {type: 'vector3', default: new THREE.Vector3()},
+      pickable: {type: 'boolean', default: false},
+      collidable: {type: 'boolean', default: false},
       player_id: {type: 'string', default: 'UnknownPlayer'},
       player_name: {type: 'string', default: 'UnknownPlayer'},
     });
@@ -32,7 +34,9 @@ elation.component.add('engine.things.remoteplayer', function() {
       'position': [0,0,-0.125],
       collidable: false,
       'tilesize': 0.075,
-      'player_id': this.properties.player_name
+      'player_id': this.properties.player_name,
+      pickable: false,
+      collidable: false
     });
     this.label = this.face.spawn('label', this.properties.player_name + '_label', {
       size: .1,
@@ -40,7 +44,9 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false,
       text: this.properties.player_name,
       position: [0,0.35,0],
-      orientation: [0,1,0,0]
+      orientation: [0,1,0,0],
+      pickable: false,
+      collidable: false
     });
     this.mouth = this.face.spawn('sound', this.properties.player_name + '_voice', {
       //loop: true
@@ -49,7 +55,7 @@ elation.component.add('engine.things.remoteplayer', function() {
     var context = this.mouth.audio.context;
     this.voip = new JanusVOIPPlayer();
     this.voip.start(context);
-    this.audiobuffer = new THREE.AudioBuffer(this.mouth.audio.context);
+    this.audiobuffer = {readyCallbacks: []};//new THREE.AudioBuffer(this.mouth.audio.context);
     this.audiobuffer.buffer = this.voip.rawbuffer;
 
     //elation.events.add(this.voip, 'voip_player_data', elation.bind(this, this.handleVoipData));
@@ -60,7 +66,7 @@ elation.component.add('engine.things.remoteplayer', function() {
 
     }
 
-    this.mouth.audio.setBuffer(this.audiobuffer);
+    //this.mouth.audio.setBuffer(this.audiobuffer);
   };
   this.speak = function(noise) {
     this.voip.speak(noise);

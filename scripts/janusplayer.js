@@ -4,6 +4,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
   elation.component.add('engine.things.janusplayer', function() {
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
+      this.defineProperties({
+        cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility}
+      });
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
         'browse_back': ['gamepad_0_button_4', elation.bind(this, this.browseBack)],
@@ -13,17 +16,35 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         xdir: new THREE.Vector3(1, 0, 0),
         ydir: new THREE.Vector3(0, 1, 0),
         zdir: new THREE.Vector3(0, 0, 1),
+        eye_pos: new THREE.Vector3(0, 1.6, 0),
         view_xdir: new THREE.Vector3(1, 0, 0),
         view_ydir: new THREE.Vector3(0, 1, 0),
         view_zdir: new THREE.Vector3(0, 0, 1),
-        hand0_xdir: new THREE.Vector3(1, 0, 0),
-        hand0_ydir: new THREE.Vector3(0, 1, 0),
-        hand0_zdir: new THREE.Vector3(0, 0, 1),
-        hand1_xdir: new THREE.Vector3(1, 0, 0),
-        hand1_ydir: new THREE.Vector3(0, 1, 0),
-        hand1_zdir: new THREE.Vector3(0, 0, 1),
+        cursor_xdir: new THREE.Vector3(1, 0, 0),
+        cursor_ydir: new THREE.Vector3(0, 1, 0),
+        cursor_zdir: new THREE.Vector3(0, 0, 1),
         cursor_pos: new THREE.Vector3(0, 0, 0),
+        lookat_pos: new THREE.Vector3(0, 0, 0),
       };
+      this.hands = {
+        left: {
+          active: false,
+          position: new THREE.Vector3(0, 0, 0),
+          xdir: new THREE.Vector3(1, 0, 0),
+          ydir: new THREE.Vector3(0, 1, 0),
+          zdir: new THREE.Vector3(0, 0, 1),
+        },
+        right: {
+          active: false,
+          position: new THREE.Vector3(0, 0, 0),
+          xdir: new THREE.Vector3(1, 0, 0),
+          ydir: new THREE.Vector3(0, 1, 0),
+          zdir: new THREE.Vector3(0, 0, 1),
+        }
+      };
+      this.cursor_active = false;
+      this.cursor_object = '';
+      this.lookat_object = '';
       this.voip = new JanusVOIPRecorder({audioScale: 1024});
       this.voipqueue = [];
       this.voipbutton = elation.ui.button({append: document.body, classname: 'janusweb_voip', label: 'VOIP'});
@@ -34,6 +55,27 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.voip, 'voip_data', elation.bind(this, this.handleVOIPData));
       elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateVectors));
+      elation.events.add(null, 'mouseover', elation.bind(this, this.updateFocusObject));
+      elation.events.add(null, 'mousemove', elation.bind(this, this.updateFocusObject));
+      elation.events.add(null, 'mouseout', elation.bind(this, this.updateFocusObject));
+      elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
+      elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
+    }
+    this.createChildren = function() {
+      elation.engine.things.janusplayer.extendclass.createChildren.call(this);
+/*
+setTimeout(elation.bind(this, function() {
+      this.cursor = this.spawn('janusobject', 'playercursor', {
+        js_id: 'player_cursor',
+        position: this.vectors.cursor_pos,
+        janusid: 'cursor_crosshair',
+        pickable: false,
+        collidable: false,
+        visible: this.cursor_visible
+      }, true);
+      this.vectors.cursor_pos = this.cursor.position;
+}), 1000);
+*/
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -77,10 +119,129 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         history.go(1);
       }
     }
+    this.engine_frame = function(ev) {
+      elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
+      if (this.tracker.hasHands()) {
+        var hands = this.tracker.getHands();
+        if (hands.left) {
+          var pos = hands.left.position,
+              orient = hands.left.orientation;
+          this.hands.left.active = true;
+          this.localToWorld(this.hands.left.position.fromArray(pos));
+        }
+        if (hands.right) {
+          var pos = hands.right.position,
+              orient = hands.right.orientation;
+          this.hands.right.active = true;
+          this.localToWorld(this.hands.right.position.fromArray(pos));
+        }
+      }
+    }
     this.updateVectors = function() {
       var v = this.vectors;
-      this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
-      this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir)
+      if (this.objects['3d']) {
+        this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
+      }
+      if (this.head) {
+        this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir)
+        v.view_zdir.negate();
+      }
+    }
+    this.updateMouseStatus = function(ev) {
+      if (ev.type == 'mousedown' && ev.button === 0) {
+        this.cursor_active = true;
+      } else if (ev.type == 'mouseup' && ev.button === 0) {
+        this.cursor_active = false;
+      }
+    }
+    this.updateFocusObject = function(ev) {
+      var obj = ev.element;
+      if ((ev.type == 'mouseover' || ev.type == 'mousemove') && obj && obj.js_id) {
+        this.cursor_object = obj.js_id;
+        this.vectors.cursor_pos.copy(ev.data.point);
+        var face = ev.data.face;
+        if (face) {
+          this.vectors.cursor_zdir.copy(face.normal);
+          var worldpos = this.localToWorld(new THREE.Vector3(0,0,0));
+
+          this.vectors.cursor_xdir.subVectors(worldpos, this.vectors.cursor_pos).normalize();
+          //this.vectors.cursor_ydir.crossVectors(this.vectors.cursor_xdir, this.vectors.cursor_zdir).normalize();
+          this.vectors.cursor_ydir.set(0,1,0);
+          var dot = this.vectors.cursor_ydir.dot(face.normal);
+          if (Math.abs(dot) > 0.9) {
+            this.vectors.cursor_ydir.crossVectors(this.vectors.cursor_xdir, this.vectors.cursor_zdir).normalize();
+            this.vectors.cursor_xdir.crossVectors(this.vectors.cursor_ydir, this.vectors.cursor_zdir).normalize();
+            if (dot / Math.abs(dot) > 0) {
+              this.vectors.cursor_zdir.negate();
+            }
+          } else {
+            //this.vectors.cursor_zdir.negate();
+            this.vectors.cursor_ydir.set(0,1,0);
+            this.vectors.cursor_xdir.crossVectors(this.vectors.cursor_zdir, this.vectors.cursor_ydir).normalize().negate();
+          }
+
+          //console.log(this.vectors.cursor_xdir.toArray(), this.vectors.cursor_ydir.toArray(), this.vectors.cursor_zdir.toArray());
+          if (this.cursor) {
+            var mat = new THREE.Matrix4().makeBasis(this.vectors.cursor_xdir, this.vectors.cursor_ydir, this.vectors.cursor_zdir);
+            mat.decompose(new THREE.Vector3(), this.cursor.properties.orientation, new THREE.Vector3());
+            var invscale = ev.data.distance / 10;
+            this.cursor.scale.set(invscale,invscale,invscale);
+          }
+        }
+//console.log(ev.data);
+
+        this.lookat_object = obj.js_id;
+        this.vectors.lookat_pos.copy(ev.data.point);
+      } else {
+        this.cursor_object = '';
+        this.lookat_object = '';
+      }
+    }
+    this.toggleCursorVisibility = function() {
+      if (this.cursor) {
+        this.cursor.visible = this.cursor_visible;
+      }
+    }
+    this.getProxyObject = function() {
+      var proxy = new elation.proxy(this, {
+        pos:           ['property', 'position'],
+        vel:           ['property', 'velocity'],
+        accel:         ['property', 'acceleration'],
+        eye_pos:       ['property', 'vectors.eye_pos'],
+        head_pos:      ['property', 'head.properties.position'],
+        cursor_pos:    ['property', 'vectors.cursor_pos'],
+        cursor_xdir:   ['property', 'vectors.cursor_xdir'],
+        cursor_ydir:   ['property', 'vectors.cursor_ydir'],
+        cursor_zdir:   ['property', 'vectors.cursor_zdir'],
+        view_dir:      ['property', 'vectors.view_zdir'],
+        dir:           ['property', 'vectors.view_zdir'],
+        up_dir:        ['property', 'vectors.ydir'],
+        userid:        ['property', 'properties.player_id'],
+        flying:        ['property', 'flying'],
+        walking:       ['property', 'walking'],
+        running:       ['property', 'running'],
+        //url:           ['property', 'currenturl'],
+        //hmd_enabled:   ['property', 'hmd_enabled'],
+        cursor_active: ['property', 'cursor_active'],
+        cursor_object: ['property', 'cursor_object'],
+        lookat_object: ['property', 'lookat_object'],
+        lookat_pos:    ['property', 'vectors.lookat_pos'],
+        //lookat_xdir:   ['property', 'properties.lookat_xdir'],
+        //lookat_ydir:   ['property', 'properties.lookat_ydir'],
+        //lookat_zdir:   ['property', 'properties.lookat_zdir'],
+        hand0_active:  ['property', 'hands.left.active'],
+        hand0_pos:     ['property', 'hands.left.position'],
+        hand0_xdir:    ['property', 'hands.left.xdir'],
+        hand0_ydir:    ['property', 'hands.left.ydir'],
+        hand0_zdir:    ['property', 'hands.left.zdir'],
+        hand1_active:  ['property', 'hands.right.active'],
+        hand1_pos:     ['property', 'hands.right.position'],
+        hand1_xdir:    ['property', 'hands.right.xdir'],
+        hand1_ydir:    ['property', 'hands.right.ydir'],
+        hand1_zdir:    ['property', 'hands.right.zdir'],
+        url:           ['property', 'parent.currentroom.url'],
+      });
+      return proxy;
     }
   }, elation.engine.things.player);
 });
