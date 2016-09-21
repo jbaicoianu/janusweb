@@ -1,7 +1,8 @@
 elation.require([
     'ui.textarea', 'ui.window', 
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
-    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.sound', 'janusweb.januslight',
+    'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 
+    'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle',
     'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
@@ -343,6 +344,7 @@ elation.require([
           objects = roomdata.objects || [],
           links = roomdata.links || [],
           sounds = roomdata.sounds || [],
+          particles = roomdata.particles || [],
           images = roomdata.images || [],
           image3ds = roomdata.image3ds || [],
           texts = roomdata.texts || [],
@@ -373,6 +375,9 @@ elation.require([
       }));
       if (sounds) sounds.forEach(elation.bind(this, function(n) {
         this.createObject('sound',  n);
+      }));
+      if (particles) particles.forEach(elation.bind(this, function(n) {
+        this.createObject('particle',  n);
       }));
 
       var videoassetmap = {};
@@ -465,6 +470,7 @@ elation.require([
       var paragraphs = this.getAsArray(elation.utils.arrayget(room, '_children.paragraph', [])); 
       var lights = this.getAsArray(elation.utils.arrayget(room, '_children.light', [])); 
       var videos = this.getAsArray(elation.utils.arrayget(room, '_children.video', [])); 
+      var particles = this.getAsArray(elation.utils.arrayget(room, '_children.particle', [])); 
 
       var orphanobjects = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.object')); 
       var orphanlinks = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.link')); 
@@ -473,6 +479,7 @@ elation.require([
       var orphanimages = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.image')); 
       var orphantexts = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.text')); 
       var orphanparagraphs = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.paragraph')); 
+      var orphanparticles = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.particle')); 
       var orphanlights = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.light')); 
 
       if (orphanobjects && orphanobjects[0]) objects.push.apply(objects, orphanobjects);
@@ -483,6 +490,7 @@ elation.require([
       if (texts && orphantexts[0]) texts.push.apply(texts, orphantexts);
       if (paragraphs && orphanparagraphs[0]) paragraphs.push.apply(paragraphs, orphanparagraphs);
       if (lights && orphanlights[0]) lights.push.apply(lights, orphanlights);
+      if (particles && orphanparticles[0]) particles.push.apply(particles, orphanparticles);
 
       return {
         assets: assets,
@@ -496,6 +504,7 @@ elation.require([
         paragraphs: paragraphs.map(elation.bind(this, this.parseNode)),
         lights: lights.map(elation.bind(this, this.parseNode)),
         videos: videos.map(elation.bind(this, this.parseNode)),
+        particles: particles.map(elation.bind(this, this.parseNode)),
       };
     }
     this.getAsArray = function(arr) {
@@ -755,6 +764,7 @@ elation.require([
         'video': 'janusvideo',
         'sound': 'janussound',
         'light': 'januslight',
+        'particle': 'janusparticle',
       };
       var realtype = typemap[type.toLowerCase()] || type;
       //var thingname = args.id + (args.js_id ? '_' + args.js_id : '_' + Math.round(Math.random() * 1000000));
@@ -807,6 +817,13 @@ elation.require([
           objectargs.distance = parseFloat(args.dist);
           //objectargs.volume = args.scale[0];
           break;
+        case 'janusparticle':
+          objectargs.particle_vel = args.vel;
+          objectargs.particle_accel = args.accel;
+          objectargs.particle_scale = args.scale;
+          objectargs.vel = new THREE.Vector3();
+          objectargs.accel = new THREE.Vector3();
+          objectargs.scale = new THREE.Vector3(1,1,1);
       }
       if (elation.engine.things[realtype]) {
         //console.log('spawn it', realtype, args, objectargs);
