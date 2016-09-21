@@ -3,7 +3,7 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
@@ -39,6 +39,7 @@ elation.require([
         'cursor_visible': { type: 'bool', default: true },
       });
       this.translators = {
+        '^about:blank$': elation.janusweb.translators.blank({}),
         '^bookmarks$': elation.janusweb.translators.bookmarks({}),
         '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({}),
         '^error$': elation.janusweb.translators.error({})
