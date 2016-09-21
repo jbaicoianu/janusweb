@@ -123,13 +123,13 @@ setTimeout(elation.bind(this, function() {
       elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
       if (this.tracker.hasHands()) {
         var hands = this.tracker.getHands();
-        if (hands.left) {
+        if (hands.left && hands.left.position) {
           var pos = hands.left.position,
               orient = hands.left.orientation;
           this.hands.left.active = true;
           this.localToWorld(this.hands.left.position.fromArray(pos));
         }
-        if (hands.right) {
+        if (hands.right && hands.right.position) {
           var pos = hands.right.position,
               orient = hands.right.orientation;
           this.hands.right.active = true;
