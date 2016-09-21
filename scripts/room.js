@@ -907,6 +907,9 @@ elation.require([
         elation.events.fire({element: room, type: 'janusweb_script_frame_end'});
       })(this);
     }
+    this.getObjectById = function(js_id) {
+      return this.jsobjects[js_id];
+    }
     this.getObjectFromProxy = function(proxy, children) {
       return proxy._target;
 /*
