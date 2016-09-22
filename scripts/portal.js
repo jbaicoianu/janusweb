@@ -5,6 +5,7 @@ elation.require(['janusweb.janusbase'], function() {
         'janus': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
         'url': { type: 'string', set: this.updateTitle },
+        'open': { type: 'boolean', default: false },
         'title': { type: 'string', set: this.updateTitle },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
