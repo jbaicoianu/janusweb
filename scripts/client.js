@@ -19,7 +19,10 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       parts.shift();
       parts.shift();
       parts.shift();
-      var rootdir = '/' + parts.join('/') + '/';
+      var rootdir = '/';
+      if (parts.length > 0) { 
+        rootdir += parts.join('/') + '/';
+      }
 
       elation.config.set('dependencies.main', fname);
       elation.config.set('dependencies.rootdir', rootdir);
@@ -57,6 +60,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
       this.enginecfg.crosshair = false;
+
+      this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
     }
     this.initWorld = function() {
       var things = this.world.load({
