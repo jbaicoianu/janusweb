@@ -63,6 +63,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.emitted = 0;
       this.currentpoint = 0;
       this.lasttime = performance.now();
+      setTimeout(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
     }
     this.updateParticles = function(ev) {
       //console.log('go!', ev);
@@ -78,12 +79,11 @@ elation.require(['janusweb.janusbase'], function() {
           count = this.count,
           loop = this.loop;
 
-//console.log('derp', elapsed, spawncount, count, this.particles.length);
       if (count != this.particles.length) {
-        ths.createParticles();
+        this.createParticles();
       }
       for (var i = 0; i < count; i++) {
-        var idx = (i + startpoint) % this.count;
+        var idx = (i + startpoint) % count;
         var p = this.particles[idx];
         if (p.active == 1) {
           this.updatePoint(p, elapsed/1000);
@@ -98,24 +98,17 @@ elation.require(['janusweb.janusbase'], function() {
             p.endtime = endtime;
             p.active = 1;
             emitted++;
-            this.currentpoint = (this.currentpoint + 1) % this.count;
+            this.currentpoint = (this.currentpoint + 1) % count;
           }
         } 
       }
       this.lasttime = now;
-/*
-      // FIXME - this is wrong but works for fast spawns
-      var numtospawn = Math.ceil(this.rate * ev.data.delta);
-      for (var i = 0; i < numtospawn; i++) {
-        var point = this.particles[this.currentpoint];
-        this.resetPoint(point);
-        this.currentpoint = (this.currentpoint + 1) % this.count;
-      }
-*/
 
       this.objects['3d'].geometry.verticesNeedUpdate = true;
-      this.objects['3d'].geometry.computeBoundingSphere();
       this.refresh();
+    }
+    this.updateBoundingSphere = function() {
+      this.objects['3d'].geometry.computeBoundingSphere();
     }
     this.createPoint = function() {
       return {
@@ -129,19 +122,19 @@ elation.require(['janusweb.janusbase'], function() {
         end: 0
       };
     }
-    this.updatePoint = function(point, delta) {
-      point.vel.x += point.accel.x * delta;
-      point.vel.y += point.accel.y * delta;
-      point.vel.z += point.accel.z * delta;
+    this.updatePoint = (function() {
+      var tmpvec = new THREE.Vector3();
+      return function(point, delta) {
+        tmpvec.copy(point.accel).multiplyScalar(delta);
+        point.vel.add(tmpvec);
 
-      point.pos.x += point.vel.x * delta;
-      point.pos.y += point.vel.y * delta;
-      point.pos.z += point.vel.z * delta;
-    }
+        tmpvec.copy(point.vel).multiplyScalar(delta);
+        point.pos.add(tmpvec);
+      }
+    })();
     this.resetPoint = function(point) {
-      point.pos.x = Math.random() * this.rand_pos.x;
-      point.pos.y = Math.random() * this.rand_pos.y;
-      point.pos.z = Math.random() * this.rand_pos.z;
+      var rand_pos = this.properties.rand_pos;
+      point.pos.set(Math.random() * rand_pos.x, Math.random() * rand_pos.y, Math.random() * rand_pos.z);
 
       var vel = point.vel,
           accel = point.accel,
