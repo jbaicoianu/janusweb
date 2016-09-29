@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -38,6 +38,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     link.href = fullpath + 'janusweb.css';
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
+    elation.html.addclass(document.body, 'janusweb');
     var janusweb = elation.janusweb.client({append: document.body, homepage: homepage, resolution: args.resolution, url: args.url});
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -88,6 +89,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       });
       this.janusweb = things.children.janusweb;
       this.player = this.janusweb.children.player;
+
+      this.ui = elation.janusweb.ui({append: document.body, client: this});
     }
     this.showAbout = function() {
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});
