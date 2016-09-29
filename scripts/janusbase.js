@@ -177,10 +177,20 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     this.updateVectors = function(updateOrientation) {
       if (updateOrientation) {
         //var quat = this.room.getOrientation(this.properties.xdir.toArray().join(' '), this.properties.ydir.toArray().join(' '), this.properties.zdir.toArray().join(' '));
-        this.xdir.normalize();
-        this.ydir.normalize();
-        this.zdir.normalize();
-        var mat4 = new THREE.Matrix4().makeBasis(this.xdir, this.ydir, this.properties.zdir.clone().negate());
+        //this.xdir.normalize();
+        //this.ydir.normalize();
+        //this.zdir.normalize();
+        var mat4 = new THREE.Matrix4();
+        mat4.makeBasis(this.xdir, this.ydir, this.properties.zdir);
+/*
+        mat4.set(
+          this.xdir.x, this.xdir.y, this.xdir.z, 0,
+          this.ydir.x, this.ydir.y, this.ydir.z, 0,
+          this.zdir.x, this.zdir.y, this.zdir.z, 0,
+          0, 0, 0, 1
+        );
+*/
+
         var quat = new THREE.Quaternion();
         var pos = new THREE.Vector3();
         var scale = new THREE.Vector3();
