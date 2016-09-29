@@ -120,11 +120,14 @@ setTimeout(function() {
       player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
       window.player = player.getProxyObject();
 
+      //THREE.Vector3.prototype.toString = function() { return this.toArray().map(function(d) { return d.toFixed(4); }).join(' '); } 
       window.Vector = function(x, y, z) {
         if (y === undefined) y = x;
         if (z === undefined) z = y;
-        return new THREE.Vector3(x, y, z);
+        var vec = new THREE.Vector3(x, y, z);
+        return vec;
       }
+      window.V = window.Vector;
       window.translate = function(v1, v2) {
         return new THREE.Vector3().addVectors(v1, v2);
       }
@@ -169,6 +172,7 @@ setTimeout(function() {
       var hashargs = elation.url();
       var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
+      this.initScripting();
       this.load(starturl, true);
       // connect to presence server
       //this.userId = Date.now().toString();
@@ -198,7 +202,6 @@ setTimeout(function() {
       }.bind(this));
       elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
       elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
-      this.initScripting();
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -244,6 +247,44 @@ setTimeout(function() {
       if (this.rooms[roomid]) {
         if (this.currentroom !== this.rooms[roomid]) {
           this.currentroom = this.rooms[roomid];
+
+          this.scriptframeargs = [
+            1000/60
+          ];
+
+          window.room = new elation.proxy(this.currentroom, {
+            url:           ['property', 'url', { readonly: true}],
+            objects:       ['property', 'jsobjects'],
+            cookies:       ['property', 'cookies'],
+            walk_speed:    ['property', 'walk_speed'],
+            run_speed:     ['property', 'run_speed'],
+            jump_velocity: ['property', 'jump_velocity'],
+            gravity:       ['property', 'gravity'],
+            fog:           ['property', 'fog'],
+            fog_mode:      ['property', 'fog_mode'], 
+            fog_density:   ['property', 'fog_density'],
+            fog_start:     ['property', 'fog_start'],
+            fog_end:       ['property', 'fog_end'],
+            fog_col:       ['property', 'fog_col'],
+    
+            createObject:  ['function', 'createObject'],
+            removeObject:  ['function', 'removeObject'],
+            addCookie:     ['function', 'addCookie'],
+            playSound:     ['function', 'playSound'],
+            stopSound:     ['function', 'stopSound'],
+            getObjectById: ['function', 'getObjectById'],
+            openLink:      ['function', 'openLink'],
+
+            onLoad:        ['callback', 'janus_room_scriptload'],
+            update:        ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
+            onCollision:   ['callback', 'physics_collide', 'objects.dynamics'],
+            onClick:       ['callback', 'click', 'engine.client.container'],
+            onMouseDown:   ['callback', 'janus_room_mousedown'],
+            onMouseUp:     ['callback', 'janus_room_mouseup'],
+            onKeyDown:     ['callback', 'janus_room_keydown'],
+            onKeyUp:       ['callback', 'janus_room_keyup']
+          });
+
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
@@ -267,40 +308,6 @@ setTimeout(function() {
         }
         this.currentroom.enable();
 
-        this.scriptframeargs = [
-          1000/60
-        ];
-        window.room = new elation.proxy(this.currentroom, {
-          url:           ['property', 'url', { readonly: true}],
-          objects:       ['property', 'jsobjects'],
-          cookies:       ['property', 'cookies'],
-          walk_speed:    ['property', 'walk_speed'],
-          run_speed:     ['property', 'run_speed'],
-          jump_velocity: ['property', 'jump_velocity'],
-          gravity:       ['property', 'gravity'],
-          fog:           ['property', 'fog'],
-          fog_mode:      ['property', 'fog_mode'], 
-          fog_density:   ['property', 'fog_density'],
-          fog_start:     ['property', 'fog_start'],
-          fog_end:       ['property', 'fog_end'],
-          fog_col:       ['property', 'fog_col'],
-  
-          createObject:  ['function', 'createObject'],
-          removeObject:  ['function', 'removeObject'],
-          addCookie:     ['function', 'addCookie'],
-          playSound:     ['function', 'playSound'],
-          stopSound:     ['function', 'stopSound'],
-          getObjectById: ['function', 'getObjectById'],
-
-          onLoad:        ['callback', 'janus_room_scriptload'],
-          update:        ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
-          onCollision:   ['callback', 'physics_collide', 'objects.dynamics'],
-          onClick:       ['callback', 'click', 'engine.client.container'],
-          onMouseDown:   ['callback', 'janus_room_mousedown'],
-          onMouseUp:     ['callback', 'janus_room_mouseup'],
-          onKeyDown:     ['callback', 'janus_room_keydown'],
-          onKeyUp:       ['callback', 'janus_room_keyup']
-        });
       } else {
         this.load(url, true);
       }
@@ -455,6 +462,9 @@ setTimeout(function() {
           }
         }
       }
+      if (movedata.hand0 || movedata.hand1) {
+        remote.updateHands(movedata.hand0, movedata.hand1);
+      }
 
       if (movedata.speaking && movedata.audio) {
         remote.speak(movedata.audio);
@@ -568,6 +578,20 @@ setTimeout(function() {
       } else if (player.controlstate.move_backward) {
         moveData.anim_id = 'walk_back';
       }
+
+      var hands = player.tracker.getHands();
+      if (hands) {
+        if (hands.left && hands.left.active) {
+          moveData.hand0 = {
+            state: hands.left.getState(player.shoulders)
+          };
+        }
+        if (hands.right && hands.right.active) {
+          moveData.hand1 = {
+            state: hands.right.getState(player.shoulders)
+          };
+        }
+      } 
 
 
       this.network.send({'method': 'move', 'data': moveData});
