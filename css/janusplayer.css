@@ -1,10 +1,9 @@
-.dark .ui_button.janusweb_voip {
+.dark .ui_buttonbar.janusweb_ui_buttons {
   position: absolute;
   right: 5px;
   bottom: 5px;
   padding: 8px;
-  border: 1px solid black;
-  border-radius: 5px;
+  border: 0;
   z-index: 50;
 }
 .dark .janusweb_voip.state_recording,

@@ -1,7 +1,7 @@
 .janusweb_chat_messages {
   height: 10em;
   width: 30em;
-  font-size: .8em;
+  font-size: .7em;
   overflow-y: scroll;
   border: 0;
 }
