@@ -237,6 +237,10 @@ elation.require([
 
       var translator = this.getTranslator(url);
 
+      /*
+      // Disabled - using outerHTML to get the source is a nice way to avoid an extra network trip,
+      // but due to how browser parsers work it means we can't get back unmodified XML, so it's best
+      // to just make an XHR call and let the browser cache handle it
       if (url == document.location.href) {
         setTimeout(elation.bind(this, function() {
           this.roomsrc = this.parseSource(document.documentElement.outerHTML);
@@ -245,8 +249,12 @@ elation.require([
           this.setActive();
           elation.events.fire({type: 'janus_room_load', element: this});
         }), 0);
-      } else if (translator) {
+      } else 
+      */
+
+      if (translator) {
         setTimeout(elation.bind(this, function() {
+          // TODO - use the new official translators here!
           translator.exec({url: url, janus: this.properties.janus, room: this})
                     .then(elation.bind(this, function(objs) {
                       this.createRoomObjects(objs);
@@ -684,6 +692,7 @@ elation.require([
     this.applyEditXML = function(editxml) {
       var xml = elation.utils.parseXML('<edit>' + editxml + '</edit>');
       var edit = xml.edit._children;
+      if (!edit) return;
       var keys = Object.keys(edit);
       var hasNew = false;
 
@@ -920,13 +929,17 @@ elation.require([
         }
       }
       this.janus.scriptframeargs[0] = ev.data.delta * 1000;
-      (function(room) {
-        elation.events.fire({element: room, type: 'janusweb_script_frame'});
-        elation.events.fire({element: room, type: 'janusweb_script_frame_end'});
-      })(this);
+      elation.events.fire({element: this, type: 'janusweb_script_frame'});
+      elation.events.fire({element: this, type: 'janusweb_script_frame_end'});
     }
     this.getObjectById = function(js_id) {
       return this.jsobjects[js_id];
+    }
+    this.openLink = function(js_id) {
+      var link = this.jsobjects[js_id];
+      if (link) {
+        link.activate();
+      }
     }
     this.getObjectFromProxy = function(proxy, children) {
       return proxy._target;
