@@ -23,6 +23,9 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.torso = this.spawn('generic', this.properties.player_name + '_torso', {
       'position': [0,1,0],
     });
+    this.shoulders = this.torso.spawn('generic', this.properties.player_id + '_shoulders', {
+      'position': [0,0.6,-0.0]
+    });
     this.neck = this.torso.spawn('generic', this.properties.player_name + '_neck', {
       'position': [0,0.6,0]
     });
@@ -31,9 +34,9 @@ elation.component.add('engine.things.remoteplayer', function() {
     });
     this.face = this.head.spawn('maskgenerator', this.properties.player_name + '_mask', {
       'seed': this.properties.player_name,
-      'position': [0,0,-0.125],
+      'position': [0,0,-0.025],
       collidable: false,
-      'tilesize': 0.075,
+      'tilesize': 0.05,
       'player_id': this.properties.player_name,
       pickable: false,
       collidable: false
@@ -67,6 +70,7 @@ elation.component.add('engine.things.remoteplayer', function() {
     }
 
     //this.mouth.audio.setBuffer(this.audiobuffer);
+    elation.events.add(this, 'thing_change', elation.bind(this, this.updateTransparency));
   };
   this.speak = function(noise) {
     this.voip.speak(noise);
@@ -102,6 +106,36 @@ elation.component.add('engine.things.remoteplayer', function() {
       //this.mouth.audio.play(ev.data.start, ev.data.end);
     } else {
       //console.log('already playing');
+    }
+  }
+  this.updateTransparency = function() {
+    var player = this.engine.client.player;
+
+    var dist = player.distanceTo(this);
+    var opacity = Math.min(1, dist / 0.25);
+    this.face.setOpacity(opacity);
+  }
+  this.updateHands = function(hand0, hand1) {
+    if (!this.hands) {
+      this.hands = {
+        left: this.shoulders.spawn('leapmotion_hand', this.properties.player_name + '_hand_left'),
+        right: this.shoulders.spawn('leapmotion_hand', this.properties.player_name + '_hand_right'),
+      };
+    }
+
+    var inverse = new THREE.Matrix4();
+    inverse.getInverse(this.objects['3d'].matrixWorld);
+    if (hand0 && hand0.state) {
+      this.hands.left.show();
+      this.hands.left.setState(hand0.state, inverse);
+    } else {
+      this.hands.left.hide();
+    }
+    if (hand1 && hand1.state) {
+      this.hands.right.show();
+      this.hands.right.setState(hand1.state, inverse);
+    } else {
+      this.hands.right.hide();
     }
   }
 }, elation.engine.things.generic);
