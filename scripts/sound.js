@@ -9,8 +9,8 @@ elation.require(['janusweb.janusbase'], function() {
         auto_play: { type: 'boolean', default: false },
         play_once: { type: 'boolean', default: false },
         dist: { type: 'float', default: 1.0 },
-        pitch: { type: 'float', default: 1.0 },
-        gain: { type: 'float', default: 1.0 }
+        pitch: { type: 'float', default: 1.0, set: this.updateSound },
+        gain: { type: 'float', default: 1.0, set: this.updateSound }
       });
       Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
     }
@@ -82,6 +82,19 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.audio && this.audio.isPlaying) {
         this.audio.stop();
       }
+    }
+    this.updateSound = function() {
+      if (this.audio) {
+        this.play();
+        this.audio.setVolume(this.gain);
+      }
+    }
+    this.getProxyObject = function() {
+      var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this);
+      proxy._proxydefs = {
+        gain:         [ 'property', 'gain'],
+      };
+      return proxy;
     }
   }, elation.engine.things.janusbase);
 });
