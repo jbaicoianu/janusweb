@@ -1,4 +1,3 @@
-console.log('hurgh');
 describe("JanusWeb Scripting", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   var client, janusweb, canvas;
