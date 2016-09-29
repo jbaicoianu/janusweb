@@ -334,7 +334,7 @@ setTimeout(function() {
       }
     }
     this.showChat = function(ev) {
-      if (ev.value == 1) {
+      if (ev.value == 1 && document.activeElement != this.engine.client.ui.urlbar.inputelement) {
         this.chat.focus();
       }
     }
