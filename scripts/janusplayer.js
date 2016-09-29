@@ -33,6 +33,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           xdir: new THREE.Vector3(1, 0, 0),
           ydir: new THREE.Vector3(0, 1, 0),
           zdir: new THREE.Vector3(0, 0, 1),
+          p0: new THREE.Vector3(0, 0, 0),
+          p1: new THREE.Vector3(0, 0, 0),
+          p2: new THREE.Vector3(0, 0, 0),
+          p3: new THREE.Vector3(0, 0, 0),
+          p4: new THREE.Vector3(0, 0, 0),
         },
         right: {
           active: false,
@@ -40,6 +45,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           xdir: new THREE.Vector3(1, 0, 0),
           ydir: new THREE.Vector3(0, 1, 0),
           zdir: new THREE.Vector3(0, 0, 1),
+          p0: new THREE.Vector3(0, 0, 0),
+          p1: new THREE.Vector3(0, 0, 0),
+          p2: new THREE.Vector3(0, 0, 0),
+          p3: new THREE.Vector3(0, 0, 0),
+          p4: new THREE.Vector3(0, 0, 0),
         }
       };
       this.cursor_active = false;
@@ -47,7 +57,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.lookat_object = '';
       this.voip = new JanusVOIPRecorder({audioScale: 1024});
       this.voipqueue = [];
-      this.voipbutton = elation.ui.button({append: document.body, classname: 'janusweb_voip', label: 'VOIP'});
+      this.voipbutton = elation.ui.button({classname: 'janusweb_voip', label: 'VOIP'});
+      this.engine.client.buttons.add('voip', this.voipbutton);
+
       elation.events.add(this.voipbutton, 'mousedown,touchstart', elation.bind(this.voip, this.voip.start));
       elation.events.add(this.voipbutton, 'mouseup,touchend', elation.bind(this.voip, this.voip.stop));
       elation.events.add(this.voip, 'voip_start', elation.bind(this, this.handleVOIPStart));
@@ -60,10 +72,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(null, 'mouseout', elation.bind(this, this.updateFocusObject));
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
+
+      if (navigator.getVRDisplays) {
+        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Toggle VR'});
+        this.engine.client.buttons.add('vr', this.vrbutton);
+        elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this.engine.client, this.engine.client.toggleVR));
+      }
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
-/*
+
 setTimeout(elation.bind(this, function() {
       this.cursor = this.spawn('janusobject', 'playercursor', {
         js_id: 'player_cursor',
@@ -75,7 +93,7 @@ setTimeout(elation.bind(this, function() {
       }, true);
       this.vectors.cursor_pos = this.cursor.position;
 }), 1000);
-*/
+
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -121,19 +139,52 @@ setTimeout(elation.bind(this, function() {
     }
     this.engine_frame = function(ev) {
       elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
-      if (this.tracker.hasHands()) {
+      var transform = new THREE.Matrix4();
+      if (this.tracker && this.tracker.hasHands()) {
         var hands = this.tracker.getHands();
-        if (hands.left && hands.left.position) {
-          var pos = hands.left.position,
-              orient = hands.left.orientation;
-          this.hands.left.active = true;
-          this.localToWorld(this.hands.left.position.fromArray(pos));
-        }
-        if (hands.right && hands.right.position) {
-          var pos = hands.right.position,
-              orient = hands.right.orientation;
-          this.hands.right.active = true;
-          this.localToWorld(this.hands.right.position.fromArray(pos));
+        if (hands) {
+          this.hands.left.active = hands.left.active;
+          this.hands.right.active = hands.right.active;
+          if (hands.left && hands.left.position) {
+            var pos = hands.left.palmPosition,
+                orient = hands.left.palmOrientation;
+            if (pos instanceof THREE.Vector3) pos = pos.toArray();
+            if (orient instanceof THREE.Quaternion) orient = orient.toArray();
+            //this.localToWorld(this.hands.left.position.fromArray(pos));
+            this.hands.left.position.fromArray(pos);
+
+            transform.makeRotationFromQuaternion(hands.left.palmOrientation);
+            transform.extractBasis(this.hands.left.xdir, this.hands.left.ydir, this.hands.left.zdir);
+            this.hands.left.xdir.normalize();
+            this.hands.left.ydir.normalize();
+            this.hands.left.zdir.normalize();
+
+            this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
+            this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
+            this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
+            this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
+            this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+          }
+          if (hands.right && hands.right.position) {
+            var pos = hands.right.palmPosition,
+                orient = hands.right.palmOrientation;
+            if (pos instanceof THREE.Vector3) pos = pos.toArray();
+            if (orient instanceof THREE.Quaternion) orient = orient.toArray();
+            //this.localToWorld(this.hands.right.position.fromArray(pos));
+            this.hands.right.position.fromArray(pos);
+
+            transform.makeRotationFromQuaternion(hands.right.palmOrientation);
+            transform.extractBasis(this.hands.right.xdir, this.hands.right.ydir, this.hands.right.zdir);
+            this.hands.right.xdir.normalize();
+            this.hands.right.ydir.normalize();
+            this.hands.right.zdir.normalize();
+
+            this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
+            this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
+            this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
+            this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
+            this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
+          }
         }
       }
     }
@@ -234,11 +285,22 @@ setTimeout(elation.bind(this, function() {
         hand0_xdir:    ['property', 'hands.left.xdir'],
         hand0_ydir:    ['property', 'hands.left.ydir'],
         hand0_zdir:    ['property', 'hands.left.zdir'],
+        hand0_p0:      ['property', 'hands.left.p0'],
+        hand0_p1:      ['property', 'hands.left.p1'],
+        hand0_p2:      ['property', 'hands.left.p2'],
+        hand0_p3:      ['property', 'hands.left.p3'],
+        hand0_p4:      ['property', 'hands.left.p4'],
+
         hand1_active:  ['property', 'hands.right.active'],
         hand1_pos:     ['property', 'hands.right.position'],
         hand1_xdir:    ['property', 'hands.right.xdir'],
         hand1_ydir:    ['property', 'hands.right.ydir'],
         hand1_zdir:    ['property', 'hands.right.zdir'],
+        hand1_p0:      ['property', 'hands.right.p0'],
+        hand1_p1:      ['property', 'hands.right.p1'],
+        hand1_p2:      ['property', 'hands.right.p2'],
+        hand1_p3:      ['property', 'hands.right.p3'],
+        hand1_p4:      ['property', 'hands.right.p4'],
         url:           ['property', 'parent.currentroom.url'],
       });
       return proxy;
