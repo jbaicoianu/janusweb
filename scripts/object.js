@@ -67,8 +67,8 @@ elation.require(['janusweb.janusbase'], function() {
           } else {
             elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {  
               collider.userData.thing = this;
-              this.extractColliders(collider, true);
-/*
+              //this.extractColliders(collider, true);
+
               //collider.bindPosition(this.position);
               //collider.bindQuaternion(this.orientation);
               //collider.bindScale(this.properties.scale);
@@ -76,12 +76,13 @@ elation.require(['janusweb.janusbase'], function() {
               collider.traverse(elation.bind(this, function(n) {
                 if (n.geometry) {
                   n.geometry.computeVertexNormals();
+                  n.geometry.computeFaceNormals();
                 }
                 if (n.material) n.material = new THREE.MeshLambertMaterial({color: 0x999900, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                 n.userData.thing = this;
               }));
               this.colliders.add(collider);
-*/
+
             }) );
           }
         }
