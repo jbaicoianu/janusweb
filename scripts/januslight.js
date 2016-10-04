@@ -17,7 +17,7 @@ elation.require(['janusweb.janusbase'], function() {
         obj.add(this.light);
       } else if (this.light_cone_angle > 0) {
         var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(0xff0000, this.light_intensity / 100, this.light_range, angle);
+        this.light = new THREE.SpotLight(this.properties.color, this.light_intensity / 100, this.light_range, angle);
         //this.light.position.set(0,0,0);
         obj.add(this.light);
       } 
