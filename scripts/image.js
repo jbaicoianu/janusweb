@@ -41,26 +41,26 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusimage.extendclass.postinit.call(this);
       this.defineProperties({
-        image_id: { type: 'string' },
-        color: { type: 'color', default: 0xffffff },
-        sbs3d: { type: 'boolean', default: false },
-        ou3d: { type: 'boolean', default: false },
-        reverse3d: { type: 'boolean', default: false },
-        lighting: { type: 'boolean', default: true },
+        image_id: { type: 'string', set: this.updateMaterial },
+        sbs3d: { type: 'boolean', default: false, set: this.updateMaterial },
+        ou3d: { type: 'boolean', default: false, set: this.updateMaterial },
+        reverse3d: { type: 'boolean', default: false, set: this.updateMaterial },
       });
     }
     this.createObject3D = function() {
-      this.texture = elation.engine.assets.find('image', this.properties.image_id);
-      if (this.texture) {
-        elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
-        elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+      var geo = this.createGeometry();
+      var mat = this.createMaterial();
+      return new THREE.Mesh(geo, mat);
 
+
+/*
         var geo = this.createGeometry();
         var mat = this.createMaterial();
         return new THREE.Mesh(geo, mat);
       } else {
         console.log('ERROR - could not find image ' + this.properties.image_id);
       }
+*/
     }
     this.createGeometry = function() {
       var aspect = this.getAspect(),
@@ -70,16 +70,25 @@ elation.require(['janusweb.janusbase'], function() {
       return box;
     }
     this.createMaterial = function() {
+      this.asset = elation.engine.assets.find('image', this.image_id, true);
+      if (this.asset) {
+        this.texture = this.asset.getInstance();
+        if (this.texture) {
+          elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
+          elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+        } 
+      }
       var matargs = {
-        map: this.texture,
-        color: this.properties.color,
+        color: this.color,
         transparent: true,
         alphaTest: 0.2
       };
 
-      var sidemattex = this.texture.clone();
-      this.sidetex = sidemattex;
-      sidemattex.repeat.x = .0001;
+      if (this.texture) {
+        var sidemattex = this.texture.clone();
+        this.sidetex = sidemattex;
+        sidemattex.repeat.x = .0001;
+      }
       var sidematargs = {
         map: sidemattex,
         color: this.properties.color,
@@ -91,8 +100,21 @@ elation.require(['janusweb.janusbase'], function() {
       var sidemat = (this.properties.lighting ? new THREE.MeshPhongMaterial(sidematargs) : new THREE.MeshBasicMaterial(sidematargs));
       var facemat = new THREE.MeshFaceMaterial([sidemat,sidemat,sidemat,sidemat,mat,mat]);
       this.facematerial = mat;
+      this.frontmaterial = mat;
       this.sidematerial = sidemat;
       return facemat;
+    }
+    this.updateMaterial = function() {
+      var newtexture = elation.engine.assets.find('image', this.image_id);
+      if (newtexture && newtexture !== this.texture) {
+        this.texture = newtexture;
+        if (newtexture.image) {
+          this.imageloaded();
+        } else {
+          elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
+        }
+        elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+      } 
     }
     this.getAspect = function() {
       var aspect = 1;
@@ -100,8 +122,8 @@ elation.require(['janusweb.janusbase'], function() {
         var size = this.getSize(this.texture.image);
         aspect = size.height / size.width;
       }
-      if (this.properties.sbs3d || (this.asset && this.asset.sbs3d)) aspect *= 2;
-      if (this.properties.ou3d || (this.asset && this.asset.ou3d)) aspect /= 2;
+      if (this.sbs3d || (this.asset && this.asset.sbs3d)) aspect *= 2;
+      if (this.ou3d || (this.asset && this.asset.ou3d)) aspect /= 2;
       return aspect;
     }
     this.getSize = function(image) {
@@ -113,6 +135,10 @@ elation.require(['janusweb.janusbase'], function() {
       this.objects['3d'].geometry = geo;
     }
     this.imageloaded = function(ev) {
+      if (!this.frontmaterial) return;
+
+      this.frontmaterial.map = this.texture;
+      this.frontmaterial.needsUpdate = true;
       this.adjustAspectRatio();
       this.sidetex.image = this.texture.image;
       this.sidetex.needsUpdate = true;
@@ -123,7 +149,7 @@ elation.require(['janusweb.janusbase'], function() {
         texture.reverse = this.properties.reverse3d;
         texture.needsUpdate = true;
         this.texture = texture;
-        this.facematerial.map = texture;
+        this.frontmaterial.map = texture;
         /*
         this.sidematerial.map = texture.clone();
         this.sidematerial.map.needsUpdate = true;
@@ -132,6 +158,13 @@ elation.require(['janusweb.janusbase'], function() {
       }
 
       this.refresh();
+    }
+    this.getProxyObject = function() {
+      var proxy = elation.engine.things.janusimage.extendclass.getProxyObject.call(this);
+      proxy._proxydefs = {
+        id:  [ 'property', 'image_id'],
+      };
+      return proxy;
     }
   }, elation.engine.things.janusbase);
 });

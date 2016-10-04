@@ -45,11 +45,13 @@ elation.require([], function() {
       console.log('[tracking] client connected', ev);
       ga('send', 'event', 'client', 'connected', ev.data);
     });
+/*
     elation.events.add(document, 'pointerlockchange,mozpointerlockchange', function(ev) {
 var el = document.pointerLockElement || document.mozPointerLockElement
       console.log('[tracking] pointer lock!', (el !== null), ev);
       ga('send', 'event', 'player', 'pointerlock', (el !== null));
     });
+*/
     elation.events.add(null, 'janusweb_client_disconnected', function(ev) {
       console.log('[tracking] client disconnected', ev);
       ga('send', 'event', 'client', 'disconnected', ev.data);
@@ -133,6 +135,7 @@ var el = document.pointerLockElement || document.mozPointerLockElement
       }, 1000);
 
       // report FPS every 15 seconds
+/*
       var stats = document.getElementById('fpsText');
       if (stats) {
         setInterval(function() {
@@ -141,6 +144,7 @@ var el = document.pointerLockElement || document.mozPointerLockElement
           ga('send', 'event', 'engine', 'fps', fps);
         }, 15000);
       }
+*/
       
     });
     elation.events.add(window, 'error', function(msg) {

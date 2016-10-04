@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -19,7 +19,10 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       parts.shift();
       parts.shift();
       parts.shift();
-      var rootdir = '/' + parts.join('/') + '/';
+      var rootdir = '/';
+      if (parts.length > 0) { 
+        rootdir += parts.join('/') + '/';
+      }
 
       elation.config.set('dependencies.main', fname);
       elation.config.set('dependencies.rootdir', rootdir);
@@ -35,6 +38,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     link.href = fullpath + 'janusweb.css';
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
+    elation.html.addclass(document.body, 'janusweb');
     var janusweb = elation.janusweb.client({append: document.body, homepage: homepage, resolution: args.resolution, url: args.url});
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -44,18 +48,21 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     this.initEngine = function() {
       var hashargs = elation.url();
        
-      this.enginecfg.stats = false;
+      this.enginecfg.stats = true;
 
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
       this.enginecfg.systems.push("physics");
-      this.enginecfg.systems.push("world");
       this.enginecfg.systems.push("ai");
+      this.enginecfg.systems.push("world");
       if (hashargs.admin == 1) {
         this.enginecfg.systems.push("admin");
       } 
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
+      this.enginecfg.crosshair = false;
+
+      this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
     }
     this.initWorld = function() {
       var things = this.world.load({
@@ -75,13 +82,15 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
               position: [0,0,0],
               mass: 10,
               movespeed: 5000,
-              collidable: false
+              collidable: true
             }
           },
         }
       });
       this.janusweb = things.children.janusweb;
       this.player = this.janusweb.children.player;
+
+      this.ui = elation.janusweb.ui({append: document.body, client: this});
     }
     this.showAbout = function() {
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});

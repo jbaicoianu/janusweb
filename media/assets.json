@@ -47,8 +47,20 @@
   { "assettype":"image", "name":"skyrender_right", "src":"assets/skybox/skyrender_right.png" },
   { "assettype":"image", "name":"skyrender_up", "src":"assets/skybox/skyrender_up.png" },
 
+  { "assettype":"model", "name":"avatar", "src":"assets/avatar.obj", "tex0": "assets/avatar.png" },
+  { "assettype":"model", "name":"avatar_head", "src":"assets/avatar_head.obj", "tex0": "assets/avatar_head.png" },
+
+  { "assettype":"model", "name":"loading", "src":"assets/loading.obj" },
+
   { "assettype":"model", "name":"cursor3d", "src":"assets/cursor3d.obj", "tex0":"assets/cursor3d.png" },
+  { "assettype":"model", "name":"cursor_arrow", "src":"assets/cursor_arrow.obj", "tex0":"assets/cursor_arrow.png" },
   { "assettype":"model", "name":"cursor_crosshair", "src":"assets/cursor_crosshair.obj", "tex0":"assets/cursor_crosshair.png" },
-  { "assettype":"model", "name":"cursor_arrow", "src":"assets/cursor_arrow.obj", "tex0":"assets/cursor_arrow.png" }
+  { "assettype":"model", "name":"cursor_hand", "src":"assets/cursor_hand.obj", "tex0":"assets/cursor_hand.png" },
+  { "assettype":"model", "name":"cursor_sphere", "src":"assets/cursor_sphere.obj", "tex0":"assets/cursor_sphere.png" },
+
+
+  { "assettype":"model", "name":"controller_vive", "src":"assets/controllers/vive/ViveController.dae.gz" },
+  { "assettype":"model", "name":"controller_touch_left", "src":"assets/controllers/oculus/TouchLeft.dae.gz" },
+  { "assettype":"model", "name":"controller_touch_right", "src":"assets/controllers/oculus/TouchRight.dae.gz" }
 
 ]
