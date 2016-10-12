@@ -2,6 +2,8 @@ elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.janusportal', function() {
     this.postinit = function() {
       this.defineProperties({
+        'url': { type: 'string' },
+        'title': { type: 'string' },
         'janus': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
         'url': { type: 'string', set: this.updateTitle },
@@ -9,6 +11,7 @@ elation.require(['janusweb.janusbase'], function() {
         'title': { type: 'string', set: this.updateTitle },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
+        'auto_load': { type: 'boolean', default: false },
         'thumb_id': { type: 'string', set: this.updateMaterial }
       });
       this.addTag('usable');
@@ -17,7 +20,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
     }
     this.createObject3D = function() {
-      var thickness = 0.1;
+      var thickness = 0.05;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box = new THREE.BoxGeometry(1,1,thickness);
       box.applyMatrix(new THREE.Matrix4().makeTranslation(0,0.5,offset/2));
@@ -58,12 +61,26 @@ elation.require(['janusweb.janusbase'], function() {
 
       this.updateTitle();
 
+      var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
+      var frame = new THREE.Mesh(framegeo, framemat);
+      this.frame = frame;
+      mesh.add(frame);
+      this.material = mat;
+      this.geometry = box;
+
       return mesh;
+    }
+    this.createChildren = function() {
+/*
+      if (this.auto_load) {
+        this.openPortal();
+      }
+*/
     }
     this.updateTitle = function() {
       if (this.draw_text) {
         var title = this.title || this.url;
-        if (title) {
+        if (title && title.length > 0) {
           if (this.flatlabel) {
             this.flatlabel.setText(title);
             this.flatlabel.scale = [1/this.properties.scale.x, 1/this.properties.scale.y, 1/this.properties.scale.z];
@@ -178,13 +195,21 @@ elation.require(['janusweb.janusbase'], function() {
       this.refresh();
     }
     this.click = function(ev) {
+      this.openPortal();
     }
     this.activate = function() {
       if (this.frame) {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
       }
-      this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
+      //this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
+      if (!this.open) {
+        this.openPortal();
+        elation.events.fire({element: this, type: 'janusweb_portal_open'});
+      } else {
+        this.closePortal();
+        elation.events.fire({element: this, type: 'janusweb_portal_close'});
+      }
       elation.events.fire({element: this, type: 'janusweb_portal_click'});
     }
     this.canUse = function(object) {
@@ -210,6 +235,152 @@ elation.require(['janusweb.janusbase'], function() {
         thumb_id: ['property', 'thumb_id'],
       };
       return proxy;
+    }
+    this.openPortal = function() {
+console.log('open room!', this.portalroom);
+      if (!this.portalroom) {
+        this.portalroom = this.janus.load(this.properties.url, false);
+        console.log('load that room', this.portalroom);
+        var rt = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBAFormat });
+        var scene = new THREE.Scene();
+        scene.add(this.portalroom.objects['3d']);
+console.log(this.engine);
+        var userdata = this.engine.client.player.camera.camera.userData;
+        this.engine.client.player.camera.camera.userData = {};
+        var cam = new THREE.PerspectiveCamera();//.copy(this.engine.client.player.camera.camera);
+        this.engine.client.player.camera.camera.userData = userdata;
+//cam.position.set(0,1.6,-3);
+scene.add(cam);
+    
+        var renderer = this.engine.systems.render.renderer;
+        console.log('dude yeah', rt, scene, cam, renderer);
+renderer.autoClear = false;
+
+        this.material.map = rt.texture;
+        this.portalrender = {
+          scene: scene,
+          camera: cam,
+          rendertarget: rt
+        };
+
+        this.updatePortal();
+        elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortal));
+      }
+      this.open = true;
+      this.portalstate = 'open';
+    }
+    this.updatePortal = function() {
+      if (this.open) {
+        var renderer = this.engine.systems.render.renderer;
+
+        var player = this.engine.client.player;
+        var playerpos = player.parent.localToWorld(player.properties.position.clone());
+        var portalpos = this.parent.localToWorld(this.properties.position.clone());
+        var startpos = new THREE.Vector3().fromArray(this.portalroom.playerstartposition);
+
+        var currentRoomRotation = new THREE.Matrix4().extractRotation(this.objects['3d'].matrixWorld);
+        var otherRoomRotation = new THREE.Matrix4().makeRotationFromQuaternion(this.portalroom.playerstartorientation);
+
+        var el = otherRoomRotation.elements;
+/*
+        el[0] *= -1;
+        el[2] *= -1;
+        el[4] *= -1;
+        el[6] *= -1;
+        el[9] *= -1;
+        el[10] *= -1;
+*/
+
+        var rotate = new THREE.Matrix4().multiplyMatrices(currentRoomRotation, otherRoomRotation);
+        //var diff = playerpos.clone().sub(portalpos).add(startpos);
+        var diff = portalpos.clone().sub(startpos);
+        var translate = new THREE.Matrix4().setPosition(portalpos);
+
+        //this.portalrender.camera.position.copy(this.engine.client.player.properties.position);
+        //this.portalrender.camera.position.copy(diff);
+        //this.portalrender.camera.position.fromArray(this.portalroom.playerstartposition);
+        //this.portalrender.camera.position.copy(diff).add(new THREE.Vector3(0,1.6,0));
+        this.portalrender.camera.position.copy(diff);
+        this.portalrender.camera.lookAt(startpos);
+        var cam = this.engine.systems.render.views.main.actualcamera;
+        var eyepos = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
+
+/*
+        this.portalrender.camera.matrixAutoUpdate = false;
+        //this.portalrender.camera.matrix.copy(player.camera.objects['3d'].matrixWorld);
+        //this.portalrender.camera.matrix.setPosition(diff);
+
+        var matrix = this.portalrender.camera.matrix;
+        matrix.copy(translate);
+        matrix.multiply(rotate);
+        translate.setPosition(startpos.negate());
+        matrix.multiply(translate);
+*/
+      
+
+
+        //var cam = player.camera.camera;
+        //cam.updateProjectionMatrix();
+/*
+        var v2 = this.geometry.vertices[1].clone(); // top right back
+        var v4 = this.geometry.vertices[3].clone(); // bottom right back
+        var v1 = this.geometry.vertices[4].clone(); // top left back
+        var v3 = this.geometry.vertices[6].clone(); // bottom left back
+*/
+        var v1 = this.geometry.vertices[5].clone(); // top left front
+        var v2 = this.geometry.vertices[0].clone(); // top right front
+        var v3 = this.geometry.vertices[7].clone(); // bottom left front
+        var v4 = this.geometry.vertices[2].clone(); // bottom right front
+        v1.applyMatrix4(this.objects['3d'].matrixWorld);
+        v2.applyMatrix4(this.objects['3d'].matrixWorld);
+        v3.applyMatrix4(this.objects['3d'].matrixWorld);
+        v4.applyMatrix4(this.objects['3d'].matrixWorld);
+
+        var axis1 = new THREE.Vector3().subVectors(v1, eyepos).normalize(),
+            axis2 = new THREE.Vector3().subVectors(v3, eyepos).normalize();
+        var fov = Math.acos(axis1.dot(axis2)) * 180/Math.PI;
+        var aspect = v1.distanceTo(v2) / v1.distanceTo(v3);
+//console.log('fov is ', fov, axis1, axis2, eyepos);
+
+        v1.project(cam);
+        v2.project(cam);
+        v3.project(cam);
+        v4.project(cam);
+
+        var bbox = new THREE.Box3();
+        bbox.expandByPoint(v1);
+        bbox.expandByPoint(v2);
+        bbox.expandByPoint(v3);
+        bbox.expandByPoint(v4);
+console.log(bbox.min, bbox.max);
+
+/*
+        var p1 = new Plane(),
+            p2 = new Plane(),
+            p3 = new Plane(),
+            p4 = new Plane(),
+            p5 = new Plane(),
+            p6 = new Plane();
+
+        var fov = 
+*/
+
+        //this.portalrender.camera.projectionMatrix.makeFrustum(-0.05, 0.05, -0.05, 0.05, 0.1, 500);
+
+        this.portalrender.camera.fov = fov;
+        this.portalrender.camera.aspect = aspect;
+        this.portalrender.camera.updateProjectionMatrix();
+
+
+
+        renderer.render(this.portalrender.scene, this.portalrender.camera, this.portalrender.rendertarget, true);
+        renderer.setRenderTarget(null);
+      }
+this.material.needsUpdate = true;
+    }
+    this.closePortal = function() {
+      this.portalstate = 'closed';
+      this.open = false;
     }
   }, elation.engine.things.janusbase);
 });
