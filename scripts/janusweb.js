@@ -321,11 +321,8 @@ setTimeout(function() {
     }
     this.showLoadURL = function(ev) {
       if (ev.value == 1) {
-        var url = prompt('url?');
-        if (url) {
-          elation.events.fire({element: this, type: 'janusweb_load_url', data: url});
-          this.setActiveRoom(url, [0,0,0]);
-        }
+        this.engine.client.ui.urlbar.selectall();
+        this.engine.client.ui.urlbar.focus();
       }
     }
     this.showRoomDebug = function(ev) {
@@ -466,6 +463,9 @@ setTimeout(function() {
         remote.updateHands(movedata.hand0, movedata.hand1);
       }
 
+      if (movedata.avatar) {
+        remote.setAvatar(movedata.avatar);
+      }
       if (movedata.speaking && movedata.audio) {
         remote.speak(movedata.audio);
       }

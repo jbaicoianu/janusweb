@@ -72,6 +72,19 @@ elation.component.add('engine.things.remoteplayer', function() {
     //this.mouth.audio.setBuffer(this.audiobuffer);
     elation.events.add(this, 'thing_change', elation.bind(this, this.updateTransparency));
   };
+  this.setAvatar = function(avatar) {
+    //console.log(avatar);
+    if (!this.avatarcode || this.avatarcode != avatar) {
+      this.avatarcode = avatar;
+      if (this.avatarroom) {
+        this.avatarroom.die();
+      }
+      //this.avatarroom = this.spawn('janusroom', null, { source: avatar });
+      //console.log(this.avatarroom);
+console.log('avatar changed:', this, avatar);
+    }
+
+  }
   this.speak = function(noise) {
     this.voip.speak(noise);
 
