@@ -11,14 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
-/*
-        'skybox_left': { type: 'string', default: 'skyrender_left' },
-        'skybox_right': { type: 'string', default: 'skyrender_right' },
-        'skybox_up': { type: 'string', default: 'skyrender_up' },
-        'skybox_down': { type: 'string', default: 'skyrender_down' },
-        'skybox_front': { type: 'string', default: 'skyrender_front' },
-        'skybox_back': { type: 'string', default: 'skyrender_back' },
-*/
+        'source': { type: 'string' },
         'skybox_left': { type: 'string' },
         'skybox_right': { type: 'string' },
         'skybox_up': { type: 'string' },
@@ -46,7 +39,6 @@ elation.require([
       };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
-      this.load(this.properties.url);
       this.roomsrc = '';
       this.changes = {};
       this.appliedchanges = {};
@@ -59,6 +51,12 @@ elation.require([
 
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.onMouseDown));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.onMouseUp));
+
+      if (this.url) {
+        this.load(this.url);
+      } else if (this.source) {
+        this.loadFromSource(this.source);
+      }
     }
     this.createChildren = function() {
       this.spawn('light_ambient', this.id + '_ambient', {
@@ -90,7 +88,6 @@ elation.require([
         pos = this.playerstartposition;
         orientation = this.playerstartorientation;
       }
-        
       var player = this.engine.client.player;
       if (pos && orientation) {
         player.properties.position.set(pos[0], pos[1], pos[2]);
@@ -269,33 +266,21 @@ elation.require([
             //'X-Requested-With':'JanusWeb Client'
           },
           callback: elation.bind(this, function(data, xhr) { 
-            var source = this.parseSource(data);
-            if (source && source.source) {
-              this.roomsrc = source.source;
-              var responseURL = xhr.getResponseHeader('X-Final-URL');
-              if (!responseURL) {
-                responseURL = xhr.responseURL.replace(proxyurl, '');
-              }
-              if (responseURL != this.properties.url) {
-                var url = responseURL;
-                if (!baseurloverride) {
-                  baseurl = url.split('/'); 
-                  baseurl.pop(); 
-                  baseurl = baseurl.join('/') + '/'; 
-                  this.baseurl = baseurl;
-                }
-                this.properties.url = url;
-              }
-              var roomdata = this.parseFireBox(source.source);
-              this.createRoomObjects(roomdata);
-              this.setActive();
-              elation.events.fire({type: 'janus_room_load', element: this});
-            } else {
-              var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-              var transpath = datapath + 'assets/translator/web/';
-              //console.log('no firebox room, load the translator', transpath);
-              this.load(transpath + 'Parallelogram.html', transpath );
+            var responseURL = xhr.getResponseHeader('X-Final-URL');
+            if (!responseURL) {
+              responseURL = xhr.responseURL.replace(proxyurl, '');
             }
+            if (responseURL != this.properties.url) {
+              var url = responseURL;
+              if (!baseurloverride) {
+                baseurl = url.split('/'); 
+                baseurl.pop(); 
+                baseurl = baseurl.join('/') + '/'; 
+                this.baseurl = baseurl;
+              }
+              this.properties.url = url;
+            }
+            this.loadFromSource(data);
           }), 
           failurecallback: elation.bind(this, function(xhr) {
             var translator = this.translators['^error$'];
@@ -304,6 +289,23 @@ elation.require([
             
           })
         });
+      }
+    }
+    this.loadFromSource = function(sourcecode) {
+      var source = this.parseSource(sourcecode);
+      if (source && source.source) {
+        this.roomsrc = source.source;
+        var roomdata = this.parseFireBox(source.source);
+        this.createRoomObjects(roomdata);
+        if (this.active) {
+          this.setActive();
+        }
+        elation.events.fire({type: 'janus_room_load', element: this});
+      } else {
+        var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+        var transpath = datapath + 'assets/translator/web/';
+        //console.log('no firebox room, load the translator', transpath);
+        this.load(transpath + 'Parallelogram.html', transpath );
       }
     }
     this.parseSource = function(data) { 
