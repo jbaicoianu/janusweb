@@ -32,10 +32,10 @@ elation.require([
         'cursor_visible': { type: 'bool', default: true },
       });
       this.translators = {
-        '^about:blank$': elation.janusweb.translators.blank({}),
-        '^bookmarks$': elation.janusweb.translators.bookmarks({}),
-        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({}),
-        '^error$': elation.janusweb.translators.error({})
+        '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
+        '^bookmarks$': elation.janusweb.translators.bookmarks({janus: this.janus}),
+        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: this.janus}),
+        '^error$': elation.janusweb.translators.error({janus: this.janus})
       };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
@@ -295,7 +295,9 @@ elation.require([
       var source = this.parseSource(sourcecode);
       if (source && source.source) {
         this.roomsrc = source.source;
-        var roomdata = this.parseFireBox(source.source);
+        var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+        var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
+        this.loadRoomAssets(roomdata);
         this.createRoomObjects(roomdata);
         if (this.active) {
           this.setActive();
@@ -330,25 +332,11 @@ elation.require([
       return parsed;
     }
 
-    this.parseFireBox = function(fireboxsrc) {
-      var xml = elation.utils.parseXML(fireboxsrc, false, true); 
-      var rooms = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.room', {})); 
-      var room = {_children: {}};
-      for (var i = 0; i < rooms.length; i++) {
-        var attrs = Object.keys(rooms[i]).filter(function(k) { return (k[0] != '_'); });
-        attrs.forEach(function(k) {
-          room[k] = rooms[i][k];
-        });
-        if (rooms[i]._children) {
-          Object.keys(rooms[i]._children).forEach(function(k) {
-            room._children[k] = rooms[i]._children[k];
-          });
-        }
+    this.loadRoomAssets = function(roomdata) {
+      if (roomdata && roomdata.assets && roomdata.assets.assetlist) {
+        elation.engine.assets.loadJSON(roomdata.assets.assetlist, this.baseurl);
       }
-      var roomdata = this.getRoomData(xml, room);
-      return roomdata;
     }
-    
     this.createRoomObjects = function(roomdata) {
       var room = roomdata.room,
           assets = roomdata.assets || [],
@@ -469,188 +457,6 @@ elation.require([
       //  this.setActive();
       //}
       //this.showDebug();
-    }
-    this.getRoomData = function(xml, room) {
-      var assets = this.parseAssets(xml, room);
-      var objects = this.getAsArray(elation.utils.arrayget(room, '_children.object', [])); 
-      var links = this.getAsArray(elation.utils.arrayget(room, '_children.link', [])); 
-      var sounds = this.getAsArray(elation.utils.arrayget(room, '_children.sound', [])); 
-      var images = this.getAsArray(elation.utils.arrayget(room, '_children.image', [])); 
-      var image3ds = this.getAsArray(elation.utils.arrayget(room, '_children.image3d', [])); 
-      var texts = this.getAsArray(elation.utils.arrayget(room, '_children.text', [])); 
-      var paragraphs = this.getAsArray(elation.utils.arrayget(room, '_children.paragraph', [])); 
-      var lights = this.getAsArray(elation.utils.arrayget(room, '_children.light', [])); 
-      var videos = this.getAsArray(elation.utils.arrayget(room, '_children.video', [])); 
-      var particles = this.getAsArray(elation.utils.arrayget(room, '_children.particle', [])); 
-
-      var orphanobjects = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.object')); 
-      var orphanlinks = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.link')); 
-      var orphansounds = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.sound')); 
-      var orphanvideos = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.video')); 
-      var orphanimages = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.image')); 
-      var orphantexts = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.text')); 
-      var orphanparagraphs = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.paragraph')); 
-      var orphanparticles = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.particle')); 
-      var orphanlights = this.getAsArray(elation.utils.arrayget(xml, 'fireboxroom._children.light')); 
-
-      if (orphanobjects && orphanobjects[0]) objects.push.apply(objects, orphanobjects);
-      if (links && orphanlinks[0]) links.push.apply(links, orphanlinks);
-      if (images && orphanimages[0]) images.push.apply(images, orphanimages);
-      if (videos && orphanvideos[0]) videos.push.apply(videos, orphanvideos);
-      if (sounds && orphansounds[0]) sounds.push.apply(sounds, orphansounds);
-      if (texts && orphantexts[0]) texts.push.apply(texts, orphantexts);
-      if (paragraphs && orphanparagraphs[0]) paragraphs.push.apply(paragraphs, orphanparagraphs);
-      if (lights && orphanlights[0]) lights.push.apply(lights, orphanlights);
-      if (particles && orphanparticles[0]) particles.push.apply(particles, orphanparticles);
-
-      return {
-        assets: assets,
-        room: this.parseNode(room),
-        objects: objects.map(elation.bind(this, this.parseNode)),
-        links: links.map(elation.bind(this, this.parseNode)),
-        sounds: sounds.map(elation.bind(this, this.parseNode)),
-        images: images.map(elation.bind(this, this.parseNode)),
-        image3ds: image3ds.map(elation.bind(this, this.parseNode)),
-        texts: texts.map(elation.bind(this, this.parseNode)),
-        paragraphs: paragraphs.map(elation.bind(this, this.parseNode)),
-        lights: lights.map(elation.bind(this, this.parseNode)),
-        videos: videos.map(elation.bind(this, this.parseNode)),
-        particles: particles.map(elation.bind(this, this.parseNode)),
-      };
-    }
-    this.getAsArray = function(arr) {
-      return (elation.utils.isArray(arr) ? arr : [arr]);
-    }
-    this.getOrientation = function(xdir, ydir, zdir) {
-      if (xdir) xdir = new THREE.Vector3().fromArray(xdir.split(' ')).normalize();
-      if (ydir) ydir = new THREE.Vector3().fromArray(ydir.split(' ')).normalize();
-      if (zdir) zdir = new THREE.Vector3().fromArray(zdir.split(' ')).normalize();
-
-      if (xdir && !ydir && !zdir) {
-        ydir = new THREE.Vector3(0,1,0);
-        zdir = new THREE.Vector3().crossVectors(xdir, ydir);
-      }
-      if (!xdir && !ydir && zdir) {
-        ydir = new THREE.Vector3(0,1,0);
-        xdir = new THREE.Vector3().crossVectors(ydir, zdir);
-      }
-
-      if (!xdir && ydir && zdir) {
-        xdir = new THREE.Vector3().crossVectors(zdir, ydir);
-      }
-      if (xdir && !ydir && zdir) {
-        ydir = new THREE.Vector3().crossVectors(xdir, zdir).multiplyScalar(-1);
-      }
-      if (xdir && ydir && !zdir) {
-        zdir = new THREE.Vector3().crossVectors(xdir, ydir);
-      }
-      if (!xdir) xdir = new THREE.Vector3(1,0,0);
-      if (!ydir) ydir = new THREE.Vector3(0,1,0);
-      if (!zdir) zdir = new THREE.Vector3(0,0,1);
-
-      var mat4 = new THREE.Matrix4().makeBasis(xdir, ydir, zdir);
-      var quat = new THREE.Quaternion();
-      var pos = new THREE.Vector3();
-      var scale = new THREE.Vector3();
-      //quat.setFromRotationMatrix(mat4);
-      mat4.decompose(pos, quat, scale);
-      quat.normalize();
-      //quat.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)));
-      return quat;
-    }
-    this.parseAssets = function(xml) {
-      var assetxml = elation.utils.arrayget(xml, 'fireboxroom._children.assets', {}); 
-      var objectassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetobject", [])); 
-      var soundassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetsound", [])); 
-      var imageassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetimage", [])); 
-      var videoassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetvideo", [])); 
-      var scriptassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetscript", [])); 
-      var websurfaceassets = this.getAsArray(elation.utils.arrayget(assetxml, "_children.assetwebsurface", [])); 
-      var assetlist = [];
-      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-      imageassets.forEach(elation.bind(this, function(n) { 
-        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-        //src = (src.match(/^(https?:)?\/\//) ? src : this.baseurl + src);
-        assetlist.push({ assettype:'image', name:n.id, src: src, baseurl: this.baseurl }); 
-      }));
-      videoassets.forEach(elation.bind(this, function(n) { 
-        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-        assetlist.push({ 
-          assettype:'video', 
-          name:n.id, 
-          src: src, 
-          loop: n.loop,
-          sbs3d: n.sbs3d == 'true',  
-          ou3d: n.ou3d == 'true',  
-          auto_play: n.auto_play == 'true',  
-          baseurl: this.baseurl
-        }); 
-      }));
-      soundassets.forEach(elation.bind(this, function(n) { 
-        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-        assetlist.push({ 
-          assettype:'sound', 
-          name:n.id, 
-          src: src,
-          baseurl: this.baseurl
-        }); 
-      }));
-      websurfaceassets.forEach(elation.bind(this, function(n) { this.websurfaces[n.id] = n; }));
-      scriptassets.forEach(elation.bind(this, function(n) { 
-        var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-        assetlist.push({ 
-          assettype:'script', 
-          name: src,
-          src: src,
-          baseurl: this.baseurl
-        }); 
-      }));
-      elation.engine.assets.loadJSON(assetlist, this.baseurl); 
-
-      var objlist = []; 
-      var baseurl = this.baseurl;
-      objectassets.forEach(function(n) { 
-        if (n.src) {
-          var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-          var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, datapath) : n.mtl);
-          if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = baseurl + mtlsrc;
-          var srcparts = src.split(' ');
-          src = srcparts[0];
-          objlist.push({assettype: 'model', name: n.id, src: src, mtl: mtlsrc, tex_linear: n.tex_linear, tex0: n.tex || n.tex0 || srcparts[1], tex1: n.tex1 || srcparts[2], tex2: n.tex2 || srcparts[3], tex3: n.tex3 || srcparts[4]}); 
-        }
-      }); 
-      elation.engine.assets.loadJSON(objlist, this.baseurl); 
-      var assets = {
-        image: imageassets,
-        sound: soundassets,
-        video: videoassets,
-        scripts: scriptassets
-      };
-      return assets;
-    }
-    this.parseNode = function(n) {
-      var nodeinfo = {};
-      var attrs = Object.keys(n);
-      attrs.forEach(elation.bind(this, function(k) {
-        nodeinfo[k] = (n[k] == 'false' ? false : n[k]);
-      }));
-
-      nodeinfo.pos = (n.pos ? (elation.utils.isArray(n.pos) ? n.pos : n.pos.split(' ')).map(parseFloat) : [0,0,0]);
-      nodeinfo.scale = (n.scale ? (elation.utils.isArray(n.scale) ? n.scale : (n.scale instanceof THREE.Vector3 ? n.scale.toArray() : n.scale.split(' '))).map(parseFloat) : [1,1,1]);
-      nodeinfo.orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
-      nodeinfo.col = (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col) : null);
-      
-      var minscale = 1e-6;
-/*
-      nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
-      nodeinfo.scale[1] = Math.max(minscale, nodeinfo.scale[1]);
-      nodeinfo.scale[2] = Math.max(minscale, nodeinfo.scale[2]);
-*/
-      if (nodeinfo.scale[0] < minscale && nodeinfo.scale[0] > -minscale) nodeinfo.scale[0] = minscale;
-      if (nodeinfo.scale[1] < minscale && nodeinfo.scale[1] > -minscale) nodeinfo.scale[1] = minscale;
-      if (nodeinfo.scale[2] < minscale && nodeinfo.scale[2] > -minscale) nodeinfo.scale[2] = minscale;
-
-      return nodeinfo;
     }
     this.getTranslator = function(url) {
       var keys = Object.keys(this.translators);
