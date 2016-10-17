@@ -3,6 +3,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       '<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
   elation.component.add('engine.things.janusbase', function() {
+    this.defaultcolor = new THREE.Color(0xffffff);
+
     this.postinit = function() {
       elation.engine.things.janusbase.extendclass.postinit.call(this);
       this.frameupdates = [];
@@ -10,7 +12,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         room:     { type: 'object' },
         janus:    { type: 'object' },
         js_id:    { type: 'string' },
-        color:    { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
+        color:    { type: 'color', default: this.defaultcolor, set: this.updateMaterial },
         fwd:      { type: 'vector3', default: new THREE.Vector3(0,0,1), set: this.pushFrameUpdate },
         xdir:     { type: 'vector3', default: new THREE.Vector3(1,0,0), set: this.pushFrameUpdate },
         ydir:     { type: 'vector3', default: new THREE.Vector3(0,1,0), set: this.pushFrameUpdate },
@@ -39,7 +41,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
     }
     this.setProperties = function(props) {
-      var n = this.properties.room.parseNode(props);
+      var n = this.janus.parser.parseNode(props);
       var rebuild = false;
 
       if (n.pos) this.properties.position.fromArray(n.pos);

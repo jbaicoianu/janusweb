@@ -2,6 +2,7 @@ elation.require(['elation.collection'], function() {
   elation.component.add('janusweb.translators.reddit', function() {
     this.init = function() {
       this.queue = [];
+      this.janus = this.args.janus;
     }
     this.loadTranslator = function() {
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
@@ -70,7 +71,8 @@ elation.require(['elation.collection'], function() {
     this.translate = function(args, ev) {
       var room = args.room;
       var source = room.parseSource(this.roomsource);
-      var roomdata = room.parseFireBox(source.source);
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+      var roomdata = this.janus.parser.parse(source.source, room.baseurl, datapath);
       var items = ev.target.items;
       var numlinks = 25;
       var flip = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));

@@ -306,6 +306,7 @@ var JanusClientConnection = function(opts)
   this._host = opts.host;
   this.lastattempt = 0;
   this.reconnectdelay = 10000;
+  this.rooms = {};
   this.connect();
 }
 
@@ -366,32 +367,46 @@ JanusClientConnection.prototype.onMessage = function(msg) {
   this.dispatchEvent({type: 'message', data: JSON.parse(msg.data)});
 };
 
-JanusClientConnection.prototype.subscribe = function(roomId) {
-  //console.log('subscribing to ', roomId);
-  this.send({
-    'method': 'subscribe',
-    'data': {
-      'roomId': md5(roomId)
-    }
-  });
+JanusClientConnection.prototype.subscribe = function(url) {
+  if (!this.rooms[url] || !this.rooms[url].subscribed) {
+    var room = this.rooms[url] = {
+      subscribed: true,
+      url: url,
+      id: md5(url)
+    };
+    this.send({
+      'method': 'subscribe',
+      'data': {
+        'roomId': room.id
+      }
+    });
+    console.log('[JanusClientConnection] subscribing to ', url, room);
+  } else {
+    console.log('[JanusClientConnection] already subscribed to ', url, this.rooms[url]);
+  }
 };
 
 JanusClientConnection.prototype.unsubscribe = function(url) {
-    //console.log('unsubscribing from', url);
+  if (this.rooms[url] && this.rooms[url].subscribed) {
+    this.rooms[url].subscribed = false;
     this.send({
       'method': 'unsubscribe',
       'data': {
         'roomId': md5(url)
       }
     });
+    console.log('[JanusClientConnection] unsubscribing from', url);
+  } else {
+    console.log('[JanusClientConnection] not subscribed to ', url);
+  }
 };
 
 JanusClientConnection.prototype.enter_room = function(url) {
-    this.send({
-      'method': 'enter_room',
-      'data': {
-        'roomId': md5(url)
-      }
-    });
+  this.send({
+    'method': 'enter_room',
+    'data': {
+      'roomId': md5(url)
+    }
+  });
 };
 

@@ -74,7 +74,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
       if (navigator.getVRDisplays) {
-        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Toggle VR'});
+        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Enter VR'});
         this.engine.client.buttons.add('vr', this.vrbutton);
         elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this.engine.client, this.engine.client.toggleVR));
       }
@@ -143,8 +143,8 @@ setTimeout(elation.bind(this, function() {
       if (this.tracker && this.tracker.hasHands()) {
         var hands = this.tracker.getHands();
         if (hands) {
-          this.hands.left.active = hands.left.active;
-          this.hands.right.active = hands.right.active;
+          this.hands.left.active = hands.left && hands.left.active;
+          this.hands.right.active = hands.right && hands.right.active;
           if (hands.left && hands.left.position) {
             var pos = hands.left.palmPosition,
                 orient = hands.left.palmOrientation;

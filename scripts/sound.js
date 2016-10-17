@@ -6,7 +6,7 @@ elation.require(['janusweb.janusbase'], function() {
         sound_id: { type: 'string' },
         rect: { type: 'string', default: "0 0 0 0" },
         loop: { type: 'boolean', default: false },
-        auto_play: { type: 'boolean', default: false },
+        auto_play: { type: 'boolean', default: true },
         play_once: { type: 'boolean', default: false },
         dist: { type: 'float', default: 1.0 },
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
