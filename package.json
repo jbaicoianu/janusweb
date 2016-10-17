@@ -1,7 +1,7 @@
 {
   "name": "janusweb",
   "description": "Web client for JanusVR worlds",
-  "version": "0.0.3",
+  "version": "1.0rc3",
   "main": "scripts/janusweb.js",
   "author": "James Baicoianu",
   "license": "MIT",
@@ -25,7 +25,7 @@
     "url": "https://github.com/jbaicoianu/janusweb"
   },
   "dependencies": {
-    "elation-engine": ">=0.9.0"
+    "elation-engine": ">=0.9.3"
   },
   "keywords": [
     "elation",

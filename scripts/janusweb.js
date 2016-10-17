@@ -2,7 +2,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
-    this.version = 'janusweb-1.0rc2';
+    this.version = 'janusweb-1.0rc3';
     this.settings = {
       multiplayer: true,
       sessiontracking: true,
