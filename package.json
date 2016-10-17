@@ -1,7 +1,7 @@
 {
   "name": "janusweb",
   "description": "Web client for JanusVR worlds",
-  "version": "1.0rc3",
+  "version": "0.9.3",
   "main": "scripts/janusweb.js",
   "author": "James Baicoianu",
   "license": "MIT",
