@@ -32,6 +32,9 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
     this.addmessage = function(msg) {
       if (!msg.timestamp) msg.timestamp = window.performance.now();
       var bottom = this.messagelist.isScrollAtBottom();
+      if (elation.utils.isObject(msg.message)) {
+        msg.message = msg.message.data;
+      }
       this.messagecollection.add(msg);
       if (bottom) {
         this.messagelist.scrollToBottom();
