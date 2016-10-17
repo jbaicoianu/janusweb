@@ -211,6 +211,7 @@ setTimeout(function() {
         //setTimeout(elation.bind(this.currentroom, this.currentroom.die), 1000);
         //this.currentroom.die();
         this.currentroom.disable();
+        this.leave_room(this.currentroom.url);
         this.currentroom = false;
       }
       this.refresh();
@@ -359,6 +360,11 @@ setTimeout(function() {
         this.network.enter_room(url);
       }
     }
+    this.leave_room = function(url) {
+      if (this.network) {
+        this.network.leave_room(url);
+      }
+    }
     this.onJanusMessage = function(msg) {
       var method = msg.data.method
       if (method == 'user_moved') {
@@ -455,6 +461,7 @@ setTimeout(function() {
 
       if (remote.room !== room) {
         room.add(remote);
+        remote.room = room;
       }
 
       if (movedata.dir) {
