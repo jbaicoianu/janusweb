@@ -9,6 +9,7 @@ elation.require(['janusweb.janusbase'], function() {
         'url': { type: 'string', set: this.updateTitle },
         'open': { type: 'boolean', default: false },
         'title': { type: 'string', set: this.updateTitle },
+        'seamless': { type: 'boolean', default: false },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
         'auto_load': { type: 'boolean', default: false },
@@ -202,13 +203,14 @@ elation.require(['janusweb.janusbase'], function() {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
       }
-      //this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
-      if (!this.open) {
-        this.openPortal();
-        elation.events.fire({element: this, type: 'janusweb_portal_open'});
+      if (this.seamless) {
+        if (!this.open) {
+          this.openPortal();
+        } else {
+          this.closePortal();
+        }
       } else {
-        this.closePortal();
-        elation.events.fire({element: this, type: 'janusweb_portal_close'});
+        this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
       }
       elation.events.fire({element: this, type: 'janusweb_portal_click'});
     }
@@ -237,14 +239,12 @@ elation.require(['janusweb.janusbase'], function() {
       return proxy;
     }
     this.openPortal = function() {
-console.log('open room!', this.portalroom);
       if (!this.portalroom) {
         this.portalroom = this.janus.load(this.properties.url, false);
         console.log('load that room', this.portalroom);
         var rt = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBAFormat });
         var scene = new THREE.Scene();
         scene.add(this.portalroom.objects['3d']);
-console.log(this.engine);
         var userdata = this.engine.client.player.camera.camera.userData;
         this.engine.client.player.camera.camera.userData = {};
         var cam = new THREE.PerspectiveCamera();//.copy(this.engine.client.player.camera.camera);
@@ -263,23 +263,34 @@ renderer.autoClear = false;
           rendertarget: rt
         };
 
+        this.janus.subscribe(this.url);
         this.updatePortal();
         elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortal));
       }
       this.open = true;
       this.portalstate = 'open';
+      elation.events.fire({element: this, type: 'janusweb_portal_open'});
     }
     this.updatePortal = function() {
       if (this.open) {
         var renderer = this.engine.systems.render.renderer;
 
         var player = this.engine.client.player;
+        var cam = this.engine.systems.render.views.main.actualcamera;
+        var portalcam = this.portalrender.camera;
         var playerpos = player.parent.localToWorld(player.properties.position.clone());
         var portalpos = this.parent.localToWorld(this.properties.position.clone());
         var startpos = new THREE.Vector3().fromArray(this.portalroom.playerstartposition);
 
         var currentRoomRotation = new THREE.Matrix4().extractRotation(this.objects['3d'].matrixWorld);
-        var otherRoomRotation = new THREE.Matrix4().makeRotationFromQuaternion(this.portalroom.playerstartorientation);
+        var blah = new THREE.Matrix4().makeRotationFromQuaternion(this.portalroom.playerstartorientation);
+        var el = blah.elements;
+        var otherRoomRotation = new THREE.Matrix4().set(
+           el[0],  el[1],  el[2], el[3],
+           el[4],  el[5],  el[6], el[7],
+           el[8],  el[9],  el[10], el[11],
+          el[12], el[13], el[14], el[15]
+        );
 
         var el = otherRoomRotation.elements;
 /*
@@ -291,32 +302,45 @@ renderer.autoClear = false;
         el[10] *= -1;
 */
 
-        var rotate = new THREE.Matrix4().multiplyMatrices(currentRoomRotation, otherRoomRotation);
-        //var diff = playerpos.clone().sub(portalpos).add(startpos);
-        var diff = portalpos.clone().sub(startpos);
-        var translate = new THREE.Matrix4().setPosition(portalpos);
+        var rotate = new THREE.Matrix4().multiplyMatrices(currentRoomRotation, otherRoomRotation.transpose());
+var mat = new THREE.Matrix4().extractRotation(cam.matrixWorld);
+//rotate.multiply(mat);
+        //var diff = playerpos.clone().sub(portalpos);
+        var diff = portalpos.clone().sub(playerpos);
+        //var diff = portalpos.clone();
+        //diff.z *= -1;
+        var translate = new THREE.Matrix4().setPosition(startpos.add(new THREE.Vector3(0,1.6,0)));
+
+        //portalcam.near = diff.length();
+        //portalcam.updateProjectionMatrix();
 
         //this.portalrender.camera.position.copy(this.engine.client.player.properties.position);
         //this.portalrender.camera.position.copy(diff);
         //this.portalrender.camera.position.fromArray(this.portalroom.playerstartposition);
         //this.portalrender.camera.position.copy(diff).add(new THREE.Vector3(0,1.6,0));
-        this.portalrender.camera.position.copy(diff);
-        this.portalrender.camera.lookAt(startpos);
-        var cam = this.engine.systems.render.views.main.actualcamera;
+        //this.portalrender.camera.position.copy(diff);
         var eyepos = new THREE.Vector3().setFromMatrixPosition(cam.matrixWorld);
 
-/*
         this.portalrender.camera.matrixAutoUpdate = false;
+/*
         //this.portalrender.camera.matrix.copy(player.camera.objects['3d'].matrixWorld);
         //this.portalrender.camera.matrix.setPosition(diff);
 
+*/
         var matrix = this.portalrender.camera.matrix;
         matrix.copy(translate);
         matrix.multiply(rotate);
-        translate.setPosition(startpos.negate());
+        translate.setPosition(startpos);
         matrix.multiply(translate);
-*/
-      
+
+        //this.portalrender.camera.lookAt(startpos);
+        var zdir = diff.normalize();
+        var xdir = new THREE.Vector3().crossVectors(zdir, new THREE.Vector3(0,1,0));
+        var ydir = new THREE.Vector3().crossVectors(xdir, zdir);
+        matrix.makeBasis(xdir, ydir, zdir);
+        var tmpmat = new THREE.Matrix4().makeBasis(xdir.negate(), ydir, zdir.negate());
+        matrix.copy(tmpmat);
+        matrix.multiply(translate);
 
 
         //var cam = player.camera.camera;
@@ -352,7 +376,7 @@ renderer.autoClear = false;
         bbox.expandByPoint(v2);
         bbox.expandByPoint(v3);
         bbox.expandByPoint(v4);
-console.log(bbox.min, bbox.max);
+//console.log(bbox.min, bbox.max);
 
 /*
         var p1 = new Plane(),
@@ -367,9 +391,11 @@ console.log(bbox.min, bbox.max);
 
         //this.portalrender.camera.projectionMatrix.makeFrustum(-0.05, 0.05, -0.05, 0.05, 0.1, 500);
 
+/*
         this.portalrender.camera.fov = fov;
         this.portalrender.camera.aspect = aspect;
         this.portalrender.camera.updateProjectionMatrix();
+*/
 
 
 
@@ -381,6 +407,7 @@ this.material.needsUpdate = true;
     this.closePortal = function() {
       this.portalstate = 'closed';
       this.open = false;
+      elation.events.fire({element: this, type: 'janusweb_portal_close'});
     }
   }, elation.engine.things.janusbase);
 });
