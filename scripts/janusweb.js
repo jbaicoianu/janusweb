@@ -201,7 +201,7 @@ setTimeout(function() {
         elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
         this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
       }.bind(this));
-      elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
+      //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
       elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
     }
     this.clear = function() {
@@ -308,7 +308,7 @@ setTimeout(function() {
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
         this.currentroom.enable();
-
+        this.enter_room(url);
       } else {
         this.load(url, true);
       }
@@ -354,8 +354,10 @@ setTimeout(function() {
       this.network.unsubscribe(url);
     }
     this.enter_room = function(url) {
-      this.network.subscribe(url);
-      this.network.enter_room(url);
+      if (this.network) {
+        this.network.subscribe(url);
+        this.network.enter_room(url);
+      }
     }
     this.onJanusMessage = function(msg) {
       var method = msg.data.method
@@ -448,7 +450,13 @@ setTimeout(function() {
     }
     this.moveRemotePlayer = function(data) {
       var remote = this.remotePlayers[data.position._userId];
+      var room = this.rooms[data.roomId] || this.currentroom;
       var movedata = data.position;
+
+      if (remote.room !== room) {
+        room.add(remote);
+      }
+
       if (movedata.dir) {
         remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
         remote.janusDirs.tmpVec2.fromArray(movedata.dir.split(" "));
