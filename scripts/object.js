@@ -160,7 +160,9 @@ elation.require(['janusweb.janusbase'], function() {
           this.videotexture = texture;
         }
       }
-      color = this.properties.color;
+      if (this.properties.color !== this.defaultcolor) {
+        color = this.properties.color;
+      }
 /*
       if (this.properties.col) {
         var col = this.properties.col;
