@@ -74,7 +74,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
       if (navigator.getVRDisplays) {
-        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Toggle VR'});
+        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Enter VR'});
         this.engine.client.buttons.add('vr', this.vrbutton);
         elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this.engine.client, this.engine.client.toggleVR));
       }
