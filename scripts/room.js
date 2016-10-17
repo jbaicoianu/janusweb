@@ -254,6 +254,8 @@ elation.require([
           // TODO - use the new official translators here!
           translator.exec({url: url, janus: this.properties.janus, room: this})
                     .then(elation.bind(this, function(objs) {
+                      this.roomsrc = objs.source;
+                      this.loadRoomAssets(objs);
                       this.createRoomObjects(objs);
                       this.setActive();
                       elation.events.fire({type: 'janus_room_load', element: this});
