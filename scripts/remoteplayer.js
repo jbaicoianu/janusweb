@@ -2,6 +2,7 @@ elation.require(['engine.things.generic', 'engine.things.maskgenerator', 'engine
 elation.component.add('engine.things.remoteplayer', function() {
   this.postinit = function() {
     this.defineProperties({
+      janus: { type: 'object' },
       startposition: {type: 'vector3', default: new THREE.Vector3()},
       pickable: {type: 'boolean', default: false},
       collidable: {type: 'boolean', default: false},
@@ -76,12 +77,10 @@ elation.component.add('engine.things.remoteplayer', function() {
     //console.log(avatar);
     if (!this.avatarcode || this.avatarcode != avatar) {
       this.avatarcode = avatar;
-      if (this.avatarroom) {
-        this.avatarroom.die();
-      }
+      var things = this.janus.parser.parse(avatar);
       //this.avatarroom = this.spawn('janusroom', null, { source: avatar });
       //console.log(this.avatarroom);
-console.log('avatar changed:', this, avatar);
+console.log('avatar changed:', this, things, avatar);
     }
 
   }
