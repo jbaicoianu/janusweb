@@ -1,8 +1,8 @@
-elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection', 'utils.proxy'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection', 'janusweb.external.JanusFireboxParser', 'utils.proxy'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
-    this.version = 'janusweb-0.4b';
+    this.version = 'janusweb-1.0rc2';
     this.settings = {
       multiplayer: true,
       sessiontracking: true,
@@ -183,10 +183,11 @@ setTimeout(function() {
         host: host,
         port: port,
         userId: this.userId,
-        version: '49.54',
+        version: this.version,
         roomUrl: starturl
       }
       this.network = new JanusClientConnection(janusOptions);
+      this.parser = new JanusFireboxParser();
       this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
       this.network.addEventListener('message', function(msg) {
         this.onJanusMessage(msg);
@@ -200,8 +201,8 @@ setTimeout(function() {
         elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
         this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
       }.bind(this));
-      elation.events.add(this, 'room_active', elation.bind(this, this.subscribe));
-      elation.events.add(this, 'room_disable', elation.bind(this, this.unsubscribe));
+      elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
+      elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -346,12 +347,15 @@ setTimeout(function() {
         elation.events.fire({type: 'janusweb_bookmark_add', element: this, data: room});
       }
     }
-    this.subscribe = function(ev) {
-      this.network.subscribe(ev.data.properties.url);
-      this.network.enter_room(ev.data.properties.url);
+    this.subscribe = function(url) {
+      this.network.subscribe(url);
     }
-    this.unsubscribe = function(ev) {
-      this.network.unsubscribe(ev.data.properties.url);
+    this.unsubscribe = function(url) {
+      this.network.unsubscribe(url);
+    }
+    this.enter_room = function(url) {
+      this.network.subscribe(url);
+      this.network.enter_room(url);
     }
     this.onJanusMessage = function(msg) {
       var method = msg.data.method
@@ -368,19 +372,20 @@ setTimeout(function() {
       }
       else if (method == 'user_disconnected' || method == 'user_leave') {
         var remoteplayer = this.remotePlayers[msg.data.data.userId];
-        //console.log("removing player", msg.data.data.userId, remoteplayer);
-        elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
-        this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
-        if (remoteplayer && remoteplayer.parent) {
-          remoteplayer.die();
+        if (remoteplayer) {
+          elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
+          this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
+          if (remoteplayer && remoteplayer.parent) {
+            remoteplayer.die();
+          }
+          delete this.remotePlayers[msg.data.data.userId];
+          this.remotePlayerCount = Object.keys(this.remotePlayers).length;
+          this.playerCount = this.remotePlayerCount + 1;
         }
-        delete this.remotePlayers[msg.data.data.userId];
-        this.remotePlayerCount = Object.keys(this.remotePlayers).length;
-        this.playerCount = this.remotePlayerCount + 1;
       } else if (method == 'user_portal') {
         var data = msg.data.data;
         var portalname = 'portal_' + data.userId + '_' + md5(data.url);
-        var node = this.currentroom.parseNode(data);
+        var node = this.parser.parseNode(data);
         var room = this.rooms[data.roomId];
         if (room) {
           room.spawn('janusportal', portalname, {
@@ -424,8 +429,12 @@ setTimeout(function() {
     }
     this.spawnRemotePlayer = function(data) {
       var userId = data.position._userId;
+      var roomId = data.roomId;
+
+      var room = this.rooms[roomId] || this.currentroom;
+
       var spawnpos = (data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
-      this.remotePlayers[userId] = this.currentroom.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false});
+      this.remotePlayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this});
       var remote = this.remotePlayers[userId];
       remote.janusDirs = {
         tmpVec1: new THREE.Vector3(),
@@ -464,7 +473,7 @@ setTimeout(function() {
       }
 
       if (movedata.avatar) {
-        remote.setAvatar(movedata.avatar);
+        remote.setAvatar(movedata.avatar.replace(/\^/g, '"'));
       }
       if (movedata.speaking && movedata.audio) {
         remote.speak(movedata.audio);
