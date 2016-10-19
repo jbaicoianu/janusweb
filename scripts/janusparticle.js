@@ -44,7 +44,7 @@ elation.require(['janusweb.janusbase'], function() {
       return obj;
     }
     this.createForces = function() {
-      this.velocity.set(0,0,0); // FIXME - hack to override "vel" property mapping
+      this.properties.velocity.set(0,0,0); // FIXME - hack to override "vel" property mapping
     }
     this.createParticles = function() {
       this.particles = [];
