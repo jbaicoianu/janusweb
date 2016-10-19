@@ -3,6 +3,7 @@ elation.component.add('engine.things.remoteplayer', function() {
   this.postinit = function() {
     this.defineProperties({
       janus: { type: 'object' },
+      room: { type: 'object' },
       startposition: {type: 'vector3', default: new THREE.Vector3()},
       pickable: {type: 'boolean', default: false},
       collidable: {type: 'boolean', default: false},
@@ -149,6 +150,10 @@ console.log('avatar changed:', this, things, avatar);
     } else {
       this.hands.right.hide();
     }
+  }
+  this.setRoom = function(room) {
+    this.room = room;
+    room.add(this);
   }
 }, elation.engine.things.generic);
 

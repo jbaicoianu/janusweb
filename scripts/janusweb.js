@@ -460,8 +460,7 @@ setTimeout(function() {
       var movedata = data.position;
 
       if (remote.room !== room) {
-        room.add(remote);
-        remote.room = room;
+        remote.setRoom(room);
       }
 
       if (movedata.dir) {
