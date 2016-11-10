@@ -21,10 +21,23 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         sync:     { type: 'boolean', default: false },
         rotate_axis: { type: 'string', default: '0 1 0' },
         rotate_deg_per_sec: { type: 'string' },
+        onclick: { type: 'object' },
       });
       //if (this.col) this.color = this.col;
       this.jschildren = [];
+      this.assets = {};
       elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
+
+      if (this.onclick) {
+        if (elation.utils.isString(this.onclick)) {
+          elation.events.add(this, 'click', elation.bind(this, function() { 
+            eval(this.onclick);
+          }));
+          
+        } else {
+          elation.events.add(this, 'click', elation.bind(this, this.onclick));
+        }
+      }
     }
     this.createForces = function() {
       elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
@@ -109,10 +122,40 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           children: ['property', 'jschildren'],
 
           oncollision: ['callback', 'collision'],
+          onclick:     ['callback', 'click'],
+
           appendChild: ['function', 'appendChild']
         });
       }
       return this._proxyobject;
+    }
+    this.getAsset = function(type, id) {
+      if (!this.assets[type]) {
+        this.assets[type] = {};
+      }
+      var asset = this.assets[type][id];
+      if (!asset) {
+        asset = elation.engine.assets.find(type, id, true);
+        if (!asset) {
+          var assetpack = { assettype:type, name:id, src: id, baseurl: this.room.baseurl }; 
+          elation.engine.assets.loadJSON([assetpack], this.room.baseurl); 
+          asset = elation.engine.assets.find(type, id, true);
+        }
+        this.assets[type][id] = asset;
+        elation.events.fire({element: this, type: 'thing_asset_add', data: asset});
+      }
+      return asset;
+    }
+    this.getActiveAssets = function(assetlist) {
+      if (assetlist) {
+        for (var type in this.assets) {
+          if (!assetlist[type]) assetlist[type] = {};
+          for (var url in this.assets[type]) {
+            assetlist[type][url] = this.assets[type][url];
+          }
+        }
+      }
+      return this.assets;
     }
     this.start = function() {
     }    
