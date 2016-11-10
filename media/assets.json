@@ -50,6 +50,8 @@
   { "assettype":"model", "name":"avatar", "src":"assets/avatar.obj", "tex0": "assets/avatar.png" },
   { "assettype":"model", "name":"avatar_head", "src":"assets/avatar_head.obj", "tex0": "assets/avatar_head.png" },
 
+  { "assettype":"model", "name":"avatar_janusweb", "src":"assets/hoverscreen.obj", "mtl": "assets/hoverscreen.mtl" },
+
   { "assettype":"model", "name":"loading", "src":"assets/loading.obj" },
 
   { "assettype":"model", "name":"cursor3d", "src":"assets/cursor3d.obj", "tex0":"assets/cursor3d.png" },
