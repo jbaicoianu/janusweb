@@ -39,7 +39,14 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
     elation.html.addclass(document.body, 'janusweb');
-    var janusweb = elation.janusweb.client({append: document.body, homepage: homepage, resolution: args.resolution, url: args.url});
+    var janusweb = elation.janusweb.client({
+      append: document.body, 
+      homepage: homepage, 
+      shownavigation: args.shownavigation,
+      showchat: elation.utils.any(args.showchat, true),
+      resolution: args.resolution, 
+      url: args.url
+    });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
     });
@@ -48,16 +55,16 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     this.initEngine = function() {
       var hashargs = elation.url();
        
-      this.enginecfg.stats = true;
+      this.enginecfg.stats = false;
 
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
       this.enginecfg.systems.push("physics");
       this.enginecfg.systems.push("ai");
       this.enginecfg.systems.push("world");
-      if (hashargs.admin == 1) {
+      //if (hashargs.admin == 1) {
         this.enginecfg.systems.push("admin");
-      } 
+      //}
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
       this.enginecfg.crosshair = false;
@@ -90,7 +97,10 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.janusweb = things.children.janusweb;
       this.player = this.janusweb.children.player;
 
-      this.ui = elation.janusweb.ui({append: document.body, client: this});
+      this.shownavigation = elation.utils.any(this.args.shownavigation, true);
+      if (this.shownavigation) {
+        this.ui = elation.janusweb.ui({append: document.body, client: this});
+      }
     }
     this.showAbout = function() {
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});
