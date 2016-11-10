@@ -326,7 +326,12 @@ JanusClientConnection.prototype.connect = function() {
       this.send(this.msgQueue.shift());
     }
     this.dispatchEvent({type: 'connect'});
-  }.bind(this)
+  }.bind(this);
+
+  this._websocket.onclose = function() {
+    this.dispatchEvent({type: 'disconnect'});
+  }.bind(this);
+
   this._websocket.onmessage = this.onMessage.bind(this)  
 };
 JanusClientConnection.prototype.reconnect = function() {
@@ -335,6 +340,9 @@ JanusClientConnection.prototype.reconnect = function() {
     console.log('Reconnecting...');
     this.connect();
   }
+}
+JanusClientConnection.prototype.disconnect = function() {
+  this._websocket.close();
 }
 
 JanusClientConnection.prototype.sendLogon = function() {
