@@ -39,6 +39,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         url: { type: 'string', default: false },
         homepage: { type: 'string', default: "" },
         corsproxy: { type: 'string', default: '' },
+        shownavigation: { type: 'boolean', default: true },
+        showchat: { type: 'boolean', default: true },
         datapath: { type: 'string', default: '/media/janusweb' }
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
@@ -49,9 +51,6 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         elation.engine.assets.setCORSProxy(this.properties.corsproxy);
       }
       elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json');
-setTimeout(function() {
-        //elation.engine.assets.setPlaceholder('model', 'loading');
-}, 200);
 
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
@@ -70,6 +69,8 @@ setTimeout(function() {
       this.tmpVecZ = new THREE.Vector3();
       this.sentUpdates = 0;
       this.updateRate = 15;
+
+      elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
     }
     this.initScripting = function() {
       window.delta_time = 1000/60;
@@ -188,7 +189,9 @@ setTimeout(function() {
       }
       this.network = new JanusClientConnection(janusOptions);
       this.parser = new JanusFireboxParser();
-      this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
+      if (this.showchat) {
+        this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
+      }
       this.network.addEventListener('message', function(msg) {
         this.onJanusMessage(msg);
       }.bind(this));
@@ -200,6 +203,9 @@ setTimeout(function() {
         }.bind(this), 100);
         elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
         this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
+      }.bind(this));
+      this.network.addEventListener('disconnect', function() {
+        this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
       }.bind(this));
       //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
       elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
@@ -504,6 +510,7 @@ setTimeout(function() {
       }
       remote.objects.dynamics.updateState();
       remote.refresh();
+      this.refresh();
     }
     this.sendPlayerUpdate = function(opts) {
       // opts.first is a bool, if true then we are sending our avatar along with the move update
@@ -522,7 +529,8 @@ setTimeout(function() {
 
       //console.log('movedata update', moveData);
       if (opts.first || this.sentUpdates == this.updateRate) {
-        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^jump^ src=^http://www.janusvr.com/avatars/animated/Beta/jump.fbx.gz^ /><AssetObject id=^fly^ src=^http://www.janusvr.com/avatars/animated/Beta/fly.fbx.gz^ /><AssetObject id=^speak^ src=^http://www.janusvr.com/avatars/animated/Beta/speak.fbx.gz^ /><AssetObject id=^walk^ src=^http://www.janusvr.com/avatars/animated/Beta/walk.fbx.gz^ /><AssetObject id=^type^ src=^http://www.janusvr.com/avatars/animated/Beta/type.fbx.gz^ /><AssetObject id=^portal^ src=^http://www.janusvr.com/avatars/animated/Beta/portal.fbx.gz^ /><AssetObject id=^run^ src=^http://www.janusvr.com/avatars/animated/Beta/run.fbx.gz^ /><AssetObject id=^idle^ src=^http://www.janusvr.com/avatars/animated/Beta/idle.fbx.gz^ /><AssetObject id=^body^ src=^http://www.janusvr.com/avatars/animated/Beta/Beta.fbx.gz^ /><AssetObject id=^walk_back^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_back.fbx.gz^ /><AssetObject id=^walk_left^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_left.fbx.gz^ /><AssetObject id=^walk_right^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_right.fbx.gz^ /><AssetObject id=^head_id^ /></Assets><Room><Ghost id=^" + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^0.993769 0 -0.111464^ ydir=^0 1 0^ zdir=^0.111464 0 0.993769^ scale=^0.0095 0.0095 0.0095^ col=^#a1e0c0^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^head_id^ head_pos=^0 0 0^ body_id=^body^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
+        //moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^jump^ src=^http://www.janusvr.com/avatars/animated/Beta/jump.fbx.gz^ /><AssetObject id=^fly^ src=^http://www.janusvr.com/avatars/animated/Beta/fly.fbx.gz^ /><AssetObject id=^speak^ src=^http://www.janusvr.com/avatars/animated/Beta/speak.fbx.gz^ /><AssetObject id=^walk^ src=^http://www.janusvr.com/avatars/animated/Beta/walk.fbx.gz^ /><AssetObject id=^type^ src=^http://www.janusvr.com/avatars/animated/Beta/type.fbx.gz^ /><AssetObject id=^portal^ src=^http://www.janusvr.com/avatars/animated/Beta/portal.fbx.gz^ /><AssetObject id=^run^ src=^http://www.janusvr.com/avatars/animated/Beta/run.fbx.gz^ /><AssetObject id=^idle^ src=^http://www.janusvr.com/avatars/animated/Beta/idle.fbx.gz^ /><AssetObject id=^body^ src=^http://www.janusvr.com/avatars/animated/Beta/Beta.fbx.gz^ /><AssetObject id=^walk_back^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_back.fbx.gz^ /><AssetObject id=^walk_left^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_left.fbx.gz^ /><AssetObject id=^walk_right^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_right.fbx.gz^ /><AssetObject id=^head_id^ /></Assets><Room><Ghost id=^" + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^0.993769 0 -0.111464^ ydir=^0 1 0^ zdir=^0.111464 0 0.993769^ scale=^0.0095 0.0095 0.0095^ col=^#a1e0c0^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^head_id^ head_pos=^0 0 0^ body_id=^body^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
+        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^screen^ src=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.obj^ mtl=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.mtl^ atex0=^https://identicons.github.com/^ /></Assets><Room><Ghost id=^"  + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^1 0 0^ ydir=^0 1 0^ zdir=^0 0 1^ scale=^1 1 1^ col=^#ffffff^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^screen^ head_pos=^0 0.9 0^ body_id=^^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
         this.sentUpdates = 0;
       }
 
@@ -725,6 +733,12 @@ setTimeout(function() {
         this.currentroom.update(1000/60);
       }
 */
+    }
+    this.updatePortals = function() {
+      var portalpass = this.engine.systems.render.views.main.portalpass;
+      if (portalpass && this.currentroom) {
+        portalpass.portals = this.currentroom.getVisiblePortals();
+      }
     }
   }, elation.engine.things.generic);
 });
