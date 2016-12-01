@@ -84,6 +84,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var imageassets = this.getAsArray(this.arrayget(assetxml, "_children.assetimage", [])); 
   var videoassets = this.getAsArray(this.arrayget(assetxml, "_children.assetvideo", [])); 
   var scriptassets = this.getAsArray(this.arrayget(assetxml, "_children.assetscript", [])); 
+  var ghostassets = this.getAsArray(this.arrayget(assetxml, "_children.assetghost", [])); 
   var websurfaceassets = this.getAsArray(this.arrayget(assetxml, "_children.assetwebsurface", [])); 
   var assetlist = [];
   if (!datapath) {
@@ -145,11 +146,25 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
     video: videoassets,
     websurfaces: websurfaces,
     scripts: scriptassets,
+    ghosts: ghostassets,
     assetlist: assetlist
   };
   return assets;
 }
 
+JanusFireboxParser.prototype.getVectorValue = function(vector, defaultvalue) {
+  if (typeof defaultvalue == 'undefined') {
+    defaultvalue = [0,0,0];
+  }
+  if (typeof vector == 'string') {
+    return vector.split(' ').map(parseFloat);
+  } else if (vector instanceof THREE.Vector3) {
+    return vector.toArray();
+  } else if (typeof vector == 'undefined') {
+    return defaultvalue;
+  }
+  return vector;
+}
 JanusFireboxParser.prototype.parseNode = function(n) {
   var nodeinfo = {};
   var attrs = Object.keys(n);
@@ -157,8 +172,9 @@ JanusFireboxParser.prototype.parseNode = function(n) {
     nodeinfo[k] = (n[k] == 'false' ? false : n[k]);
   });
 
-  nodeinfo.pos = (n.pos ? (n.pos instanceof Array ? n.pos : n.pos.split(' ')).map(parseFloat) : [0,0,0]);
-  nodeinfo.scale = (n.scale ? (n.scale instanceof Array ? n.scale : (n.scale instanceof THREE.Vector3 ? n.scale.toArray() : n.scale.split(' '))).map(parseFloat) : [1,1,1]);
+  
+  nodeinfo.pos = this.getVectorValue(n.pos);
+  nodeinfo.scale = this.getVectorValue(n.scale, [1,1,1]);
   nodeinfo.orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
   nodeinfo.col = (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col) : null);
   
@@ -176,9 +192,9 @@ JanusFireboxParser.prototype.parseNode = function(n) {
 }
 
 JanusFireboxParser.prototype.getOrientation = function(xdir, ydir, zdir) {
-  if (xdir) xdir = new THREE.Vector3().fromArray(xdir.split(' ')).normalize();
-  if (ydir) ydir = new THREE.Vector3().fromArray(ydir.split(' ')).normalize();
-  if (zdir) zdir = new THREE.Vector3().fromArray(zdir.split(' ')).normalize();
+  if (xdir) xdir = (xdir instanceof THREE.Vector3 ? xdir : new THREE.Vector3().fromArray(xdir.split(' '))).normalize();
+  if (ydir) ydir = (ydir instanceof THREE.Vector3 ? ydir : new THREE.Vector3().fromArray(ydir.split(' '))).normalize();
+  if (zdir) zdir = (zdir instanceof THREE.Vector3 ? zdir : new THREE.Vector3().fromArray(zdir.split(' '))).normalize();
 
   if (xdir && !ydir && !zdir) {
     ydir = new THREE.Vector3(0,1,0);
