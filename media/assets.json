@@ -25,7 +25,7 @@
   { "assettype":"model", "name":"room_box_medium", "src":"assets/rooms/room_box_medium.obj", "tex0":"assets/rooms/room_box_medium.png" },
   { "assettype":"model", "name":"room1_new", "src":"assets/rooms/room1_new.obj", "tex0":"assets/rooms/room1_new.png" },
   { "assettype":"model", "name":"room_home", "src":"assets/rooms/room_home.obj", "tex0":"assets/rooms/room_home.png" },
-  { "assettype":"model", "name":"room_plane", "src":"assets/rooms/room_plane.obj", "tex0":"assets/rooms/room_plane.png" },
+  { "assettype":"model", "name":"room_plane", "src":"assets/rooms/room_plane.obj", "tex0":"assets/rooms/tile_d.png" },
   { "assettype":"model", "name":"room_plane2", "src":"assets/rooms/room_plane2.obj", "tex0":"assets/rooms/room_plane2.png" },
 
   { "assettype":"image", "name":"dark_back", "src":"assets/skybox/dark_back.png" },
@@ -49,16 +49,15 @@
 
   { "assettype":"model", "name":"avatar", "src":"assets/avatar.obj", "tex0": "assets/avatar.png" },
   { "assettype":"model", "name":"avatar_head", "src":"assets/avatar_head.obj", "tex0": "assets/avatar_head.png" },
+  { "assettype":"model", "name":"avatar_gltf", "src":"assets/Beta.gltf/Beta.gltf" },
 
   { "assettype":"model", "name":"avatar_janusweb", "src":"assets/hoverscreen.obj", "mtl": "assets/hoverscreen.mtl" },
 
   { "assettype":"model", "name":"loading", "src":"assets/loading.obj" },
 
-  { "assettype":"model", "name":"cursor3d", "src":"assets/cursor3d.obj", "tex0":"assets/cursor3d.png" },
-  { "assettype":"model", "name":"cursor_arrow", "src":"assets/cursor_arrow.obj", "tex0":"assets/cursor_arrow.png" },
-  { "assettype":"model", "name":"cursor_crosshair", "src":"assets/cursor_crosshair.obj", "tex0":"assets/cursor_crosshair.png" },
-  { "assettype":"model", "name":"cursor_hand", "src":"assets/cursor_hand.obj", "tex0":"assets/cursor_hand.png" },
-  { "assettype":"model", "name":"cursor_sphere", "src":"assets/cursor_sphere.obj", "tex0":"assets/cursor_sphere.png" },
+  { "assettype":"image", "name":"cursor_arrow", "src":"assets/cursor/arrow.png" },
+  { "assettype":"image", "name":"cursor_crosshair", "src":"assets/cursor/crosshair.png" },
+  { "assettype":"image", "name":"cursor_hand", "src":"assets/cursor/hand.png" },
 
 
   { "assettype":"model", "name":"controller_vive", "src":"assets/controllers/vive/ViveController.dae.gz" },
