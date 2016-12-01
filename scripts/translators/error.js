@@ -29,11 +29,11 @@ elation.require([], function() {
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
           },
           objects: [
-            room.parseNode({id: 'stand', js_id: 0, pos: "1 -0.1 4", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"}),
-            room.parseNode({id: 'sphere', js_id: 1, pos: "4 350 -1", xdir: "0 0 1", ydir: "0 -1 0", zdir: "1 0 0", scale: "400 400 400", col: error.color2, lighting: "false", cull_face: 'front', image_id: 'static'})
+            {id: 'stand', js_id: 0, pos: "1 -0.1 4", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"},
+            {id: 'sphere', js_id: 1, pos: "4 350 -1", xdir: "0 0 1", ydir: "0 -1 0", zdir: "1 0 0", scale: "400 400 400", col: error.color2, lighting: "false", cull_face: 'front', image_id: 'static'}
           ],
           texts: [
-            room.parseNode({ js_id: 2, pos: "1.3 1.4 12.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: error.color1, '_content': error.text})
+            { js_id: 2, pos: "1.3 1.4 12.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: error.color1, '_content': error.text}
           ],
           links: []
         };
