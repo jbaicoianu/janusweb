@@ -10,6 +10,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.pathname);
     var path = elation.utils.any(args.path, elation.config.get('dependencies.path'), '/');
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
+    var container = elation.utils.any(args.container, document.body);
+    var fullsize = (container == document.body);
 
     var fullpath = proto + '//' + host + rootdir;
     if (clientScript) { // && clientScript.src.match(/\/janusweb.js^/)) {
@@ -40,12 +42,13 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     elation.html.addclass(document.body, 'dark');
     elation.html.addclass(document.body, 'janusweb');
     var janusweb = elation.janusweb.client({
-      append: document.body, 
+      append: container, 
       homepage: homepage, 
       shownavigation: args.shownavigation,
       showchat: elation.utils.any(args.showchat, true),
       resolution: args.resolution, 
-      url: args.url
+      url: args.url,
+      fullsize: fullsize
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -79,7 +82,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           corsproxy: elation.config.get('engine.assets.corsproxy'),
           datapath: elation.config.get('janusweb.datapath'),
           homepage: this.args.homepage,
-          url: this.args.url
+          url: this.args.url,
+          showchat: this.args.showchat
         },
         things: {
           player: {
