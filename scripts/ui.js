@@ -1,4 +1,4 @@
-elation.require(['ui.all'], function() {
+elation.require(['ui.all', 'janusweb.urlbar'], function() {
   elation.component.add('janusweb.ui', function() {
     this.init = function() {
       elation.janusweb.ui.extendclass.init.call(this);
@@ -16,20 +16,18 @@ elation.require(['ui.all'], function() {
       this.backbutton = elation.ui.button({append: this.navigation, label: '◀', events: { click: elation.bind(this.janusweb, this.janusweb.navigateBack) } });
       this.forwardbutton = elation.ui.button({append: this.navigation, label: '▶', events: { click: elation.bind(this.janusweb, this.janusweb.navigateForward) } });
       this.homebutton = elation.ui.button({append: this.navigation, label: '🏠', events: { click: elation.bind(this.janusweb, this.janusweb.navigateHome) } });
-      this.urlbar = elation.ui.input({
+      this.urlbar = elation.janusweb.urlbar({
         append: this.navigation, 
         label: '', 
         value: this.janusweb.properties.url, 
+        janusweb: this.janusweb,
+        client: this.client,
         events: { 
-          ui_input_accept: elation.bind(this, function(ev) { this.janusweb.setActiveRoom(ev.data); this.hideMenu(); this.player.enable(); }),
+          ui_input_accept: elation.bind(this, function(ev) { this.janusweb.setActiveRoom(ev.data); this.client.hideMenu(); this.player.enable(); }),
           focus: elation.bind(this, function(ev) { this.player.disable(); }),
           blur: elation.bind(this, function(ev) { this.player.enable(); }),
         }
       });
-
-      elation.events.add(this.janusweb, 'room_change', elation.bind(this, function() {
-        this.urlbar.value = this.janusweb.url;
-      }));
     }
 
     this.createUI3D = function() {
