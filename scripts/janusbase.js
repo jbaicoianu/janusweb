@@ -27,6 +27,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.jschildren = [];
       this.assets = {};
       elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
+      elation.events.add(this, 'mouseover,mouseout', elation.bind(this, this.updatePlayerCursor));
 
       if (this.onclick) {
         if (elation.utils.isString(this.onclick)) {
@@ -122,7 +123,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           children: ['property', 'jschildren'],
 
           oncollision: ['callback', 'collision'],
-          onclick:     ['callback', 'click'],
+          //onclick:     ['callback', 'click'],
 
           appendChild: ['function', 'appendChild']
         });
@@ -133,17 +134,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       if (!this.assets[type]) {
         this.assets[type] = {};
       }
-      var asset = this.assets[type][id];
-      if (!asset) {
-        asset = elation.engine.assets.find(type, id, true);
-        if (!asset) {
-          var assetpack = { assettype:type, name:id, src: id, baseurl: this.room.baseurl }; 
-          elation.engine.assets.loadJSON([assetpack], this.room.baseurl); 
-          asset = elation.engine.assets.find(type, id, true);
-        }
-        this.assets[type][id] = asset;
-        elation.events.fire({element: this, type: 'thing_asset_add', data: asset});
-      }
+      var asset = this.assets[type][id] = this.room.getAsset(type, id);
       return asset;
     }
     this.getActiveAssets = function(assetlist) {
@@ -167,15 +158,21 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.handleFrameUpdates = function() {
       var updatenames = Object.keys(this.frameupdates);
-      if (updatenames.length > 0) {
+      var xdir = this.properties.xdir,
+          ydir = this.properties.ydir,
+          zdir = this.properties.zdir,
+          m = this.objects['3d'].matrix.elements;
+      var diff = (
+          xdir.x != m[0] || xdir.y != m[1] || xdir.z != m[2] ||
+          ydir.x != m[4] || ydir.y != m[5] || ydir.z != m[6] ||
+          zdir.x != m[8] || zdir.y != m[9] || zdir.z != m[10]
+      );
+      if (updatenames.length > 0 || diff) {
         var updates = this.frameupdates;
         if ('fwd' in updates) {
           this.properties.zdir.copy(this.fwd);
           updates.zdir = this.properties.zdir;
         }
-        var xdir = this.properties.xdir,
-            ydir = this.properties.ydir,
-            zdir = this.properties.zdir;
 
         if ( ('xdir' in updates) && 
             !('ydir' in updates) && 
@@ -226,7 +223,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         //this.ydir.normalize();
         //this.zdir.normalize();
         var mat4 = new THREE.Matrix4();
-        mat4.makeBasis(this.xdir, this.ydir, this.properties.zdir);
+        mat4.makeBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
+
 /*
         mat4.set(
           this.xdir.x, this.xdir.y, this.xdir.z, 0,
@@ -299,6 +297,22 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         } else {
 console.error('dunno what this is', other);
         }
+      }
+    }
+    this.setOpacity = function(opacity) {
+      this.objects['3d'].traverse(function(n) {
+        if (n.material) {
+          n.material.opacity = opacity;
+        }
+      });
+    }
+    this.updatePlayerCursor = function(ev) {
+      if (ev.type == 'mouseover' && this.onclick) {
+        this.engine.client.player.cursor_style = 'pointer';
+      } else if (this.engine.systems.controls.pointerLockActive) {
+        this.engine.client.player.cursor_style = 'crosshair';
+      } else {
+        this.engine.client.player.cursor_style = 'default';
       }
     }
   }, elation.engine.things.generic);
