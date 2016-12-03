@@ -3,6 +3,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusparticle.extendclass.postinit.call(this);
       this.defineProperties({ 
+        emitter_id: { type: 'string', refreshGeometry: true },
+        emitter_scale: { type: 'vector3', default: [1, 1, 1]},
         image_id: { type: 'string', set: this.updateMaterial },
         rate: { type: 'float', default: 1 },
         count: { type: 'int', default: 0 },
@@ -22,14 +24,17 @@ elation.require(['janusweb.janusbase'], function() {
       });
       this.particles = [];
       this.emitted = 0;
+      this.emitmesh = false;
+      this.emitpoints = false;
       this.currentpoint = 0;
       this.lasttime = 0;
-      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateParticles));
+      this.loaded = false;
+      this.started = false;
+
+      this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
     this.createObject3D = function() {
       var geo = this.geometry = new THREE.Geometry()
-
-      this.createParticles();
 
       var texture = null;
       if (this.image_id) {
@@ -37,8 +42,27 @@ elation.require(['janusweb.janusbase'], function() {
         //elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
         elation.events.add(texture, 'update', elation.bind(this, this.refresh));
       }
+      if (this.emitter_id) {
+        var asset = this.getAsset('model', this.emitter_id);
+        if (asset) {
+          this.emitmesh = asset.getInstance();
 
-      var mat = new THREE.PointsMaterial({color: this.color, map: texture, size: this.particle_scale.x, transparent: true, alphaTest: 0.05});
+          if (asset.loaded) {
+            this.loaded = true;
+          } else {
+            elation.events.add(asset, 'asset_load_complete', elation.bind(this, function() { this.loaded = true; this.createParticles(); this.start(); }));
+          }
+        }
+      } else {
+        this.loaded = true;
+      }
+      this.createParticles();
+
+      if (this.loaded) {
+        this.start();
+      }
+
+      var mat = new THREE.PointsMaterial({color: this.color, map: texture, size: this.particle_scale.x + this.rand_scale.x, transparent: true, alphaTest: 0.01});
       this.scale.set(1,1,1);
       var obj = new THREE.Points(geo, mat);
       return obj;
@@ -48,6 +72,10 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createParticles = function() {
       this.particles = [];
+
+      if (this.emitmesh && !this.emitpoints) {
+        this.extractEmitPoints(this.emitmesh);
+      }
 
       var count = this.count;
       for (var i = 0; i < count; i++) {
@@ -60,16 +88,15 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.geometry.vertices.length > count) {
         this.geometry.vertices.splice(count)
       }
+      this.created = true;
       this.emitted = 0;
       this.currentpoint = 0;
       this.lasttime = performance.now();
-      setTimeout(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
+
+      setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
     }
     this.updateParticles = function(ev) {
-      //console.log('go!', ev);
-      //this.physics.step(ev.data.delta);
-//console.log('pdate', this.particles[0].toArray());
-
+      if (!this.loaded || !this.started) return;
       var now = performance.now(),
           elapsed = now - this.lasttime,
           endtime = now + this.duration * 1000,
@@ -134,7 +161,15 @@ elation.require(['janusweb.janusbase'], function() {
     })();
     this.resetPoint = function(point) {
       var rand_pos = this.properties.rand_pos;
-      point.pos.set(Math.random() * rand_pos.x, Math.random() * rand_pos.y, Math.random() * rand_pos.z);
+      var randomInRange = function(range) {
+        //return (Math.random() - .5) * range;
+        return Math.random() * range;
+      }
+      point.pos.set(randomInRange(rand_pos.x), randomInRange(rand_pos.y), randomInRange(rand_pos.z));
+      if (this.emitpoints) {
+        var rand_id = Math.floor(Math.random() * this.emitpoints.length);
+        point.pos.add(this.emitpoints[rand_id]);
+      }
 
       var vel = point.vel,
           accel = point.accel,
@@ -145,15 +180,47 @@ elation.require(['janusweb.janusbase'], function() {
       accel.copy(this.properties.particle_accel);
 
       if (rand_vel.lengthSq() > 0) {
-        vel.x += rand_vel.x * Math.random();
-        vel.y += rand_vel.y * Math.random();
-        vel.z += rand_vel.z * Math.random();
+        vel.x += randomInRange(rand_vel.x);
+        vel.y += randomInRange(rand_vel.y);
+        vel.z += randomInRange(rand_vel.z);
       }
       if (rand_accel.lengthSq() > 0) {
-        accel.x += rand_accel.x * Math.random();
-        accel.y += rand_accel.y * Math.random();
-        accel.z += rand_accel.z * Math.random();
+        accel.x += randomInRange(rand_accel.x);
+        accel.y += randomInRange(rand_accel.y);
+        accel.z += randomInRange(rand_accel.z);
       }
+    }
+    this.extractEmitPoints = function(mesh) {
+      if (mesh) {
+        var vertices = [];
+        var scale = this.properties.scale;
+        mesh.traverse(function(n) {
+          if (n && n.geometry) {
+            var geo = n.geometry;
+            if (geo instanceof THREE.Geometry) {
+            } else if (geo instanceof THREE.BufferGeometry) {
+              var positions = geo.attributes.position.array;
+              for (var i = 0; i < positions.length; i += 3) {
+                vertices.push(new THREE.Vector3(positions[i], positions[i+1], positions[i+2]));
+              }
+            }
+          }
+        });
+        if (vertices.length > 0) {
+          this.emitpoints = vertices;
+        }
+      }
+    }
+    this.start = function() {
+      if (!this.created) {
+        this.createParticles();
+      }
+      this.started = true;
+      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateParticles));
+    }
+    this.stop = function() {
+      this.started = false;
+      elation.events.remove(this.engine, 'engine_frame', elation.bind(this, this.updateParticles));
     }
     this.getProxyObject = function() {
       var proxy = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this);
