@@ -39,6 +39,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (this.asset.auto_play) {
           texture.image.play();
         }
+        texture.minFilter = THREE.LinearFilter;
         elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
       }
 
