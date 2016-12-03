@@ -78,6 +78,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.start = function() {
       this.play();
     }
+    this.seek = function(time) {
+      this.audio.seek(currentTime);
+    
+    }
     this.stop = function() {
       if (this.audio && this.audio.isPlaying) {
         this.audio.stop();
