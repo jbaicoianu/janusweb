@@ -10,7 +10,8 @@ elation.require(['janusweb.janusbase'], function() {
         play_once: { type: 'boolean', default: false },
         dist: { type: 'float', default: 1.0 },
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
-        gain: { type: 'float', default: 1.0, set: this.updateSound }
+        gain: { type: 'float', default: 1.0, set: this.updateSound },
+        starttime: { type: 'float', default: 0.0, set: this.updateSound }
       });
       Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
     }
@@ -21,7 +22,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (!this.audio) {
         var sound = elation.engine.assets.find('sound', this.sound_id);
         if (sound) {
-          this.createAudio(sound.getProxiedURL());
+          this.createAudio(sound.getProxiedURL(sound.src));
         }
       }
     }
@@ -39,16 +40,17 @@ elation.require(['janusweb.janusbase'], function() {
           this.audio.panner.distanceModel = this.properties.distanceModel;
         }
         //this.audio.panner.maxDistance = this.properties.distance;
-        if (this.properties.distance) {
-          this.audio.setRefDistance(this.properties.distance);
+        if (this.dist) {
+          this.audio.setRefDistance(this.dist);
         } else {
-          this.audio.panner.distanceModel = 'linear';
+          //this.audio.panner.distanceModel = 'linear';
         }
         this.audio.autoplay = this.auto_play;
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         if (src) {
-          this.audio.load(src);
+          var loader = new THREE.AudioLoader();
+          loader.load(src, elation.bind(this, function(buffer) { this.audio.setBuffer(buffer); this.play(); }));
         } else {
         }
         this.objects['3d'].add(this.audio);
@@ -63,9 +65,11 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.play = function() {
       if (this.audio && this.audio.source.buffer) {
+        this.audio.setVolume(this.gain);
         if (this.audio.isPlaying) {
           this.audio.source.currentTime = 0;
         } else {
+          this.seek(this.starttime);
           this.audio.play();
         }
       }
@@ -79,8 +83,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.play();
     }
     this.seek = function(time) {
-      this.audio.seek(currentTime);
-    
+      this.audio.currentTime = time;
     }
     this.stop = function() {
       if (this.audio && this.audio.isPlaying) {
@@ -89,7 +92,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateSound = function() {
       if (this.audio) {
-        this.play();
+        //this.play();
         this.audio.setVolume(this.gain);
       }
     }
@@ -97,6 +100,10 @@ elation.require(['janusweb.janusbase'], function() {
       var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this);
       proxy._proxydefs = {
         gain:         [ 'property', 'gain'],
+        play:         [ 'function', 'play'],
+        pause:        [ 'function', 'pause'],
+        stop:         [ 'function', 'stop'],
+        seek:         [ 'function', 'seek'],
       };
       return proxy;
     }
