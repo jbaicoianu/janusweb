@@ -22,7 +22,8 @@ module.exports = function(config) {
       {pattern: 'build/media/**', watched: false, included: false, served: true},
       'tests/imagediff.js',
       //{pattern: 'tests/*.test.js', watched: true, included: true, served: true},
-      {pattern: 'tests/assets/*.test.js', watched: true, included: true, served: true},
+      //{pattern: 'tests/assets/*.test.js', watched: true, included: true, served: true},
+      {pattern: 'tests/assets/models.test.js', watched: true, included: true, served: true},
     ],
 
 
