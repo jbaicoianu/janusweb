@@ -1,15 +1,15 @@
-elation.require(['engine.things.generic', 'engine.things.maskgenerator', 'engine.things.sound', 'janusweb.external.JanusVOIP'], function() {
+elation.require(['janusweb.janusghost', 'engine.things.maskgenerator', 'engine.things.sound', 'janusweb.external.JanusVOIP'], function() {
 elation.component.add('engine.things.remoteplayer', function() {
   this.postinit = function() {
+    elation.engine.things.remoteplayer.extendclass.postinit.call(this);
     this.defineProperties({
-      janus: { type: 'object' },
-      room: { type: 'object' },
       startposition: {type: 'vector3', default: new THREE.Vector3()},
       pickable: {type: 'boolean', default: false},
       collidable: {type: 'boolean', default: false},
       player_id: {type: 'string', default: 'UnknownPlayer'},
       player_name: {type: 'string', default: 'UnknownPlayer'},
     });
+    this.properties.ghost_id = this.properties.player_name;
   };
 
 /*
@@ -29,11 +29,12 @@ elation.component.add('engine.things.remoteplayer', function() {
       'position': [0,0.6,-0.0]
     });
     this.neck = this.torso.spawn('generic', this.properties.player_name + '_neck', {
-      'position': [0,0.6,0]
+      'position': [0,0.4,0]
     });
     this.head = this.neck.spawn('generic', this.properties.player_name + '_head', {
       'position': [0,0,0],
     });
+/*
     this.face = this.head.spawn('maskgenerator', this.properties.player_name + '_mask', {
       'seed': this.properties.player_name,
       'position': [0,0,-0.025],
@@ -43,17 +44,18 @@ elation.component.add('engine.things.remoteplayer', function() {
       pickable: false,
       collidable: false
     });
-    this.label = this.face.spawn('label', this.properties.player_name + '_label', {
+*/
+    this.label = this.head.spawn('label', this.player_name + '_label', {
       size: .1,
       align: 'center',
       collidable: false,
-      text: this.properties.player_name,
-      position: [0,0.35,0],
+      text: this.player_name,
+      position: [0,.5,0],
       orientation: [0,1,0,0],
       pickable: false,
       collidable: false
     });
-    this.mouth = this.face.spawn('sound', this.properties.player_name + '_voice', {
+    this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
       //loop: true
     });
     this.mouth.createAudio();
@@ -74,17 +76,6 @@ elation.component.add('engine.things.remoteplayer', function() {
     //this.mouth.audio.setBuffer(this.audiobuffer);
     elation.events.add(this, 'thing_change', elation.bind(this, this.updateTransparency));
   };
-  this.setAvatar = function(avatar) {
-    //console.log(avatar);
-    if (!this.avatarcode || this.avatarcode != avatar) {
-      this.avatarcode = avatar;
-      var things = this.janus.parser.parse(avatar);
-      //this.avatarroom = this.spawn('janusroom', null, { source: avatar });
-      //console.log(this.avatarroom);
-console.log('avatar changed:', this, things, avatar);
-    }
-
-  }
   this.speak = function(noise) {
     this.voip.speak(noise);
 
@@ -126,36 +117,25 @@ console.log('avatar changed:', this, things, avatar);
 
     var dist = player.distanceTo(this);
     var opacity = Math.min(1, dist / 0.25);
-    this.face.setOpacity(opacity);
-  }
-  this.updateHands = function(hand0, hand1) {
-    if (!this.hands) {
-      this.hands = {
-        left: this.shoulders.spawn('leapmotion_hand', this.properties.player_name + '_hand_left'),
-        right: this.shoulders.spawn('leapmotion_hand', this.properties.player_name + '_hand_right'),
-      };
-    }
 
-    var inverse = new THREE.Matrix4();
-    inverse.getInverse(this.objects['3d'].matrixWorld);
-    if (hand0 && hand0.state) {
-      this.hands.left.show();
-      this.hands.left.setState(hand0.state, inverse);
-    } else {
-      this.hands.left.hide();
-    }
-    if (hand1 && hand1.state) {
-      this.hands.right.show();
-      this.hands.right.setState(hand1.state, inverse);
-    } else {
-      this.hands.right.hide();
-    }
+    // FIXME - we should cache materials rather than fetching them every frame
+    var materials = [];
+    this.objects['3d'].traverse(function(n) {
+      if (n.material) {
+        materials = materials.concat(n.material instanceof THREE.MeshFaceMaterial ? n.material.materials : [n.material]);
+      }
+    });
+    materials.forEach(function(m) { 
+      m.opacity = opacity;
+      m.transparent = (opacity < 1);
+      m.visible = (opacity > 0);
+    });
   }
   this.setRoom = function(room) {
     this.room = room;
     room.add(this);
   }
-}, elation.engine.things.generic);
+}, elation.engine.things.janusghost);
 
 });
 
