@@ -307,9 +307,10 @@ console.error('dunno what this is', other);
       });
     }
     this.updatePlayerCursor = function(ev) {
-      if (ev.type == 'mouseover' && this.onclick) {
+      var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+      if (ev.type == 'mouseover' && (this.onclick || elation.events.hasEventListener(this, 'click'))) {
         this.engine.client.player.cursor_style = 'pointer';
-      } else if (this.engine.systems.controls.pointerLockActive) {
+      } else if (this.engine.systems.controls.pointerLockActive || (vrdisplay && vrdisplay.isPresenting)) {
         this.engine.client.player.cursor_style = 'crosshair';
       } else {
         this.engine.client.player.cursor_style = 'default';
