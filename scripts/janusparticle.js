@@ -9,6 +9,7 @@ elation.require(['janusweb.janusbase'], function() {
         rate: { type: 'float', default: 1 },
         count: { type: 'int', default: 0 },
         duration: { type: 'float', default: 1.0 },
+        opacity: { type: 'float', default: 1.0 },
         fade_in: { type: 'float', default: 1.0 },
         fade_out: { type: 'float', default: 1.0 },
         duration: { type: 'float', default: 1.0 },
@@ -21,6 +22,8 @@ elation.require(['janusweb.janusbase'], function() {
         rand_col: { type: 'vector3', default: [0, 0, 0]},
         rand_scale: { type: 'vector3', default: [0, 0, 0]},
         loop: { type: 'bool', default: false },
+        blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
+        blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
       });
       this.particles = [];
       this.emitted = 0;
@@ -62,12 +65,21 @@ elation.require(['janusweb.janusbase'], function() {
         this.start();
       }
 
-      var mat = new THREE.PointsMaterial({color: this.color, map: texture, size: this.particle_scale.x + this.rand_scale.x, transparent: true, alphaTest: 0.01});
+      var mat = new THREE.PointsMaterial({
+        color: this.color, 
+        map: texture, 
+        size: this.particle_scale.x + this.rand_scale.x, 
+        transparent: true, 
+        opacity: this.opacity,
+        //alphaTest: 0.01,
+        blending: THREE.AdditiveBlending
+      });
       this.scale.set(1,1,1);
       var obj = new THREE.Points(geo, mat);
       return obj;
     }
     this.createForces = function() {
+      elation.engine.things.janusparticle.extendclass.createForces.call(this);
       this.properties.velocity.set(0,0,0); // FIXME - hack to override "vel" property mapping
     }
     this.createParticles = function() {
@@ -93,6 +105,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.currentpoint = 0;
       this.lasttime = performance.now();
 
+      this.updateBoundingSphere();
       setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
     }
     this.updateParticles = function(ev) {
@@ -135,7 +148,9 @@ elation.require(['janusweb.janusbase'], function() {
       this.refresh();
     }
     this.updateBoundingSphere = function() {
-      this.objects['3d'].geometry.computeBoundingSphere();
+      if (this.objects['3d'] && this.objects['3d'].geometry) {
+        this.objects['3d'].geometry.computeBoundingSphere();
+      }
     }
     this.createPoint = function() {
       return {
@@ -193,7 +208,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.extractEmitPoints = function(mesh) {
       if (mesh) {
         var vertices = [];
-        var scale = this.properties.scale;
+        var scale = this.properties.emitter_scale;
         mesh.traverse(function(n) {
           if (n && n.geometry) {
             var geo = n.geometry;
@@ -201,7 +216,7 @@ elation.require(['janusweb.janusbase'], function() {
             } else if (geo instanceof THREE.BufferGeometry) {
               var positions = geo.attributes.position.array;
               for (var i = 0; i < positions.length; i += 3) {
-                vertices.push(new THREE.Vector3(positions[i], positions[i+1], positions[i+2]));
+                vertices.push(new THREE.Vector3(positions[i] * scale.x, positions[i+1] * scale.y, positions[i+2] * scale.z));
               }
             }
           }
