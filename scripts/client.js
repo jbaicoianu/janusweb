@@ -46,6 +46,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       homepage: homepage, 
       shownavigation: args.shownavigation,
       showchat: elation.utils.any(args.showchat, true),
+      usevoip: elation.utils.any(args.usevoip, false),
       resolution: args.resolution, 
       url: args.url,
       fullsize: fullsize
@@ -83,23 +84,18 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           datapath: elation.config.get('janusweb.datapath'),
           homepage: this.args.homepage,
           url: this.args.url,
-          showchat: this.args.showchat
-        },
-        things: {
-          player: {
-            name: 'player',
-            type: 'janusplayer',
-            properties: {
-              position: [0,0,0],
-              mass: 10,
-              movespeed: 5000,
-              collidable: true
-            }
-          },
+          showchat: this.args.showchat,
         }
       });
       this.janusweb = things.children.janusweb;
-      this.player = this.janusweb.children.player;
+      this.player = this.janusweb.spawn('janusplayer', 'player', {
+        janus: this.janusweb,
+        position: [0,0,0],
+        mass: 10,
+        movespeed: 5000,
+        collidable: true,
+        usevoip: this.args.usevoip
+      });
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
       if (this.shownavigation) {
