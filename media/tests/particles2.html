@@ -1,0 +1,25 @@
+<FireBoxRoom>
+  <Assets>
+    <AssetImage id="water_particle" src="images/water2.png" />
+    <AssetImage id="water_particle2" src="http://www.janusvr.com/newlobby/images/water3.png" tex_compress="true" />
+    <AssetImage id="particle24" src="http://www.janusvr.com/home2/sparkle.png" />
+
+    <AssetObject id="monkey" src="models/monkey-nomaterial-smooth.obj" />
+  </Assets>
+  <Room>
+    <!-- Particle pos="0 1 5" count="5" rand_pos="1 1 1" col="1 0 0" loop="true" / -->
+
+<!--
+<Particle pos="-.11 4.09 -.88" scale=".111 .11 .11" vel="-.5 0 -1.2" accel="0 -9.8 0" rate="100" count="200" lighting="false" image_id="water_particle" duration="1" fade_in="0.1" fade_out="0.1" loop="true" rand_pos=".25 0.1 0" rand_vel="1 0 -.5" rand_accel="0 0.5 0" col="0.8 0.8 1 0.5" rand_col="0 0 0.3" blend_src="src_alpha" blend_dest="one" />
+<Particle pos="-.11 4.09 .9" scale=".11 .08 .08" vel="-.5 0 1.2" accel="0 -9.8 0" rate="100" count="200" lighting="false" image_id="water_particle" duration="1" fade_in="0.1" fade_out="0.1" loop="true" rand_pos=".25 0.1 0" rand_vel="1 0 .5" rand_accel="0 0.5 0" col="0.8 0.8 1 0.5" rand_col="0 0 0.3" blend_src="src_alpha" blend_dest="one" />
+<Particle pos="-.11 4.09 -.91" scale=".111 .11 .11" vel="-.5 0 -1.2" accel="0 -9.8 0" rate="100" count="200" lighting="false" image_id="water_particle2" duration="1" fade_in="0.2" fade_out="0.2" loop="true" rand_pos=".25 0.1 0" rand_vel="1 0 -.5" rand_accel="0 0.5 0" col="0.8 0.8 1 0.5" rand_col="0 0 0.3" blend_src="src_alpha" blend_dest="one" />
+<Particle pos="-.11 4.09 .92" scale=".11 .09 .09" vel="-.5 0 1.2" accel="0 -9.8 0" rate="100" count="200" lighting="false" image_id="water_particle2" duration="1" fade_in="0.2" fade_out="0.2" loop="true" rand_pos=".25 0.1 0" rand_vel="1 0 .5" rand_accel="0 0.5 0" col="0.8 0.8 1 0.5" rand_col="0 0 0.3" blend_src="src_alpha" blend_dest="one" />
+-->
+<Particle pos="0 0 5" scale=".05 .05 .05" vel="0 0 0" accel="0 0 0" rate="10000" count="20000" lighting="false" emitter_id="monkey" duration="2" fade_in="0.2" fade_out="0.2" loop="true" rand_pos=".3 .3 .3" rand_vel=".2 .2 .2" rand_accel=".1 .1 .1" col="1 0.2 0.2 0.5" rand_col="0 0 0" blend_src="src_alpha" blend_dest="one" image_id="particle24" />
+
+<Particle pos="4 0 5" scale=".1 .1 .1" vel="0 0 0" accel="0 0 0" rate="2904" count="2904" lighting="false" emitter_id="monkey" duration="0" fade_in="0.2" fade_out="0.2" loop="true" col="0.0 0.0 1.0 1.0" rand_col="0 0 0" blend_src="src_alpha" blend_dest="one" image_id="particle24" />
+
+
+  </Room>
+</FireBoxRoom>
+

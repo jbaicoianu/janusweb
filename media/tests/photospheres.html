@@ -1,0 +1,24 @@
+<FireBoxRoom>
+<Assets>
+
+#Sphere
+<aAssetObject id="sphere" src="http://www.thevrdudes.com/VRexperts/oculusV2/sphere.obj" />
+
+#Images
+<AssetImage id="image1" src="http://www.thevrbar.com/gallery/nuke/1.jpg" tex_clamp="true" />
+<AssetImage id="image2" src="http://www.thevrbar.com/gallery/nuke/2.jpg" tex_clamp="true" />
+<AssetImage id="image3" src="http://www.thevrbar.com/gallery/nuke/3.jpg" tex_clamp="true" />
+
+<AssetVideo id="video1" src="http://meobets.com/~bai/360vid.mp4" tex_clamp="true" />
+
+</Assets>
+
+<Room visible="false" pos="0 0 0" xdir="1 0 0" ydir="0 1 0" zdir="0 0 1">
+
+#Put images in the scene on spheres
+<Object id="sphere" lighting="false" image_id="image1" pos="0 -4 0" xdir="0 0 -1" ydir="-0 1 0" zdir="1 0 0" scale="10 10 10" cull_face="front" />
+<Object id="sphere" lighting="false" image_id="image2" pos="20 -4 0" xdir="0 0 -1" ydir="-0 1 0" zdir="1 0 0" scale="10 10 10" cull_face="front" />
+<aObject id="sphere" lighting="false" image_id="image3" pos="40 -4 0" xdir="0 0 -1" ydir="-0 1 0" zdir="1 0 0" scale="10 10 10" cull_face="front" />
+
+</Room>
+</FireBoxRoom>
