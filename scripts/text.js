@@ -58,7 +58,7 @@ elation.require(['engine.things.label'], function() {
     this.createTextMaterial = function() {
       var matargs = {
         color: this.properties.color || new THREE.Color(0xffffff), 
-        emissive: new THREE.Color(0xff0000), //this.properties.emissive, 
+        emissive: this.properties.emissive, 
         shading: THREE.SmoothShading, 
         depthTest: this.properties.depthTest
       };
