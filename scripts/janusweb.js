@@ -56,7 +56,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
         'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
-        'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ]
+        'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ],
+        'mute': [ 'keyboard_ctrl_m', elation.bind(this, this.mute) ]
       });
       this.engine.systems.controls.activateContext('janus');
       this.remotePlayers = {};
@@ -202,10 +203,14 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           this.sendPlayerUpdate({first: false});
         }.bind(this), 100);
         elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
-        this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
+        if (this.chat) {
+          this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
+        }
       }.bind(this));
       this.network.addEventListener('disconnect', function() {
-        this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
+        if (this.chat) {
+          this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
+        }
       }.bind(this));
       //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
       elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
@@ -222,12 +227,13 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
       this.refresh();
     }
-    this.load = function(url, makeactive) {
+    this.load = function(url, makeactive, baseurl) {
       var roomname = url;
 
       var room = this.spawn('janusroom', roomname, {
         url: url,
-        janus: this
+        janus: this,
+        baseurl: baseurl
       });
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
@@ -241,20 +247,49 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
       return room;
     }
+    this.loadFromSource = function(source, makeactive, baseurl) {
+      var roomname = md5(source + Math.random());
+
+      var room = this.spawn('janusroom', roomname, {
+        source: source,
+        baseurl: baseurl,
+        janus: this
+      });
+      room.url = roomname;
+      // FIXME - should be able to spawn without adding to the heirarchy yet
+      this.remove(room);
+
+      var roomid = roomname;
+      this.rooms[roomid] = room;
+      //console.log('made new room', url, room);
+      this.loading = false;
+      if (room && makeactive) {
+        this.setActiveRoom(room);
+      }
+      return room;
+    }
     this.setActiveRoom = function(url, pos) {
       this.clear();
-      var changed = this.properties.url != url;
-      if (!url) {
-        url = this.properties.homepage || this.properties.url;
-      } else {
-        this.properties.url = url;
-      }
+
+      var room = false;
       this.loading = true;
 
-      var roomid = md5(url);
-      if (this.rooms[roomid]) {
-        if (this.currentroom !== this.rooms[roomid]) {
-          this.currentroom = this.rooms[roomid];
+      if (elation.utils.isString(url)) {
+        var roomid = md5(url);
+        if (this.rooms[roomid]) {
+          room = this.rooms[roomid];
+        }
+      }
+
+      if (room) {
+        var changed = this.properties.url != url;
+        if (!url) {
+          url = this.properties.homepage || this.properties.url;
+        } else {
+          this.properties.url = url;
+        }
+        if (this.currentroom !== room) {
+          this.currentroom = room;
 
           this.scriptframeargs = [
             1000/60
@@ -274,23 +309,28 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
             fog_start:     ['property', 'fog_start'],
             fog_end:       ['property', 'fog_end'],
             fog_col:       ['property', 'fog_col'],
+            bloom:         ['property', 'bloom'],
+            col:           ['property', 'col'],
     
             createObject:  ['function', 'createObject'],
             removeObject:  ['function', 'removeObject'],
             addCookie:     ['function', 'addCookie'],
             playSound:     ['function', 'playSound'],
             stopSound:     ['function', 'stopSound'],
+            seekSound:     ['function', 'seekSound'],
             getObjectById: ['function', 'getObjectById'],
             openLink:      ['function', 'openLink'],
 
-            onLoad:        ['callback', 'janus_room_scriptload'],
-            update:        ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
-            onCollision:   ['callback', 'physics_collide', 'objects.dynamics'],
-            onClick:       ['callback', 'click', 'engine.client.container'],
-            onMouseDown:   ['callback', 'janus_room_mousedown'],
-            onMouseUp:     ['callback', 'janus_room_mouseup'],
-            onKeyDown:     ['callback', 'janus_room_keydown'],
-            onKeyUp:       ['callback', 'janus_room_keyup']
+            onLoad:          ['callback', 'janus_room_scriptload'],
+            update:          ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
+            onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
+            onColliderEnter: ['callback', 'janus_room_collider_enter'],
+            onColliderExit:  ['callback', 'janus_room_collider_exit'],
+            onClick:         ['callback', 'click', 'engine.client.container'],
+            onMouseDown:     ['callback', 'janus_room_mousedown'],
+            onMouseUp:       ['callback', 'janus_room_mouseup'],
+            onKeyDown:       ['callback', 'janus_room_keydown'],
+            onKeyUp:         ['callback', 'janus_room_keyup']
           });
 
           this.add(this.currentroom);
@@ -314,7 +354,13 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         if (changed || document.location.hash != newhash) {
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
-        this.currentroom.enable();
+        if (!this.currentroom.loaded) {
+          elation.events.add(this.currentroom, 'janus_room_load', elation.bind(this, function() {
+            this.currentroom.enable();
+          }));
+        } else {
+          this.currentroom.enable();
+        }
         this.enter_room(url);
       } else {
         this.load(url, true);
@@ -323,8 +369,10 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     this.handlePopstate = function(ev) {
       var hashargs = elation.url();
       var hashurl = hashargs['janus.url'];
-      if (hashurl != this.properties.url && !this.loading) {
+      if (hashurl && hashurl != this.properties.url && !this.loading) {
         this.setActiveRoom(hashurl);
+      } else if (!hashurl && this.properties.url != this.homepage) {
+        this.setActiveRoom(this.homepage);
       }
     }
     this.showLoadURL = function(ev) {
@@ -339,7 +387,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
     }
     this.showChat = function(ev) {
-      if (ev.value == 1 && document.activeElement != this.engine.client.ui.urlbar.inputelement) {
+      if (ev.value == 1 && this.chat && document.activeElement != this.engine.client.ui.urlbar.inputelement) {
         this.chat.focus();
       }
     }
@@ -352,6 +400,11 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         };
         this.bookmarks.add(room);
         elation.events.fire({type: 'janusweb_bookmark_add', element: this, data: room});
+      }
+    }
+    this.mute = function(ev) {
+      if (ev.value == 1) {
+        this.engine.systems.sound.toggleMute();
       }
     }
     this.subscribe = function(url) {
@@ -378,7 +431,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         if (!this.remotePlayers.hasOwnProperty(userId)) {
           var remoteplayer = this.spawnRemotePlayer(msg.data.data);
           elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
-          this.chat.addmessage({userId: ' ! ', message: userId + ' entered room' });
+          if (this.chat) {
+            this.chat.addmessage({userId: ' ! ', message: userId + ' entered room' });
+          }
         }
         else {
           this.moveRemotePlayer(msg.data.data);
@@ -388,7 +443,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         var remoteplayer = this.remotePlayers[msg.data.data.userId];
         if (remoteplayer) {
           elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
-          this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
+          if (this.chat) {
+            this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
+          }
           if (remoteplayer && remoteplayer.parent) {
             remoteplayer.die();
           }
@@ -412,7 +469,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           });
         }
       } else if (method == 'user_chat') {
-        this.chat.addmessage(msg.data.data);
+        if (this.chat) {
+          this.chat.addmessage(msg.data.data);
+        }
       }
     }
     this.getJanusOrientation = function(player, head) {
@@ -450,12 +509,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       var spawnpos = (data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
       this.remotePlayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this});
       var remote = this.remotePlayers[userId];
-      remote.janusDirs = {
-        tmpVec1: new THREE.Vector3(),
-        tmpVec2: new THREE.Vector3(),
-        tmpVec3: new THREE.Vector3(),
-        tmpMat4: new THREE.Matrix4()
-      }
+
       this.remotePlayerCount = Object.keys(this.remotePlayers).length;
       this.playerCount = this.remotePlayerCount + 1;
       return remote;
@@ -469,47 +523,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         remote.setRoom(room);
       }
 
-      if (movedata.dir) {
-        remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
-        remote.janusDirs.tmpVec2.fromArray(movedata.dir.split(" "));
-        remote.janusDirs.tmpVec3.fromArray([0,1,0]);
-        remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-      }
+      remote.updateData(movedata);
 
-      if (movedata.view_dir && movedata.up_dir) {
-        remote.janusDirs.tmpVec1.fromArray([0, 0, 0]);
-        remote.janusDirs.tmpVec2.fromArray(movedata.view_dir.split(" "));
-        remote.janusDirs.tmpVec3.fromArray(movedata.up_dir.split(" "));
-        remote.janusDirs.tmpMat4.lookAt(remote.janusDirs.tmpVec1, remote.janusDirs.tmpVec2, remote.janusDirs.tmpVec3);
-        if (remote.head) {
-          remote.head.properties.orientation.setFromRotationMatrix(remote.janusDirs.tmpMat4);
-          if (movedata.head_pos) {
-            remote.head.properties.position.fromArray(movedata.head_pos.split(" "));
-          }
-        }
-      }
-      if (movedata.hand0 || movedata.hand1) {
-        remote.updateHands(movedata.hand0, movedata.hand1);
-      }
-
-      if (movedata.avatar) {
-        remote.setAvatar(movedata.avatar.replace(/\^/g, '"'));
-      }
-      if (movedata.speaking && movedata.audio) {
-        remote.speak(movedata.audio);
-      }
-
-      if (movedata.room_edit || movedata.room_delete) {
-        this.handleRoomEditOther(data);
-      }
-
-      //remote.set('position', movepos, true);
-      if (movedata.pos) {
-        var movepos = movedata.pos.split(" ").map(parseFloat);
-        remote.properties.position.fromArray(movepos);
-      }
-      remote.objects.dynamics.updateState();
-      remote.refresh();
       this.refresh();
     }
     this.sendPlayerUpdate = function(opts) {
@@ -529,8 +544,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       //console.log('movedata update', moveData);
       if (opts.first || this.sentUpdates == this.updateRate) {
-        //moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^jump^ src=^http://www.janusvr.com/avatars/animated/Beta/jump.fbx.gz^ /><AssetObject id=^fly^ src=^http://www.janusvr.com/avatars/animated/Beta/fly.fbx.gz^ /><AssetObject id=^speak^ src=^http://www.janusvr.com/avatars/animated/Beta/speak.fbx.gz^ /><AssetObject id=^walk^ src=^http://www.janusvr.com/avatars/animated/Beta/walk.fbx.gz^ /><AssetObject id=^type^ src=^http://www.janusvr.com/avatars/animated/Beta/type.fbx.gz^ /><AssetObject id=^portal^ src=^http://www.janusvr.com/avatars/animated/Beta/portal.fbx.gz^ /><AssetObject id=^run^ src=^http://www.janusvr.com/avatars/animated/Beta/run.fbx.gz^ /><AssetObject id=^idle^ src=^http://www.janusvr.com/avatars/animated/Beta/idle.fbx.gz^ /><AssetObject id=^body^ src=^http://www.janusvr.com/avatars/animated/Beta/Beta.fbx.gz^ /><AssetObject id=^walk_back^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_back.fbx.gz^ /><AssetObject id=^walk_left^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_left.fbx.gz^ /><AssetObject id=^walk_right^ src=^http://www.janusvr.com/avatars/animated/Beta/walk_right.fbx.gz^ /><AssetObject id=^head_id^ /></Assets><Room><Ghost id=^" + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^0.993769 0 -0.111464^ ydir=^0 1 0^ zdir=^0.111464 0 0.993769^ scale=^0.0095 0.0095 0.0095^ col=^#a1e0c0^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^head_id^ head_pos=^0 0 0^ body_id=^body^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
-        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^screen^ src=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.obj^ mtl=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.mtl^ atex0=^https://identicons.github.com/^ /></Assets><Room><Ghost id=^"  + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^1 0 0^ ydir=^0 1 0^ zdir=^0 0 1^ scale=^1 1 1^ col=^#ffffff^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^screen^ head_pos=^0 0.9 0^ body_id=^^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
+        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^screen^ src=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.obj^ mtl=^http://bai.dev.supcrit.com/media/janusweb/assets/hoverscreen.mtl^ atex0=^https://identicons.github.com/^ /></Assets><Room><Ghost id=^"  + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^1 0 0^ ydir=^0 1 0^ zdir=^0 0 1^ scale=^1 1 1^ col=^#ffffff^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^screen^ head_pos=^0 1.4 0^ body_id=^^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
         this.sentUpdates = 0;
       }
 
@@ -595,7 +609,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         //console.log('SEND', changestr);
         moveData.room_edit = changestr;
       }
-      if (document.activeElement && document.activeElement === this.chat.input.inputelement) {
+      if (document.activeElement && this.chat && document.activeElement === this.chat.input.inputelement) {
         moveData.anim_id = 'type';
       }
       if (player.controlstate.run) {
