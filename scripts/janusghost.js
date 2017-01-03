@@ -209,10 +209,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             if (movedata.head_pos && this.face) {
               var headpos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
+/*
               headpos.copy(this.properties.head_pos).negate();
               headpos.x += newpos[0];
               headpos.y += newpos[1];
               headpos.z += newpos[2];
+*/
+              headpos.fromArray(newpos);
             }
           }
         }
@@ -228,10 +231,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.speak(movedata.audio);
         }
 
-        if (movedata.room_edit || movedata.room_delete) {
-          this.handleRoomEditOther(data);
-        }
   */
+        if (movedata.room_edit || movedata.room_delete) {
+          var edit = movedata.room_edit,
+              del = movedata.room_delete;
+
+          this.handleRoomEdit(edit, del);
+        }
 
         //this.set('position', movepos, true);
         if (movedata.pos) {
@@ -282,6 +288,20 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       } else {
         this.hands.right.hide();
       }
+    }
+    this.handleRoomEdit = function(edit, del) {
+      //var room = this.janus.rooms[roomId];
+      var room = this.room;
+      if (room) {
+        if (edit) {
+          var editxml = edit.replace(/\^/g, '"');
+          room.applyEditXML(editxml);
+        }
+        if (del) {
+          var deletexml = del.replace(/\^/g, '"');
+          room.applyDeleteXML(deletexml);
+        }
+      } 
     }
   }, elation.engine.things.janusbase);
 });
