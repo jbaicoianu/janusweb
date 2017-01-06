@@ -5,7 +5,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
       this.defineProperties({
-        cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility}
+        janus: {type: 'object' },
+        cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
+        usevoip: {type: 'boolean', default: false }
       });
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
@@ -53,20 +55,24 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       };
       this.cursor_active = false;
+      this.cursor_style = 'default';
       this.cursor_object = '';
       this.lookat_object = '';
-      this.voip = new JanusVOIPRecorder({audioScale: 1024});
-      this.voipqueue = [];
-      this.voipbutton = elation.ui.button({classname: 'janusweb_voip', label: 'VOIP'});
-      this.engine.client.buttons.add('voip', this.voipbutton);
+      if (this.usevoip) {
+        this.voip = new JanusVOIPRecorder({audioScale: 1024});
+        this.voipqueue = [];
+        this.voipbutton = elation.ui.button({classname: 'janusweb_voip', label: 'VOIP'});
+        this.engine.client.buttons.add('voip', this.voipbutton);
 
-      elation.events.add(this.voipbutton, 'mousedown,touchstart', elation.bind(this.voip, this.voip.start));
-      elation.events.add(this.voipbutton, 'mouseup,touchend', elation.bind(this.voip, this.voip.stop));
-      elation.events.add(this.voip, 'voip_start', elation.bind(this, this.handleVOIPStart));
-      elation.events.add(this.voip, 'voip_stop', elation.bind(this, this.handleVOIPStop));
-      elation.events.add(this.voip, 'voip_data', elation.bind(this, this.handleVOIPData));
-      elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
+        elation.events.add(this.voipbutton, 'mousedown,touchstart', elation.bind(this.voip, this.voip.start));
+        elation.events.add(this.voipbutton, 'mouseup,touchend', elation.bind(this.voip, this.voip.stop));
+        elation.events.add(this.voip, 'voip_start', elation.bind(this, this.handleVOIPStart));
+        elation.events.add(this.voip, 'voip_stop', elation.bind(this, this.handleVOIPStop));
+        elation.events.add(this.voip, 'voip_data', elation.bind(this, this.handleVOIPData));
+        elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
+      }
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateVectors));
+      elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updateCursor));
       elation.events.add(null, 'mouseover', elation.bind(this, this.updateFocusObject));
       elation.events.add(null, 'mousemove', elation.bind(this, this.updateFocusObject));
       elation.events.add(null, 'mouseout', elation.bind(this, this.updateFocusObject));
@@ -76,24 +82,25 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (navigator.getVRDisplays) {
         this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Enter VR'});
         this.engine.client.buttons.add('vr', this.vrbutton);
-        elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this.engine.client, this.engine.client.toggleVR));
+        elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this, function(ev) { this.engine.client.toggleVR(ev); }));
+        elation.events.add(this.engine.client.view, elation.bind(this, function(ev) {
+          var vrdisplay = ev.data;
+          elation.events.add(ev.data, 'vrdisplaypresentchange', elation.bind(this, function() { this.vrbutton.label = (vrdisplay && vrdisplay.isPresenting ? 'Exit' : 'Enter') + ' VR'; }));
+        }));
       }
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
 
-setTimeout(elation.bind(this, function() {
-      this.cursor = this.spawn('janusobject', 'playercursor', {
-        js_id: 'player_cursor',
-        position: this.vectors.cursor_pos,
-        janusid: 'cursor_crosshair',
-        pickable: false,
-        collidable: false,
-        visible: this.cursor_visible
-      }, true);
-      this.vectors.cursor_pos = this.cursor.position;
-}), 1000);
-
+      setTimeout(elation.bind(this, function() {
+        this.cursors = {
+          'default': elation.engine.assets.find('image', 'cursor_arrow'),
+          'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
+          'pointer': elation.engine.assets.find('image', 'cursor_hand'),
+        };
+        this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, map: null}));
+        this.engine.systems.world.scene['world-3d'].add(this.cursor);
+      }), 1000);
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -146,47 +153,110 @@ setTimeout(elation.bind(this, function() {
           this.hands.left.active = hands.left && hands.left.active;
           this.hands.right.active = hands.right && hands.right.active;
           if (hands.left && hands.left.position) {
-            var pos = hands.left.palmPosition,
-                orient = hands.left.palmOrientation;
+            var pos = hands.left.palmPosition || hands.left.position,
+                orient = hands.left.palmOrientation || hands.left.orientation;
             if (pos instanceof THREE.Vector3) pos = pos.toArray();
             if (orient instanceof THREE.Quaternion) orient = orient.toArray();
             //this.localToWorld(this.hands.left.position.fromArray(pos));
-            this.hands.left.position.fromArray(pos);
+            if (pos) {
+              this.hands.left.position.fromArray(pos);
+            }
 
-            transform.makeRotationFromQuaternion(hands.left.palmOrientation);
-            transform.extractBasis(this.hands.left.xdir, this.hands.left.ydir, this.hands.left.zdir);
-            this.hands.left.xdir.normalize();
-            this.hands.left.ydir.normalize();
-            this.hands.left.zdir.normalize();
+            if (orient) {
+              transform.makeRotationFromQuaternion(orient);
+              transform.extractBasis(this.hands.left.xdir, this.hands.left.ydir, this.hands.left.zdir);
+              this.hands.left.xdir.normalize();
+              this.hands.left.ydir.normalize();
+              this.hands.left.zdir.normalize();
+            }
 
-            this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
-            this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
-            this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
-            this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
-            this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+            if (hands.left.fingerTips) {
+              this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
+              this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
+              this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
+              this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
+              this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+            }
           }
           if (hands.right && hands.right.position) {
-            var pos = hands.right.palmPosition,
-                orient = hands.right.palmOrientation;
+            var pos = hands.right.palmPosition || hands.right.position,
+                orient = hands.right.palmOrientation || hands.right.orientation;
             if (pos instanceof THREE.Vector3) pos = pos.toArray();
             if (orient instanceof THREE.Quaternion) orient = orient.toArray();
             //this.localToWorld(this.hands.right.position.fromArray(pos));
-            this.hands.right.position.fromArray(pos);
+            if (pos) {
+              this.hands.right.position.fromArray(pos);
+            }
 
-            transform.makeRotationFromQuaternion(hands.right.palmOrientation);
-            transform.extractBasis(this.hands.right.xdir, this.hands.right.ydir, this.hands.right.zdir);
-            this.hands.right.xdir.normalize();
-            this.hands.right.ydir.normalize();
-            this.hands.right.zdir.normalize();
+            if (orient) {
+              transform.makeRotationFromQuaternion(orient);
+              transform.extractBasis(this.hands.right.xdir, this.hands.right.ydir, this.hands.right.zdir);
+              this.hands.right.xdir.normalize();
+              this.hands.right.ydir.normalize();
+              this.hands.right.zdir.normalize();
+            }
 
-            this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
-            this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
-            this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
-            this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
-            this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
+            if (hands.right.fingerTips) {
+              this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
+              this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
+              this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
+              this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
+              this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
+            }
           }
         }
       }
+    }
+    this.updateCursor = function() {
+      if (this.cursor_object == '') {
+        this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-10));
+      }
+      if (this.cursor) {
+        // Show system cursor when the mouse is unlocked and we're not in VR
+        // Otherwise, we'll render one in the 3d scene
+
+        var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+        var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay && vrdisplay.isPresenting));
+        if (useSystemCursor) {
+          this.cursor.visible = false;
+          var view = this.engine.systems.render.views.main;
+          if (!view.hasclass('cursor_' + this.cursor_style)) {
+            var cursortypes = Object.keys(this.cursors);
+            for (var i = 0; i < cursortypes.length; i++) { 
+              var thistype = cursortypes[i] == this.cursor_style,
+                  hasclass = view.hasclass('cursor_' + cursortypes[i]);
+              if (thistype && !hasclass) {
+                view.addclass('cursor_' + this.cursor_style);
+              } else if (hasclass) {
+                view.removeclass('cursor_' + cursortypes[i]);
+              }
+            }
+          }
+        } else {
+          this.cursor.visible = this.cursor_visible;
+          var distance = this.camera.localToWorld(new THREE.Vector3()).distanceTo(this.vectors.cursor_pos);
+          var size = distance / 12; // FIXME - add cursor scaling
+          this.cursor.position.copy(this.vectors.cursor_pos);
+          this.cursor.scale.set(size,size,size);
+
+          if (this.cursor_object == '') {
+            this.cursor.material.opacity = .5;
+          } else {
+            this.cursor.material.opacity = 1;
+          }
+
+          if (this.cursors[this.cursor_style]) {
+            this.cursor.material.map = this.cursors[this.cursor_style];
+          } else if (this.cursors['default']) {
+            this.cursor.material.map = this.cursors['default'];
+          } else {
+            this.cursor.material.map = null;
+            this.cursor.visible = false;
+          }
+        }
+      }
+      this.camera.objects['3d'].updateMatrix();
+      this.camera.objects['3d'].updateMatrixWorld();
     }
     this.updateVectors = function() {
       var v = this.vectors;
@@ -209,48 +279,37 @@ setTimeout(elation.bind(this, function() {
       var obj = ev.element;
       if ((ev.type == 'mouseover' || ev.type == 'mousemove') && obj && obj.js_id) {
         this.cursor_object = obj.js_id;
-        this.vectors.cursor_pos.copy(ev.data.point);
-        var face = ev.data.face;
-        if (face) {
-          this.vectors.cursor_zdir.copy(face.normal);
-          var worldpos = this.localToWorld(new THREE.Vector3(0,0,0));
-
-          this.vectors.cursor_xdir.subVectors(worldpos, this.vectors.cursor_pos).normalize();
-          //this.vectors.cursor_ydir.crossVectors(this.vectors.cursor_xdir, this.vectors.cursor_zdir).normalize();
-          this.vectors.cursor_ydir.set(0,1,0);
-          var dot = this.vectors.cursor_ydir.dot(face.normal);
-          if (Math.abs(dot) > 0.9) {
-            this.vectors.cursor_ydir.crossVectors(this.vectors.cursor_xdir, this.vectors.cursor_zdir).normalize();
-            this.vectors.cursor_xdir.crossVectors(this.vectors.cursor_ydir, this.vectors.cursor_zdir).normalize();
-            if (dot / Math.abs(dot) > 0) {
-              this.vectors.cursor_zdir.negate();
-            }
-          } else {
-            //this.vectors.cursor_zdir.negate();
-            this.vectors.cursor_ydir.set(0,1,0);
-            this.vectors.cursor_xdir.crossVectors(this.vectors.cursor_zdir, this.vectors.cursor_ydir).normalize().negate();
-          }
-
-          //console.log(this.vectors.cursor_xdir.toArray(), this.vectors.cursor_ydir.toArray(), this.vectors.cursor_zdir.toArray());
-          if (this.cursor) {
-            var mat = new THREE.Matrix4().makeBasis(this.vectors.cursor_xdir, this.vectors.cursor_ydir, this.vectors.cursor_zdir);
-            mat.decompose(new THREE.Vector3(), this.cursor.properties.orientation, new THREE.Vector3());
-            var invscale = ev.data.distance / 10;
-            this.cursor.scale.set(invscale,invscale,invscale);
-          }
-        }
-//console.log(ev.data);
+        var worldpos = this.camera.localToWorld(new THREE.Vector3(0,0,0));
+        var diff = ev.data.point.clone().sub(worldpos);
+        this.vectors.cursor_pos.copy(diff).multiplyScalar(-.05).add(ev.data.point);
 
         this.lookat_object = obj.js_id;
         this.vectors.lookat_pos.copy(ev.data.point);
       } else {
         this.cursor_object = '';
         this.lookat_object = '';
+        var distance = 20;
+        this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-distance));
       }
     }
     this.toggleCursorVisibility = function() {
       if (this.cursor) {
         this.cursor.visible = this.cursor_visible;
+      }
+    }
+    this.reset_position = function(ev) {
+      if (!ev || ev.value == 1) {
+        var room = this.engine.client.janusweb.currentroom;
+        if (room) {
+          this.properties.position.fromArray(room.playerstartposition);
+          this.properties.orientation.copy(room.playerstartorientation);
+          this.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+          this.head.properties.orientation.copy(this.properties.startcameraorientation);
+          this.properties.velocity.set(0,0,0);
+          this.objects.dynamics.angular.set(0,0,0);
+          //this.engine.systems.controls.calibrateHMDs();
+          this.refresh();
+        }
       }
     }
     this.getProxyObject = function() {
@@ -274,6 +333,7 @@ setTimeout(elation.bind(this, function() {
         //url:           ['property', 'currenturl'],
         //hmd_enabled:   ['property', 'hmd_enabled'],
         cursor_active: ['property', 'cursor_active'],
+        cursor_style: ['property', 'cursor_style'],
         cursor_object: ['property', 'cursor_object'],
         lookat_object: ['property', 'lookat_object'],
         lookat_pos:    ['property', 'vectors.lookat_pos'],
