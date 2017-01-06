@@ -88,6 +88,7 @@ describe("Elation Engine Assets", function() {
       done();
     });
   });
+/*
   it("should load an image that's not specified in assets list", function(done) {
     loadAsset('image', 'http://meobets.com:9876/base/build/media/assets/translator/errors/static.gif').then(function(asset) {
       expect(asset).toBeDefined();
@@ -102,4 +103,5 @@ describe("Elation Engine Assets", function() {
       done();
     });
   });
+*/
 });

@@ -114,7 +114,7 @@ console.log('now test models');
     it('fired all expected events', function(done) {
       expect(eventlog.asset_load_queued.length).toBe(1);
       expect(eventlog.asset_load_start.length).toBe(1);
-      expect(eventlog.asset_load_progress.length).toBe(1);
+      expect(eventlog.asset_load_progress.length).toBeGreaterThan(0);
       expect(eventlog.asset_load_processing.length).toBe(1);
       expect(eventlog.asset_load_processed.length).toBe(1);
       expect(eventlog.asset_load_complete.length).toBe(1);
