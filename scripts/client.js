@@ -49,7 +49,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       usevoip: elation.utils.any(args.usevoip, false),
       resolution: args.resolution, 
       url: args.url,
-      fullsize: fullsize
+      networking: args.networking,
+      autoload: args.autoload
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -72,6 +73,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
       this.enginecfg.crosshair = false;
+      this.enginecfg.picking = true;
 
       this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
     }
@@ -85,6 +87,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           homepage: this.args.homepage,
           url: this.args.url,
           showchat: this.args.showchat,
+          networking: this.args.networking,
+          autoload: this.args.autoload,
         }
       });
       this.janusweb = things.children.janusweb;

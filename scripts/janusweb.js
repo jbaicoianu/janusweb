@@ -36,12 +36,14 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
     this.postinit = function() {
       this.defineProperties({
-        url: { type: 'string', default: false },
-        homepage: { type: 'string', default: "" },
-        corsproxy: { type: 'string', default: '' },
+        url:            { type: 'string', default: false },
+        homepage:       { type: 'string', default: "" },
+        corsproxy:      { type: 'string', default: '' },
         shownavigation: { type: 'boolean', default: true },
-        showchat: { type: 'boolean', default: true },
-        datapath: { type: 'string', default: '/media/janusweb' }
+        showchat:       { type: 'boolean', default: true },
+        datapath:       { type: 'string', default: '/media/janusweb' },
+        autoload:       { type: 'boolean', default: true },
+        networking:     { type: 'boolean', default: true }
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
@@ -50,7 +52,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.properties.corsproxy != '') {
         elation.engine.assets.setCORSProxy(this.properties.corsproxy);
       }
-      elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json');
+      elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
+      this.parser = new JanusFireboxParser();
+      this.scriptingInitialized = false;
 
       this.engine.systems.controls.addContext('janus', {
         'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
@@ -74,6 +78,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
     }
     this.initScripting = function() {
+      if (this.scriptingInitialized) return;
       window.delta_time = 1000/60;
       window.janus = new elation.proxy(this, {
         version:           ['property', 'version',       { readonly: true}],
@@ -169,51 +174,55 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       window.uniqueId = function() {
         return uniqueId++;
       }
+      this.scriptingInitialized = true;
     }
     this.createChildren = function() {
       var hashargs = elation.url();
       var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
       this.initScripting();
-      this.load(starturl, true);
-      // connect to presence server
-      //this.userId = Date.now().toString();
-      this.userId = this.getUsername();
-      var host = elation.utils.any(hashargs['janus.server'], elation.config.get('janusweb.network.host')),
-          port = elation.utils.any(hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
-      var janusOptions = {
-        host: host,
-        port: port,
-        userId: this.userId,
-        version: this.version,
-        roomUrl: starturl
+      if (this.autoload) {
+        this.load(starturl, true);
       }
-      this.network = new JanusClientConnection(janusOptions);
-      this.parser = new JanusFireboxParser();
+      if (this.networking) {
+        // connect to presence server
+        //this.userId = Date.now().toString();
+        this.userId = this.getUsername();
+        var host = elation.utils.any(hashargs['janus.server'], elation.config.get('janusweb.network.host')),
+            port = elation.utils.any(hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
+        var janusOptions = {
+          host: host,
+          port: port,
+          userId: this.userId,
+          version: this.version,
+          roomUrl: starturl
+        }
+        this.network = new JanusClientConnection(janusOptions);
+        this.network.addEventListener('message', function(msg) {
+          this.onJanusMessage(msg);
+        }.bind(this));
+        this.network.addEventListener('connect', function() {
+          this.sendPlayerUpdate({first: true});
+          //elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
+          setInterval(function() {
+            this.sendPlayerUpdate({first: false});
+          }.bind(this), 100);
+          elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
+          if (this.chat) {
+            this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
+          }
+        }.bind(this));
+        this.network.addEventListener('disconnect', function() {
+          if (this.chat) {
+            this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
+          }
+        }.bind(this));
+        //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
+        elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
+      }
       if (this.showchat) {
         this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
       }
-      this.network.addEventListener('message', function(msg) {
-        this.onJanusMessage(msg);
-      }.bind(this));
-      this.network.addEventListener('connect', function() {
-        this.sendPlayerUpdate({first: true});
-        //elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
-        setInterval(function() {
-          this.sendPlayerUpdate({first: false});
-        }.bind(this), 100);
-        elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
-        if (this.chat) {
-          this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
-        }
-      }.bind(this));
-      this.network.addEventListener('disconnect', function() {
-        if (this.chat) {
-          this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
-        }
-      }.bind(this));
-      //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
-      elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
     }
     this.clear = function() {
       if (this.currentroom) {
@@ -245,6 +254,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (room && makeactive) {
         this.setActiveRoom(url);
       }
+      this.initScripting();
       return room;
     }
     this.loadFromSource = function(source, makeactive, baseurl) {
@@ -528,6 +538,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       this.refresh();
     }
     this.sendPlayerUpdate = function(opts) {
+      if (!this.currentroom) return;
       // opts.first is a bool, if true then we are sending our avatar along with the move update
       // else, we send the avatar on every 15th update
       if (Date.now() - this.lastUpdate < 20) return;
