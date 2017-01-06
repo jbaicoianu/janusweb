@@ -1,0 +1,22 @@
+.janusweb_urlbar {
+  position: relative;
+}
+.janusweb_urlbar_progress {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 2px;
+  height: 2px;
+  pointer-events: none;
+}
+.janusweb_urlbar_progress .ui_progressbar_track {
+  margin: 0;
+  height: 2px;
+  border: 0;
+  vertical-align: top;
+  background: transparent;
+  box-shadow: none;
+}
+.janusweb_urlbar_progress.ui_progressbar .ui_pegboard_peg {
+  background-color: rgba(0,196,64,.5);
+}
