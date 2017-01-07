@@ -11,7 +11,6 @@ describe("JanusWeb Init", function() {
   it("should initialize client", function(done) {
     try {
       elation.janusweb.init({
-        homepage: 'http://www.janusvr.com/index.html', 
         resolution: resolution,
         autoload: false,
         showchat: false,

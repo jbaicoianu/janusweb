@@ -17,7 +17,8 @@ module.exports = function(config) {
     files: [
       //{pattern: 'node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js', watched: false, included: true, served: true},
       //{pattern: 'tests/boot.js', watched: true, included: true, served: true},
-      {pattern: 'build/*', watched: true, included: true, served: true},
+      //{pattern: 'build/*', watched: true, included: true, served: true},
+      {pattern: 'build/janusweb.js', watched: true, included: true, served: true},
       {pattern: 'build/media/*', watched: false, included: false, served: true},
       {pattern: 'build/media/**', watched: false, included: false, served: true},
       'tests/imagediff.js',

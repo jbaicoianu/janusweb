@@ -118,7 +118,6 @@
       height = canvas.height,
       width = canvas.width,
       context = canvas.getContext('2d');
-console.log(canvas, context);
     return context.getImageData(0, 0, width, height);
   }
   function toImageDataFromContext (context) {

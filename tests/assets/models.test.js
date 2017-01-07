@@ -1,3 +1,6 @@
+    elation.events.add(null, 'asset_load_queued,asset_load_start,asset_load_progress,asset_load_processing,asset_load_processed,asset_load_complete', function(ev) {
+      console.log(ev.type, ev.element.src);
+    });
 describe("Elation Engine Assets", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
   elation.config.set('dependencies.path', document.origin);
