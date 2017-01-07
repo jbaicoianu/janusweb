@@ -1,6 +1,5 @@
 describe("Elation Engine Assets", function() {
   jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
-console.log('now test models');
   elation.config.set('dependencies.path', document.origin);
   elation.config.set('dependencies.rootdir', 'base/build/');
   elation.config.set('dependencies.main', 'janusweb.js');
@@ -156,13 +155,12 @@ console.log('now test models');
 
       expect(mesh.material.map).toBeDefined();
       expect(mesh.material.map.image).toBeDefined();
-console.log(mesh.material.map.image);
       expect(mesh.material.bumpMap).toBeDefined();
       expect(mesh.material.bumpMap.image).toBeDefined();
-     console.log(mesh); 
       done();
     });
     it('fired all expected events', function(done) {
+console.log(JSON.stringify(eventlog));
       expect(eventlog.asset_load_queued).toBeDefined();
       expect(eventlog.asset_load_queued.length).toBe(1);
       expect(eventlog.asset_load_processing).toBeDefined();
@@ -186,7 +184,6 @@ console.log(mesh.material.map.image);
         expect(asset).toBeDefined();
         expect(asset.loaded).toBe(true);
         var group = asset.getInstance();
-console.log('derrr', asset, group);
         mesh = group;
         expect(mesh).toBeDefined();
         done();
