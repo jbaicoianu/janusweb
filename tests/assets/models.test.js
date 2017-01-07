@@ -161,7 +161,7 @@ describe("Elation Engine Assets", function() {
     });
     it('fired all expected events', function(done) {
 var furp = {};
-Object.keys(eventlog).forEach(k) { furp[k] = eventlog[k].length;
+Object.keys(eventlog).forEach(function(k) { furp[k] = eventlog[k].length; });
 console.log(JSON.stringify(furp));
 console.log(eventlog);
       expect(eventlog.asset_load_queued).toBeDefined();
