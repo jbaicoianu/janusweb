@@ -23,7 +23,7 @@ module.exports = function(config) {
       'tests/imagediff.js',
       //{pattern: 'tests/*.test.js', watched: true, included: true, served: true},
       //{pattern: 'tests/assets/*.test.js', watched: true, included: true, served: true},
-      {pattern: 'tests/janusweb.test.js', watched: true, included: true, served: true},
+      //{pattern: 'tests/janusweb.test.js', watched: true, included: true, served: true},
       {pattern: 'tests/room.test.js', watched: true, included: true, served: true},
     ],
 
