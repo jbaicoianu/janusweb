@@ -11,6 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
         'skybox_left': { type: 'string' },
@@ -118,6 +119,7 @@ elation.require([
       setTimeout(elation.bind(player, player.reset_position), 0);
     }
     this.setSkybox = function() {
+      if (!this.loaded) return;
       if (!this.skybox) {
         this.skybox = this.spawn('skybox', this.id + '_sky', {
           position: [0,0,0],
@@ -252,7 +254,7 @@ elation.require([
         this.properties.url = url;
       }
       var baseurl = baseurloverride;
-      if (!baseurl) {
+      if (!baseurl && url) {
         baseurl = url.split('/'); 
         if (baseurl.length > 3) baseurl.pop(); 
         baseurl = baseurl.join('/') + '/'; 
@@ -267,7 +269,7 @@ elation.require([
 
       this.setTitle('loading...');
 
-      var proxyurl = this.properties.janus.properties.corsproxy;
+      var proxyurl = this.corsproxy || '';
 
       var fullurl = url;
       if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
@@ -428,7 +430,7 @@ elation.require([
     }
 
     this.loadRoomAssets = function(roomdata) {
-      if (roomdata && roomdata.assets && roomdata.assets.assetlist) {
+      if (roomdata && roomdata.assets && roomdata.assets.assetlist && roomdata.assets.assetlist.length > 0) {
         elation.engine.assets.loadJSON(roomdata.assets.assetlist, this.baseurl);
         this.websurfaces = roomdata.assets.websurfaces;
       }
@@ -888,7 +890,9 @@ elation.require([
         if (idx >= 0) {
           this.pendingassets.splice(idx, 1);
           if (this.pendingassets.length == 0) {
-            elation.events.fire({element: this, type: 'room_load_complete'});
+            setTimeout(elation.bind(this, function() {
+              elation.events.fire({element: this, type: 'room_load_complete'});
+            }), 0);
           }
         }
       }
@@ -936,7 +940,6 @@ elation.require([
       if (!this.applyingEdits && thing.js_id && this.jsobjects[thing.js_id]) {
         var proxy = this.jsobjects[thing.js_id];
         if (proxy.sync) {
-          var k = Object.keys(proxy);
           if (!this.appliedchanges[thing.js_id]) {
             this.changes[thing.js_id] = proxy;
           }
