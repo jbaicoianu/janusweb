@@ -70,7 +70,7 @@ elation.require(['janusweb.janusbase'], function() {
       return box;
     }
     this.createMaterial = function() {
-      this.asset = elation.engine.assets.find('image', this.image_id, true);
+      this.asset = this.getAsset('image', this.image_id);
       if (this.asset) {
         this.texture = this.asset.getInstance();
         if (this.texture) {
@@ -105,7 +105,11 @@ elation.require(['janusweb.janusbase'], function() {
       return facemat;
     }
     this.updateMaterial = function() {
-      var newtexture = elation.engine.assets.find('image', this.image_id);
+      this.asset = this.getAsset('image', this.image_id);
+      var newtexture = false;
+      if (this.asset) {
+        newtexture = this.asset.getInstance();
+      }
       if (newtexture && newtexture !== this.texture) {
         this.texture = newtexture;
         if (newtexture.image) {
