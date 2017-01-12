@@ -49,8 +49,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       this.bookmarks = elation.collection.localindexed({index: 'url', storagekey: 'janusweb.bookmarks'});
 
-      if (this.properties.corsproxy != '') {
-        elation.engine.assets.setCORSProxy(this.properties.corsproxy);
+      if (this.corsproxy != '') {
+        elation.engine.assets.setCORSProxy(this.corsproxy);
       }
       elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
       this.parser = new JanusFireboxParser();
@@ -242,7 +242,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       var room = this.spawn('janusroom', roomname, {
         url: url,
         janus: this,
-        baseurl: baseurl
+        baseurl: baseurl,
+        corsproxy: this.corsproxy
       });
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
@@ -258,25 +259,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       return room;
     }
     this.loadFromSource = function(source, makeactive, baseurl) {
-      var roomname = md5(source + Math.random());
-
-      var room = this.spawn('janusroom', roomname, {
-        source: source,
-        baseurl: baseurl,
-        janus: this
-      });
-      room.url = roomname;
-      // FIXME - should be able to spawn without adding to the heirarchy yet
-      this.remove(room);
-
-      var roomid = roomname;
-      this.rooms[roomid] = room;
-      //console.log('made new room', url, room);
-      this.loading = false;
-      if (room && makeactive) {
-        this.setActiveRoom(room);
-      }
-      return room;
+      var dataurl = 'data:text/html,' + encodeURIComponent(source);
+      return this.load(dataurl, makeactive, baseurl)
     }
     this.setActiveRoom = function(url, pos) {
       this.clear();
@@ -289,6 +273,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         if (this.rooms[roomid]) {
           room = this.rooms[roomid];
         }
+      } else if (url.type == 'janusroom') {
+        room = url;
+        url = room.url;
       }
 
       if (room) {
