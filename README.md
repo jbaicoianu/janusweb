@@ -85,7 +85,7 @@ NOTE - if you see errors relating to node-canvas, make sure your system has `lib
 JanusWeb supports several arguments at initialization time to control how it behaves.
 
 <table>
-  <th><td> Name           </td><td> Description                            </td><td> Default                  </td></th>
+  <tr><th> Name           </th><th> Description                            </th><th> Default                  </th></tr>
   <tr><td> homepage       </td><td> Default page to go to when user presses 
                                     home button                            </td><td> https://web.janusvr.com/ </td></tr>
   <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
@@ -101,17 +101,17 @@ JanusWeb supports several arguments at initialization time to control how it beh
 </table>
 
 ## Scripting
-After initializing the client, `elation.janusweb.init()` returns a Promise which returns a reference to the client.
+After initializing the client, `elation.janusweb.init()` returns a Promise which provides a reference to the client.
 You can programatically control this client to do all sorts of things.  For instance, we can make the client load a
-URL, wait for the room and all of its assets to load, and then take a screenshot of the page:
+URL, wait for the world and all of its assets to load, and then take a screenshot of the world after a specified delay:
 
 ```javascript
 var pageinfo = elation.utils.parseURL(document.location.href),
     urlargs = pageinfo.args || {},
     hashargs = pageinfo.hash || {};
 
-var url = elation.utils.any(hashargs.url, urlargs.url, 'http://www.janusvr.com/index.html');
-var delay = elation.utils.any(hashargs.delay, urlargs.delay, 1000);
+var url = elation.utils.any(hashargs.url, urlargs.url, 'http://www.janusvr.com/index.html'),
+    delay = elation.utils.any(hashargs.delay, urlargs.delay, 1000);
 
 elation.janusweb.init({
   url: url,
@@ -123,7 +123,7 @@ elation.janusweb.init({
     setTimeout(function() {
       client.hideMenu();
       client.screenshot(types[type]).then(function(imagefile) {
-        // upload imagefile somewhere via REST API
+        // upload imagefile somewhere via XHR
         console.log('Screenshot complete!');
       });
     }, delay);
