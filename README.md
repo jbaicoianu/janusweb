@@ -11,7 +11,9 @@ browser.
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Rendering functionality provided by Three.js / WebGL
-- Oculus Rift, Vive, and Cardboard support via WebVR API
+- Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
+- Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
+- Networking support
 
 ## Installing
 
