@@ -7,13 +7,15 @@ browser.
 
 ## Features
 
-- Support for 2D and 3D (sbs3d or ou3d) video textures using HTML5 Video
+- Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
+- Support for 2D, sbs3D/ou3d, and 360 degree video textures using HTML5 Video
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Rendering functionality provided by Three.js / WebGL
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
 - Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
-- Networking support
+- Realtime collaboration across all devices via built-in networking
+- Scriptable client enables many customized uses
 
 ## Using
 
@@ -148,4 +150,7 @@ than happy to help you through this (it's all very experimental right now!)
 JanusWeb is open source, and we welcome any contributions!  Please do report bugs using GitHub Issues,
 and all pull requests will be considered.  We could especially use help with documentation!
 
-
+## Who is responsible for this?
+JanusWeb was created by James Baicoianu, and is now an official open source project of JanusVR, Inc.
+The JanusWeb software and its API are published under the MIT license, and are free to use for whatever
+uses you can think of.  If you build something cool, let us know!
