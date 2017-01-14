@@ -1,12 +1,12 @@
 #JanusWeb
---------
+
 JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
 written in HTML and hosted in the same manner of regular websites.  JanusWeb allows
 users to view and interact with others in these environments using only their web
 browser.
 
 ## Features
---------
+
 - Support for 2D and 3D (sbs3d or ou3d) video textures using HTML5 Video
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
@@ -14,7 +14,7 @@ browser.
 - Oculus Rift, Vive, and Cardboard support via WebVR API
 
 ## Installing
-----------
+
 To build JanusWeb, run the following commands:
 
 ```bash
