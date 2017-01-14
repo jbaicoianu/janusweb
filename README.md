@@ -27,8 +27,9 @@ Our default viewer is always available at https://web.janusvr.com/.  You can wri
 page with your [JanusVR Markup](http://janusvr.com/guide/markuplanguage/index.html) and host
 it anywhere you would normally host a static website.  Any regular webhost, AWS S3 static 
 sites, CDNs, or even more exotic locations like [IPFS distributed filesystems](https://ipfs.io) will work.
-Then just load your page in our viewer by entering the URL into the navigation bar, and you 
-can link to it and share on social media.
+You can even put your mark-up onto sites like PasteBin or PiratePad.  Then just load the URL
+in our viewer by entering the URL into the navigation bar, and you can link directly to it, share 
+on social media, or embed our viewer directly into other webpages, blog posts, or articles.
 
 ### Pull our scripts into your page
 Using the above method, all of your links would go through our servers.  If you'd prefer to 
@@ -138,7 +139,7 @@ elation.janusweb.init({
   elation.events.add(client.janusweb.currentroom, 'room_load_complete', function() {
     setTimeout(function() {
       client.hideMenu();
-      client.screenshot(types[type]).then(function(imagefile) {
+      client.screenshot().then(function(imagefile) {
         // upload imagefile somewhere via XHR
         console.log('Screenshot complete!');
       });
