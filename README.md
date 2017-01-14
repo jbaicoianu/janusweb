@@ -88,18 +88,32 @@ JanusWeb supports several arguments at initialization time to control how it beh
 
 <table>
   <tr><th> Name           </th><th> Description                            </th><th> Default                  </th></tr>
+
+  <tr><td> autoload       </td><td> Load URL by default or wait for script </td><td> true                     </td></tr>
+
+  <tr><td> crosshair      </td><td> Show player crosshair                  </td><td> true                     </td></tr>
+
   <tr><td> homepage       </td><td> Default page to go to when user presses 
                                     home button                            </td><td> https://web.janusvr.com/ </td></tr>
-  <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
+
+  <tr><td> networking     </td><td> Enable networking                      </td><td> true                     </td></tr>
+
+  <tr><td> picking        </td><td> Enable mouse interactions              </td><td> true                     </td></tr>
+
+  <tr><td> resolution     </td><td> If specified, restrict the renderer to 
+                                    the specified size                     </td><td> (none)                   </td></tr>
+
   <tr><td> shownavigation </td><td> Control visibility of navigation bar   </td><td> true                     </td></tr>
+
   <tr><td> showchat       </td><td> Control visibility of chat             </td><td> true                     </td></tr>
+
+  <tr><td> stats          </td><td> Enable render performance stats        </td><td> false                    </td></tr>
+
+  <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
+
   <tr><td> usevoip        </td><td> Enable or disable VOIP functionality
                                     (NOTE - disabled pending browser support 
                                     for Opus via WebAudio)                 </td><td> false                    </td></tr>
-  <tr><td> resolution     </td><td> If specified, restrict the renderer to 
-                                    a the specified size                   </td><td> (none)                   </td></tr>
-  <tr><td> networking     </td><td> Enable or disable networking           </td><td> true                     </td></tr>
-  <tr><td> autoload       </td><td> Load URL by default or wait for script </td><td> true                     </td></tr>
 </table>
 
 ## Scripting
