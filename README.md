@@ -1,19 +1,20 @@
 #JanusWeb
 
 JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
-written in HTML and hosted in the same manner of regular websites.  JanusWeb allows
-users to view and interact with others in these environments using only their web
-browser.
+written in HTML and JavaScript, hosted in the same manner as regular websites, merging 
+the 2d and 3d web into one experience.  JanusWeb allows users to view and interact with 
+others in these environments using only their web browser.
 
 ## Features
 
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
-- Support for 2D, sbs3D/ou3d, and 360 degree video textures using HTML5 Video
+- Support for 2d, sbs3d/ou3d, and 360 degree video textures using HTML5 Video
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Rendering functionality provided by Three.js / WebGL
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
 - Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
+- Import Collada, OBJ, glTF, and other popular 3d file formats
 - Realtime collaboration across all devices via built-in networking
 - Scriptable client enables many customized uses
 
@@ -56,7 +57,7 @@ client via its API.  This looks something like this:
 
 The `elation.janusweb.init()` function can take a number of arguments, and returns a promise which
 receives an instance of the client.  This client reference can be controlled via its API.  See the 
-sections on Arguments and Scripting below.
+sections on **Arguments** and **Scripting** below.
 
 ### Install from ZIPs
 (TODO - we will start shipping zip builds of JanusWeb once we release v1.0)
