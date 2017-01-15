@@ -1,15 +1,16 @@
-#!/bin/sh
+#!/bin/bash
 
-BUILDDIR=$(pwd)/build
-RELDIR=$(pwd)/release
 VERSION=$(node -pe "require('./package.json').version")
+BUILDROOT=$(pwd)/build
+BUILDBASE=${VERSION}
+BUILDDIR=${BUILDROOT}/${BUILDBASE}
+ZIPNAME=janusweb-${VERSION}
 
 
+echo $BUILDROOT
+echo $BUILDDIR
 if [ ! -e "$BUILDDIR" ]; then
-  mkdir "$BUILDDIR"
-fi
-if [ ! -e "$RELDIR" ]; then
-  mkdir "$RELDIR"
+  mkdir -p "$BUILDDIR"
 fi
 
 if [ -e "$BUILDDIR/media" ]; then
@@ -34,5 +35,6 @@ fi
 mv janusweb.css janusweb.js "$BUILDDIR"
 echo Built new release in \"$BUILDDIR/\"
 
-cd $BUILDDIR
-tar czf $RELDIR/janusweb-$VERSION.tar.gz .
+cd $BUILDROOT
+tar czf "$ZIPNAME.tar.gz" "$BUILDBASE" --transform=s/${BUILDBASE}/$ZIPNAME/ 
+
