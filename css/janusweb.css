@@ -55,6 +55,7 @@
   left: 0;
   z-index: 500;
   margin: .4em;
+  white-space: nowrap;
 }
 .janusweb_ui_navigation .ui_button {
   padding: .6em;
