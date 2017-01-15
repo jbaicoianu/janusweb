@@ -8,6 +8,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     this.postinit = function() {
       elation.engine.things.janusbase.extendclass.postinit.call(this);
       this.frameupdates = [];
+      this.jschildren = [];
+      this.assets = {};
       this.defineProperties({
         room:     { type: 'object' },
         janus:    { type: 'object' },
@@ -24,8 +26,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         onclick: { type: 'object' },
       });
       //if (this.col) this.color = this.col;
-      this.jschildren = [];
-      this.assets = {};
       elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
       elation.events.add(this, 'mouseover,mouseout', elation.bind(this, this.updatePlayerCursor));
 
