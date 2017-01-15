@@ -39,6 +39,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.pickable = false;
         this.collidable = false;
       }
+      if (this.video_id) {
+        elation.events.add(this, 'click', elation.bind(this, this.pauseVideo));
+      }
     }
     this.createObject3D = function() {
       if (this.properties.exists === false) return;
@@ -197,6 +200,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.properties.video_id) {
         var videoasset = this.getAsset('video', this.properties.video_id);
         if (videoasset) {
+          this.videoasset = videoasset;
           texture = videoasset.getInstance();
           if (videoasset.sbs3d) {
             texture.repeat.x = 0.5;
@@ -204,14 +208,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (videoasset.loop || this.properties.loop) {
             texture.image.loop = true;
           }
-          if (videoasset.auto_play) {
-            texture.image.play();
-          }
           texture.minFilter = THREE.LinearFilter;
           texture.magFilter = THREE.LinearFilter;
           elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
-          elation.events.add(this, 'click', elation.bind(this, this.pauseVideo));
           this.videotexture = texture;
+          if (videoasset.auto_play) {
+            texture.image.play();
+          } else {
+            texture.image.pause();
+          }
         }
       }
       if (this.properties.websurface_id) {
@@ -364,10 +369,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
       }
       if (this.video_id) {
-        var texture = elation.engine.assets.find('video', this.video_id);
-        if (!texture.image.playing) {
-          texture.image.play();
-          //console.log('start the video!', texture);
+        if (this.videoasset && this.videotexture) {
+          var texture = this.videotexture;
+          if (!texture.image.playing && this.videoasset.auto_start) {
+            texture.image.play();
+            //console.log('start the video!', texture);
+          }
         }
       }
       if (this.websurface_id) {
