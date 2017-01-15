@@ -9,7 +9,7 @@
     "postinstall": "./utils/init.sh",
     "version": "./utils/build.sh",
     "build": "./utils/build.sh",
-    "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run"
+    "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
 
   "devDependencies": {
