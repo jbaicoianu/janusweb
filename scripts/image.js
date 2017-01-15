@@ -41,10 +41,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusimage.extendclass.postinit.call(this);
       this.defineProperties({
-        image_id: { type: 'string', set: this.updateMaterial },
-        sbs3d: { type: 'boolean', default: false, set: this.updateMaterial },
-        ou3d: { type: 'boolean', default: false, set: this.updateMaterial },
-        reverse3d: { type: 'boolean', default: false, set: this.updateMaterial },
+        image_id: { type: 'string', set: this.setMaterialDirty },
+        sbs3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
+        ou3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
+        reverse3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
       });
     }
     this.createObject3D = function() {
@@ -104,8 +104,18 @@ elation.require(['janusweb.janusbase'], function() {
       this.sidematerial = sidemat;
       return facemat;
     }
+    this.setMaterialDirty = function() {
+      this.materialNeedsUpdate = true;
+    }
+    this.handleFrameUpdates = function() {
+      elation.engine.things.janusobject.extendclass.handleFrameUpdates.call(this);
+      if (this.materialNeedsUpdate) {
+        this.updateMaterial();
+      }
+    }
     this.updateMaterial = function() {
       this.asset = this.getAsset('image', this.image_id);
+      this.materialNeedsUpdate = false;
       var newtexture = false;
       if (this.asset) {
         newtexture = this.asset.getInstance();
