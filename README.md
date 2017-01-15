@@ -76,14 +76,12 @@ following steps:
 ```bash
 $ git clone https://github.com/jbaicoianu/janusweb
 $ cd janusweb
-$ npm install
+$ npm install --only=prod
 $ npm run build
 ```
 
 This will give you a full build of the latest verson of JanusWeb in your `build/` directory.  You 
 can then modify `build/index.html` however you see fit, and host it as suggested above.
-
-NOTE - if you see errors relating to node-canvas, make sure your system has `libgif-dev` installed.
 
 ## Arguments
 JanusWeb supports several arguments at initialization time to control how it behaves.
