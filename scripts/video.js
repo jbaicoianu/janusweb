@@ -12,7 +12,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'click', elation.bind(this, this.click));
     }
     this.createObject3D = function() {
-      this.asset = elation.engine.assets.find('video', this.properties.video_id, true);
+      this.asset = this.getAsset('video', this.video_id);
       if (this.asset) {
         var geo = this.createGeometry();
         var mat = this.createMaterial();
@@ -38,6 +38,8 @@ elation.require(['janusweb.janusbase'], function() {
         }
         if (this.asset.auto_play) {
           texture.image.play();
+        } else {
+          texture.image.pause();
         }
         texture.minFilter = THREE.LinearFilter;
         elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
