@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "./utils/init.sh",
+    "version": "npm run build && git add -A release",
     "build": "./utils/build.sh",
     "test": "./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
