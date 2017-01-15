@@ -1,8 +1,15 @@
 #!/bin/sh
 
 BUILDDIR=$(pwd)/build
+RELDIR=$(pwd)/release
+VERSION=$(node -pe "require('./package.json').version")
+
+
 if [ ! -e "$BUILDDIR" ]; then
   mkdir "$BUILDDIR"
+fi
+if [ ! -e "$RELDIR" ]; then
+  mkdir "$RELDIR"
 fi
 
 if [ -e "$BUILDDIR/media" ]; then
@@ -14,7 +21,7 @@ if [ -z "$CFGNAME" ]; then
   CFGNAME="config"
 fi
 
-cp -r $(pwd)/media "$BUILDDIR/media"
+cp -al $(pwd)/media "$BUILDDIR/media"
 mv "$BUILDDIR/media/index.html" "$BUILDDIR/index.html"
 if [ -e elation ] && [ -e elation/components/janusweb ]; then
   echo 'Building from project-local elation directory'
@@ -26,3 +33,6 @@ fi
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb janusweb.client engine.assetworker
 mv janusweb.css janusweb.js "$BUILDDIR"
 echo Built new release in \"$BUILDDIR/\"
+
+cd $BUILDDIR
+tar czf $RELDIR/janusweb-$VERSION.tar.gz .
