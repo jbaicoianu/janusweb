@@ -283,7 +283,6 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
 
       if (room) {
-        var changed = this.properties.url != url;
         if (!url) {
           url = this.properties.homepage || this.properties.url;
         } else {
@@ -379,7 +378,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           hashargs['janus.url'] = url;
         }
         var newhash = '#' + elation.utils.encodeURLParams(hashargs);
-        if (changed || document.location.hash != newhash) {
+        if (document.location.hash != newhash) {
           document.location.hash = (newhash == '#' ? '' : newhash);
         }
       }
