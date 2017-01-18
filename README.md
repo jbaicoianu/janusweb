@@ -110,6 +110,7 @@ JanusWeb supports several arguments at initialization time to control how it beh
   <tr><td> stats          </td><td> Enable render performance stats        </td><td> false                    </td></tr>
 
   <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
+  <tr><td> urltemplate    </td><td> Optional template for generating URLs  </td><td> (none)                   </td></tr>
 
   <tr><td> usevoip        </td><td> Enable or disable VOIP functionality
                                     (NOTE - disabled pending browser support 

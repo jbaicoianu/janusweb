@@ -43,7 +43,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         showchat:       { type: 'boolean', default: true },
         datapath:       { type: 'string', default: '/media/janusweb' },
         autoload:       { type: 'boolean', default: true },
-        networking:     { type: 'boolean', default: true }
+        networking:     { type: 'boolean', default: true },
+        urltemplate:    { type: 'string', default: false },
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
@@ -76,6 +77,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       this.updateRate = 15;
 
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
+      if (this.urltemplate) {
+        elation.template.add('janusweb.url', this.urltemplate);
+      }
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
@@ -341,16 +345,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           this.engine.client.player.properties.position.fromArray(pos);
           this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
         }
-        var hashargs = elation.url();
-        if (url == this.properties.homepage) {
-          delete hashargs['janus.url'];
-        } else {
-          hashargs['janus.url'] = url;
-        }
-        var newhash = '#' + elation.utils.encodeURLParams(hashargs);
-        if (changed || document.location.hash != newhash) {
-          document.location.hash = (newhash == '#' ? '' : newhash);
-        }
+        this.updateClientURL();
+
         if (!this.currentroom.loaded) {
           elation.events.add(this.currentroom, 'janus_room_load', elation.bind(this, function() {
             this.currentroom.enable();
@@ -363,15 +359,49 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         this.load(url, true);
       }
     }
-    this.handlePopstate = function(ev) {
-      var hashargs = elation.url();
-      var hashurl = hashargs['janus.url'];
-      if (hashurl && hashurl != this.properties.url && !this.loading) {
-        this.setActiveRoom(hashurl);
-      } else if (!hashurl && this.properties.url != this.homepage) {
-        this.setActiveRoom(this.homepage);
+    this.updateClientURL = function() {
+      if (this.urltemplate) {
+        var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
+        var m = document.location.pathname.match(re);
+        if (m && m[1] !== this.currentroom.url) {
+          var url = elation.template.get('janusweb.url', {url: this.currentroom.url});
+          //history.pushState({}, '', '/sites/' + this.currentroom.url);
+          history.pushState({}, '', url);
+        } else {
+          var url = elation.template.get('janusweb.url', {url: this.currentroom.url});
+          history.pushState({}, '', url);
+        }
+      } else {
+        var hashargs = elation.url();
+        if (url == this.properties.homepage) {
+          delete hashargs['janus.url'];
+        } else {
+          hashargs['janus.url'] = url;
+        }
+        var newhash = '#' + elation.utils.encodeURLParams(hashargs);
+        if (changed || document.location.hash != newhash) {
+          document.location.hash = (newhash == '#' ? '' : newhash);
+        }
       }
     }
+    this.handlePopstate = function(ev) {
+      if (this.urltemplate) {
+        var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
+        var m = document.location.pathname.match(re);
+        if (m) {
+          this.setActiveRoom(m[1]);
+        }
+      } else {
+        var hashargs = elation.url();
+        var hashurl = hashargs['janus.url'];
+        if (hashurl && hashurl != this.properties.url && !this.loading) {
+          this.setActiveRoom(hashurl);
+        } else if (!hashurl && this.properties.url != this.homepage) {
+          this.setActiveRoom(this.homepage);
+        }
+      }
+    }
+
     this.showLoadURL = function(ev) {
       if (ev.value == 1) {
         this.engine.client.ui.urlbar.selectall();

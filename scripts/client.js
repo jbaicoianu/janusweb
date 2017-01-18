@@ -50,7 +50,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       resolution: args.resolution, 
       url: args.url,
       networking: args.networking,
-      autoload: args.autoload
+      autoload: args.autoload,
+      urltemplate: args.urltemplate
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -89,6 +90,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           showchat: this.args.showchat,
           networking: this.args.networking,
           autoload: this.args.autoload,
+          urltemplate: this.args.urltemplate,
         }
       });
       this.janusweb = things.children.janusweb;
