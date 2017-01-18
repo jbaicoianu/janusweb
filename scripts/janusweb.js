@@ -266,7 +266,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       var dataurl = 'data:text/html,' + encodeURIComponent(source);
       return this.load(dataurl, makeactive, baseurl)
     }
-    this.setActiveRoom = function(url, pos) {
+    this.setActiveRoom = function(url, pos, skipURLUpdate) {
       this.clear();
 
       var room = false;
@@ -283,7 +283,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
 
       if (room) {
-        var changed = this.url != url;
+        var changed = this.properties.url != url;
         if (!url) {
           url = this.properties.homepage || this.properties.url;
         } else {
@@ -345,7 +345,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           this.engine.client.player.properties.position.fromArray(pos);
           this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
         }
-        if (changed) {
+        if (changed && !skipURLUpdate) {
           this.updateClientURL();
         }
 
@@ -391,13 +391,13 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
         var m = document.location.pathname.match(re);
         if (m) {
-          this.setActiveRoom(m[1]);
+          this.setActiveRoom(m[1], null, true);
         }
       } else {
         var hashargs = elation.url();
         var hashurl = hashargs['janus.url'];
         if (hashurl && hashurl != this.properties.url && !this.loading) {
-          this.setActiveRoom(hashurl);
+          this.setActiveRoom(hashurl, null, true);
         } else if (!hashurl && this.properties.url != this.homepage) {
           this.setActiveRoom(this.homepage);
         }
