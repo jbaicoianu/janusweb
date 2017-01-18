@@ -283,6 +283,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
 
       if (room) {
+        var changed = this.url != url;
         if (!url) {
           url = this.properties.homepage || this.properties.url;
         } else {
@@ -344,7 +345,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           this.engine.client.player.properties.position.fromArray(pos);
           this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
         }
-        this.updateClientURL();
+        if (changed) {
+          this.updateClientURL();
+        }
 
         if (!this.currentroom.loaded) {
           elation.events.add(this.currentroom, 'janus_room_load', elation.bind(this, function() {
