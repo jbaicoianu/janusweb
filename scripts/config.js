@@ -12,6 +12,7 @@ elation.config.set('dependencies.main', 'scripts/utils/elation.js');            
 
 elation.config.set('demohack.vive', false);
 
+elation.config.set('share.imagebase', 'media/images/share/');
 elation.config.set('share.targets.imgur.clientid', '68bc9426b322db4');
 elation.config.set('share.targets.dropbox.clientid', '8u2gus0kinv8172');
 elation.config.set('share.targets.google.clientid', '374523350201-p566ctvssq49sa48aj2gistjuak3ci7k.apps.googleusercontent.com');
