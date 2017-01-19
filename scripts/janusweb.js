@@ -346,7 +346,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
           this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
         }
         if (changed && !skipURLUpdate) {
-          this.updateClientURL();
+          this.updateClientURL(url);
         }
 
         if (!this.currentroom.loaded) {
@@ -361,7 +361,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         this.load(url, true);
       }
     }
-    this.updateClientURL = function() {
+    this.updateClientURL = function(url) {
       if (this.urltemplate) {
         var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
         var m = document.location.pathname.match(re);
