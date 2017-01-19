@@ -390,7 +390,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.urltemplate) {
         var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
         var m = document.location.pathname.match(re);
-        if (m) {
+        if (m && m[1] != this.currentroom.url) {
           this.setActiveRoom(m[1], null, true);
         }
       } else {
