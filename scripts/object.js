@@ -182,7 +182,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           color = false,
           blend_src = false,
           blend_dest = false,
-          side = this.sidemap[this.properties.cull_face];
+          side = this.sidemap[this.properties.cull_face],
+          textureasset;
 
       this.textureNeedsUpdate = false;
 
@@ -327,7 +328,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         var m = new THREE.MultiMaterial(materials);
       } else {
-        var m = (this.properties.lighting != false ? new THREE.MeshPhysicalMaterial() : new THREE.MeshBasicMaterial());
+        var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
         //var m = new THREE.MeshBasicMaterial();
         m.anisotropy = 16;
         m.name = oldmat.name;
