@@ -225,7 +225,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
       }
       if (this.showchat) {
-        this.chat = elation.janusweb.chat({append: document.body, client: this.network, player: this.engine.client.player});
+        this.chat = elation.janusweb.chat({append: document.body, client: this.engine.client, network: this.network});
       }
     }
     this.clear = function() {
