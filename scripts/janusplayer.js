@@ -79,15 +79,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
-      if (navigator.getVRDisplays) {
-        this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Enter VR'});
-        this.engine.client.buttons.add('vr', this.vrbutton);
-        elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this, function(ev) { this.engine.client.toggleVR(ev); }));
-        elation.events.add(this.engine.client.view, elation.bind(this, function(ev) {
-          var vrdisplay = ev.data;
-          elation.events.add(ev.data, 'vrdisplaypresentchange', elation.bind(this, function() { this.vrbutton.label = (vrdisplay && vrdisplay.isPresenting ? 'Exit' : 'Enter') + ' VR'; }));
-        }));
-      }
+      this.updateVRButton();
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -110,6 +102,19 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.engine.systems.controls.deactivateContext('janusplayer');
       elation.engine.things.janusplayer.extendclass.disable.call(this);
     }
+    this.updateVRButton = function() {
+      if (this.engine.client.view.vrdisplay) {
+        if (!this.vrbutton) {
+          this.vrbutton = elation.ui.button({classname: 'janusweb_vr', label: 'Enter VR'});
+          this.engine.client.buttons.add('vr', this.vrbutton);
+          elation.events.add(this.vrbutton, 'ui_button_click', elation.bind(this, function(ev) { this.engine.client.toggleVR(ev); }));
+          elation.events.add(this.engine.client.view, elation.bind(this, function(ev) {
+            var vrdisplay = ev.data;
+            elation.events.add(ev.data, 'vrdisplaypresentchange', elation.bind(this, function() { this.vrbutton.label = (vrdisplay && vrdisplay.isPresenting ? 'Exit' : 'Enter') + ' VR'; }));
+          }));
+        }
+      }
+    }
     this.activateVOIP = function(ev) {
       var on = (ev.value == 1);
       if (on) {
@@ -117,6 +122,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       } else {
         this.voip.stop();
       }
+    }
+    this.updateHMD = function(vrdevice) {
+      if (vrdevice && !this.vrbutton) {
+        this.updateVRButton();
+      }
+      elation.engine.things.janusplayer.extendclass.updateHMD.call(this, vrdevice);
     }
     this.handleVOIPStart = function() {
       this.voipbutton.addclass('state_recording');
