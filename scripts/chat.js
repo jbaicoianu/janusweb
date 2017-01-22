@@ -8,10 +8,15 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
       this.args.bottom = true;
       this.args.resizable = false;
       this.args.controls = true;
-      this.player = this.args.player;
       this.client = this.args.client;
+      this.player = this.args.player || this.client.player;
+      this.network = this.args.network;
 
       elation.janusweb.chat.extendclass.init.call(this);
+
+      this.chatbutton = elation.ui.button({classname: 'janusweb_chat', label: 'Chat'});
+      elation.events.add(this.chatbutton, 'ui_button_click', elation.bind(this, this.toggleChat));
+      this.client.buttons.add('chat', this.chatbutton);
 
       this.messagecollection = elation.collection.indexed({index: 'timestamp'});
       var panel = elation.ui.panel_vertical({classname: 'janusweb_chat_panel'});
@@ -28,6 +33,7 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
       });
 
       this.setcontent(panel);
+      this.hide();
     }
     this.addmessage = function(msg) {
       if (!msg.timestamp) msg.timestamp = window.performance.now();
@@ -42,7 +48,7 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
       this.refresh();
     }
     this.sendmessage = function() {
-      this.client.send({'method': 'chat', data: this.input.value});
+      this.network.send({'method': 'chat', data: this.input.value});
       var msg = {userId: 'me', message: this.input.value, self: true};
       this.addmessage(msg);
       elation.events.fire({element: this, type: 'janusweb_chat_send', data: msg});
@@ -59,6 +65,15 @@ elation.require(['ui.window', 'ui.list', 'ui.input', 'elation.collection'], func
     this.blur = function() {
       if (this.player) {
         this.player.enable();
+      }
+    }
+    this.toggleChat = function() {
+      if (this.hidden) {
+        this.show();
+        this.refresh();
+      } else {
+        this.hide();
+        this.refresh();
       }
     }
   }, elation.ui.window);
