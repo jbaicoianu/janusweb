@@ -59,6 +59,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
   });
   elation.component.add('janusweb.client', function() {
     this.initEngine = function() {
+      this.initLoader();
+
       var hashargs = elation.url();
        
       this.enginecfg.stats = false;
@@ -77,6 +79,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.picking = true;
 
       this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
+      setTimeout(elation.bind(this, function() {
+        this.initSharing();
+      }), 0);
     }
     this.initWorld = function() {
       var things = this.world.load({
@@ -106,6 +111,36 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
       if (this.shownavigation) {
         this.ui = elation.janusweb.ui({append: document.body, client: this});
+      }
+    }
+    this.initLoader = function() {
+      var loader = document.getElementsByClassName('engine_loading')[0];
+      if (loader) {
+        var logo = loader.getElementsByTagName('svg')[0];
+        var label = loader.getElementsByClassName('janusweb_loading_status')[0];
+        this.loadingscreen = {
+          container: loader,
+          logo: logo,
+          label: label
+        };
+        elation.events.add(this, 'engine_error', elation.bind(this, this.handleEngineError));
+        elation.events.add(this.engine, 'engine_start', elation.bind(this, this.handleEngineStart));
+      }
+    }
+    this.handleEngineStart = function(ev) {
+      if (this.loadingscreen) {
+        this.loadingscreen.container.parentNode.removeChild(this.loadingscreen.container);
+      }
+    }
+    this.handleEngineError = function(ev) {
+      console.log('omg error!', ev);
+      if (this.loadingscreen) {
+        this.loadingscreen.label.innerHTML = 'Error!';
+        elation.html.addclass(this.loadingscreen.container, 'state_error');
+        var err = ev.data;
+        var msg = err.message + '\n' + err.stack;
+
+        var errordiv = elation.html.create({tag: 'pre', append: this.loadingscreen.container, content: msg, classname: 'janusweb_error'});
       }
     }
     this.showAbout = function() {
