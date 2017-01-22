@@ -26,6 +26,104 @@
   </head>
   <body>
     <script>elation.janusweb.init({homepage: 'http://www.janusvr.com/index.html'})</script>
+
+  <div class="engine_loading janusweb_loading">
+    <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+       width="198px" height="198px" viewBox="0 0 198 198" enable-background="new 0 0 198 198" xml:space="preserve">
+    <g id="New_Symbol">
+    </g>
+    <g id="New_Symbol_1_">
+    </g>
+    <g>
+      <g>
+        <path fill="#4CB96F" d="M139.831,74.956c0-22.503-18.242-40.703-40.744-40.703s-40.745,18.18-40.745,40.682
+          c0,5.449,1.078,10.332,3.018,15.332h-2.909l24.632,69h28.762l27.877-69h-2.909C138.753,85.267,139.831,80.405,139.831,74.956z"/>
+        <g>
+          <g id="XMLID_12_">
+            <path fill="#F0F8FA" stroke="#4CB96F" stroke-width="1.5" stroke-miterlimit="10" d="M91.647,147.08
+              c-0.974-4.919-0.969-15.703-1.18-17.257c-0.939-6.92-1.794-6.623-6.626-14.17c-4.563-7.125-6.438-13.688-8.221-20.049
+              C68.408,69.89,69.984,43.75,56.248,53.503c-9.44,6.703-11.576,24.607-11.21,27.352c1.18,8.85,1.911,8.024-3.663,16.716
+              c-5.802,9.046-2.975,10.57-0.467,12.562c1.423,1.13,4.113,4.775,4.21,8.524c0.482,18.635,9.966,18.836,20.291,18.836
+              c10.325,0,4.13,1.77,14.749,26.254l13.816-4.277C95.944,158.585,93.575,156.812,91.647,147.08z"/>
+          </g>
+          <g id="XMLID_11_">
+            <path fill="#F0F8FA" stroke="#4CB96F" stroke-width="1.5" stroke-miterlimit="10" d="M106.412,147.08
+              c0.974-4.919,0.969-15.703,1.18-17.257c0.939-6.92,1.794-6.623,6.626-14.17c4.563-7.125,6.438-13.688,8.221-20.049
+              c7.211-25.715,5.635-51.854,19.371-42.101c9.44,6.703,11.576,24.607,11.21,27.352c-1.18,8.85-1.911,8.024,3.663,16.716
+              c5.802,9.046,2.975,10.57,0.467,12.562c-1.423,1.13-4.113,4.775-4.21,8.524c-0.482,18.635-9.966,18.836-20.291,18.836
+              c-10.325,0-4.13,1.77-14.749,26.254l-13.816-4.277C102.116,158.585,104.484,156.812,106.412,147.08z"/>
+          </g>
+        </g>
+      </g>
+    </g>
+    </svg>
+    <h2 class="janusweb_loading_status">Loading</h2>
+  </div>
+
+<style>
+.janusweb_loading {
+  background: black;
+  text-align: center;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+.janusweb_loading svg {
+  margin: 0 auto;
+  margin-top: 10%;
+  display: block;
+  animation: pulsatesize 2s linear;
+  animation-iteration-count: infinite; 
+}
+.janusweb_loading h2 {
+  color: #000000;
+  text-shadow: 0 0 5px #4CB96F;
+  font-size: 4em;
+  margin: 0;
+  margin-top: -0.5em;
+  font-family: sans-serif;
+  animation: pulsate 2s linear;
+  animation-iteration-count: infinite; 
+}
+.janusweb_loading.state_error h2 {
+  color: #110000;
+  text-shadow: 0 0 5px #cc0000;
+  animation: none;
+}
+.janusweb_loading pre {
+  text-align: left;
+  width: 70em;
+  max-width: 95%;
+  overflow: auto;
+  margin: 0 auto;
+  font-size: .8em;
+}
+@keyframes pulsatesize {
+    0% { 
+        transform: scale(.9);
+    }
+    50% { 
+        transform: scale(1);
+    }
+    100% { 
+        transform: scale(.9);
+    }
+}
+@keyframes pulsate {
+    0% { 
+        color: #000000;
+    }
+    50% { 
+        color: #002200;
+    }
+    100% { 
+        color: #000000;
+    }
+}
+
+</style>
   </body>
 </html>
 
