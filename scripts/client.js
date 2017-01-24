@@ -84,10 +84,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }), 0);
     }
     this.initSharing = function() {
-      this.sharedialog = elation.engine.sharing({append: document.body, client: this});
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
-      elation.events.add(this.sharebutton, 'ui_button_click', elation.bind(this.sharedialog, this.sharedialog.showShareDialog));
       this.buttons.add('sharing', this.sharebutton);
+
+      this.sharedialog = elation.engine.sharing({append: document.body, client: this, anchor: this.sharebutton});
+      elation.events.add(this.sharebutton, 'ui_button_click', elation.bind(this.sharedialog, this.sharedialog.showShareDialog));
     }
     this.initWorld = function() {
       var things = this.world.load({
