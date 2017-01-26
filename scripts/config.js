@@ -14,12 +14,19 @@ elation.config.set('demohack.vive', false);
 
 elation.config.set('share.imagebase', '/media/images/share/');
 elation.config.set('share.targets.imgur.clientid', '68bc9426b322db4'); // web.janusvr.com
-//elation.config.set('share.targets.imgur.clientid', '96d8f6e2515953a');// bai.dev
 elation.config.set('share.targets.dropbox.clientid', '8u2gus0kinv8172');
 elation.config.set('share.targets.googledrive.clientid', '374523350201-p566ctvssq49sa48aj2gistjuak3ci7k.apps.googleusercontent.com');
 elation.config.set('share.targets.yahoo.clientid', '374523350201-p566ctvssq49sa48aj2gistjuak3ci7k.apps.googleusercontent.com');
 elation.config.set('share.targets.facebook.clientid', '1197654320349894');
 elation.config.set('share.targets.file.enabled', true);
+
+// FIXME - hack for dev, we should support role-based config
+if (typeof document != 'undefined' && document.location.origin == 'https://bai.dev.supcrit.com') {
+  elation.config.set('share.imagebase', null);
+  elation.config.set('share.targets.imgur.clientid', '96d8f6e2515953a');// bai.dev
+  elation.config.set('share.targets.facebook.clientid', '1200979896684003');
+}
+
 
 // You probably don't want to edit past this line unless you know what you're doing
 // --------------------------------------------------------------------------------
@@ -32,6 +39,7 @@ elation.config.set('engine.assets.font.path', elation.config.get('janusweb.datap
 WebVRConfig = {
   FORCE_ENABLE_VR: false,
   MOUSE_KEYBOARD_CONTROLS_DISABLED: true,
-  DEFER_INITIALIZATION: false
+  DEFER_INITIALIZATION: true,
+  BUFFER_SCALE: 0.5
 };
 
