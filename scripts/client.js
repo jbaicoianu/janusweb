@@ -51,7 +51,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       url: args.url,
       networking: args.networking,
       autoload: args.autoload,
-      urltemplate: args.urltemplate
+      urltemplate: args.urltemplate,
+      useWebVRPolyfill: args.useWebVRPolyfill
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -77,6 +78,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.systems.push("sound");
       this.enginecfg.crosshair = false;
       this.enginecfg.picking = true;
+      this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
 
       this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
       setTimeout(elation.bind(this, function() {
