@@ -105,28 +105,30 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       var objects = this.getGhostObjects();
       if (headid && this.head) {
         var assetid = headid;
-        if (objects && objects[headid]) {
-          assetid = this.id + '_head_model';
-          var asset = elation.engine.assets.get({
-            assettype: 'model',
-            name: assetid,
-            src: objects[headid].src,
-            mtl: objects[headid].mtl 
+        if (!this.face || this.face.janusid != assetid) {
+          if (objects && objects[headid]) {
+            assetid = this.id + '_head_model';
+            var asset = elation.engine.assets.get({
+              assettype: 'model',
+              name: assetid,
+              src: objects[headid].src,
+              mtl: objects[headid].mtl 
+            });
+          }
+          if (headpos) {
+            this.head.properties.position.copy(headpos);
+          }
+
+          this.face = this.head.spawn('janusobject', null, {
+            janus: this.janus,
+            room: this.room,
+            janusid: assetid,
+            position: headpos.clone().negate(),
+            orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
+            lighting: this.lighting,
+            cull_face: 'none'
           });
         }
-        if (headpos) {
-          this.head.properties.position.copy(headpos);
-        }
-
-        this.face = this.head.spawn('janusobject', null, {
-          janus: this.janus,
-          room: this.room,
-          janusid: assetid,
-          position: headpos.clone().negate(),
-          orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
-          lighting: this.lighting,
-          cull_face: 'none'
-        });
         //this.head.properties.position.copy(headpos);
       }
     }
@@ -197,8 +199,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
 
         if (movedata.view_dir && movedata.up_dir) {
           if (this.head) {
-            ydir.fromArray(parser.getVectorValue(movedata.up_dir, [0,1,0])),
-            zdir.fromArray(parser.getVectorValue(movedata.view_dir, [0,0,1])),
+            ydir.fromArray(parser.getVectorValue(movedata.up_dir, [0,1,0]));
+            zdir.fromArray(parser.getVectorValue(movedata.view_dir, [0,0,1]));
             xdir.crossVectors(zdir, ydir);
 
             xdir.crossVectors(zdir, ydir).normalize();
@@ -207,15 +209,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             matrix.makeBasis(xdir, ydir, zdir);
             this.head.properties.orientation.setFromRotationMatrix(matrix);
             if (movedata.head_pos && this.face) {
-              var headpos = this.face.properties.position;
+              var headpos = this.head.properties.position;
+              var facepos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
-/*
-              headpos.copy(this.properties.head_pos).negate();
-              headpos.x += newpos[0];
-              headpos.y += newpos[1];
-              headpos.z += newpos[2];
-*/
               headpos.fromArray(newpos);
+              facepos.fromArray([-newpos[0], -newpos[1], -newpos[2]]).sub(this.properties.head_pos);
             }
           }
         }

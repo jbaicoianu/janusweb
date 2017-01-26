@@ -29,10 +29,10 @@ elation.component.add('engine.things.remoteplayer', function() {
       'position': [0,0.6,-0.0]
     });
     this.neck = this.torso.spawn('generic', this.properties.player_name + '_neck', {
-      'position': [0,0.4,0]
+      'position': [0,0.4,0],
     });
     this.head = this.neck.spawn('generic', this.properties.player_name + '_head', {
-      'position': [0,0,0],
+      'position': [0,1.4,0],
     });
 /*
     this.face = this.head.spawn('maskgenerator', this.properties.player_name + '_mask', {
