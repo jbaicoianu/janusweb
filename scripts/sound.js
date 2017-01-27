@@ -11,9 +11,12 @@ elation.require(['janusweb.janusbase'], function() {
         dist: { type: 'float', default: 1.0 },
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
         gain: { type: 'float', default: 1.0, set: this.updateSound },
-        starttime: { type: 'float', default: 0.0, set: this.updateSound }
+        starttime: { type: 'float', default: 0.0, set: this.updateSound },
+        rect: { type: 'string', set: this.updateSound }
       });
       Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
+
+      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.checkBounds));
     }
     this.createObject3D = function() {
       return new THREE.Object3D();
@@ -35,15 +38,19 @@ elation.require(['janusweb.janusbase'], function() {
       }
       var listener = this.engine.systems.sound.getRealListener();
       if (listener) {
-        this.audio = new THREE.PositionalAudio(listener);
-        if (this.properties.distanceModel) {
-          this.audio.panner.distanceModel = this.properties.distanceModel;
-        }
-        //this.audio.panner.maxDistance = this.properties.distance;
-        if (this.dist) {
-          this.audio.setRefDistance(this.dist);
+        if (this.rect) {
+          this.audio = new THREE.Audio(listener);
         } else {
-          //this.audio.panner.distanceModel = 'linear';
+          this.audio = new THREE.PositionalAudio(listener);
+          if (this.properties.distanceModel) {
+            this.audio.panner.distanceModel = this.properties.distanceModel;
+          }
+          //this.audio.panner.maxDistance = this.properties.distance;
+          if (this.dist) {
+            this.audio.setRefDistance(this.dist);
+          } else {
+            //this.audio.panner.distanceModel = 'linear';
+          }
         }
         this.audio.autoplay = this.auto_play;
         this.audio.setLoop(this.loop);
@@ -64,7 +71,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.createAudio(url);
     }
     this.play = function() {
-      if (this.audio && this.audio.source.buffer) {
+      if (this.audio && this.audio.source && this.audio.source.buffer) {
         this.audio.setVolume(this.gain);
         if (this.audio.isPlaying) {
           this.audio.source.currentTime = 0;
@@ -95,7 +102,31 @@ elation.require(['janusweb.janusbase'], function() {
         //this.play();
         this.audio.setVolume(this.gain);
       }
+      if (this.rect) {
+        var parts = this.rect.split(' ');
+        this.bounds = new THREE.Box3(new THREE.Vector3(parts[0], -Infinity, parts[1]), new THREE.Vector3(parts[2], Infinity, parts[3]));
+      } else {
+        this.bounds = false;
+      }
     }
+    this.checkBounds = (function() {
+      var worldpos = new THREE.Vector3();
+      return function() {
+        if (this.bounds && this.audio) {
+          var listener = this.engine.systems.sound.getRealListener();
+          if (listener) {
+            worldpos.set(0,0,0).applyMatrix4(listener.matrixWorld);
+          }
+          if (this.bounds.containsPoint(worldpos)) {
+            if (!this.audio.isPlaying) {
+              this.play();
+            }
+          } else if (this.audio.isPlaying) {
+            this.pause();
+          }
+        }
+      }
+    })();
     this.getProxyObject = function() {
       var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this);
       proxy._proxydefs = {
