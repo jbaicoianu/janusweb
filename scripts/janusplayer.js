@@ -117,10 +117,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.activateVOIP = function(ev) {
       var on = (ev.value == 1);
-      if (on) {
-        this.voip.start();
-      } else {
-        this.voip.stop();
+      if (this.voip) {
+        if (on) {
+          this.voip.start();
+        } else {
+          this.voip.stop();
+        }
       }
     }
     this.updateHMD = function(vrdevice) {
