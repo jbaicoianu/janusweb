@@ -327,7 +327,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
             onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
             onColliderEnter: ['callback', 'janus_room_collider_enter'],
             onColliderExit:  ['callback', 'janus_room_collider_exit'],
-            onClick:         ['callback', 'click', 'engine.client.container'],
+            onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
             onMouseDown:     ['callback', 'janus_room_mousedown'],
             onMouseUp:       ['callback', 'janus_room_mouseup'],
             onKeyDown:       ['callback', 'janus_room_keydown'],
