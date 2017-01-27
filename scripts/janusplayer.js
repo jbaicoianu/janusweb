@@ -11,8 +11,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       });
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
-        'browse_back': ['gamepad_0_button_4', elation.bind(this, this.browseBack)],
-        'browse_forward': ['gamepad_0_button_5', elation.bind(this, this.browseForward)],
+        'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
+        'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
       });
       this.vectors = {
         xdir: new THREE.Vector3(1, 0, 0),
