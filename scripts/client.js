@@ -82,15 +82,19 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
       this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
       setTimeout(elation.bind(this, function() {
-        this.initSharing();
+        this.initButtons();
       }), 0);
     }
-    this.initSharing = function() {
+    this.initButtons = function() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
-      this.buttons.add('sharing', this.sharebutton);
-
       this.sharedialog = elation.engine.sharing({append: document.body, client: this, anchor: this.sharebutton});
       elation.events.add(this.sharebutton, 'ui_button_click', elation.bind(this.sharedialog, this.sharedialog.showShareDialog));
+      this.buttons.add('sharing', this.sharebutton);
+
+      this.fullscreenbutton = elation.ui.button({ classname: 'janusweb_fullscreen', label: 'Expand' });
+      elation.events.add(this.fullscreenbutton, 'ui_button_click', elation.bind(this, this.toggleFullscreen));
+      elation.events.add(document, 'fullscreenchange,webkitfullscreenchange,mozfullscreenchange', elation.bind(this, function(ev) { this.toggleFullscreen({ value: this.view.isFullscreen() }, true); this.fullscreenbutton.container.blur(); this.view.rendersystem.renderer.domElement.focus(); }));
+      this.buttons.add('fullscreen', this.fullscreenbutton);
     }
     this.initWorld = function() {
       var things = this.world.load({
@@ -156,6 +160,19 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});
       var frame = elation.ui.iframe({src: 'http://github.com/jbaicoianu/janusweb/', classname: 'janusweb_about'});
       aboutwin.setcontent(frame);
+    }
+    this.toggleFullscreen = function(ev, updateOnly) {
+      var view = this.view;
+      if (!updateOnly && view && (ev.value == 1 || typeof ev.value == 'undefined')) {
+        view.toggleFullscreen();
+      }
+      if (view.isFullscreen()) {
+        this.fullscreenbutton.addclass('state_fullscreen');
+        this.fullscreenbutton.setLabel('Shrink');
+      } else {
+        this.fullscreenbutton.removeclass('state_fullscreen');
+        this.fullscreenbutton.setLabel('Expand');
+      }
     }
   }, elation.engine.client);
 });
