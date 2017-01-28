@@ -39,7 +39,7 @@ elation.config.set('engine.assets.font.path', elation.config.get('janusweb.datap
 WebVRConfig = {
   FORCE_ENABLE_VR: false,
   MOUSE_KEYBOARD_CONTROLS_DISABLED: true,
-  DEFER_INITIALIZATION: true,
+  DEFER_INITIALIZATION: false,
   BUFFER_SCALE: 0.5
 };
 
