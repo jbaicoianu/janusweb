@@ -145,10 +145,10 @@
 }
 .janusweb_ui_buttons .ui_button::before {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   margin: 0 auto;
-  font-size: 2em;
+  font-size: 1.5em;
 }
 .janusweb_ui_buttons .janusweb_vr::before {
   content: '\00a0';
@@ -165,6 +165,14 @@
   content: '\e246';
   display: block;
   font-family: 'Glyphicons';
+}
+.janusweb_ui_buttons .janusweb_fullscreen::before {
+  content: '\e237';
+  display: block;
+  font-family: 'Glyphicons';
+}
+.janusweb_ui_buttons .janusweb_fullscreen.state_fullscreen::before {
+  content: '\e238';
 }
 
 @font-face {
