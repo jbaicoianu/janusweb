@@ -3,8 +3,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusparticle.extendclass.postinit.call(this);
       this.defineProperties({ 
-        emitter_id: { type: 'string', refreshGeometry: true },
-        emitter_scale: { type: 'vector3', default: [1, 1, 1]},
+        emitter_id: { type: 'string', set: this.updateGeometry },
+        emitter_scale: { type: 'vector3', default: [1, 1, 1], set: this.updateGeometry},
         image_id: { type: 'string', set: this.updateMaterial },
         rate: { type: 'float', default: 1 },
         count: { type: 'int', default: 0 },
@@ -37,7 +37,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
     this.createObject3D = function() {
-      var geo = this.geometry = new THREE.Geometry()
+      var geo = this.geometry = new THREE.BufferGeometry()
 
       var texture = null;
       if (this.image_id) {
@@ -71,12 +71,34 @@ elation.require(['janusweb.janusbase'], function() {
         size: this.particle_scale.x + this.rand_scale.x, 
         transparent: true, 
         opacity: this.opacity,
-        //alphaTest: 0.01,
-        blending: THREE.AdditiveBlending
+        alphaTest: 0.001,
+        //blending: THREE.AdditiveBlending,
+        vertexColors: THREE.VertexColors
       });
       this.scale.set(1,1,1);
       var obj = new THREE.Points(geo, mat);
       return obj;
+    }
+    this.updateGeometry = function() {
+      if (this.emitter_id) {
+        var asset = this.getAsset('model', this.emitter_id);
+        if (asset) {
+          this.emitmesh = asset.getInstance();
+
+          if (asset.loaded) {
+            this.emitpoints = null;
+            this.loaded = true;
+            this.createParticles();
+          } else {
+            elation.events.add(asset, 'asset_load_complete', elation.bind(this, function() { 
+              this.emitpoints = null;
+              this.loaded = true; 
+              this.createParticles(); 
+              this.start(); 
+            }));
+          }
+        }
+      }
     }
     this.createForces = function() {
       elation.engine.things.janusparticle.extendclass.createForces.call(this);
@@ -89,24 +111,39 @@ elation.require(['janusweb.janusbase'], function() {
         this.extractEmitPoints(this.emitmesh);
       }
 
+      var geo = this.geometry;
       var count = this.count;
+      var position = (geo.attributes.position && geo.attributes.position.count == count ? geo.attributes.position.array : new Float32Array(count * 3));
+      var color = (geo.attributes.color && geo.attributes.color.count == count ? geo.attributes.color.array : new Float32Array(count * 3));
+
       for (var i = 0; i < count; i++) {
         var point = this.createPoint();
         this.resetPoint(point);
 
-        this.geometry.vertices[i] = point.pos;
+        //this.geometry.vertices[i] = point.pos;
         this.particles[i] = point;
+
+        position[i*3] = point.pos.x;
+        position[i*3+1] = point.pos.y;
+        position[i*3+2] = point.pos.z;
+
+        color[i*3] = point.color.r;
+        color[i*3+1] = point.color.g;
+        color[i*3+2] = point.color.b;
       }
-      if (this.geometry.vertices.length > count) {
-        this.geometry.vertices.splice(count)
-      }
+
+      geo.addAttribute('position', new THREE.BufferAttribute(position, 3));
+      geo.addAttribute('color', new THREE.BufferAttribute(color, 3));
+
       this.created = true;
       this.emitted = 0;
       this.currentpoint = 0;
       this.lasttime = performance.now();
 
       this.updateBoundingSphere();
-      setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
+      if (this.duration > 0) {
+        setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
+      }
     }
     this.updateParticles = function(ev) {
       if (!this.loaded || !this.started) return;
@@ -126,16 +163,15 @@ elation.require(['janusweb.janusbase'], function() {
         var idx = (i + startpoint) % count;
         var p = this.particles[idx];
         if (p.active == 1) {
-          this.updatePoint(p, elapsed/1000);
+          this.updatePoint(p, idx, elapsed/1000);
           if (now > p.endtime) {
             p.active = (loop ? 0 : 2);
           }
-
         } else if (p.active == 0) {
           if (spawncount > emitted) {
-            this.resetPoint(p);
+            this.resetPoint(p, idx);
             p.starttime = now;
-            p.endtime = endtime;
+            p.endtime = (this.duration > 0 ? endtime : Infinity);
             p.active = 1;
             emitted++;
             this.currentpoint = (this.currentpoint + 1) % count;
@@ -144,7 +180,8 @@ elation.require(['janusweb.janusbase'], function() {
       }
       this.lasttime = now;
 
-      this.objects['3d'].geometry.verticesNeedUpdate = true;
+      this.geometry.attributes.position.needsUpdate = true;
+      this.geometry.attributes.color.needsUpdate = true;
       this.refresh();
     }
     this.updateBoundingSphere = function() {
@@ -159,6 +196,7 @@ elation.require(['janusweb.janusbase'], function() {
         accel: new THREE.Vector3(0, 0, 0),
         scale: new THREE.Vector3(1,1,1),
         color: new THREE.Color(255, 255, 255),
+        rand_col: new THREE.Color(0, 0, 0),
         active: 0,
         start: 0,
         end: 0
@@ -166,15 +204,27 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updatePoint = (function() {
       var tmpvec = new THREE.Vector3();
-      return function(point, delta) {
+      return function(point, idx, delta) {
         tmpvec.copy(point.accel).multiplyScalar(delta);
         point.vel.add(tmpvec);
 
         tmpvec.copy(point.vel).multiplyScalar(delta);
         point.pos.add(tmpvec);
+
+        var pos = this.geometry.attributes.position.array,
+            color = this.geometry.attributes.color.array,
+            offset = idx * 3;
+
+        pos[offset] = point.pos.x;
+        pos[offset+1] = point.pos.y;
+        pos[offset+2] = point.pos.z;
+
+        color[offset] = point.color.r;
+        color[offset+1] = point.color.g;
+        color[offset+2] = point.color.b;
       }
     })();
-    this.resetPoint = function(point) {
+    this.resetPoint = function(point, idx) {
       var rand_pos = this.properties.rand_pos;
       var randomInRange = function(range) {
         //return (Math.random() - .5) * range;
@@ -188,8 +238,10 @@ elation.require(['janusweb.janusbase'], function() {
 
       var vel = point.vel,
           accel = point.accel,
+          col = point.color,
           rand_vel = this.properties.rand_vel,
-          rand_accel = this.properties.rand_accel;
+          rand_accel = this.properties.rand_accel,
+          rand_col = this.properties.rand_col;
 
       vel.copy(this.properties.particle_vel);
       accel.copy(this.properties.particle_accel);
@@ -203,6 +255,25 @@ elation.require(['janusweb.janusbase'], function() {
         accel.x += randomInRange(rand_accel.x);
         accel.y += randomInRange(rand_accel.y);
         accel.z += randomInRange(rand_accel.z);
+      }
+      col.copy(this.properties.color);
+      if (rand_col.lengthSq() > 0) {
+        col.r += Math.random() * rand_col.x;
+        col.g += Math.random() * rand_col.y;
+        col.b += Math.random() * rand_col.z;
+      }
+
+      if (this.geometry.attributes.position) {
+        var pos = this.geometry.attributes.position.array,
+            color = this.geometry.attributes.color.array;
+
+        pos[idx*3] = point.pos.x;
+        pos[idx*3+1] = point.pos.y;
+        pos[idx*3+2] = point.pos.z;
+
+        color[idx*3] = point.color.r;
+        color[idx*3+1] = point.color.g;
+        color[idx*3+2] = point.color.b;
       }
     }
     this.extractEmitPoints = function(mesh) {
@@ -231,11 +302,15 @@ elation.require(['janusweb.janusbase'], function() {
         this.createParticles();
       }
       this.started = true;
-      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateParticles));
+      if (this.duration > 0) {
+        elation.events.add(this.engine, 'engine_frame', this.updateParticles);
+      }
     }
     this.stop = function() {
       this.started = false;
-      elation.events.remove(this.engine, 'engine_frame', elation.bind(this, this.updateParticles));
+      if (this.duration > 0) {
+        elation.events.remove(this.engine, 'engine_frame', this.updateParticles);
+      }
     }
     this.getProxyObject = function() {
       var proxy = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this);
@@ -245,6 +320,9 @@ elation.require(['janusweb.janusbase'], function() {
         rand_pos:  [ 'property', 'rand_pos'],
         rand_vel:  [ 'property', 'rand_vel'],
         rand_accel:  [ 'property', 'rand_accel'],
+        rand_col:  [ 'property', 'rand_col'],
+        emitter_id:  [ 'property', 'emitter_id'],
+        emitter_scale:  [ 'property', 'emitter_scale'],
       };
       return proxy;
     }
