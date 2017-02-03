@@ -258,9 +258,10 @@ elation.require(['janusweb.janusbase'], function() {
       }
       col.copy(this.properties.color);
       if (rand_col.lengthSq() > 0) {
-        col.r += Math.random() * rand_col.x;
-        col.g += Math.random() * rand_col.y;
-        col.b += Math.random() * rand_col.z;
+        var rand = Math.random();
+        col.r += rand * rand_col.x;
+        col.g += rand * rand_col.y;
+        col.b += rand * rand_col.z;
       }
 
       if (this.geometry.attributes.position) {
