@@ -327,6 +327,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           materials.push(this.copyMaterial(oldmat.materials[i]));
         }
         var m = new THREE.MultiMaterial(materials);
+      } else if (oldmat instanceof THREE.PointsMaterial) {
+        var m = oldmat.clone(); 
       } else {
         var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
         //var m = new THREE.MeshBasicMaterial();
