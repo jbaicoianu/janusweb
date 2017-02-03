@@ -1,0 +1,32 @@
+#VRML V2.0 utf8
+
+#Example VRML 2.0 file for teaching basic concepts of
+#color and 3D primitive shapes.  
+#Created by Theresa-Marie Rhyne
+
+ 	# A Cylinder
+     Shape {
+         appearance Appearance {
+             material Material { 
+		diffuseColor 0.75 0.5 1.0
+                specularColor 0.7 0.7 0.8
+                shininess 0.1
+             }
+         }
+         geometry Cylinder {
+             height 0.2
+             radius 3.0
+         }
+     }
+	# A Sphere
+    Shape {
+         appearance Appearance {
+             material Material { 
+             diffuseColor 0.2 0.5 0.75
+             transparency 0.0
+	     }
+         }
+    geometry Sphere {
+        radius 1.0
+    }
+}
