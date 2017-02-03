@@ -19,18 +19,26 @@
 
     <assetobject id="vrml" src="models/vrmltest.wrl" />
 
+    <AssetObject id="gltf-monster" src="https://threejs.org/examples/models/gltf/monster/glTF-MaterialsCommon/monster.gltf" />
+    <AssetObject id="gltf-duck" src="https://threejs.org/examples/models/gltf/duck/glTF-MaterialsCommon/duck.gltf" />
+    <AssetObject id="gltf-guy" src="https://threejs.org/examples/models/gltf/CesiumMan/glTF-MaterialsCommon/Cesium_Man.gltf" />
+    <AssetObject id="gltf-truck" src="https://threejs.org/examples/models/gltf/CesiumMilkTruck/glTF-MaterialsCommon/CesiumMilkTruck.gltf" />
+
+
     <assetimage id="texture-diffuse" src="models/metal07-diffuse.png" />
     <assetimage id="texture-normal" src="models/metal07-normal.png" />
     <assetimage id="texture-specular" src="models/metal07-specular.png" />
   </assets>
   <room use_local_asset="room5" pos="-.75 2 8.5" zdir="0 0 -1">
 
+    <text pos="0 2.5 -4" scale="1 1 1" col="0 1 1">glTF</text>
     <text pos="0 2.5 -2" scale="1 1 1" col="1 0 1">VRML</text>
     <text pos="0 2.5 0" scale="1 1 1" col="0 0 1">FBX</text>
     <text pos="0 2.5 2" scale="1 1 1" col="0 1 0">DAE</text>
     <text pos="0 2.5 4" scale="1 1 1" col="1 0 0">OBJ</text>
     <text pos="0 2.5 6" scale="1 1 1" col="1 1 0">PLY</text>
 
+    <object id="cube" pos="-1 0 -4" scale="24 .1 .1" col="0 1 1" />
     <object id="cube" pos="-1 0 -2" scale="24 .1 .1" col="1 0 1" />
     <object id="cube" pos="-1 0 0" scale="24 .1 .1" col="0 0 1" />
     <object id="cube" pos="-1 0 2" scale="24 .1 .1" col="0 1 0" />
@@ -59,6 +67,12 @@
     <object id="pointcloud-ascii-ply" pos="1 1 6" scale="2 2 2" rotate_deg_per_sec="10" />
 
     <object id="vrml" pos="0 1 -2" scale=".5 .5 .5" rotate_deg_per_sec="10" />
+
+    <object id="gltf-duck" pos="-3 1 -4" scale=".5 .5 .5" rotate_deg_per_sec="10" />
+    <object id="gltf-monster" pos="-1 1 -4" scale=".5 .5 .5" rotate_deg_per_sec="10" />
+    <object id="gltf-guy" pos="1 1 -4" scale=".5 .5 .5" rotate_deg_per_sec="10" />
+    <object id="gltf-truck" pos="3 1 -4" scale=".5 .5 .5" rotate_deg_per_sec="10" />
+
 
     <light pos="6 6 6" light_intensity="100" col="1 1 0" />
     <light pos="-6 6 6" light_intensity="100" col="1 1 0" />
