@@ -148,7 +148,7 @@ var el = document.pointerLockElement || document.mozPointerLockElement
       
     });
     elation.events.add(window, 'error', function(msg) {
-      ga('send', 'event', 'client', 'error', msg);
+      ga('send', 'event', 'client', 'error', msg.message);
     });
   }
 });
