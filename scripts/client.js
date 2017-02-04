@@ -51,6 +51,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       url: args.url,
       networking: args.networking,
       autoload: args.autoload,
+      stats: args.stats,
       urltemplate: args.urltemplate,
       useWebVRPolyfill: args.useWebVRPolyfill
     });
@@ -64,7 +65,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
       var hashargs = elation.url();
        
-      this.enginecfg.stats = false;
+      this.enginecfg.stats = this.args.stats;
 
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
