@@ -652,7 +652,7 @@ elation.require([
         for (var i = 0; i < newobjs.length; i++) {
           var newobj = newobjs[i],
               existing = this.jsobjects[newobj.js_id];
-          this.appliedchanges[newobj.jsid] = true;
+          this.appliedchanges[newobj.js_id] = true;
           if (existing) {
             //existing.setProperties(newobj);
             var objkeys = Object.keys(newobj);
