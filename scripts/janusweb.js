@@ -192,6 +192,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         // connect to presence server
         //this.userId = Date.now().toString();
         this.userId = this.getUsername();
+        this.engine.client.player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
+
         var host = elation.utils.any(hashargs['janus.server'], elation.config.get('janusweb.network.host')),
             port = elation.utils.any(hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
         var janusOptions = {
