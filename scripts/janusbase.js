@@ -120,6 +120,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           ydir:     ['property', 'ydir'],
           zdir:     ['property', 'zdir'],
           sync:     ['property', 'sync'],
+          visible:  ['property', 'visible'],
           children: ['property', 'jschildren'],
 
           oncollision: ['callback', 'collision'],
