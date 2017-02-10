@@ -301,6 +301,13 @@ elation.require(['janusweb.janusbase'], function() {
     this.start = function() {
       if (!this.created) {
         this.createParticles();
+      } else {
+        for (var i = 0; i < this.particles.length; i++) {
+          this.particles[i].active = 0;
+        }
+      }
+      if (this.started) {
+        this.stop();
       }
       this.started = true;
       if (this.duration > 0) {
