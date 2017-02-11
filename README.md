@@ -103,6 +103,8 @@ JanusWeb supports several arguments at initialization time to control how it beh
   <tr><td> resolution     </td><td> If specified, restrict the renderer to 
                                     the specified size                     </td><td> (none)                   </td></tr>
 
+  <tr><td> server         </td><td> Presence server to connect to          </td><td> wss://presence.janusvr.com:5567/</td></tr>
+
   <tr><td> shownavigation </td><td> Control visibility of navigation bar   </td><td> true                     </td></tr>
 
   <tr><td> showchat       </td><td> Control visibility of chat             </td><td> true                     </td></tr>
@@ -110,7 +112,11 @@ JanusWeb supports several arguments at initialization time to control how it beh
   <tr><td> stats          </td><td> Enable render performance stats        </td><td> false                    </td></tr>
 
   <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
+
   <tr><td> urltemplate    </td><td> Optional template for generating URLs  </td><td> (none)                   </td></tr>
+
+  <tr><td> useWebVRPolyfill </td><td> Enable WebVR polyfill for mobile 
+                                      phone compatibility                  </td><td> true                     </td></tr>
 
   <tr><td> usevoip        </td><td> Enable or disable VOIP functionality
                                     (NOTE - disabled pending browser support 
