@@ -60,17 +60,19 @@ elation.component.add('engine.things.remoteplayer', function() {
     });
     this.mouth.createAudio();
     var context = this.mouth.audio.context;
-    this.voip = new JanusVOIPPlayer();
-    this.voip.start(context);
-    this.audiobuffer = {readyCallbacks: []};//new THREE.AudioBuffer(this.mouth.audio.context);
-    this.audiobuffer.buffer = this.voip.rawbuffer;
+    if (this.engine.client.player.usevoip) {
+      this.voip = new JanusVOIPPlayer();
+      this.voip.start(context);
+      this.audiobuffer = {readyCallbacks: []};//new THREE.AudioBuffer(this.mouth.audio.context);
+      this.audiobuffer.buffer = this.voip.rawbuffer;
 
-    //elation.events.add(this.voip, 'voip_player_data', elation.bind(this, this.handleVoipData));
-    this.audiobuffer.ready = true;
-    for ( var i = 0; i < this.audiobuffer.readyCallbacks.length; i ++ ) {
+      //elation.events.add(this.voip, 'voip_player_data', elation.bind(this, this.handleVoipData));
+      this.audiobuffer.ready = true;
+      for ( var i = 0; i < this.audiobuffer.readyCallbacks.length; i ++ ) {
 
-      this.audiobuffer.readyCallbacks[ i ]( this.voip.rawbuffer );
+        this.audiobuffer.readyCallbacks[ i ]( this.voip.rawbuffer );
 
+      }
     }
 
     //this.mouth.audio.setBuffer(this.audiobuffer);
