@@ -44,6 +44,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         datapath:       { type: 'string', default: '/media/janusweb' },
         autoload:       { type: 'boolean', default: true },
         networking:     { type: 'boolean', default: true },
+        server:         { type: 'string', default: null },
+        port:           { type: 'integer', default: null },
         urltemplate:    { type: 'string', default: false },
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
@@ -194,8 +196,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         this.userId = this.getUsername();
         this.engine.client.player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
 
-        var host = elation.utils.any(hashargs['janus.server'], elation.config.get('janusweb.network.host')),
-            port = elation.utils.any(hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
+        var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
+            port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
         var janusOptions = {
           host: host,
           port: port,
