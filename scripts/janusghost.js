@@ -39,6 +39,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
     this.createChildren = function() {
       this.head = this.spawn('generic', null, { position: new THREE.Vector3() });
+      this.shoulders = this.spawn('generic', this.properties.player_id + '_shoulders', {
+        'position': [0,1.0,0]
+      });
       this.setHead(this.head_id, this.properties.head_pos);
       this.setBody(this.body_id);
       var name = this.properties.ghost_id;
@@ -265,6 +268,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
 
     }
     this.updateHands = function(hand0, hand1) {
+      if (!this.shoulders) {
+        this.shoulders = this.spawn('generic', this.properties.player_id + '_shoulders', {
+          'position': [0,1.0,0]
+        });
+      }
       if (!this.hands) {
         this.hands = {
           left: this.shoulders.spawn('leapmotion_hand', this.properties.player_name + '_hand_left'),
