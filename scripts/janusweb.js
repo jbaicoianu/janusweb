@@ -622,9 +622,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
               var val = change[k];
               if (val instanceof THREE.Vector2 ||
                   val instanceof THREE.Vector3) {
-                val = val.toArray().join(',');
+                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
               } else if (val instanceof THREE.Color) {
-                val = val.toArray().join(',');
+                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
               }
               if (val !== null && val !== undefined && typeof val != 'function') {
                 xmlnode.setAttribute(k, val);
