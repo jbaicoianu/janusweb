@@ -19,10 +19,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
-        collider_id: { type: 'string', set: this.updatePhysics },
-        collider_pos: { type: 'vector3', set: this.updatePhysics },
-        collider_scale: { type: 'vector3', set: this.updatePhysics },
+        collision_id: { type: 'string', set: this.updatePhysics },
+        collision_pos: { type: 'vector3', set: this.updatePhysics },
+        collision_scale: { type: 'vector3', set: this.updatePhysics },
         collision_static: { type: 'boolean', default: true, set: this.updatePhysics },
+        collision_trigger: { type: 'boolean', default: false, set: this.updatePhysics },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -71,28 +72,28 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       elation.engine.things.janusobject.extendclass.createForces.call(this);
       if (!this.collidable) return;
 
-      var collider_id = this.collider_id || this.collision_id;
-      var collider_scale = this.properties.collider_scale || this.properties.scale;
-      if (collider_id) {
+      var collision_id = this.collision_id || this.collider_id;
+      var collision_scale = this.properties.collision_scale || this.properties.scale;
+      if (collision_id) {
         if ((!this.collision_static || this.collision_static == 'false') && this.room.gravity) { // FIXME - should never receive 'false' as a string here
           this.objects.dynamics.mass = this.mass = 1;
           this.objects.dynamics.addForce('static', new THREE.Vector3(0, this.room.gravity, 0));
         }
 
         this.collidable = true;
-        if (collider_id == 'sphere') {
-          this.setCollider('sphere', {radius: Math.max(collider_scale.x, collider_scale.y, collider_scale.z) / 2});
-        } else if (collider_id == 'cube') {
-          var halfsize = collider_scale.clone().multiplyScalar(.5);
+        if (collision_id == 'sphere') {
+          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2});
+        } else if (collision_id == 'cube') {
+          var halfsize = collision_scale.clone().multiplyScalar(.5);
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
-        } else if (collider_id == 'plane') {
-          var halfsize = collider_scale.clone().multiplyScalar(.5);
+        } else if (collision_id == 'plane') {
+          var halfsize = collision_scale.clone().multiplyScalar(.5);
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
-        } else if (collider_id == 'cylinder') {
-          this.setCollider('cylinder', {height: collider_scale.y, radius: Math.max(collider_scale.x, collider_scale.z) / 2, offset: new THREE.Vector3(0, 0.5 * collider_scale.y, 0)});
+        } else if (collision_id == 'cylinder') {
+          this.setCollider('cylinder', {height: collision_scale.y, radius: Math.max(collision_scale.x, collision_scale.z) / 2, offset: new THREE.Vector3(0, 0.5 * collision_scale.y, 0)});
         } else {
-          var colliderasset = this.getAsset('model', collider_id);
+          var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
             var collider = colliderasset.getInstance();
             this.collidermesh = collider;
@@ -408,10 +409,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       proxy._proxydefs = {
         id:  [ 'property', 'janusid'],
         url:  [ 'property', 'url'],
-        collider_id:  [ 'property', 'collider_id'],
-        collider_scale:  [ 'property', 'collider_scale'],
         collision_id:  [ 'property', 'collision_id'],
+        collision_scale:  [ 'property', 'collider_scale'],
         collision_static:  [ 'property', 'collision_static'],
+        collision_trigger:  [ 'property', 'collision_trigger'],
       };
       return proxy;
     }
