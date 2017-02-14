@@ -20,7 +20,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
         collision_id: { type: 'string', set: this.updatePhysics },
-        collision_pos: { type: 'vector3', set: this.updatePhysics },
+        collision_pos: { type: 'vector3', default: new THREE.Vector3(0,0,0), set: this.updatePhysics },
         collision_scale: { type: 'vector3', set: this.updatePhysics },
         collision_static: { type: 'boolean', default: true, set: this.updatePhysics },
         collision_trigger: { type: 'boolean', default: false, set: this.updatePhysics },
@@ -82,12 +82,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
         this.collidable = true;
         if (collision_id == 'sphere') {
-          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2});
+          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2, offset: this.collision_pos});
         } else if (collision_id == 'cube') {
           var halfsize = collision_scale.clone().multiplyScalar(.5);
-          this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
+          this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
         } else if (collision_id == 'plane') {
-          var halfsize = collision_scale.clone().multiplyScalar(.5);
+          var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
         } else if (collision_id == 'cylinder') {
