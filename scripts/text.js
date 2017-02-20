@@ -22,6 +22,7 @@ elation.require(['engine.things.label'], function() {
       });
       this.properties.thickness = .11;
       this.properties.align = 'center';
+      this.emptygeometry = new THREE.Geometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
     }
     this.createObject3D = function() {
@@ -41,7 +42,9 @@ elation.require(['engine.things.label'], function() {
           this.material.transparent = true;
         }
 
-        this.textcache[text] = geometry;
+        if (geometry !== this.emptygeomety) {
+          this.textcache[text] = geometry;
+        }
       }
       var mesh;
       if (this.objects['3d']) {
@@ -71,6 +74,11 @@ elation.require(['engine.things.label'], function() {
       return material;
     }
     this.createTextGeometry = function(text) {
+      // Early out for invisible geometry
+      if (!this.visible) {
+        return this.emptygeometry;
+      }
+
       var font = elation.engine.assets.find('font', this.properties.font);
       if (!font) font = elation.engine.assets.find('font', 'helvetiker');
 if (!window.GEOMCACHE) window.GEOMCACHE = {};
