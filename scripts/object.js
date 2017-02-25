@@ -262,7 +262,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
         if (n.material) {
           var materials = [];
-          if (n.material instanceof THREE.MeshFaceMaterial) {
+          if (n.material instanceof THREE.MultiMaterial) {
             //materials = [n.material.materials[1]];
             for (var i = 0; i < n.material.materials.length; i++) {
               if (cloneMaterial) {
@@ -273,7 +273,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               }
             }
             if (cloneMaterial) {
-              n.material = new THREE.MeshFaceMaterial(materials);
+              n.material = new THREE.MultiMaterial(materials);
             } else {
               n.material.materials = materials;
             }
