@@ -113,7 +113,6 @@ describe("JanusWeb Render textures", function() {
 
     var testroom = janusweb.loadFromSource(roomsrc, true);
     elation.events.add(testroom, 'room_load_complete', function() {
-setTimeout(function() {
       client.view.getPixelAt(0,0).then(function(color) {
 console.log('got a color', color);
         expect(color[0]).toBe(127);
@@ -122,7 +121,6 @@ console.log('got a color', color);
         expect(color[3]).toBe(255);
         done();
       });
-}, 10000);
     });
   });
 
