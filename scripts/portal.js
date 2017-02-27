@@ -126,16 +126,16 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createMaterial = function() {
       var matargs = { color: 0xdddddd };
-      var mat;
+      var mat = new THREE.MeshBasicMaterial(matargs);
       if (this.thumb_id) {
         var asset = this.getAsset('image', this.thumb_id);
         if (asset) var thumb = asset.getInstance();
         if (thumb) {
-          matargs.map = thumb;
+          mat.map = thumb;
           if (asset.loaded) {
             if (asset.hasalpha) {
-              matargs.transparent = true;
-              matargs.alphaTest = 0.1;
+              mat.transparent = true;
+              mat.alphaTest = 0.1;
             }
           } else {
             elation.events.add(thumb, 'asset_load', function() {
@@ -145,9 +145,9 @@ elation.require(['janusweb.janusbase'], function() {
               }
             });
           }
+          elation.events.add(thumb, 'asset_update', elation.bind(this, function(ev) { mat.map = ev.data; }));
         }
       }
-      mat = new THREE.MeshBasicMaterial(matargs);
       return mat;
     }
     this.updateMaterial = function() {
