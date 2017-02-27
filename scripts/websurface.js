@@ -12,7 +12,18 @@ elation.require(['engine.things.generic'], function() {
         if (url && !url.match(/^(https?:)?\/\//)) {
           url = this.room.baseurl + url;
         }
-        this.url = url;
+        // So...it turns out this is a bad time to be doing this sort of 3d iframe hackery in the browser.
+        // The internet is slowly transitioning from HTTP to HTTPS, but we're currently only at about 50%
+        // encrypted.  Within the Janus community this is even lower, around 10%.  Due to browser security
+        // concerns, WebVR content must be run on HTTPS since it's considered a "powerful new feature" and
+        // browser developers are using this as a wedge to drive the internet towards greater adoption of
+        // HTTPS.  This requirement combines with the "HTTPS sites must not load any unencrypted resources"
+        // restriction to mean that we can only show WebSurfaces of HTTPS websites.
+
+        // As a last-ditch effort, we'll try loading the page as HTTPS even if the user specified HTTP,
+        // and hope that most sites are running both.
+
+        this.url = url.replace(/^http:/, 'https:');
       }
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
