@@ -297,9 +297,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else if (m.map) {
               var imagesrc = m.map.sourceFile;
               var asset = this.getAsset('image', imagesrc);
-              if (asset && asset.hasalpha) {
-                m.transparent = true;
-                m.alphaTest = 0.01;
+              if (asset) {
+                if (asset.hasalpha) {
+                  m.transparent = true;
+                  m.alphaTest = 0.01;
+                }
+                m.map = asset.getInstance();
+                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { this.frontmaterial.map = ev.data; }));
+              }
+            }
+            if (m.normalMap) {
+              var imagesrc = m.normalMap.sourceFile;
+              var asset = this.getAsset('image', imagesrc);
+              if (asset) {
+                m.normalMap = asset.getInstance();
+                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
             }
             //m.roughness = 0.75;
@@ -307,9 +319,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.color = color;
             }
             m.side = side;
-            if (blend_src) m.blendSrc = blend_src;
-            if (blend_dest) m.blendDst = blend_dest;
-            m.blending = THREE.CustomBlending;
+            if (blend_src || blend_dest) {
+              if (blend_src) m.blendSrc = blend_src;
+              if (blend_dest) m.blendDst = blend_dest;
+              m.blending = THREE.CustomBlending;
+            } else {
+              m.blending = THREE.NormalBlending;
+            }
             m.needsUpdate = true;
           }
         } else if (n instanceof THREE.Light) {
