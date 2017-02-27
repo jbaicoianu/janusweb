@@ -64,6 +64,7 @@ elation.require([
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
       }
       //this.showDebug();
+      elation.events.add(window, 'touchstart', elation.bind(this, this.onTouchStart));
       elation.events.add(window, 'keydown', elation.bind(this, this.onKeyDown));
       elation.events.add(window, 'keyup', elation.bind(this, this.onKeyUp));
 
@@ -934,6 +935,12 @@ elation.require([
     }
     this.onMouseUp = function(ev) { 
       elation.events.fire({type: 'janus_room_mouseup', element: this, event: ev});
+    }
+    this.onTouchStart = function(ev) { 
+      if (!this.firsttouch) {
+        this.firsttouch = true;
+        this.start();
+      }
     }
     this.onThingChange = function(ev) {
       var thing = ev.target;
