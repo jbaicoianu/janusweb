@@ -80,7 +80,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       var matargs = {
         color: this.color,
-        transparent: true,
+        transparent: this.asset.hasalpha,
         alphaTest: 0.2
       };
 
@@ -88,20 +88,25 @@ elation.require(['janusweb.janusbase'], function() {
         var sidemattex = this.texture.clone();
         this.sidetex = sidemattex;
         sidemattex.repeat.x = .0001;
+        matargs.map = this.texture;
       }
       var sidematargs = {
         map: sidemattex,
         color: this.properties.color,
-        transparent: true,
+        transparent: this.asset.hasalpha,
         alphaTest: 0.2
       };
 
       var mat = (this.properties.lighting ? new THREE.MeshPhongMaterial(matargs) : new THREE.MeshBasicMaterial(matargs));
       var sidemat = (this.properties.lighting ? new THREE.MeshPhongMaterial(sidematargs) : new THREE.MeshBasicMaterial(sidematargs));
       var facemat = new THREE.MultiMaterial([sidemat,sidemat,sidemat,sidemat,mat,mat]);
-      this.facematerial = mat;
+      this.facematerial = facemat;
       this.frontmaterial = mat;
       this.sidematerial = sidemat;
+      if (this.texture) {
+        // Update diffuse map whenever the asset updates (gif frames, etc)
+        elation.events.add(this.texture, 'asset_update', elation.bind(this, function(ev) { this.frontmaterial.map = ev.data; }));
+      }
       return facemat;
     }
     this.setMaterialDirty = function() {
@@ -127,7 +132,7 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
           elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
         }
-        elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+        elation.events.add(this.texture, 'asset_update', elation.bind(this, function(ev) { this.frontmaterial.map = ev.data; }));
       } 
     }
     this.getAspect = function() {
