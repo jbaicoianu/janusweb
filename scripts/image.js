@@ -70,20 +70,22 @@ elation.require(['janusweb.janusbase'], function() {
       return box;
     }
     this.createMaterial = function() {
+      var matargs = {
+        color: this.properties.color,
+        transparent: false,
+        alphaTest: 0.2
+      };
+
       this.asset = this.getAsset('image', this.image_id);
       if (this.asset) {
         this.texture = this.asset.getInstance();
         if (this.texture) {
           elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
           elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+
+          matargs.transparent = this.asset.hasalpha;
         } 
       }
-      var matargs = {
-        color: this.color,
-        transparent: this.asset.hasalpha,
-        alphaTest: 0.2
-      };
-
       if (this.texture) {
         var sidemattex = this.texture.clone();
         this.sidetex = sidemattex;
@@ -93,7 +95,7 @@ elation.require(['janusweb.janusbase'], function() {
       var sidematargs = {
         map: sidemattex,
         color: this.properties.color,
-        transparent: this.asset.hasalpha,
+        transparent: matargs.transparent,
         alphaTest: 0.2
       };
 
