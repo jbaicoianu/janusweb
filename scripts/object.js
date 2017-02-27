@@ -352,7 +352,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
-        m.opacity = oldmat.opacity;
+        //m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1);
         m.normalMap = oldmat.normalMap;
         m.lightMap = oldmat.lightMap;
         m.color.copy(oldmat.color);
