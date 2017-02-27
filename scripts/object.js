@@ -293,7 +293,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (texture && texture.image) {
               m.map = texture; 
               elation.events.add(texture, 'asset_update', elation.bind(m, function(ev) { m.map = ev.data; }));
-              m.transparent = (textureasset && textureasset.hasalpha);
+              m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map) {
               var imagesrc = m.map.sourceFile;
               var asset = this.getAsset('image', imagesrc);
@@ -303,7 +303,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = 0.01;
                 }
                 m.map = asset.getInstance();
-                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { this.frontmaterial.map = ev.data; }));
+                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
             }
             if (m.normalMap) {
@@ -352,10 +352,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
+        m.opacity = oldmat.opacity;
         m.normalMap = oldmat.normalMap;
         m.lightMap = oldmat.lightMap;
         m.color.copy(oldmat.color);
-        m.transparent = oldmat.transparent;
+        m.transparent = m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
 
         if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
