@@ -20,3 +20,4 @@ if [ -L $TO ]; then
   rm $TO
 fi
 ln -sf $VERSION $TO
+ln -sf janusweb-$VERSION.tar.gz janusweb-$TO.tar.gz
