@@ -32,6 +32,8 @@ You can even put your mark-up onto sites like PasteBin or PiratePad.  Then just 
 in our viewer by entering the URL into the navigation bar, and you can link directly to it, share 
 on social media, or embed our viewer directly into other webpages, blog posts, or articles.
 
+See also **Using a specific version of JanusWeb** below.
+
 ### Pull our scripts into your page
 Using the above method, all of your links would go through our servers.  If you'd prefer to 
 link to your own servers, you can pull our JS into your page and use JanusWeb as a scriptable
@@ -58,6 +60,8 @@ client via its API.  This looks something like this:
 The `elation.janusweb.init()` function can take a number of arguments, and returns a promise which
 receives an instance of the client.  This client reference can be controlled via its API.  See the 
 sections on **Arguments** and **Scripting** below.
+
+See also **Using a specific version of JanusWeb** below.
 
 ### Install from ZIPs
 (TODO - we will start shipping zip builds of JanusWeb once we release v1.0)
@@ -166,6 +170,11 @@ You can even run JanusWeb in NodeJS for headless server-side operations.  Use it
 wanders the metaverse, or run your game logic and physics on a server to have one authoritative 
 source of state for your world.  If this sounds interesting to you let us know, we will be more
 than happy to help you through this (it's all very experimental right now!)
+
+## Using a specific version of JanusWeb
+If you need to load a specific version of JanusWeb, all previous versions are stores on the same server, and can be accessed by construction a URL of the form ```https://web.janusvr.com/<version>/```.  This is useful if you have a room which you know works with a specific version, which relies on features which have since been deprecated or changed, or to determine whether bugs have been introduced.  
+
+JanusWeb versions follow the [Semantic Versioning 2.0.0](http://semver.org/) spec, which follows the format ```<major>.<minor>.<patch>``` - for example, at the time of writing (March 2017) the current stable release is **1.0.15**.  So if you want to view this version, you could go to https://web.janusvr.com/1.0.15/ and if you wanted to pull this specific version into your page, you could do so with ```<script src="https://web.janusvr.com/1.0.15/janusweb.js"></script>```.  We also support aliases for the most current version - for instance, https://web.janusvr.com/1.0/ will always refer to the most recent 1.0 release, https://web.janusvr.com/0.9/ the final 0.9 release, etc.
 
 ## Contributing
 JanusWeb is open source, and we welcome any contributions!  Please do report bugs using GitHub Issues,
