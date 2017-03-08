@@ -153,6 +153,15 @@ elation.require([
           this.getAsset('image', skyboxname + '_back')
         ];
       }
+      if (this.cubemap_irradiance_id) {
+        var asset = this.getAsset('image', this.cubemap_irradiance_id);
+        console.log('irradiance', this.cubemap_irradiance_id, asset);
+      }
+      
+      if (this.cubemap_radiance_id) {
+        var asset = this.getAsset('image', this.cubemap_radiance_id);
+        console.log('radiance', this.cubemap_radiance_id, asset);
+      }
 
       var loaded = 0, errored = 0;
       var texures = [];
@@ -939,7 +948,7 @@ elation.require([
     this.onTouchStart = function(ev) { 
       if (!this.firsttouch) {
         this.firsttouch = true;
-        this.start();
+        this.enable();
       }
     }
     this.onThingChange = function(ev) {
