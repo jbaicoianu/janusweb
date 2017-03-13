@@ -64,9 +64,18 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createGeometry = function() {
       var aspect = this.getAspect(),
-          thickness = .1;
-      var box = new THREE.BoxGeometry(2, 2 * aspect, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, .1 / this.properties.scale.z));
+          thickness = Math.max(this.scale.x, this.scale.z) / 10;
+      var box = new THREE.BoxBufferGeometry(2, 2 * aspect, thickness);
+      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness/2));
+
+      // Flip the back face for images
+      var uvs = box.attributes.uv;
+      var start = 20,
+          count = 4;
+      for (var i = start; i < start + count; i++) {
+        uvs.array[i*2] = 1.0 - uvs.array[i*2];
+      }
+
       return box;
     }
     this.createMaterial = function() {
@@ -139,8 +148,8 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.getAspect = function() {
       var aspect = 1;
-      if (this.texture && this.texture.image) {
-        var size = this.getSize(this.texture.image);
+      if (this.asset && this.asset.rawimage) {
+        var size = this.getSize(this.asset.rawimage);
         aspect = size.height / size.width;
       }
       if (this.sbs3d || (this.asset && this.asset.sbs3d)) aspect *= 2;
