@@ -78,7 +78,7 @@ JanusFireboxParser.prototype.getAsArray = function(arr) {
   return (arr instanceof Array ? arr : [arr]);
 }
 JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
-  var assetxml = this.arrayget(xml, 'fireboxroom._children.assets', {}); 
+  var assetxml = this.arrayget(xml, 'fireboxroom._children.assets.0', {}); 
   var objectassets = this.getAsArray(this.arrayget(assetxml, "_children.assetobject", [])); 
   var soundassets = this.getAsArray(this.arrayget(assetxml, "_children.assetsound", [])); 
   var imageassets = this.getAsArray(this.arrayget(assetxml, "_children.assetimage", [])); 
@@ -246,7 +246,7 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
   if (!leaf) {
     var rootname = node.tagName;
     if (forceLower) rootname = rootname.toLowerCase();
-    root[rootname] = {};
+    if (!root[rootname]) root[rootname] = {};
     parent = root[rootname];
     //node = parent[node.tagName];
   } else {
@@ -265,11 +265,13 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
       var child = node.childNodes[j];
       var nodename = child.nodeName;
       if (forceLower) nodename = nodename.toLowerCase();
-      if (node.getElementsByTagName(child.tagName).length > 1) {
-        if (!parent._children) parent._children = {};
-        if (!parent._children[nodename]) {
-          parent._children[nodename] = [];
-        }
+      if (!parent._children) parent._children = {};
+      if (!parent._children[nodename]) {
+        parent._children[nodename] = [];
+      } else if (parent._children[nodename].constructor !== Array) {
+        parent._children[nodename] = [parent._children[nodename]];
+      }
+      if (node.getElementsByTagName(child.tagName).length > 0) {
         parent._children[nodename].push(this.parseXML(child, true, forceLower));
       } else if (child.nodeName) {
         if (child.nodeName == "#text" || child.nodeName == "#cdata-section") {
@@ -278,8 +280,7 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
             parent._content = child.nodeValue;
           }
         } else {
-          if (!parent._children) parent._children = {};
-          parent._children[nodename] = this.parseXML(child, true, forceLower);
+          parent._children[nodename] = parent._children[nodename].concat(this.parseXML(child, true, forceLower));
         }
       }
     }
