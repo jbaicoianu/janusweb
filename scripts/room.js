@@ -451,7 +451,7 @@ elation.require([
       }
       this.createLights();
     }
-    this.createRoomObjects = function(roomdata) {
+    this.createRoomObjects = function(roomdata, parent) {
       var room = roomdata.room,
           assets = roomdata.assets || [],
           objects = roomdata.objects || [],
@@ -467,31 +467,31 @@ elation.require([
           videos = roomdata.videos || [];
 
       if (lights) lights.forEach(elation.bind(this, function(n) {
-        this.createObject('light',  n);
+        this.createObject('light',  n, parent);
       }));
       if (objects) objects.forEach(elation.bind(this, function(n) { 
-        this.createObject('object', n);
+        this.createObject('object', n, parent);
       }));
       if (links) links.forEach(elation.bind(this, function(n) {
-        this.createObject('link', n);
+        this.createObject('link', n, parent);
       }));
       if (images) images.forEach(elation.bind(this, function(n) {
-        this.createObject('image', n);
+        this.createObject('image', n, parent);
       }));
       if (image3ds) image3ds.forEach(elation.bind(this, function(n) {
-        this.createObject('image', n);
+        this.createObject('image', n, parent);
       }));
       if (texts) texts.forEach(elation.bind(this, function(n) {
-        this.createObject('text', n);
+        this.createObject('text', n, parent);
       }));
       if (paragraphs) paragraphs.forEach(elation.bind(this, function(n) {
-        this.createObject('paragraph',  n);
+        this.createObject('paragraph', n, parent);
       }));
       if (sounds) sounds.forEach(elation.bind(this, function(n) {
-        this.createObject('sound',  n);
+        this.createObject('sound', n, parent);
       }));
       if (particles) particles.forEach(elation.bind(this, function(n) {
-        this.createObject('particle',  n);
+        this.createObject('particle', n, parent);
       }));
       if (ghosts) {
         var ghostassetmap = {};
@@ -502,7 +502,7 @@ elation.require([
             var ghosturl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
             n.ghost_src = ghostassetmap[n.id].src;
           }
-          this.createObject('ghost',  n);
+          this.createObject('ghost', n, parent);
         }));
       }
 
@@ -526,7 +526,7 @@ elation.require([
         this.jsobjects[n.js_id] = video.getProxyObject();
       }));
       
-      if (room) {
+      if (room && !parent) {
         if (room.use_local_asset && room.visible !== false) {
 //setTimeout(elation.bind(this, function() {
         this.localasset = this.createObject('object', {
@@ -570,18 +570,18 @@ elation.require([
         this.properties.walk_speed = room.walk_speed || 1.8;
         this.properties.run_speed = room.run_speed || 5.4;
         this.properties.cursor_visible = room.cursor_visible;
-      }
 
-      if (assets.scripts) {
-        this.pendingScripts = 0;
-        assets.scripts.forEach(elation.bind(this, function(s) {
-          var script = elation.engine.assets.find('script', s.src);
-          this.pendingScripts++;
-          elation.events.add(script, 'asset_load', elation.bind(this, function() {
-            document.head.appendChild(script);
-            script.onload = elation.bind(this, this.doScriptOnload);
+        if (assets.scripts) {
+          this.pendingScripts = 0;
+          assets.scripts.forEach(elation.bind(this, function(s) {
+            var script = elation.engine.assets.find('script', s.src);
+            this.pendingScripts++;
+            elation.events.add(script, 'asset_load', elation.bind(this, function() {
+              document.head.appendChild(script);
+              script.onload = elation.bind(this, this.doScriptOnload);
+            }));
           }));
-        }));
+        }
       }
 
       //if (!this.active) {
@@ -703,7 +703,7 @@ elation.require([
         }
       }));
     }
-    this.createObject = function(type, args) {
+    this.createObject = function(type, args, parent) {
       var typemap = {
         'object': 'janusobject',
         'link': 'janusportal',
@@ -717,6 +717,7 @@ elation.require([
         'particle': 'janusparticle',
         'ghost': 'janusghost',
       };
+      var parentobj = (parent ? parent._target : this);
       var realtype = typemap[type.toLowerCase()] || type;
       //var thingname = args.id + (args.js_id ? '_' + args.js_id : '_' + Math.round(Math.random() * 1000000));
       var thingname = args.js_id;
@@ -797,7 +798,7 @@ elation.require([
         if (this.jsobjects[objectargs.js_id]) {
           objectargs.js_id = objectargs.js_id + '_' + window.uniqueId();
         }
-        var object = this.spawn(realtype, objectargs.js_id, objectargs);
+        var object = parentobj.spawn(realtype, objectargs.js_id, objectargs);
         if (objectargs.js_id) {
           this.jsobjects[objectargs.js_id] = object.getProxyObject();
         }
@@ -813,6 +814,20 @@ elation.require([
         elation.events.add(object, 'thing_change_queued', elation.bind(this, this.onThingChange));
         elation.events.add(object, 'collide', elation.bind(this, this.onCollide));
         //elation.events.add(object, 'thing_asset_add', elation.bind(this, this.addAsset));
+
+        if (args._children) {
+          var children = {};
+          for (var k in args._children) {
+            var key = k + 's';
+            var objs = args._children[k];
+            if (!elation.utils.isArray(objs)) {
+              objs = [objs];
+            }
+            children[key] = objs;
+          }
+          this.createRoomObjects(children);
+        }
+
 
         return this.jsobjects[objectargs.js_id];
       } else {
@@ -830,6 +845,9 @@ elation.require([
           obj.parent.remove(obj);
         }
       }
+    }
+    this.loadNewAsset = function(type, args) {
+      console.log('FIXME - room.loadNewAssets() needs implementing');
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
