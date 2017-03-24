@@ -317,6 +317,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
             bloom:         ['property', 'bloom'],
             col:           ['property', 'col'],
     
+            loadNewAsset:  ['function', 'loadNewAsset'],
             createObject:  ['function', 'createObject'],
             removeObject:  ['function', 'removeObject'],
             addCookie:     ['function', 'addCookie'],
