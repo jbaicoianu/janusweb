@@ -204,6 +204,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (textureasset.ou3d) {
             texture.repeat.y = 0.5;
           }
+          this.assignTextureParameters(texture, modelasset);
         }
       }
       if (this.properties.video_id) {
@@ -224,6 +225,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.magFilter = THREE.LinearFilter;
           elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
           this.videotexture = texture;
+          this.assignTextureParameters(texture, modelasset);
           if (videoasset.auto_play) {
             texture.image.play();
           } else {
@@ -313,16 +315,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = 0.01;
                 }
                 m.map = asset.getInstance();
-                texture = m.map;
+                this.assignTextureParameters(m.map, modelasset);
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
-            }
-            if (texture) {
-              var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
-              texture.minFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
-              texture.magFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
-              texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
-              texture.generateMipmaps = linear;
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
@@ -388,6 +383,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
 
       return m;
+    }
+    this.assignTextureParameters = function(texture, modelasset) {
+      var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
+      texture.minFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
+      texture.magFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
+      texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
+      texture.generateMipmaps = linear;
     }
     this.pauseVideo = function() {
       if (this.videotexture) {
