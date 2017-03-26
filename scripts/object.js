@@ -303,8 +303,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = 0.01;
                 }
                 m.map = asset.getInstance();
+                texture = m.map;
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
+            }
+            if (texture) {
+              var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
+              texture.minFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
+              texture.magFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
+              texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
+              texture.generateMipmaps = linear;
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
