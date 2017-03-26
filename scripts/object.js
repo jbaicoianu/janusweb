@@ -197,6 +197,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture = textureasset.getInstance();
           //elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
           elation.events.add(texture, 'update', elation.bind(this, this.refresh));
+
+          if (textureasset.sbs3d) {
+            texture.repeat.x = 0.5;
+          }
+          if (textureasset.ou3d) {
+            texture.repeat.y = 0.5;
+          }
         }
       }
       if (this.properties.video_id) {
@@ -206,6 +213,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture = videoasset.getInstance();
           if (videoasset.sbs3d) {
             texture.repeat.x = 0.5;
+          }
+          if (videoasset.ou3d) {
+            texture.repeat.y = 0.5;
           }
           if (videoasset.loop || this.properties.loop) {
             texture.image.loop = true;
