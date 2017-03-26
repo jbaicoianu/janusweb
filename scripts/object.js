@@ -315,9 +315,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = 0.01;
                 }
                 m.map = asset.getInstance();
-                this.assignTextureParameters(m.map, modelasset);
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
+              this.assignTextureParameters(m.map, modelasset);
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
