@@ -678,7 +678,6 @@ elation.require([
             }
           } else {
             hasNew = true;
-            newobj.sync = false;
             diff[(k.toLowerCase() + 's')].push(newobj);
             if (newobj.id && newobj.id.match(/^https?:/)) {
               diff.assets.objects.push({assettype: 'model', name: newobj.id, src: newobj.id});
@@ -691,11 +690,10 @@ elation.require([
           this.createRoomObjects(diff);
         }
       }));
+      // Clear the list of edits which have been applied this frame
+      this.appliedchanges = {};
       this.applyingEdits = false;
-      setTimeout(elation.bind(this, function() {
-        //this.locked = waslocked;
-        //this.appliedchanges = {};
-      }), 0);
+
     }
     this.applyDeleteXML = function(deletexml) {
       var del = elation.utils.parseXML(deletexml);
