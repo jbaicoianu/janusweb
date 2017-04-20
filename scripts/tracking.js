@@ -8,12 +8,12 @@ elation.require([], function() {
 
     ga('create', elation.config.get('janusweb.tracking.clientid'), 'auto');
     ga('set', 'page', "/");
-    ga('send', 'pageview');
+    //ga('send', 'pageview');
 
     elation.events.add(null, 'room_change', function(ev) {
       console.log('[tracking] room changed', ev.type, ev.data);
       setTimeout(function() {
-        ga('set', 'page', '/#janus.url=' + ev.data);
+        ga('set', 'page', '/sites/' + ev.data);
         ga('send', 'pageview');
       }, 100);
     });
