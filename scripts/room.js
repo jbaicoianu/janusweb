@@ -671,6 +671,11 @@ elation.require([
                 existing[objkeys[j]] = newobj[objkeys[j]];
               }
             }
+            // If the node has a _content attribute, determine the attribute name by looking at the tag name
+            if (newobj._content) {
+              var attrname = k.toLowerCase();
+              existing[attrname] = newobj._content;
+            }
           } else {
             hasNew = true;
             newobj.sync = false;
