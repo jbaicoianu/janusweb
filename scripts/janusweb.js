@@ -628,7 +628,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
                 val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
               }
               if (val !== null && val !== undefined && typeof val != 'function') {
-                // If the property name matches the object type, put it into a textNode child
+                // If the property name matches the object type, use a text node rather than setting the property
                 if (xmltype.toLowerCase() == k.toLowerCase()) {
                   xmlnode.appendChild(xmldoc.createTextNode(val));
                 } else {
