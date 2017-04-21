@@ -828,7 +828,7 @@ elation.require([
             }
             children[key] = objs;
           }
-          this.createRoomObjects(children);
+          this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
         }
 
 
