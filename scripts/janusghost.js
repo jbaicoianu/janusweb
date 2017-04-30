@@ -38,6 +38,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       );
     }
     this.createChildren = function() {
+      elation.engine.things.janusghost.extendclass.createChildren.call(this);
+
       this.head = this.spawn('generic', null, { position: new THREE.Vector3() });
       this.shoulders = this.spawn('generic', this.properties.player_id + '_shoulders', {
         'position': [0,1.0,0]
@@ -215,7 +217,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               var headpos = this.head.properties.position;
               var facepos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
-              headpos.fromArray(newpos);
+              headpos.fromArray(newpos).add(this.head_pos);
               facepos.fromArray([-newpos[0], -newpos[1], -newpos[2]]).sub(this.properties.head_pos);
             }
           }
