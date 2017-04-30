@@ -19,6 +19,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         ydir: new THREE.Vector3(0, 1, 0),
         zdir: new THREE.Vector3(0, 0, 1),
         eye_pos: new THREE.Vector3(0, 1.6, 0),
+        head_pos: new THREE.Vector3(0, 1.6, 0),
         view_xdir: new THREE.Vector3(1, 0, 0),
         view_ydir: new THREE.Vector3(0, 1, 0),
         view_zdir: new THREE.Vector3(0, 0, 1),
@@ -229,7 +230,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         // Otherwise, we'll render one in the 3d scene
 
         var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
-        var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay && vrdisplay.isPresenting));
+        var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay));
         if (useSystemCursor) {
           this.cursor.visible = false;
           var view = this.engine.systems.render.views.main;
@@ -278,6 +279,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
       if (this.head) {
         this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir)
+        v.head_pos.setFromMatrixPosition(this.head.objects['3d'].matrixWorld);
         v.view_zdir.negate();
       }
     }
@@ -314,6 +316,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (!ev || ev.value == 1) {
         var room = this.engine.client.janusweb.currentroom;
         if (room) {
+          var pos = room.playerstartposition;
+          // If startpos is < 3 elements, pad it with 0s
+          if (pos.length < 3) {
+            var len = pos.length;
+            pos.length = 3;
+            pos.fill(0, len, 3);
+          }
           this.properties.position.fromArray(room.playerstartposition);
           this.properties.orientation.copy(room.playerstartorientation);
           this.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
@@ -331,7 +340,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         vel:           ['property', 'velocity'],
         accel:         ['property', 'acceleration'],
         eye_pos:       ['property', 'vectors.eye_pos'],
-        head_pos:      ['property', 'head.properties.position'],
+        head_pos:      ['property', 'vectors.head_pos'],
         cursor_pos:    ['property', 'vectors.cursor_pos'],
         cursor_xdir:   ['property', 'vectors.cursor_xdir'],
         cursor_ydir:   ['property', 'vectors.cursor_ydir'],
