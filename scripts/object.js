@@ -252,13 +252,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
 */
       var srcfactors = {
-        'src_alpha': THREE.SrcAlphaFactor,
         'zero': THREE.ZeroFactor,
         'one': THREE.OneFactor,
         'src_color': THREE.SrcColorFactor,
+        'dst_color': THREE.DstColorFactor,
+        'src_alpha': THREE.SrcAlphaFactor,
+        'dst_alpha': THREE.DstAlphaFactor,
         'one_minus_src_color': THREE.OneMinusSrcColorFactor,
         'one_minus_src_alpha': THREE.OneMinusSrcAlphaFactor,
-        'dst_color': THREE.DstColorFactor,
         'one_minus_dst_color': THREE.OneMinusDstColorFactor,
         'one_minus_dst_alpha': THREE.OneMinusDstAlphaFactor,
       }
@@ -339,6 +340,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (blend_src) m.blendSrc = blend_src;
               if (blend_dest) m.blendDst = blend_dest;
               m.blending = THREE.CustomBlending;
+              m.transparent = true;
             } else {
               m.blending = THREE.NormalBlending;
             }
@@ -382,14 +384,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.reflectivity !== undefined) m.reflectivity = oldmat.reflectivity;
         var scene = this.engine.systems.world.scene['world-3d'];
         //m.envMap = scene.background;
+        m.roughnessMap = oldmat.alphaMap;
+        m.roughness = 1.0 - (oldmat.shininess / 512); // Convert shininess value to roughness
 
+        /*
+        if (oldmat.specular && oldmat.specular.b != 0 && oldmat.specular.g != 0 && oldmat.specular.b != 0) {
+          m.color.copy(oldmat.specular);
+        }
+        */
       }
 
       return m;
     }
     this.assignTextureParameters = function(texture, modelasset) {
       var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
-      texture.minFilter = (linear ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
+      texture.minFilter = (linear && !this.video_id ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
