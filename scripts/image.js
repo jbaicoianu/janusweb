@@ -110,7 +110,7 @@ elation.require(['janusweb.janusbase'], function() {
 
       var mat = (this.properties.lighting ? new THREE.MeshPhongMaterial(matargs) : new THREE.MeshBasicMaterial(matargs));
       var sidemat = (this.properties.lighting ? new THREE.MeshPhongMaterial(sidematargs) : new THREE.MeshBasicMaterial(sidematargs));
-      var facemat = new THREE.MultiMaterial([sidemat,sidemat,sidemat,sidemat,mat,mat]);
+      var facemat = [sidemat,sidemat,sidemat,sidemat,mat,mat];
       this.facematerial = facemat;
       this.frontmaterial = mat;
       this.sidematerial = sidemat;
