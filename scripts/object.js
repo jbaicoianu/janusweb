@@ -68,6 +68,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       elation.engine.things.janusobject.extendclass.createChildren.call(this);
 
       //this.properties.collidable = false;
+
       //this.updateColliderFromGeometry(new THREE.BoxGeometry(1,1,1));
     }
     this.createForces = function() {
@@ -277,21 +278,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
         if (n.material) {
           var materials = [];
-          if (n.material instanceof THREE.MultiMaterial) {
+          if (elation.utils.isArray(n.material)) {
             //materials = [n.material.materials[1]];
-            for (var i = 0; i < n.material.materials.length; i++) {
+            for (var i = 0; i < n.material.length; i++) {
               if (cloneMaterial) {
-                var m = this.copyMaterial(n.material.materials[i]);
+                var m = this.copyMaterial(n.material[i]);
                 materials.push(m); 
               } else {
-                materials.push(n.material.materials[i]);
+                materials.push(n.material[i]);
               }
             }
-            if (cloneMaterial) {
-              n.material = new THREE.MultiMaterial(materials);
-            } else {
-              n.material.materials = materials;
-            }
+            n.material = materials;
           } else {
             if (cloneMaterial) {
               var m = this.copyMaterial(n.material);
@@ -356,12 +353,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.refresh();
     }
     this.copyMaterial = function(oldmat) {
-      if (oldmat instanceof THREE.MultiMaterial) {
+      if (elation.utils.isArray(oldmat)) {
         var materials = [];
-        for (var i = 0; i < oldmat.materials.length; i++) {
-          materials.push(this.copyMaterial(oldmat.materials[i]));
+        for (var i = 0; i < oldmat.length; i++) {
+          materials.push(this.copyMaterial(oldmat[i]));
         }
-        var m = new THREE.MultiMaterial(materials);
+        var m = materials;
       } else if (oldmat instanceof THREE.PointsMaterial) {
         var m = oldmat.clone(); 
       } else {
@@ -373,7 +370,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         //m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1);
         m.normalMap = oldmat.normalMap;
         m.lightMap = oldmat.lightMap;
-        m.color.copy(oldmat.color);
+        if (oldmat.color) {
+          m.color.copy(oldmat.color);
+        }
         m.transparent = m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
 
