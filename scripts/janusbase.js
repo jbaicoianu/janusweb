@@ -217,38 +217,24 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         this.updateVectors(false);
       }
     }
-    this.updateVectors = function(updateOrientation) {
-      if (updateOrientation) {
-        //var quat = this.room.getOrientation(this.properties.xdir.toArray().join(' '), this.properties.ydir.toArray().join(' '), this.properties.zdir.toArray().join(' '));
-        //this.xdir.normalize();
-        //this.ydir.normalize();
-        //this.zdir.normalize();
-        var mat4 = new THREE.Matrix4();
-        mat4.makeBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
+    this.updateVectors = (function() {
+      // Closure scratch variables
+      var mat4 = new THREE.Matrix4();
+      var quat = new THREE.Quaternion();
+      var pos = new THREE.Vector3();
+      var scale = new THREE.Vector3();
 
-/*
-        mat4.set(
-          this.xdir.x, this.xdir.y, this.xdir.z, 0,
-          this.ydir.x, this.ydir.y, this.ydir.z, 0,
-          this.zdir.x, this.zdir.y, this.zdir.z, 0,
-          0, 0, 0, 1
-        );
-*/
+      return function(updateOrientation) {
+        if (updateOrientation) {
+          mat4.makeBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
 
-        var quat = new THREE.Quaternion();
-        var pos = new THREE.Vector3();
-        var scale = new THREE.Vector3();
-        quat.setFromRotationMatrix(mat4);
-        //mat4.decompose(pos, this.orientation, scale);
-        //this.orientation.normalize();
-//console.log(mat4.elements);
-        this.properties.orientation.copy(quat);
-//console.log(this.xdir.toArray(), this.ydir.toArray(), this.zdir.toArray(), this.orientation.toArray());
-//console.log(this.properties.orientation, this.properties.orientation.toArray());
-      } else if (this.objects['3d']) {
-        //this.objects['3d'].matrix.extractBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
-      }
-    }
+          quat.setFromRotationMatrix(mat4);
+          this.properties.orientation.copy(quat);
+        } else if (this.objects['3d']) {
+          //this.objects['3d'].matrix.extractBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
+        }
+      };
+    })();
     this.appendChild = function(obj) {
       var proxyobj = obj
       if (elation.utils.isString(obj)) {
