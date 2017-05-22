@@ -114,10 +114,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 //collider.bindScale(this.properties.scale);
 
                 collider.traverse(elation.bind(this, function(n) {
-                  if (n.geometry) {
-                    n.geometry.computeVertexNormals();
-                    n.geometry.computeFaceNormals();
-                  }
                   if (n.material) n.material = new THREE.MeshLambertMaterial({color: 0x999900, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                   n.userData.thing = this;
                 }));
