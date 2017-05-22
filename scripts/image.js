@@ -64,9 +64,9 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createGeometry = function() {
       var aspect = this.getAspect(),
-          thickness = Math.max(this.scale.x, this.scale.z) / (10 * this.scale.z);
+          thickness = 0.1; //Math.max(this.scale.x, this.scale.z) / (10 * this.scale.z);
       var box = new THREE.BoxBufferGeometry(2, 2 * aspect, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness/2));
+      box.applyMatrix(new THREE.Matrix4().makeTranslation(0, 0, thickness / this.scale.z));
 
       // Flip the back face for images
       var uvs = box.attributes.uv;
