@@ -106,7 +106,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.start();
       }
     }
-    this.setHead = function(headid, headpos) {
+    this.setHead = function(headid, headpos, scale) {
       var objects = this.getGhostObjects();
       if (headid && this.head) {
         var assetid = headid;
@@ -135,24 +135,23 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           });
         }
         //this.head.properties.position.copy(headpos);
+        if (scale) {
+          this.head.scale.fromArray(scale);
+        }
       }
     }
-    this.setBody = function(bodyid) {
+    this.setBody = function(bodyid, scale) {
       var objects = this.getGhostObjects();
       if (bodyid) {
         var assetid = bodyid;
         if (objects && objects[bodyid]) {
           assetid = this.player_name + '_body_model';
-          if (objects[bodyid].src.match(/Beta\.fbx\.gz/)) {
-            assetid = 'avatar_gltf';
-          } else {
-            var asset = elation.engine.assets.get({
-              assettype: 'model',
-              name: assetid,
-              src: objects[bodyid].src,
-              mtl: objects[bodyid].mtl,
-            });
-          }
+          var asset = elation.engine.assets.get({
+            assettype: 'model',
+            name: assetid,
+            src: objects[bodyid].src,
+            mtl: objects[bodyid].mtl,
+          });
         }
         this.body = this.spawn('janusobject', null, {
           janus: this.janus,
@@ -162,6 +161,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           lighting: this.lighting,
           cull_face: 'none'
         });
+        if (scale) this.body.scale.fromArray(scale);
       }
     }
     this.start = function() {
@@ -264,8 +264,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.head_pos = headpos;
         }
         this.setGhostAssets(things.assets);
-        this.setHead(ghostdef.head_id, headpos);
-        this.setBody(ghostdef.body_id);
+        this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
+        this.setBody(ghostdef.body_id, ghostdef.scale);
+
       }
 
     }
