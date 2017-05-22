@@ -23,7 +23,7 @@ if [ -z "$CFGNAME" ]; then
 fi
 
 cp -al $(pwd)/media "$BUILDDIR/media"
-mv "$BUILDDIR/media/index.html" "$BUILDDIR/index.html"
+mv "$BUILDDIR/media/index.html" "$BUILDDIR/media/manifest.json" "$BUILDDIR/"
 if [ -e elation ] && [ -e elation/components/janusweb ]; then
   echo 'Building from project-local elation directory'
   cd elation/
