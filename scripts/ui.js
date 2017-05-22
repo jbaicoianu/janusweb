@@ -12,9 +12,7 @@ elation.require(['ui.all', 'janusweb.urlbar'], function() {
     }
     this.createUI = function() {
       this.navigation = elation.ui.panel({append: this, classname: 'janusweb_ui_navigation'})
-      this.menubutton = elation.ui.button({append: this.navigation, label: '⋯', events: { click: elation.bind(this, this.showMenu) } });
       this.backbutton = elation.ui.button({append: this.navigation, label: '◀', events: { click: elation.bind(this.janusweb, this.janusweb.navigateBack) } });
-      this.forwardbutton = elation.ui.button({append: this.navigation, label: '▶', events: { click: elation.bind(this.janusweb, this.janusweb.navigateForward) } });
       this.homebutton = elation.ui.button({append: this.navigation, label: '🏠', events: { click: elation.bind(this.janusweb, this.janusweb.navigateHome) } });
       this.urlbar = elation.janusweb.urlbar({
         append: this.navigation, 
@@ -34,10 +32,17 @@ elation.require(['ui.all', 'janusweb.urlbar'], function() {
       var nav3d = this.janusweb.spawn('generic', 'janusweb_navigation_3d', { position: [0,1,5] });
       this.navigation3d = elation.ui.panel3d({append3d: nav3d, panelorientation: 'horizontal', classname: 'janusweb_ui_navigation'})
 
-      this.menubutton3d    = elation.ui.button3d({append3d: this.navigation3d, label: '⋯', events: { click: elation.bind(this, this.showMenu) } });
       this.backbutton3d    = elation.ui.button3d({append3d: this.navigation3d, label: '◀', events: { click: elation.bind(this.janusweb, this.janusweb.navigateBack) } });
       this.forwardbutton3d = elation.ui.button3d({append3d: this.navigation3d, label: '▶', events: { click: elation.bind(this.janusweb, this.janusweb.navigateForward) } });
       this.homebutton3d    = elation.ui.button3d({append3d: this.navigation3d, label: '🏠', events: { click: elation.bind(this.janusweb, this.janusweb.navigateHome) } });
+    }
+    this.enable = function() {
+      elation.janusweb.ui.extendclass.enable.call(this);
+      this.navigation.enable();
+    }
+    this.disable = function() {
+      elation.janusweb.ui.extendclass.disable.call(this);
+      this.navigation.disable();
     }
   }, elation.ui.base);
 
