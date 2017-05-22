@@ -153,6 +153,8 @@ elation.require([
           this.getAsset('image', skyboxname + '_back')
         ];
       }
+      // TODO - THREE.DDSLoader only supports compressed DDS textures, but JanusVR sends uncompressed RGBA888 (I think)
+      /* 
       if (this.cubemap_irradiance_id) {
         var asset = this.getAsset('image', this.cubemap_irradiance_id);
         console.log('irradiance', this.cubemap_irradiance_id, asset);
@@ -162,6 +164,7 @@ elation.require([
         var asset = this.getAsset('image', this.cubemap_radiance_id);
         console.log('radiance', this.cubemap_radiance_id, asset);
       }
+      */
 
       var loaded = 0, errored = 0;
       var texures = [];
