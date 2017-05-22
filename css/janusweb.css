@@ -3,6 +3,12 @@
 .dark {
   font-family: "Open Sans Regular", sans-serif;
 }
+body.dark {
+  background: #303030;
+}
+body.dark .ui_window:after {
+  background: #303030;
+}
 .dark input.ui_input_element {
 }
 .janusweb_room_url {
@@ -56,6 +62,9 @@
   z-index: 500;
   margin: .4em;
   white-space: nowrap;
+}
+.janusweb_ui_navigation.state_disabled {
+  opacity: .4;
 }
 .janusweb_ui_navigation .ui_button {
   padding: .6em;
@@ -152,7 +161,11 @@
   flex-grow: 1;
 }
 
-.janusweb_ui_buttons {
+.janusweb_ui_buttons>button {
+  font-size: .75em;
+}
+.janusweb_ui_buttons.state_disabled {
+  opacity: .4;
 }
 .janusweb_ui_buttons .ui_button::before {
   display: block;
@@ -184,6 +197,11 @@
 }
 .janusweb_ui_buttons .janusweb_fullscreen.state_fullscreen::before {
   content: '\e238';
+}
+.janusweb_ui_buttons .janusweb_config::before {
+  content: '\e138';
+  display: block;
+  font-family: 'Glyphicons';
 }
 
 @font-face {
