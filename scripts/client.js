@@ -97,6 +97,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       elation.events.add(this.fullscreenbutton, 'ui_button_click', elation.bind(this, this.toggleFullscreen));
       elation.events.add(document, 'fullscreenchange,webkitfullscreenchange,mozfullscreenchange', elation.bind(this, function(ev) { this.toggleFullscreen({ value: this.view.isFullscreen() }, true); this.fullscreenbutton.container.blur(); this.view.rendersystem.renderer.domElement.focus(); }));
       this.buttons.add('fullscreen', this.fullscreenbutton);
+
+      this.configbutton = elation.ui.button({classname: 'janusweb_config', label: 'Config', events: { click: elation.bind(this, this.configureOptions) } });
+      this.buttons.add('config', this.configbutton);
+
+      elation.events.add(document, 'pointerlockchange', elation.bind(this, function() { this.setUIActive(document.pointerLockElement === null); }));
     }
     this.initWorld = function() {
       var things = this.world.load({
@@ -157,6 +162,17 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         var msg = err.message + '\n' + err.stack;
 
         var errordiv = elation.html.create({tag: 'pre', append: this.loadingscreen.container, content: msg, classname: 'janusweb_error'});
+      }
+    }
+    this.showMenu = function() {
+    }
+    this.setUIActive = function(active) {
+      if (active) {
+        this.ui.enable();
+        this.buttons.enable();
+      } else {
+        this.ui.disable();
+        this.buttons.disable();
       }
     }
     this.showAbout = function() {
