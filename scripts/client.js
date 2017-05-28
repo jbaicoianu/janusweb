@@ -168,11 +168,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     this.setUIActive = function(active) {
       if (active) {
-        this.ui.enable();
-        this.buttons.enable();
+        if (this.ui) this.ui.enable();
+        if (this.buttons) this.buttons.enable();
       } else {
-        this.ui.disable();
-        this.buttons.disable();
+        if (this.ui) this.ui.disable();
+        if (this.buttons) this.buttons.disable();
       }
     }
     this.showAbout = function() {
