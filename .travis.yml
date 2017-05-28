@@ -16,3 +16,8 @@ before_install:
 before_script:
   - "./utils/build.sh"
 
+deploy:
+  provider: npm
+  api_key: "QBbW+js79XHrdBUd9dONM/U+7ZSMnU1fph2No+k1k83CntzwSxX3ABWP7U184LfTZXwug8nrVfmVVuyDpEiF/C8Qf05K+gcU9XIclkAXU51gFIHDsoMwaGIx+Iw51SVOSIYsQPoHik/vvpljk2JXOYTd4nocYRSE8SiOXU2DfKswKP171jAl0RvfCNzt9//yqv3EJ8yW5FGjVNvqQz8NNG2DQRuxd7zhVa/YlgCJq02BM8LuweYEIFRWTlm9fqpMyT3s2wGSY5us3bDuFqDF7LMulhlaB3kG6kUJET/JpLSCdUjdtnDWrJkHUXdeklcYmX1HrwHUhTqsoZNvWF7BQgENVaTIRCbd1ND2QDYGwLUo0nzaauRAEN1zDTfK+CGXVbSJbOhd6j8N4XsesPlRM9L4w+0xV/m5wH3o6uDWT/6iBfm6LVauYEwkNi0T0bSdsgMwTxPZv1WFIZr67AieaQrpYFB0Xtx1WeRdIvYh/iOPuYLkui4UjXpNWa8ImUW3uSHik9aaqyeDE4RHrny+LV1bp5suiD0x5C3zkmi5QJS6LijC7ipcm7TdcO8AHB/J8gP8Gr38lQKZVillYO8XBHnE1kueJkJr1CyQMjEXg/SlYk9uAEhpihGDsk6X2X+xFbbHjwN4gH+Eg4tFgtPgvfrcG0oC7/Lqg0u4pkrBg/k="
+  on:
+    tags: true
