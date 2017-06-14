@@ -350,9 +350,11 @@ JanusClientConnection.prototype.sendLogon = function() {
     'method': 'logon',
     'data': {
       'userId': this._userId,
-      'version': this._version,
-      'roomId': md5(this._roomUrl)
+      'version': this._version
     }
+  }
+  if (this._roomUrl) {
+    msgData.data.roomId = md5(this._roomUrl);
   }
   this.send(msgData);
 };
