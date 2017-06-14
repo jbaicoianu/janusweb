@@ -1,6 +1,5 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib room1_new.mtl
 v -10.000000 -1.000000 10.000000
 v 10.000000 -1.000000 10.000000
 v -10.000000 0.000000 10.000000
