@@ -420,13 +420,11 @@ JanusClientConnection.prototype.enter_room = function(url) {
   });
 };
 JanusClientConnection.prototype.leave_room = function(url) {
-/*
   this.send({
     'method': 'leave_room',
     'data': {
       'roomId': md5(url)
     }
   });
-*/
 };
 
