@@ -318,7 +318,11 @@ JanusClientConnection.prototype.connect = function() {
   this.error = '';
   this._websocket = new WebSocket(this._host, 'binary');
   this.status = 1;
+  this.loggedin = false;
+  this.loggingin = false;
   this.msgQueue = [];
+  this._useridSuffix = '';
+  this.pendingReconnect = false;
   this._websocket.onopen = function() {
     this.status = 2;
     this.sendLogon();
@@ -330,15 +334,24 @@ JanusClientConnection.prototype.connect = function() {
 
   this._websocket.onclose = function() {
     this.dispatchEvent({type: 'disconnect'});
+    if (this.pendingReconnect) {
+      this.connect();
+    }
   }.bind(this);
 
   this._websocket.onmessage = this.onMessage.bind(this)  
 };
-JanusClientConnection.prototype.reconnect = function() {
+JanusClientConnection.prototype.reconnect = function(force) {
   var now = new Date().getTime();
-  if (this.lastattempt + this.reconnectdelay <= now) {
-    console.log('Reconnecting...');
-    this.connect();
+  if (force || this.lastattempt + this.reconnectdelay <= now) {
+    if (this._websocket.readyState == this._websocket.OPEN) {
+      console.log('Socket already connected, disconnecting');
+      this.disconnect();
+      this.pendingReconnect = true;
+    } else {
+      console.log('Reconnecting...');
+      this.connect();
+    }
   }
 }
 JanusClientConnection.prototype.disconnect = function() {
@@ -349,18 +362,21 @@ JanusClientConnection.prototype.sendLogon = function() {
   var msgData = {
     'method': 'logon',
     'data': {
-      'userId': this._userId,
+      'userId': this._userId + this._useridSuffix,
       'version': this._version
     }
   }
   if (this._roomUrl) {
     msgData.data.roomId = md5(this._roomUrl);
   }
+  this.loggingin = true;
   this.send(msgData);
 };
 JanusClientConnection.prototype.setUserId = function(userId) {
   this._userId = userId;
-  this.sendLogon();
+  // TODO - if the network protocol had a 'change_name' command, we could switch usernames without reconnecting
+  //this.sendLogon();
+  this.reconnect(true);
 };
 
 JanusClientConnection.prototype.send = function(msg) {
@@ -374,7 +390,25 @@ JanusClientConnection.prototype.send = function(msg) {
 };
 
 JanusClientConnection.prototype.onMessage = function(msg) {
-  this.dispatchEvent({type: 'message', data: JSON.parse(msg.data)});
+  var data = JSON.parse(msg.data);
+  if (!this.loggedin && this.loggingin) {
+    if (data.method == 'okay') {
+      this._useridSuffix = '';
+      this.loggedin = true;
+      this.dispatchEvent({type: 'login'});
+      if (this._roomUrl) {
+        this.enter_room(this._roomUrl);
+      }
+    } else if (data.method == 'error') {
+      console.log('[JanusClientConnection] error logging in', data);
+      if (data.data.message == 'User name is already in use') {
+        console.log('[JanusClientConnection] Username in use, retrying');
+        this._useridSuffix += '_';
+        this.sendLogon();
+      }
+    }
+  }
+  this.dispatchEvent({type: 'message', data: data});
 };
 
 JanusClientConnection.prototype.subscribe = function(url) {
