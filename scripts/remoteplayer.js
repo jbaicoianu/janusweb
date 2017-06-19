@@ -114,29 +114,6 @@ elation.component.add('engine.things.remoteplayer', function() {
       //console.log('already playing');
     }
   }
-  this.updateTransparency = function() {
-    var player = this.engine.client.player;
-
-    var dist = player.distanceTo(this);
-    var opacity = Math.min(1, dist / 0.25);
-
-    // FIXME - we should cache materials rather than fetching them every frame
-    var materials = [];
-    this.objects['3d'].traverse(function(n) {
-      if (n.material) {
-        materials = materials.concat(n.material instanceof THREE.MeshFaceMaterial ? n.material.materials : [n.material]);
-      }
-    });
-    materials.forEach(function(m) { 
-      m.opacity = opacity;
-      m.transparent = (opacity < 1);
-      m.visible = (opacity > 0);
-    });
-  }
-  this.setRoom = function(room) {
-    this.room = room;
-    room.add(this);
-  }
 }, elation.engine.things.janusghost);
 
 });
