@@ -8,6 +8,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         head_id: { type: 'string' },
         head_pos: { type: 'vector3', default: [0,1,0] },
         body_id: { type: 'string' },
+        anim_id: { type: 'string' },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         ghost_scale: { type: 'vector3', default: [1,1,1] },
         ghostassets: { type: 'object' },
@@ -19,7 +20,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     this.createObject3D = function() {
       if (this.ghost_src) {
         var url = this.ghost_src;
-        if (elation.engine.assets.corsproxy && !this.isURLLocal(url) && url.indexOf(elation.engine.assets.corsproxy) == -1) {
+        var isLocal = this.isURLLocal(url);
+        if (isLocal) {
+          url = this.room.baseurl + url;
+        }
+        if (elation.engine.assets.corsproxy && isLocal && url.indexOf(elation.engine.assets.corsproxy) == -1) {
           url = elation.engine.assets.corsproxy + url;
         }
         elation.net.get(url, null, {
@@ -164,6 +169,63 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (scale) this.body.scale.fromArray(scale);
       }
     }
+    this.setAnimation = function(anim_id) {
+      if (anim_id != this.anim_id) {
+        if (!this.body || !this.body.animationmixer) return;
+        if (this.activeanimation) {
+          //console.log('pause active animation', this.activeanimation);
+          // TODO - interpolating between actions would make transitions smoother
+          this.activeanimation.stop();
+        }
+        if (this.body.animationactions && this.body.animationactions[anim_id]) {
+          var action = this.body.animationactions[anim_id];
+          //console.log('found action!', anim_id, action);
+          action.play();
+          this.activeanimation = action;
+        } else {
+          console.log('need to load action', anim_id, this.ghostassets, this.skeleton);
+          //this.loadAsset()
+          var objects = this.getGhostObjects();
+          var assetid = anim_id;
+
+          if (objects && objects[anim_id]) {
+            assetid = this.player_name + '_anim_' + anim_id;
+            var asset = elation.engine.assets.find('model', assetid, true);
+            if (!asset) {
+              asset = elation.engine.assets.get({
+                assettype: 'model',
+                name: assetid,
+                src: objects[anim_id].src,
+                mtl: objects[anim_id].mtl,
+              });
+            }
+
+            if (asset.loaded) {
+              var animations = asset.extractAnimations();
+              if (animations.length > 0) {
+                var action = this.body.animationmixer.clipAction(animations[0]);
+                this.body.animationactions[anim_id] = action;
+                action.play();
+              }
+            } else {
+              asset.getInstance();
+              elation.events.add(asset, 'asset_load', elation.bind(this, function() {
+                var animations = asset.extractAnimations();
+                if (animations.length > 0) {
+                  var action = this.body.animationmixer.clipAction(animations[0]);
+                  this.body.animationactions[anim_id] = action;
+                  if (anim_id == this.anim_id) {
+                    action.play();
+                    this.activeanimation = action;
+                  }
+                }
+              }));
+            }
+          }
+        }
+        this.anim_id = anim_id;
+      }
+    }
     this.start = function() {
       this.framenum = -1;
       if (this.frames.length > 0) {
@@ -246,6 +308,15 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (movedata.pos) {
           this.properties.position.fromArray(parser.getVectorValue(movedata.pos));
         }
+        if (movedata.vel) {
+          this.properties.velocity.fromArray(parser.getVectorValue(movedata.vel));
+        }
+        if (movedata.rotvel) {
+          this.properties.angular.fromArray(parser.getVectorValue(movedata.rotvel));
+        }
+        if (movedata.anim_id) {
+          this.setAnimation(movedata.anim_id);
+        }
         this.objects.dynamics.updateState();
         this.refresh();
       }
@@ -311,6 +382,36 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           room.applyDeleteXML(deletexml);
         }
       } 
+    }
+    this.updateTransparency = function() {
+      var player = this.engine.client.player;
+
+      var dist = player.distanceTo(this);
+      var opacity = Math.min(1, dist / 0.25);
+
+      // FIXME - we should cache materials rather than fetching them every frame
+      var materials = [];
+      this.objects['3d'].traverse(function(n) {
+        if (n.material) {
+          materials = materials.concat(elation.utils.isArray(n.material) ? n.material : [n.material]);
+        }
+      });
+      materials.forEach(function(m) { 
+        m.opacity = opacity;
+        m.transparent = (opacity < 1);
+        m.visible = (opacity > 0);
+      });
+    }
+    this.setRoom = function(room) {
+      if (room !== this.room) {
+        if (this.room) {
+          this.room.remove(this);
+        }
+        this.room = room;
+        if (room && this.parent != this.room) {
+          room.add(this);
+        }
+      }
     }
   }, elation.engine.things.janusbase);
 });
