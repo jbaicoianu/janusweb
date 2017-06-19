@@ -11,6 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
@@ -37,6 +38,9 @@ elation.require([
         'cursor_visible': { type: 'bool', default: true },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
         'col': { type: 'color', set: this.updateLocalAsset },
+        'server': { type: 'string' },
+        'port': { type: 'int' },
+        'rate': { type: 'int', default: 200 },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
@@ -72,6 +76,7 @@ elation.require([
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.onMouseUp));
 
       if (this.url) {
+        this.roomid = md5(this.url);
         this.load(this.url, this.baseurl);
       } else if (this.source) {
         this.loadFromSource(this.source);
@@ -143,7 +148,7 @@ elation.require([
           this.getAsset('image', this.skybox_back || 'black')
         ];
       } else {
-        var skyboxname = 'miramar';
+        var skyboxname = 'dayskybox';
         var assets = [
           this.getAsset('image', skyboxname + '_right'),
           this.getAsset('image', skyboxname + '_left'),
@@ -534,6 +539,7 @@ elation.require([
 //setTimeout(elation.bind(this, function() {
         this.localasset = this.createObject('object', {
           id: room.use_local_asset,
+          collision_id: room.use_local_asset + '_collision',
           col: room.col,
           fwd: room.fwd,
           xdir: room.xdir,
@@ -557,6 +563,10 @@ elation.require([
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
     
         //this.setSkybox();
+
+        if (room.server) this.properties.server = room.server;
+        if (room.port) this.properties.port = room.port;
+        if (room.rate) this.properties.rate = room.rate;
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
@@ -1091,6 +1101,126 @@ elation.require([
         urls.push(url);
       }
       return urls;
+    }
+    this.getServer = function() {
+      if (!this._server) {
+        var hashargs = elation.url();
+        var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
+            port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
+        this._server = this.janusweb.getConnection(host, port, this.url);
+      }
+      return this._server;
+    }
+    this.join = function() {
+      elation.events.fire({type: 'join', element: this, data: this.url});
+    }
+    this.part = function() {
+      elation.events.fire({type: 'part', element: this, data: this.url});
+    }
+    this.getProxyObject = function() {
+      var proxy = new elation.proxy(this, {
+        url:           ['property', 'url', { readonly: true}],
+        objects:       ['property', 'jsobjects'],
+        cookies:       ['property', 'cookies'],
+        walk_speed:    ['property', 'walk_speed'],
+        run_speed:     ['property', 'run_speed'],
+        jump_velocity: ['property', 'jump_velocity'],
+        gravity:       ['property', 'gravity'],
+        fog:           ['property', 'fog'],
+        fog_mode:      ['property', 'fog_mode'],
+        fog_density:   ['property', 'fog_density'],
+        fog_start:     ['property', 'fog_start'],
+        fog_end:       ['property', 'fog_end'],
+        fog_col:       ['property', 'fog_col'],
+        bloom:         ['property', 'bloom'],
+        col:           ['property', 'col'],
+
+        loadNewAsset:  ['function', 'loadNewAsset'],
+        createObject:  ['function', 'createObject'],
+        removeObject:  ['function', 'removeObject'],
+        addCookie:     ['function', 'addCookie'],
+        playSound:     ['function', 'playSound'],
+        stopSound:     ['function', 'stopSound'],
+        seekSound:     ['function', 'seekSound'],
+        getObjectById: ['function', 'getObjectById'],
+        openLink:      ['function', 'openLink'],
+
+        onLoad:          ['callback', 'janus_room_scriptload'],
+        update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
+        onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
+        onColliderEnter: ['callback', 'janus_room_collider_enter'],
+        onColliderExit:  ['callback', 'janus_room_collider_exit'],
+        onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
+        onMouseDown:     ['callback', 'janus_room_mousedown'],
+        onMouseUp:       ['callback', 'janus_room_mouseup'],
+        onKeyDown:       ['callback', 'janus_room_keydown'],
+        onKeyUp:         ['callback', 'janus_room_keyup']
+      });
+
+      return proxy;
+    }
+    this.hasChanges = function() {
+      return Object.keys(this.changes).length > 0;
+    }
+    this.getChanges = function() {
+      var changeids = Object.keys(this.changes);
+      var changestr = '';
+      if (changeids.length > 0) {
+        var xmldoc = document.implementation.createDocument(null, 'edit', null);
+        var editroot = xmldoc.documentElement;
+
+        var typemap = {
+          janustext: 'Text',
+          janusobject: 'Object',
+          janusportal: 'Link',
+          janusparagraph: 'Paragraph',
+          janusimage: 'Image',
+          janusvideo: 'Video',
+          janussound: 'Sound',
+          januslight: 'Light',
+          janusparticle: 'Particle',
+          janusghost: 'Ghost',
+        };
+
+
+        changeids.forEach(elation.bind(this, function(id) {
+          //changestr += this.currentroom.changes[id];
+          var change = this.changes[id];
+          var real = this.getObjectFromProxy(change);
+          if (real) {
+            var xmltype = typemap[real.type] || 'Object';
+            xmlnode = xmldoc.createElement(xmltype); // FIXME - determine object's type
+            
+            var attrs = Object.keys(change);
+            for (var i = 0; i < attrs.length; i++) {
+              var k = attrs[i];
+              var val = change[k];
+              if (val instanceof THREE.Vector2 ||
+                  val instanceof THREE.Vector3) {
+                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+              } else if (val instanceof THREE.Color) {
+                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+              }
+              if (val !== null && val !== undefined && typeof val != 'function') {
+                // If the property name matches the object type, use a text node rather than setting the property
+                if (xmltype.toLowerCase() == k.toLowerCase()) {
+                  xmlnode.appendChild(xmldoc.createTextNode(val));
+                } else {
+                  xmlnode.setAttribute(k, val);
+                }
+              }
+            }
+            editroot.appendChild(xmlnode);
+          }
+          delete this.changes[id];
+        }));
+        this.appliedchanges = {};
+        var serializer = new XMLSerializer();
+        changestr = serializer.serializeToString(xmldoc);
+        changestr = changestr.replace(/^<edit\/?>/, '');
+        changestr = changestr.replace(/<\/edit>\s*$/, '');
+        return changestr;
+      }
     }
   }, elation.engine.things.generic);
 });
