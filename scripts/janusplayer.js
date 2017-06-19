@@ -2,10 +2,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
   elation.requireCSS('janusweb.janusplayer');
 
   elation.component.add('engine.things.janusplayer', function() {
+    this.defaultavatar = '<FireBoxRoom><Assets><AssetObject id="screen" src="https://web.janusvr.com/media/assets/hoverscreen.obj" mtl="https://web.janusvr.com/media/assets/hoverscreen.mtl" /></Assets><Room><Ghost id="januswebuser" js_id="januswebuser" locked="false" interp_time="0.1" col="#ffffff" lighting="true" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" eye_ipd="0" userid_pos="0 0.5 0" cull_face="back" /></Room></FireBoxRoom>'
+
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
+
+      this.settings = elation.collection.localindexed({storagekey: 'janusweb.player.settings', index: 'key'});
+
       this.defineProperties({
         janus: {type: 'object' },
+        room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false }
       });
@@ -59,6 +65,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.cursor_style = 'default';
       this.cursor_object = '';
       this.lookat_object = '';
+
       if (this.usevoip) {
         this.voip = new JanusVOIPRecorder({audioScale: 1024});
         this.voipqueue = [];
@@ -160,8 +167,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.engine_frame = function(ev) {
       elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
-      var transform = new THREE.Matrix4();
       if (this.tracker && this.tracker.hasHands()) {
+        var transform = new THREE.Matrix4();
         var hands = this.tracker.getHands();
         if (hands) {
           this.hands.left.active = hands.left && hands.left.active;
@@ -312,6 +319,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor.visible = this.cursor_visible;
       }
     }
+    this.setRoom = function(room) {
+      if (this.room) {
+        this.room.part();
+      }
+      this.room = room;
+      this.room.join();
+    }
     this.reset_position = function(ev) {
       if (!ev || ev.value == 1) {
         var room = this.engine.client.janusweb.currentroom;
@@ -386,6 +400,114 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         url:           ['property', 'parent.currentroom.url'],
       });
       return proxy;
+    }
+    this.getAvatarData = function() {
+      return this.getSetting('avatar', this.defaultavatar);
+    }
+    this.setAvatar = function(avatar) {
+      return this.setSetting('avatar', avatar);
+    }
+    this.hasVoipData = function() {
+      return this.voipqueue && this.voipqueue.length > 0;
+    }
+    this.getVoipData = function() {
+      var voipdata = '';
+      if (this.voipqueue && this.voipqueue.length > 0) {
+        // FIXME - we should probably just return a combined Uint8Array rather than a binary string
+        while (this.voipqueue.length > 0) {
+          var buf = this.voipqueue.shift();
+          var bytes = new Uint8Array(buf.buffer);
+          for (var i = 0; i < bytes.byteLength; i++) {
+            voipdata += String.fromCharCode(bytes[i]);
+          }
+        }
+      }
+      return voipdata;
+    }
+    this.getAnimationID = function() {
+      var animid = 'idle';
+      if (this.controlstate.run) {
+        animid = 'run';
+      } else if (this.controlstate.move_forward) {
+        animid = 'walk';
+      } else if (this.controlstate.move_left) {
+        animid = 'walk_left';
+      } else if (this.controlstate.move_right) {
+        animid = 'walk_right';
+      } else if (this.controlstate.move_backward) {
+        animid = 'walk_back';
+      } else if (document.activeElement && this.chat && document.activeElement === this.chat.input.inputelement) {
+        animid = 'type';
+      } else if (this.hasVoipData()) {
+        animid = 'speak';
+      }
+      return animid;
+    }
+    this.hasHands = function() {
+      return (this.tracker && this.tracker.hasHands());
+    }
+    this.getHandData = function() {
+      var handData = false;
+      var hands = this.tracker.getHands();
+      if (hands) {
+        handData = {};
+        if (hands.left && hands.left.active) {
+          handData.left = {
+            active: true,
+            state: hands.left.getState(player.shoulders)
+          };
+        }
+        if (hands.right && hands.right.active) {
+          handData.right = {
+            active: true,
+            state: hands.right.getState(player.shoulders)
+          };
+        }
+      } 
+      return handData;
+    }
+    this.getRandomUsername = function() {
+      var adjectives = [
+				"Adorable", "Beautiful", "Clean", "Drab", "Elegant", "Fancy", "Glamorous", "Handsome", "Long", "Magnificent",
+				"Plain", "Quaint", "Sparkling", "Ugliest", "Unsightly", "Agreeable", "Brave", "Calm", "Delightful", "Eager",
+				"Faithful", "Gentle", "Happy", "Jolly", "Kind", "Lively", "Nice", "Obedient", "Proud", "Relieved", "Silly",
+				"Thankful", "Victorious", "Witty", "Zealous", "Angry", "Bewildered", "Clumsy", "Defeated", "Embarrassed",
+				"Fierce", "Grumpy", "Helpless", "Itchy", "Jealous", "Lazy", "Mysterious", "Nervous", "Obnoxious", "Panicky",
+				"Repulsive", "Scary", "Thoughtless", "Uptight", "Worried"
+      ];
+      var nouns = [
+				"Alligator", "Ant", "Bear", "Bee", "Bird", "Camel", "Cat", "Cheetah", "Chicken", "Chimpanzee", "Cow",
+				"Crocodile", "Deer", "Dog", "Dolphin", "Duck", "Eagle", "Elephant", "Fish", "Fly", "Fox", "Frog", "Giraffe",
+				"Goat", "Goldfish", "Hamster", "Hippopotamus", "Horse", "Kangaroo", "Kitten", "Lion", "Lobster", "Monkey",
+				"Octopus", "Owl", "Panda", "Pig", "Puppy", "Rabbit", "Rat", "Scorpion", "Seal", "Shark", "Sheep", "Snail",
+				"Snake", "Spider", "Squirrel", "Tiger", "Turtle", "Wolf", "Zebra"
+      ];
+
+      var adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      var noun = nouns[Math.floor(Math.random() * nouns.length)];
+      var num = Math.floor(Math.random() * 1000);
+
+      return adj + noun + num
+    }
+    this.getSetting = function(key, defaultvalue) {
+      var setting = this.settings.get(key);
+      if (!setting) return defaultvalue;
+      return elation.utils.any(setting.value, defaultvalue);
+    }
+    this.setSetting = function(key, value) {
+      this.settings.add({key: key, value: value});
+      this.settings.save();
+    }
+    this.getUsername = function() {
+      var username = this.getSetting('username');;
+      if (!username) {
+        username = this.getRandomUsername();
+      }
+      return username;
+    }
+    this.setUsername = function(username) {
+      this.setSetting('username', username);
+      elation.events.fire({type: 'username_change', element: this, data: username});
     }
   }, elation.engine.things.player);
 });
