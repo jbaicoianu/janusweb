@@ -1,4 +1,4 @@
-elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.external.JanusClientConnection', 'janusweb.external.JanusFireboxParser', 'utils.proxy'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
@@ -33,6 +33,10 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       rotationspeed: 50.0,
       hidemenu: false
     };
+    this.scriptframeargs = [
+      1000/60
+    ];
+
 
     this.postinit = function() {
       this.defineProperties({
@@ -67,16 +71,12 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         'mute': [ 'keyboard_ctrl_m', elation.bind(this, this.mute) ]
       });
       this.engine.systems.controls.activateContext('janus');
-      this.remotePlayers = {};
-      this.remotePlayerCount = 0;
-      this.playerCount = this.remotePlayerCount + 1;
-      this.lastUpdate = Date.now();
-      this.tmpMat = new THREE.Matrix4();
-      this.tmpVecX = new THREE.Vector3();
-      this.tmpVecY = new THREE.Vector3();
-      this.tmpVecZ = new THREE.Vector3();
-      this.sentUpdates = 0;
-      this.updateRate = 15;
+
+      this.network = elation.janusweb.multiplayermanager({
+        janusweb: this,
+        server: this.server,
+        player: this.engine.client.player
+      });
 
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
       if (this.urltemplate) {
@@ -192,41 +192,11 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
       if (this.networking) {
         // connect to presence server
-        //this.userId = Date.now().toString();
-        this.userId = this.getUsername();
-        this.engine.client.player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
+        var player = this.engine.client.player;
+        this.userId = player.getUsername();
+        player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
 
-        var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
-            port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
-        var janusOptions = {
-          host: host,
-          port: port,
-          userId: this.userId,
-          version: this.version,
-          roomUrl: starturl
-        }
-        this.network = new JanusClientConnection(janusOptions);
-        this.network.addEventListener('message', function(msg) {
-          this.onJanusMessage(msg);
-        }.bind(this));
-        this.network.addEventListener('connect', function() {
-          this.sendPlayerUpdate({first: true});
-          //elation.events.add(this.engine.client.player, 'thing_change', elation.bind(this, this.sendPlayerUpdate));
-          setInterval(function() {
-            this.sendPlayerUpdate({first: false});
-          }.bind(this), 100);
-          elation.events.fire({element: this, type: 'janusweb_client_connected', data: this.userId});
-          if (this.chat) {
-            this.chat.addmessage({userId: ' ! ', message: 'Connected as ' + this.userId });
-          }
-        }.bind(this));
-        this.network.addEventListener('disconnect', function() {
-          if (this.chat) {
-            this.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
-          }
-        }.bind(this));
-        //elation.events.add(this, 'room_change', elation.bind(this, function(ev) { console.log('DUR', ev); this.enter_room(ev.data); }));
-        elation.events.add(this, 'room_disable', elation.bind(this, function(ev) { this.unsubscribe(ev.data.url); }));
+        this.network.enable(player);
       }
       if (this.showchat) {
         this.chat = elation.janusweb.chat({append: document.body, client: this.engine.client, network: this.network});
@@ -239,7 +209,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         //setTimeout(elation.bind(this.currentroom, this.currentroom.die), 1000);
         //this.currentroom.die();
         this.currentroom.disable();
-        this.leave_room(this.currentroom.url);
+        //this.leave_room(this.currentroom.url);
         this.currentroom = false;
       }
       this.refresh();
@@ -256,8 +226,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
 
-      var roomid = md5(url);
-      this.rooms[roomid] = room;
+      this.network.registerRoom(room, true);
+
+      this.rooms[room.roomid] = room;
       //console.log('made new room', url, room);
       this.loading = false;
       if (room && makeactive) {
@@ -277,7 +248,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       this.loading = true;
 
       if (elation.utils.isString(url)) {
-        var roomid = md5(url);
+        var roomid = this.roomid = md5(url);
         if (this.rooms[roomid]) {
           room = this.rooms[roomid];
         }
@@ -285,6 +256,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         room = url;
         url = room.url;
       }
+      var player = this.engine.client.player;
 
       if (room) {
         var changed = this.properties.url != url;
@@ -296,49 +268,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         if (this.currentroom !== room) {
           this.currentroom = room;
 
-          this.scriptframeargs = [
-            1000/60
-          ];
+          window.room = this.currentroom.getProxyObject();
 
-          window.room = new elation.proxy(this.currentroom, {
-            url:           ['property', 'url', { readonly: true}],
-            objects:       ['property', 'jsobjects'],
-            cookies:       ['property', 'cookies'],
-            walk_speed:    ['property', 'walk_speed'],
-            run_speed:     ['property', 'run_speed'],
-            jump_velocity: ['property', 'jump_velocity'],
-            gravity:       ['property', 'gravity'],
-            fog:           ['property', 'fog'],
-            fog_mode:      ['property', 'fog_mode'], 
-            fog_density:   ['property', 'fog_density'],
-            fog_start:     ['property', 'fog_start'],
-            fog_end:       ['property', 'fog_end'],
-            fog_col:       ['property', 'fog_col'],
-            bloom:         ['property', 'bloom'],
-            col:           ['property', 'col'],
-    
-            loadNewAsset:  ['function', 'loadNewAsset'],
-            createObject:  ['function', 'createObject'],
-            removeObject:  ['function', 'removeObject'],
-            addCookie:     ['function', 'addCookie'],
-            playSound:     ['function', 'playSound'],
-            stopSound:     ['function', 'stopSound'],
-            seekSound:     ['function', 'seekSound'],
-            getObjectById: ['function', 'getObjectById'],
-            openLink:      ['function', 'openLink'],
-
-            onLoad:          ['callback', 'janus_room_scriptload'],
-            update:          ['callback', 'janusweb_script_frame', null, this.scriptframeargs],
-            onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
-            onColliderEnter: ['callback', 'janus_room_collider_enter'],
-            onColliderExit:  ['callback', 'janus_room_collider_exit'],
-            onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
-            onMouseDown:     ['callback', 'janus_room_mousedown'],
-            onMouseUp:       ['callback', 'janus_room_mouseup'],
-            onKeyDown:       ['callback', 'janus_room_keydown'],
-            onKeyUp:         ['callback', 'janus_room_keyup']
-          });
-
+          player.setRoom(room);
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
@@ -347,8 +279,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         }
         if (!pos) pos = this.currentroom.playerstartposition;
         if (pos) {
-          this.engine.client.player.properties.position.fromArray(pos);
-          this.engine.client.player.properties.orientation.copy(this.currentroom.playerstartorientation);
+          player.properties.position.fromArray(pos);
+          player.properties.orientation.copy(this.currentroom.playerstartorientation);
         }
         if (changed && !skipURLUpdate) {
           this.updateClientURL(url);
@@ -361,7 +293,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         } else {
           this.currentroom.enable();
         }
-        this.enter_room(url);
+        //this.enter_room(url);
       } else {
         this.load(url, true);
       }
@@ -441,275 +373,14 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         this.engine.systems.sound.toggleMute();
       }
     }
-    this.subscribe = function(url) {
-      this.network.subscribe(url);
-    }
-    this.unsubscribe = function(url) {
-      this.network.unsubscribe(url);
-    }
-    this.enter_room = function(url) {
-      if (this.network) {
-        this.network.subscribe(url);
-        this.network.enter_room(url);
-      }
-    }
-    this.leave_room = function(url) {
-      if (this.network) {
-        this.network.leave_room(url);
-      }
-    }
-    this.onJanusMessage = function(msg) {
-      var method = msg.data.method
-      if (method == 'user_moved') {
-        var userId = msg.data.data.position._userId;
-        if (!this.remotePlayers.hasOwnProperty(userId)) {
-          var remoteplayer = this.spawnRemotePlayer(msg.data.data);
-          elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
-          if (this.chat) {
-            this.chat.addmessage({userId: ' ! ', message: userId + ' entered room' });
-          }
-        }
-        else {
-          this.moveRemotePlayer(msg.data.data);
-        }
-      }
-      else if (method == 'user_disconnected' || method == 'user_leave') {
-        var remoteplayer = this.remotePlayers[msg.data.data.userId];
-        if (remoteplayer) {
-          elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
-          if (this.chat) {
-            this.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
-          }
-          if (remoteplayer && remoteplayer.parent) {
-            remoteplayer.die();
-          }
-          delete this.remotePlayers[msg.data.data.userId];
-          this.remotePlayerCount = Object.keys(this.remotePlayers).length;
-          this.playerCount = this.remotePlayerCount + 1;
-        }
-      } else if (method == 'user_portal') {
-        var data = msg.data.data;
-        var portalname = 'portal_' + data.userId + '_' + md5(data.url);
-        var node = this.parser.parseNode(data);
-        var room = this.rooms[data.roomId];
-        if (room) {
-          room.spawn('janusportal', portalname, {
-            url: data.url,
-            janus: this,
-            room: room,
-            title: data.url,
-            position: node.pos,
-            orientation: node.orientation,
-          });
-        }
-      } else if (method == 'user_chat') {
-        if (this.chat) {
-          this.chat.addmessage(msg.data.data);
-        }
-      }
-    }
-    this.getJanusOrientation = function(player, head) {
-      // takes a quaternion, returns an object OTF {dir: "0 0 0", up_dir: "0 0 0", view_dir: "0 0 0"}
-      this.tmpMat.makeRotationFromQuaternion(player.properties.orientation);
-      this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
-      var ret = {
-        dir: this.tmpVecZ.clone().negate().toArray().join(' '),
-        //up_dir: this.tmpVecY.toArray().join(' '),
-        up_dir: '0 1 0',
-        //view_dir: this.tmpVecZ.toArray().join(' ')
-      }
-      if (head) {
-        //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
-        this.tmpMat.copy(head.objects['3d'].matrixWorld);
-        this.tmpMat.extractBasis(this.tmpVecX, this.tmpVecY, this.tmpVecZ);
-        ret.view_dir = this.tmpVecZ.clone().negate().toArray().join(' ');
-        ret.up_dir = this.tmpVecY.toArray().join(' ');
-        var headpos = head.properties.position.clone();//.sub(new THREE.Vector3(0,1.3,0));
-        headpos.x *= -1;
-        headpos.z *= -1;
-        ret.head_pos = headpos.toArray().join(' '); //this.tmpMat.getPosition().toArray().join(' ');
-      } else {
-        ret.view_dir = '0 0 1';
-        ret.head_pos = '0 0 0';
-      }
-      return ret;
-    }
-    this.spawnRemotePlayer = function(data) {
-      var userId = data.position._userId;
-      var roomId = data.roomId;
 
-      var room = this.rooms[roomId] || this.currentroom;
-
-      var spawnpos = (data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
-      this.remotePlayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this});
-      var remote = this.remotePlayers[userId];
-
-      this.remotePlayerCount = Object.keys(this.remotePlayers).length;
-      this.playerCount = this.remotePlayerCount + 1;
-      return remote;
-    }
-    this.moveRemotePlayer = function(data) {
-      var remote = this.remotePlayers[data.position._userId];
-      var room = this.rooms[data.roomId] || this.currentroom;
-      var movedata = data.position;
-
-      if (remote.room !== room) {
-        remote.setRoom(room);
-      }
-
-      remote.updateData(movedata);
-
-      this.refresh();
-    }
-    this.sendPlayerUpdate = function(opts) {
-      if (!this.currentroom) return;
-      // opts.first is a bool, if true then we are sending our avatar along with the move update
-      // else, we send the avatar on every 15th update
-      if (Date.now() - this.lastUpdate < 20) return;
+    this.setUsername = function(name) {
       var player = this.engine.client.player;
-      var dirs = this.getJanusOrientation(player, player.head)
-      var moveData = {
-        "pos": this.engine.client.player.properties.position.toArray().join(" "),
-        "dir": dirs.dir,
-        "up_dir": dirs.up_dir,
-        "view_dir": dirs.view_dir,
-        "head_pos": dirs.head_pos,
-        "anim_id": "idle"
-      }
-
-      //console.log('movedata update', moveData);
-      if (opts.first || this.sentUpdates == this.updateRate) {
-        // FIXME - don't hardcode this!
-        var head_pos = '0 1.4 0'; 
-        moveData["avatar"] = "<FireBoxRoom><Assets><AssetObject id=^screen^ src=^https://web.janusvr.com/media/assets/hoverscreen.obj^ mtl=^https://web.janusvr.com/media/assets/hoverscreen.mtl^ /></Assets><Room><Ghost id=^"  + this.userId + "^ js_id=^105^ locked=^false^ onclick=^^ oncollision=^^ interp_time=^0.1^ pos=^0.632876 -1.204882 32.774837^ vel=^0 0 0^ accel=^0 0 0^ xdir=^1 0 0^ ydir=^0 1 0^ zdir=^0 0 1^ scale=^1 1 1^ col=^#ffffff^ lighting=^true^ visible=^true^ shader_id=^^ head_id=^screen^ head_pos=^" + head_pos + "^ body_id=^^ anim_id=^^ anim_speed=^1^ eye_pos=^0 1.6 0^ eye_ipd=^0^ userid_pos=^0 0.5 0^ loop=^false^ gain=^1^ pitch=^1^ auto_play=^false^ cull_face=^back^ play_once=^false^ /></Room></FireBoxRoom>";
-        this.sentUpdates = 0;
-      }
-
-      if (player.voipqueue && player.voipqueue.length > 0) {
-        var binary = '';
-        while (player.voipqueue.length > 0) {
-          var buf = player.voipqueue.shift();
-          var bytes = new Uint8Array(buf.buffer);
-          for (var i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-        }
-        moveData.speaking = true;
-        moveData.audio = window.btoa(binary);
-        moveData.anim_id = "speak";
-      }
-      var changeids = Object.keys(this.currentroom.changes);
-      var changestr = '';
-      if (changeids.length > 0) {
-        var xmldoc = document.implementation.createDocument(null, 'edit', null);
-        var editroot = xmldoc.documentElement;
-
-        var typemap = {
-          janustext: 'Text',
-          janusobject: 'Object',
-        };
-
-        changeids.forEach(elation.bind(this, function(id) {
-          //changestr += this.currentroom.changes[id];
-          var change = this.currentroom.changes[id];
-          var real = this.currentroom.getObjectFromProxy(change);
-          if (real) {
-            var xmltype = typemap[real.type] || 'Object';
-            xmlnode = xmldoc.createElement(xmltype); // FIXME - determine object's type
-            
-            var attrs = Object.keys(change);
-            for (var i = 0; i < attrs.length; i++) {
-              var k = attrs[i];
-              var val = change[k];
-              if (val instanceof THREE.Vector2 ||
-                  val instanceof THREE.Vector3) {
-                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
-              } else if (val instanceof THREE.Color) {
-                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
-              }
-              if (val !== null && val !== undefined && typeof val != 'function') {
-                // If the property name matches the object type, use a text node rather than setting the property
-                if (xmltype.toLowerCase() == k.toLowerCase()) {
-                  xmlnode.appendChild(xmldoc.createTextNode(val));
-                } else {
-                  xmlnode.setAttribute(k, val);
-                }
-              }
-            }
-            editroot.appendChild(xmlnode);
-          }
-          delete this.currentroom.changes[id];
-        }));
-        this.currentroom.appliedchanges = {};
-        var serializer = new XMLSerializer();
-        changestr = serializer.serializeToString(xmldoc);
-        changestr = changestr.replace(/"/g, '^');
-        changestr = changestr.replace(/^<edit\/?>/, '');
-        changestr = changestr.replace(/<\/edit>\s*$/, '');
-      }
-      if (changestr != '') {
-        //console.log('SEND', changestr);
-        moveData.room_edit = changestr;
-      }
-      if (document.activeElement && this.chat && document.activeElement === this.chat.input.inputelement) {
-        moveData.anim_id = 'type';
-      }
-      if (player.controlstate.run) {
-        moveData.anim_id = 'run';
-      } else if (player.controlstate.move_forward) {
-        moveData.anim_id = 'walk';
-      } else if (player.controlstate.move_left) {
-        moveData.anim_id = 'walk_left';
-      } else if (player.controlstate.move_right) {
-        moveData.anim_id = 'walk_right';
-      } else if (player.controlstate.move_backward) {
-        moveData.anim_id = 'walk_back';
-      }
-
-      var hands = player.tracker.getHands();
-      if (hands) {
-        if (hands.left && hands.left.active) {
-          moveData.hand0 = {
-            state: hands.left.getState(player.shoulders)
-          };
-        }
-        if (hands.right && hands.right.active) {
-          moveData.hand1 = {
-            state: hands.right.getState(player.shoulders)
-          };
-        }
-      } 
-
-
-      this.network.send({'method': 'move', 'data': moveData});
-      this.lastUpdate = Date.now();
-      this.sentUpdates++;
+      player.setUsername(name);
     }
     this.getUsername = function() {
-      var adjectives = [
-				"Adorable", "Beautiful", "Clean", "Drab", "Elegant", "Fancy", "Glamorous", "Handsome", "Long", "Magnificent",
-				"Plain", "Quaint", "Sparkling", "Ugliest", "Unsightly", "Agreeable", "Brave", "Calm", "Delightful", "Eager",
-				"Faithful", "Gentle", "Happy", "Jolly", "Kind", "Lively", "Nice", "Obedient", "Proud", "Relieved", "Silly",
-				"Thankful", "Victorious", "Witty", "Zealous", "Angry", "Bewildered", "Clumsy", "Defeated", "Embarrassed",
-				"Fierce", "Grumpy", "Helpless", "Itchy", "Jealous", "Lazy", "Mysterious", "Nervous", "Obnoxious", "Panicky",
-				"Repulsive", "Scary", "Thoughtless", "Uptight", "Worried"
-      ];
-      var nouns = [
-				"Alligator", "Ant", "Bear", "Bee", "Bird", "Camel", "Cat", "Cheetah", "Chicken", "Chimpanzee", "Cow",
-				"Crocodile", "Deer", "Dog", "Dolphin", "Duck", "Eagle", "Elephant", "Fish", "Fly", "Fox", "Frog", "Giraffe",
-				"Goat", "Goldfish", "Hamster", "Hippopotamus", "Horse", "Kangaroo", "Kitten", "Lion", "Lobster", "Monkey",
-				"Octopus", "Owl", "Panda", "Pig", "Puppy", "Rabbit", "Rat", "Scorpion", "Seal", "Shark", "Sheep", "Snail",
-				"Snake", "Spider", "Squirrel", "Tiger", "Turtle", "Wolf", "Zebra"
-      ];
-
-      var adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-      var noun = nouns[Math.floor(Math.random() * nouns.length)];
-      var num = Math.floor(Math.random() * 1000);
-
-      return adj + noun + num
-    }
-    this.setUsername = function(name) {
-      this.network.setUserId(name);
+      var player = this.engine.client.player;
+      return player.getUsername();
     }
     this.handleRoomEditOther = function(data) {
       var roomId = data.roomId,
@@ -749,7 +420,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       return this.currentroom.properties.locked;
     }
     this.sendChatMessage = function(text) {
-      this.network.send({'method': 'chat', data: text});
+      var network = this.currentroom.getServer();
+      network.send({'method': 'chat', data: text});
     }
     this.getSetting = function(name) {
       return elation.utils.arrayget(this.settings, name);
@@ -781,9 +453,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       return true;
     }
     this.sendScriptFrame = function(ev) {
+      this.scriptframeargs[0] = Math.round(ev.data.delta * 1000);
 /*
       this.engine.systems.world.scene['world-3d'].updateMatrixWorld(true);
-      this.scriptframeargs[0] = ev.data.delta * 1000;
       //elation.events.fire({element: this.currentroom, type: 'janusweb_script_frame'});
       if (this.currentroom.update) {
         this.currentroom.update(1000/60);
