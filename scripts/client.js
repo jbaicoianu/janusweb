@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui', 'janusweb.configuration'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -192,6 +192,23 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         this.fullscreenbutton.removeclass('state_fullscreen');
         this.fullscreenbutton.setLabel('Expand');
       }
+    }
+    this.configureOptions = function() {
+      if (!this.configmenu) {
+        var configpanel = elation.janusweb.configuration({client: this});
+        this.configmenu = elation.ui.window({
+          append: document.body,
+          classname: this.name + '_config',
+          center: true,
+          resizable: false,
+          title: 'Configuration',
+          controls: true,
+          maximize: false,
+          minimize: false,
+          content: configpanel
+        });
+      }
+      this.configmenu.show();
     }
   }, elation.engine.client);
 });
