@@ -12,15 +12,16 @@ elation.require(['janusweb.janusbase'], function() {
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
       if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color, this.light_intensity / 100, this.light_range);
+        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
         this.light.position.set(0,0,0);
         obj.add(this.light);
       } else if (this.light_cone_angle > 0) {
         var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color, this.light_intensity / 100, this.light_range, angle);
+        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
         //this.light.position.set(0,0,0);
         obj.add(this.light);
       } 
+      this.updateLight();
       return obj;
     }
     this.createChildren = function() {
@@ -46,8 +47,11 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateLight = function() {
       if (this.light) {
-        this.light.intensity = this.light_intensity / 100;
+        //this.light.intensity = this.light_intensity / 100;
+        var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
         this.light.color.copy(this.color);
+        this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
+        this.light.range = this.light_range * avgscale;
       }
     }
     this.getProxyObject = function() {
