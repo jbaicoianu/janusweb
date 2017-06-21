@@ -232,7 +232,15 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
       this.hoverstate = false;
-      this.engine.client.player.cursor_style = 'default';
+
+      var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+      if (this.engine.systems.controls.pointerLockActive || (vrdisplay && vrdisplay.isPresenting)) {
+        this.engine.client.player.cursor_style = 'crosshair';
+      } else {
+        this.engine.client.player.cursor_style = 'default';
+      }
+
+      //this.engine.client.player.cursor_style = 'default';
       this.refresh();
     }
     this.click = function(ev) {
