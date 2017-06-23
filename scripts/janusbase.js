@@ -24,6 +24,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         rotate_axis: { type: 'string', default: '0 1 0' },
         rotate_deg_per_sec: { type: 'string' },
         onclick: { type: 'object' },
+        anim_id: { type: 'string' },
+        anim_transition_time: { type: 'float', default: .2 },
       });
       //if (this.col) this.color = this.col;
       elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
@@ -306,6 +308,23 @@ console.error('dunno what this is', other);
         this.engine.client.player.cursor_style = 'crosshair';
       } else {
         this.engine.client.player.cursor_style = 'default';
+      }
+    }
+    this.setAnimation = function(anim_id) {
+      if (!this.activeanimation || anim_id != this.anim_id) {
+        if (!this.animationmixer) return;
+        if (this.activeanimation) {
+          //console.log('pause active animation', this.activeanimation);
+          // TODO - interpolating between actions would make transitions smoother
+          this.activeanimation.stop();
+        }
+        if (this.animationactions && this.animationactions[anim_id]) {
+          var action = this.animationactions[anim_id];
+          //console.log('found action!', anim_id, action);
+          action.play();
+          this.activeanimation = action;
+        }
+        this.anim_id = anim_id;
       }
     }
   }, elation.engine.things.generic);
