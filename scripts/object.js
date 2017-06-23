@@ -246,6 +246,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.minFilter = THREE.LinearFilter;
           texture.magFilter = THREE.LinearFilter;
           elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+          elation.events.add(texture, 'autoplaystart', elation.bind(this, this.handleAutoplayStart));
+          elation.events.add(texture, 'autoplayfailed', elation.bind(this, this.handleAutoplayFailed));
           this.videotexture = texture;
           this.assignTextureParameters(texture, modelasset);
           if (videoasset.auto_play) {
@@ -253,6 +255,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           } else {
             texture.image.pause();
           }
+          elation.events.add(this, elation.bind(this, this.handleVideoClick));
         }
       }
       if (this.properties.websurface_id) {
@@ -449,16 +452,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
     }
-    this.pauseVideo = function() {
-      if (this.videotexture) {
-        var video = this.videotexture.image;
-        if (video.currentTime > 0 && !video.paused && !video.ended) {
-          video.pause();
-        } else {
-          video.play();
-        }
-      }
-    }
     this.start = function() {
       if (this.image_id) {
         var textureasset = this.getAsset('image', this.image_id);
@@ -497,6 +490,31 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (this.websurface_id && this.websurface) {
         this.websurface.stop();
+      }
+    }
+    this.handleVideoClick = function() {
+      if (this.videotexture) {
+        var video = this.videotexture.image;
+        if (video.currentTime > 0 && !video.paused && !video.ended) {
+          video.pause();
+        } else {
+          video.play();
+        }
+      }
+    }
+    this.handleAutoplayStart = function() {
+      if (this.playbutton) {
+        this.remove(this.playbutton);
+      }
+    }
+    this.handleAutoplayFailed = function() {
+      if (!this.playbutton) {
+        this.playbutton = this.spawn('janustext', null, {
+          janus: this.janus,
+          room: this.room,
+          text: 'play'
+        });
+        elation.events.add(this.playbutton, 'click', elation.bind(this, this.play));
       }
     }
     this.getProxyObject = function() {
