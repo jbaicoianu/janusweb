@@ -8,7 +8,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         head_id: { type: 'string' },
         head_pos: { type: 'vector3', default: [0,1,0] },
         body_id: { type: 'string' },
-        anim_id: { type: 'string' },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         ghost_scale: { type: 'vector3', default: [1,1,1] },
         ghostassets: { type: 'object' },
@@ -173,13 +172,17 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       if (anim_id != this.anim_id) {
         if (!this.body || !this.body.animationmixer) return;
         if (this.activeanimation) {
-          //console.log('pause active animation', this.activeanimation);
-          // TODO - interpolating between actions would make transitions smoother
-          this.activeanimation.stop();
+          this.activeanimation.fadeOut(this.anim_transition_time);
+          var oldanim = this.activeanimation;
+          setTimeout(elation.bind(this, function() {
+            if (this.activeanimation !== oldanim)
+              oldanim.stop();
+          }), this.anim_transition_time * 1000);
         }
         if (this.body.animationactions && this.body.animationactions[anim_id]) {
           var action = this.body.animationactions[anim_id];
           //console.log('found action!', anim_id, action);
+          action.fadeIn(this.anim_transition_time);
           action.play();
           this.activeanimation = action;
         } else {
@@ -226,6 +229,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.anim_id = anim_id;
       }
     }
+    this.rebindAnimations = function() {
+      this.body.rebindAnimations();
+    }
+
     this.start = function() {
       this.framenum = -1;
       if (this.frames.length > 0) {
@@ -306,13 +313,32 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
 
         //this.set('position', movepos, true);
         if (movedata.pos) {
-          this.properties.position.fromArray(parser.getVectorValue(movedata.pos));
+          var pos = parser.getVectorValue(movedata.pos);
         }
         if (movedata.vel) {
           this.properties.velocity.fromArray(parser.getVectorValue(movedata.vel));
+          this.properties.position.fromArray(pos);
+          this.interpolateNextPos.copy(this.properties.position);
+        } else {
+          if (this.interpolateLastPos) {
+            var rate = this.janusweb.network.getUpdateRate(this.room);
+            var lastpos = this.interpolateLastPos;
+            this.properties.position.fromArray(this.interpolateLastPos);
+            this.properties.velocity.set(pos[0] - lastpos[0], pos[1] - lastpos[1], pos[2] - lastpos[2]).multiplyScalar(1000 / rate);
+
+            if (this.interpolateTimer) clearTimeout(this.interpolateTimer);
+            this.interpolateTimer = setTimeout(elation.bind(this, function() {
+              this.properties.velocity.set(0,0,0);
+            }), rate);
+          } else {
+            this.properties.position.fromArray(pos);
+          }
+          this.interpolateLastPos = pos;
         }
         if (movedata.rotvel) {
           this.properties.angular.fromArray(parser.getVectorValue(movedata.rotvel));
+        } else {
+          // TODO - interpolate rotations
         }
         if (movedata.anim_id) {
           this.setAnimation(movedata.anim_id);
