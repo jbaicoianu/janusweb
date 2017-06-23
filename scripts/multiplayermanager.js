@@ -22,10 +22,8 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       this.player = this.args.player;
       this.parser = new JanusFireboxParser();
 
-      this.updateRate = 50;
-      this.sentUpdates = 0;
-      this.lastUpdate = 0;
       this.avatarNeedsUpdate = true;
+      this.avatarUpdateRate = 5000;
 
       var hashargs = elation.url(),
           server = elation.utils.any(this.args.server, hashargs['janus.server'], elation.config.get('janusweb.network.server')),
@@ -44,6 +42,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       this.defaultport = port;
 
       elation.events.add(this.player, 'username_change', elation.bind(this, this.handleUsernameChange));
+      setInterval(elation.bind(this, this.updateAvatar), this.avatarUpdateRate);
     }
     this.enable = function(player) {
       this.enabled = true;
@@ -57,11 +56,14 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       this.enabled = false;
       elation.events.fire({type: 'disabled', element: this});
     }
-    this.getUpdateRate = function() {
+    this.getUpdateRate = function(room) {
       var roomrate;
-      if (this.activeroom) {
-        roomrate = this.activeroom.rate;
+      if (!room) room = this.activeroom;
+
+      if (room) {
+        roomrate = room.rate;
       }
+
       var rate = elation.utils.any(roomrate, this.args.rate, elation.config.get('janusweb.network.rate'), 100);
       return rate;
     }
@@ -71,7 +73,6 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       }
       var rate = this.getUpdateRate();
       this.updateinterval = setInterval(elation.bind(this, this.sendUpdate), rate);
-console.log('Set update interval', rate);
     }
     this.stopUpdateInterval = function() {
       if (this.updateinterval) {
@@ -192,7 +193,6 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       // opts.first is a bool, if true then we are sending our avatar along with the move update
       // else, we send the avatar on every 15th update
-      //if (Date.now() - this.lastUpdate < 20) return;
       var player = this.player,
           room = this.activeroom,
           server = this.getServerForRoom(room);
@@ -212,10 +212,8 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       }
 
       //console.log('[MultiplayerManager] player update', moveData);
-      if (this.avatarNeedsUpdate || this.sentUpdates == this.updateRate) {
-console.log('UPDATE AVATAR');
+      if (this.avatarNeedsUpdate) {
         moveData["avatar"] = player.getAvatarData().replace(/"/g, "^");
-        this.sentUpdates = 0;
         this.avatarNeedsUpdate = false
       }
 
@@ -246,8 +244,6 @@ console.log('UPDATE AVATAR');
 
 //console.log(moveData, server, room);
       server.send({'method': 'move', 'data': moveData});
-      this.lastUpdate = Date.now();
-      this.sentUpdates++;
     }
     this.subscribe = function(room) {
       var server = this.getServerForRoom(room);
@@ -282,6 +278,9 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
       this.remotePlayerCount = Object.keys(this.remoteplayers).length;
       this.playerCount = this.remotePlayerCount + 1;
+
+      // If a new player spawned, let's send an avatar update ASAP
+      this.updateAvatar();
       return remote;
     }
     this.updateAvatar = function() {
@@ -318,7 +317,7 @@ console.log('[MultiplayerManager] disconnected', ev);
       } else if (method == 'user_portal') {
         this.handlePortal(msg);
       } else if (method == 'user_chat') {
-        this.handleChat(msg);
+        this.handleUserChat(msg);
       }
     }
     this.handleUserMoved = function(msg) {
