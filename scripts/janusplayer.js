@@ -98,7 +98,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
           'pointer': elation.engine.assets.find('image', 'cursor_hand'),
         };
-        this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, map: null}));
+        this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
         this.engine.systems.world.scene['world-3d'].add(this.cursor);
       }), 1000);
     }
@@ -436,7 +436,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         animid = 'walk_right';
       } else if (this.controlstate.move_backward) {
         animid = 'walk_back';
-      } else if (document.activeElement && this.chat && document.activeElement === this.chat.input.inputelement) {
+      } else if (document.activeElement && this.janus.chat && document.activeElement === this.janus.chat.input.inputelement) {
         animid = 'type';
       } else if (this.hasVoipData()) {
         animid = 'speak';
