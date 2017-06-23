@@ -318,7 +318,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (movedata.vel) {
           this.properties.velocity.fromArray(parser.getVectorValue(movedata.vel));
           this.properties.position.fromArray(pos);
-          this.interpolateNextPos.copy(this.properties.position);
         } else {
           if (this.interpolateLastPos) {
             var rate = this.janusweb.network.getUpdateRate(this.room);
