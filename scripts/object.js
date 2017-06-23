@@ -42,9 +42,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.pickable = false;
         this.collidable = false;
       }
-      if (this.video_id) {
-        elation.events.add(this, 'click', elation.bind(this, this.pauseVideo));
+      if (this.anim_id) {
+        this.setAnimation(this.anim_id);
       }
+
     }
     this.createObject3D = function() {
       if (this.properties.exists === false) return;
@@ -290,12 +291,20 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (srcfactors[this.properties.blend_dest]) {
         blend_dest = srcfactors[this.properties.blend_dest];
       }
+
+      this.extractAnimations(this.objects['3d']);
+
       var scene = this.engine.systems.world.scene['world-3d'];
       if (!this.hasalpha) this.hasalpha = {};
       var hasalpha = this.hasalpha;
       var remove = [];
       var cloneMaterial = true;//(texture !== false);
+      var useSkinning = this.animations && this.animations.length > 0;
+
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
+        n.receiveShadow = this.shadows;
+        n.castShadow = this.shadows;
+
         if (n.material) {
           var materials = [];
           if (elation.utils.isArray(n.material)) {
@@ -378,6 +387,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.blending = THREE.NormalBlending;
             }
             m.needsUpdate = true;
+            m.skinning = useSkinning;
           }
         } else if (n instanceof THREE.Light) {
           remove.push(n);
