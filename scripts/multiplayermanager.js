@@ -286,6 +286,12 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
     this.updateAvatar = function() {
       this.avatarNeedsUpdate = true;
     }
+    this.send = function(msg, room) {
+      //console.log('[MultiplayerManager] send', msg, room);
+      if (!room) room = this.activeroom;
+      var server = this.getServerForRoom(room);
+      server.send(msg);
+    }
 
     this.handleServerConnect = function(msg) {
 console.log('[MultiplayerManager] connected', msg);
