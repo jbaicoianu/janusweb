@@ -320,7 +320,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.properties.position.fromArray(pos);
         } else {
           if (this.interpolateLastPos) {
-            var rate = this.janusweb.network.getUpdateRate(this.room);
+            var rate = this.janus.network.getUpdateRate(this.room);
             var lastpos = this.interpolateLastPos;
             this.properties.position.fromArray(this.interpolateLastPos);
             this.properties.velocity.set(pos[0] - lastpos[0], pos[1] - lastpos[1], pos[2] - lastpos[2]).multiplyScalar(1000 / rate);
