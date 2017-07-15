@@ -5,6 +5,8 @@ elation.require(['engine.things.generic'], function() {
       this.defineProperties({
         websurface_id: { type: 'string' },
         color: { type: 'color', default: 0xffffff },
+        hovercolor: { type: 'color', default: 0x009900 },
+        activecolor: { type: 'color', default: 0x00ff00 }
       });
       var websurface = this.room.websurfaces[this.properties.websurface_id];
       if (websurface) {
@@ -27,9 +29,11 @@ elation.require(['engine.things.generic'], function() {
       }
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
+      elation.events.add(this, 'click', elation.bind(this, this.click));
     }
     this.createObject3D = function() {
       var plane = new THREE.PlaneBufferGeometry(1,1);
+
       var mat = new THREE.MeshBasicMaterial({
         color: 0x000000,
         opacity: 0,
@@ -37,9 +41,32 @@ elation.require(['engine.things.generic'], function() {
         blending: THREE.NoBlending,
         side: THREE.DoubleSide
       });
+
+      var selectionmat = new THREE.MeshBasicMaterial({
+        color: this.hovercolor,
+        blending: THREE.NormalBlending,
+        opacity: 1,
+        side: THREE.DoubleSide,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnit: 10
+      });
       this.material = mat;
+
       //plane.applyMatrix(new THREE.Matrix4().makeTranslation(.5,-.5,0));
-      return new THREE.Mesh(plane, mat);
+      elation.events.add(window, 'click', elation.bind(this, this.deactivate));
+      var obj = new THREE.Mesh(plane, mat);
+
+      var selection = new THREE.Mesh(plane, selectionmat);
+      var ratio = this.scale.x / this.scale.y;
+      selection.scale.set(1 + this.scale.x / 100,1 + this.scale.y / 100, 1);
+      selection.position.z = -.01;
+      obj.add(selection);
+      selection.visible = false;
+      this.selection = selection;
+      this.selectionmaterial = selectionmat;
+
+      return obj;
     }
     this.createObjectDOM = function() {
         var websurface = this.room.websurfaces[this.properties.websurface_id];
@@ -64,11 +91,39 @@ elation.require(['engine.things.generic'], function() {
           this.domobj = obj;
         }
     }
+    this.deactivate = function(ev) {
+      if (this.active) {
+        var canvas = this.engine.client.view.rendersystem.renderer.domElement;
+        canvas.style.pointerEvents = 'all';
+        this.engine.systems.controls.requestPointerLock();
+        this.selection.visible = false;
+        this.active = false;
+      }
+    }
+    this.click = function(ev) {
+      if (!this.active) {
+        var canvas = this.engine.client.view.rendersystem.renderer.domElement;
+        canvas.style.pointerEvents = 'none';
+        this.engine.systems.controls.releasePointerLock();
+
+        ev.stopPropagation();
+        this.active = true;
+        this.selectionmaterial.color.copy(this.activecolor);
+      }
+
+    }
     this.hover = function() {
-      this.material.color.setHex(0xff0000);
+      this.selection.visible = true;
+      this.selectionmaterial.color.copy(this.active ? this.activecolor : this.hovercolor);
+      if (this.selection.material !== this.selectionmaterial) this.selection.material = this.selectionmaterial;
+      //this.material.color.setHex(0xff0000);
     }
     this.unhover = function() {
-      this.material.color.setHex(0x000000);
+      if (!this.active) {
+        this.selection.visible = false;
+      }
+      this.selectionmaterial.color.copy(this.active ? this.activecolor : this.hovercolor);
+      //this.material.color.setHex(0x000000);
     }
     this.start = function() {
       this.objects['3d'].add(this.domobj);
