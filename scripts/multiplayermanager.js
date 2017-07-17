@@ -228,7 +228,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       }
 
       if (player.hasHands()) {
-        var hands = player.tracker.getHandData();
+        var hands = player.getHandData();
 
         if (hands.left && hands.left.active) {
           moveData.hand0 = {
@@ -273,7 +273,7 @@ console.log('[MultiplayerManager] part', room.url);
 console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
       var spawnpos = (data.position && data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
-      this.remoteplayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this});
+      this.remoteplayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this.janusweb});
       var remote = this.remoteplayers[userId];
 
       this.remotePlayerCount = Object.keys(this.remoteplayers).length;
@@ -404,7 +404,7 @@ console.log('[MultiplayerManager] player left', msg, remoteplayer);
       if (room) {
         room.spawn('janusportal', portalname, {
           url: portaldata.url,
-          janus: this,
+          janus: this.janusweb,
           room: room,
           title: portaldata.url,
           position: node.pos,
