@@ -191,7 +191,7 @@
     }
   }
 
-})(window);
+})(self);
 
 // event dispatcher by mrdoob https://github.com/mrdoob/eventdispatcher.js
 var EventDispatcher = function () {}
