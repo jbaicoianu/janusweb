@@ -123,8 +123,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.setMaterialDirty = function() {
       this.materialNeedsUpdate = true;
     }
-    this.handleFrameUpdates = function() {
-      elation.engine.things.janusobject.extendclass.handleFrameUpdates.call(this);
+    this.handleFrameUpdates = function(ev) {
+      elation.engine.things.janusobject.extendclass.handleFrameUpdates.call(this, ev);
       if (this.materialNeedsUpdate) {
         this.updateMaterial();
       }
@@ -162,6 +162,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.adjustAspectRatio = function() {
       var img = this.texture.image;
       var geo = this.createGeometry();
+      geo.computeBoundingBox();
+      this.colliders.children[0].geometry = geo;
       this.objects['3d'].geometry = geo;
     }
     this.imageloaded = function(ev) {
@@ -189,8 +191,8 @@ elation.require(['janusweb.janusbase'], function() {
 
       this.refresh();
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janusimage.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusimage.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         id:  [ 'property', 'image_id'],
       };
