@@ -72,6 +72,12 @@
   { "assettype":"image", "name":"dayskybox_left", "src":"assets/skybox/Day/Dayleft.jpg", "hasalpha": false },
   { "assettype":"image", "name":"dayskybox_right", "src":"assets/skybox/Day/Dayright.jpg", "hasalpha": false },
   { "assettype":"image", "name":"dayskybox_up", "src":"assets/skybox/Day/Daytop.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_back", "src":"assets/skybox/Night/Nightback.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_down", "src":"assets/skybox/Night/Nightbottom.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_front", "src":"assets/skybox/Night/Nightfront.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_left", "src":"assets/skybox/Night/Nightleft.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_right", "src":"assets/skybox/Night/Nightright.jpg", "hasalpha": false },
+  { "assettype":"image", "name":"nightskybox_up", "src":"assets/skybox/Night/Nighttop.jpg", "hasalpha": false },
 
   { "assettype":"model", "name":"avatar", "src":"assets/avatar.obj", "tex0": "assets/avatar.png" },
   { "assettype":"model", "name":"avatar_head", "src":"assets/avatar_head.obj", "tex0": "assets/avatar_head.png" },
