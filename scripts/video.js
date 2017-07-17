@@ -66,12 +66,28 @@ elation.require(['janusweb.janusbase'], function() {
       return {width: image.videoWidth, height: image.videoHeight};
     }
     this.click = function() {
-      var texture = this.asset.getInstance();
-      var video = texture.image;
-      if (video.currentTime > 0 && !video.paused && !video.ended) {
-        video.pause();
+      this.togglePlay();
+    }
+    this.togglePlay = function() {
+      //var texture = this.asset.getInstance();
+      if (this.isPlaying()) {
+        this.pause();
       } else {
-        video.play();
+        this.play();
+      }
+    }
+    this.isPlaying = function() {
+      var video = this.video;
+      return (video.currentTime > 0 && !video.paused && !video.ended);
+    }
+    this.play = function() {
+      if (!this.isPlaying()) {
+        this.video.play();
+      }
+    }
+    this.pause = function() {
+      if (this.isPlaying()) {
+        this.video.pause();
       }
     }
     this.start = function() {
@@ -79,17 +95,33 @@ elation.require(['janusweb.janusbase'], function() {
         if (this.video.originalSrc) {
           this.video.src = this.video.originalSrc;
         }
+        if (this.video.muted) {
+          this.video.muted = false;
+          this.play();
+        }
       }
     }
     this.stop = function() {
-      console.log('stop the video!', this, this.video);
       if (this.video) {
-        this.video.pause();
+        this.pause();
         // FIXME - this stops the video from loading any more data, but means we can't easily restart
         //         so we're hackishly working around that
         this.video.originalSrc = this.video.src;
         this.video.src = '';
       }
+    }
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusvideo.extendclass.getProxyObject.call(this, classdef);
+      proxy._proxydefs = {
+        loop:    [ 'property', 'loop'],
+        video:   [ 'property', 'video'],
+
+        isPlaying: [ 'function', 'isPlaying'],
+        play:    [ 'function', 'play'],
+        pause:   [ 'function', 'pause'],
+        toggle:  [ 'function', 'togglePlay'],
+      };
+      return proxy;
     }
   }, elation.engine.things.janusimage);
 });
