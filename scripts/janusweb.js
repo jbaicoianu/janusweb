@@ -36,6 +36,21 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     this.scriptframeargs = [
       1000/60
     ];
+    this.typemap = {
+      'object': 'janusobject',
+      'link': 'janusportal',
+      'text': 'janustext',
+      'paragraph': 'janusparagraph',
+      'image': 'janusimage',
+      'image3d': 'janusimage',
+      'video': 'janusvideo',
+      'sound': 'janussound',
+      'light': 'januslight',
+      'particle': 'janusparticle',
+      'ghost': 'janusghost',
+    };
+    this.classmap = {};
+    this.customElements = {};
 
 
     this.postinit = function() {
@@ -82,9 +97,25 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.urltemplate) {
         elation.template.add('janusweb.url', this.urltemplate);
       }
+      this.initScripting();
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
+
+      this.registerBuiltinElements({
+        'object': 'janusobject',
+        'link': 'janusportal',
+        'text': 'janustext',
+        'paragraph': 'janusparagraph',
+        'image': 'janusimage',
+        'image3d': 'janusimage',
+        'video': 'janusvideo',
+        'sound': 'janussound',
+        'light': 'januslight',
+        'particle': 'janusparticle',
+        'ghost': 'janusghost',
+      });
+
       window.delta_time = 1000/60;
       window.janus = new elation.proxy(this, {
         version:           ['property', 'version',       { readonly: true}],
@@ -111,6 +142,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         launchurl:         ['function', 'load'],
         navback:           ['function', 'navigateBack'],
         navforward:        ['function', 'navigateForward'],
+        load:              ['function', 'navigateTo'],
         navhome:           ['function', 'navigateHome'],
         chatsend:          ['function', 'sendChatMessage'],
         sync:              ['function', 'currentroom.sync'],
@@ -126,12 +158,10 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         setavatarlighting: ['function', 'setAvatarLighting'],
         getavatarlighting: ['function', 'getAvatarLighting'],
         resetavatar:       ['function', 'resetAvatar'],
-        hasFocus:          ['function', 'hasFocus']
-      });
+        hasFocus:          ['function', 'hasFocus'],
+        registerElement:   ['function', 'registerElement'],
 
-      var player = this.engine.client.player;
-      player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
-      window.player = player.getProxyObject();
+      });
 
       //THREE.Vector3.prototype.toString = function() { return this.toArray().map(function(d) { return d.toFixed(4); }).join(' '); } 
       window.Vector = function(x, y, z) {
@@ -182,22 +212,23 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
       this.scriptingInitialized = true;
     }
+
     this.createChildren = function() {
       var hashargs = elation.url();
       var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
+      var player = this.engine.client.player;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
-      this.initScripting();
+      //this.initScripting();
       if (this.autoload) {
         this.load(starturl, true);
       }
+      this.userId = player.getUsername();
+      player.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
+      window.player = player.getProxyObject();
       if (this.networking) {
-        // connect to presence server
-        var player = this.engine.client.player;
-        this.userId = player.getUsername();
-        player.properties.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
-
         this.network.enable(player);
       }
+
       if (this.showchat) {
         this.chat = elation.janusweb.chat({append: document.body, client: this.engine.client, network: this.network});
       }
@@ -410,6 +441,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
     this.navigateBack = function() {
       history.back();
     }
+    this.navigateTo = function(url) {
+      return this.setActiveRoom(url);
+    }
     this.navigateForward = function() {
       history.forward();
     }
@@ -466,6 +500,36 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       var portalpass = this.engine.systems.render.views.main.portalpass;
       if (portalpass && this.currentroom) {
         portalpass.portals = this.currentroom.getVisiblePortals();
+      }
+    }
+    this.registerElement = function(tagname, classobj, extendclass) {
+      if (!extendclass || !elation.engine.things[extendclass]) extendclass = 'janusbase';
+      tagname = tagname.toLowerCase();
+console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
+      elation.component.add('engine.things.' + tagname, classobj, elation.engine.things[extendclass]);
+/*
+      this.typemap[tagname] = tagname;
+      this.classmap[tagname] = {
+        class: classobj,
+        extendclass: extendclass
+      };
+*/
+      this.customElements[tagname] = {
+        tagname: tagname,
+        classname: tagname,
+        class: classobj,
+        extendclass: extendclass
+      };
+    }
+    this.registerBuiltinElements = function(elements) {
+      for (var k in elements) {
+        var tagname = k.toLowerCase(),
+            classname = elements[k];
+        this.customElements[tagname] = {
+          tagname: tagname,
+          classname: classname,
+          class: elation.engine.things[classname]
+        };
       }
     }
   }, elation.engine.things.generic);
