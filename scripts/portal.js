@@ -6,7 +6,7 @@ elation.require(['janusweb.janusbase'], function() {
         'title': { type: 'string' },
         'janus': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
-        'size': { type: 'vector3', set: this.updateGeometry },
+        'size': { type: 'vector3', default: new THREE.Vector3(1,1,1), set: this.updateGeometry },
         'url': { type: 'string', set: this.updateTitle },
         'open': { type: 'boolean', default: false },
         'title': { type: 'string', set: this.updateTitle },
@@ -275,8 +275,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.useBlur = function(ev) {
       this.unhover();
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         url: ['property', 'url'],
         title: ['property', 'title'],
