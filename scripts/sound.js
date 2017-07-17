@@ -1,9 +1,11 @@
 elation.require(['janusweb.janusbase'], function() {
+  var soundcache = {};
+
   elation.component.add('engine.things.janussound', function() {
     this.postinit = function() {
       elation.engine.things.janussound.extendclass.postinit.call(this);
       this.defineProperties({
-        sound_id: { type: 'string' },
+        sound_id: { type: 'string', set: this.updateSound },
         rect: { type: 'string', default: "0 0 0 0" },
         loop: { type: 'boolean', default: false },
         auto_play: { type: 'boolean', default: true },
@@ -56,11 +58,28 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         if (src) {
-          var loader = new THREE.AudioLoader();
-          loader.load(src, elation.bind(this, function(buffer) { this.audio.setBuffer(buffer); this.play(); }));
+          if (soundcache[src]) {
+            this.audio.setBuffer(soundcache[src]);
+            this.play();
+          } else {
+            var loader = new THREE.AudioLoader();
+            loader.load(src, elation.bind(this, function(buffer) {
+              if (buffer) {
+                soundcache[src] = buffer;
+                this.audio.setBuffer(buffer);
+                this.play();
+              }
+            }));
+          }
         } else {
         }
         this.objects['3d'].add(this.audio);
+      }
+    }
+    this.updateSound = function() {
+      var sound = elation.engine.assets.find('sound', this.sound_id);
+      if (sound) {
+        this.createAudio(sound.getProxiedURL(sound.src));
       }
     }
     this.load = function(url) {
@@ -127,8 +146,8 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
     })();
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         gain:         [ 'property', 'gain'],
         play:         [ 'function', 'play'],
