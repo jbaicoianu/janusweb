@@ -162,8 +162,8 @@ GEOMCACHE[text] = geometry;
       }
       this.objects['3d'].geometry = geometry;
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janustext.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janustext.extendclass.getProxyObject.call(this, classdef);
 
       proxy._proxydefs = {
         text:  [ 'property', 'text'],
