@@ -14,19 +14,26 @@ body.dark .ui_window:after {
 .janusweb_room_url {
   font-weight: bold;
 }
+.janusweb_room_debug {
+  display: flex;
+  flex-direction: column;
+  flex: 0;
+}
 .janusweb_room_source {
   height: 40em;
   width: 60em;
   max-width: 100%;
   max-height: 100%;
+  position: relative;
+  flex: 1;
 }
 .janusweb_room_source textarea {
   position: absolute;
-  top: 1%;
-  bottom: 1%;
-  left: 1%;
-  right: 1%;
-  width: 98%;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
 }
 .janusweb_websurface {
   width: 1000px;
