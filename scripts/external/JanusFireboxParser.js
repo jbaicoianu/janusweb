@@ -22,57 +22,32 @@ JanusFireboxParser.prototype.parse = function(source, baseurl, datapath) {
 }
 JanusFireboxParser.prototype.getRoomData = function(xml, room, baseurl, datapath) {
   var assets = this.parseAssets(xml, baseurl, datapath);
-  var objects = this.getAsArray(this.arrayget(room, '_children.object', [])); 
-  var links = this.getAsArray(this.arrayget(room, '_children.link', [])); 
-  var sounds = this.getAsArray(this.arrayget(room, '_children.sound', [])); 
-  var images = this.getAsArray(this.arrayget(room, '_children.image', [])); 
-  var image3ds = this.getAsArray(this.arrayget(room, '_children.image3d', [])); 
-  var texts = this.getAsArray(this.arrayget(room, '_children.text', [])); 
-  var paragraphs = this.getAsArray(this.arrayget(room, '_children.paragraph', [])); 
-  var lights = this.getAsArray(this.arrayget(room, '_children.light', [])); 
-  var videos = this.getAsArray(this.arrayget(room, '_children.video', [])); 
-  var particles = this.getAsArray(this.arrayget(room, '_children.particle', [])); 
-  var ghosts = this.getAsArray(this.arrayget(room, '_children.ghost', [])); 
-
-  var orphanobjects = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.object')); 
-  var orphanlinks = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.link')); 
-  var orphansounds = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.sound')); 
-  var orphanvideos = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.video')); 
-  var orphanimages = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.image')); 
-  var orphantexts = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.text')); 
-  var orphanparagraphs = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.paragraph')); 
-  var orphanparticles = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.particle')); 
-  var orphanlights = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.light')); 
-  var orphanghosts = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.ghost')); 
-
-  if (orphanobjects && orphanobjects[0]) objects.push.apply(objects, orphanobjects);
-  if (links && orphanlinks[0]) links.push.apply(links, orphanlinks);
-  if (images && orphanimages[0]) images.push.apply(images, orphanimages);
-  if (videos && orphanvideos[0]) videos.push.apply(videos, orphanvideos);
-  if (sounds && orphansounds[0]) sounds.push.apply(sounds, orphansounds);
-  if (texts && orphantexts[0]) texts.push.apply(texts, orphantexts);
-  if (paragraphs && orphanparagraphs[0]) paragraphs.push.apply(paragraphs, orphanparagraphs);
-  if (lights && orphanlights[0]) lights.push.apply(lights, orphanlights);
-  if (particles && orphanparticles[0]) particles.push.apply(particles, orphanparticles);
-  if (ghosts && orphanghosts[0]) ghosts.push.apply(ghosts, orphanghosts);
 
   var parseNode = this.parseNode.bind(this);
 
-  return {
+  var roomdata = {
     assets: assets,
-    room: this.parseNode(room),
-    objects: objects.map(parseNode),
-    links: links.map(parseNode),
-    sounds: sounds.map(parseNode),
-    images: images.map(parseNode),
-    image3ds: image3ds.map(parseNode),
-    texts: texts.map(parseNode),
-    paragraphs: paragraphs.map(parseNode),
-    lights: lights.map(parseNode),
-    videos: videos.map(parseNode),
-    particles: particles.map(parseNode),
-    ghosts: ghosts.map(parseNode),
+    room: this.parseNode(room)
   };
+  for (var k in room._children) {
+    var objects = this.getAsArray(room._children[k]);
+    roomdata[k] = objects.map(parseNode);
+  }
+
+  // TODO - some rooms have orphan objects, outside of the <Room> tag. 
+  // We should parse these too, but I don't have any examples to test with
+/*
+  var orphantypes = ['link', 'image', 'image3d', 'video', 'sound', 'text', 'paragraph', 'light', 'particle', 'ghost'];
+  for (var i = 0; i < orphantypes.length; i++) {
+    var type = orphantypes[i],
+        orphans = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.' + type));
+    if (orphans && orphans.length > 0) {
+      if (!roomdata[type]) roomdata[type] = [];
+      roomdata[type].push.apply(roomdata[type], orphans);
+    }
+  };
+*/
+  return roomdata;
 }
 JanusFireboxParser.prototype.getAsArray = function(arr) {
   return (arr instanceof Array ? arr : [arr]);
