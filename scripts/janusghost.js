@@ -353,7 +353,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (this.avatar_body) {
           this.remove(this.avatar_body);
         }
-        var ghostdef = things.ghosts[0];
+        var ghostdef = things.ghost[0];
         var headpos = new THREE.Vector3();
         if (ghostdef.head_pos) {
           headpos.fromArray(ghostdef.head_pos.split(' '));
