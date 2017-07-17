@@ -398,6 +398,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         hand1_p3:      ['property', 'hands.right.p3'],
         hand1_p4:      ['property', 'hands.right.p4'],
         url:           ['property', 'parent.currentroom.url'],
+
+        localToWorld:  ['function', 'localToWorld'],
+        worldToLocal:  ['function', 'worldToLocal'],
       });
       return proxy;
     }
