@@ -2,7 +2,7 @@
   "name": "JanusWeb",
   "short_name": "JanusWeb",
   "background_color": "#2f363b",
-  "theme_color": "#4cb96f",
+  "theme_color": "#2f363b",
   "lang": "en-US",
   "orientation": "landscape",
   "start_url": "index.html",
