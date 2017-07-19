@@ -210,6 +210,28 @@ body.dark .ui_window:after {
   display: block;
   font-family: 'Glyphicons';
 }
+.janusweb_config_username .ui_label,
+.janusweb_config_avatar .ui_label {
+  display: block;
+  width: 8em;
+  flex: none;
+  padding: 0;
+}
+.janusweb_config_username,
+.janusweb_config_avatar {
+  display: flex;
+  flex-direction: row;
+}
+.janusweb_config_username .ui_input_element {
+  flex: 1 1 auto;
+}
+.janusweb_config_avatar textarea {
+  flex: 1 1 auto;
+  min-height: 15em;
+}
+.janusweb_config_avatar.state_droppable textarea {
+  background: #cfc;
+}
 
 @font-face {
   font-family: "Open Sans Regular";
