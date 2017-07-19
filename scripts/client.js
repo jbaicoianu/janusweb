@@ -210,5 +210,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
       this.configmenu.show();
     }
+    this.registerElement = function(tagname, classobj, extendclass) {
+      this.janusweb.registerElement(tagname, classobj, extendclass);
+    }
   }, elation.engine.client);
 });
