@@ -2,7 +2,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
   elation.requireCSS('janusweb.janusplayer');
 
   elation.component.add('engine.things.janusplayer', function() {
-    this.defaultavatar = '<FireBoxRoom><Assets><AssetObject id="screen" src="https://web.janusvr.com/media/assets/hoverscreen.obj" mtl="https://web.janusvr.com/media/assets/hoverscreen.mtl" /></Assets><Room><Ghost id="januswebuser" js_id="januswebuser" locked="false" interp_time="0.1" col="#ffffff" lighting="true" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" eye_ipd="0" userid_pos="0 0.5 0" cull_face="back" /></Room></FireBoxRoom>'
+    this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusvr.com/media/assets/hoverscreen.obj" mtl="https://web.janusvr.com/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" />\n  </Room>\n</FireBoxRoom>'
 
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
@@ -86,6 +86,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(null, 'mouseout', elation.bind(this, this.updateFocusObject));
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
+
+      elation.events.add(this.room, 'mouseover,mouseout', elation.bind(this, this.updateCursorStyle));
 
       this.updateVRButton();
     }
@@ -408,6 +410,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return this.getSetting('avatar', this.defaultavatar);
     }
     this.setAvatar = function(avatar) {
+      this.avatarNeedsUpdate = true;
       return this.setSetting('avatar', avatar);
     }
     this.hasVoipData = function() {
@@ -511,6 +514,26 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.setUsername = function(username) {
       this.setSetting('username', username);
       elation.events.fire({type: 'username_change', element: this, data: username});
+    }
+    this.updateCursorStyle = function(ev) {
+      var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+      var obj = ev.target || ev.element;
+      var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
+
+      if (ev.type == 'mouseover' && (
+            obj.onclick ||
+            elation.events.hasEventListener(obj, 'click') ||
+            elation.events.hasEventListener(proxyobj, 'click') ||
+            obj.onmousedown ||
+            elation.events.hasEventListener(obj, 'mousedown') ||
+            elation.events.hasEventListener(proxyobj, 'mousedown'))
+          ) {
+        this.cursor_style = 'pointer';
+      } else if (this.engine.systems.controls.pointerLockActive || (vrdisplay && vrdisplay.isPresenting)) {
+        this.cursor_style = 'crosshair';
+      } else {
+        this.cursor_style = 'default';
+      }
     }
   }, elation.engine.things.player);
 });
