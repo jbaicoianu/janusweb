@@ -13,6 +13,18 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var container = elation.utils.any(args.container, document.body);
     var fullsize = (container == document.body);
 
+    if (elation.config.get('serviceworker.enabled') && 'serviceWorker' in navigator) {
+      var workerscript = elation.config.get('serviceworker.script', 'serviceworker.js');
+      navigator.serviceWorker.register(workerscript)
+      .then(function(reg) {
+        // registration worked
+        console.log('ServiceWorker registration succeeded. Scope is ' + reg.scope);
+      }).catch(function(error) {
+        // registration failed
+        console.log('ServiceWorker registration failed with ' + error);
+      });
+    }
+
     var fullpath = proto + '//' + host + rootdir;
     if (clientScript) { // && clientScript.src.match(/\/janusweb.js^/)) {
       var parts = clientScript.src.split('/');
