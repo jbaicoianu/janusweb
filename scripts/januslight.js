@@ -7,7 +7,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_intensity: { type: 'float', default: 100, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
         light_cone_exponent: { type: 'float', default: 1, set: this.updateLight },
-        light_shadow: { type: 'boolean', default: true, set: this.updateLight },
+        light_shadow: { type: 'boolean', default: false, set: this.updateLight },
       });
     }
     this.createObject3D = function() {
@@ -48,7 +48,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateLight = function() {
       if (this.light) {
-        //this.light.intensity = this.light_intensity / 100;
+        this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
         this.light.color.copy(this.color);
         //this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
@@ -64,8 +64,8 @@ elation.require(['janusweb.janusbase'], function() {
       this.light.shadow.camera.far = 120;
       this.light.shadow.camera.fov = 50;
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         light_range:         [ 'property', 'light_range'],
         light_intensity:     [ 'property', 'light_intensity'],
