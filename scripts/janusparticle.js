@@ -5,11 +5,12 @@ elation.require(['janusweb.janusbase'], function() {
       this.defineProperties({ 
         emitter_id: { type: 'string', set: this.updateGeometry },
         emitter_scale: { type: 'vector3', default: [1, 1, 1], set: this.updateGeometry},
+        emitter_pos: { type: 'vector3', default: [0, 0, 0] },
         image_id: { type: 'string', set: this.updateMaterial },
         rate: { type: 'float', default: 1 },
         count: { type: 'int', default: 0 },
         duration: { type: 'float', default: 1.0 },
-        opacity: { type: 'float', default: 1.0 },
+        opacity: { type: 'float', default: 1.0, set: this.updateMaterial },
         fade_in: { type: 'float', default: 1.0 },
         fade_out: { type: 'float', default: 1.0 },
         duration: { type: 'float', default: 1.0 },
@@ -33,6 +34,8 @@ elation.require(['janusweb.janusbase'], function() {
       this.lasttime = 0;
       this.loaded = false;
       this.started = false;
+      this.pickable = false;
+      this.collidable = false;
 
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
@@ -75,6 +78,7 @@ elation.require(['janusweb.janusbase'], function() {
         //blending: THREE.AdditiveBlending,
         vertexColors: THREE.VertexColors
       });
+      this.material = mat;
       this.scale.set(1,1,1);
       var obj = new THREE.Points(geo, mat);
       return obj;
@@ -98,6 +102,12 @@ elation.require(['janusweb.janusbase'], function() {
             }));
           }
         }
+      }
+    }
+    this.updateMaterial = function() {
+      if (this.material) {
+        this.material.opacity = this.opacity;
+        this.material.color = this.color;
       }
     }
     this.createForces = function() {
@@ -143,6 +153,25 @@ elation.require(['janusweb.janusbase'], function() {
       this.updateBoundingSphere();
       if (this.duration > 0) {
         setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
+      }
+    }
+    this.resetParticles = function() {
+      var geo = this.geometry;
+      var count = this.count;
+      var position = geo.attributes.position;
+      var color = geo.attributes.color;
+
+      for (var i = 0; i < count; i++) {
+        var point = this.particles[i];
+        this.resetPoint(point);
+
+        position[i*3] = point.pos.x;
+        position[i*3+1] = point.pos.y;
+        position[i*3+2] = point.pos.z;
+
+        color[i*3] = point.color.r;
+        color[i*3+1] = point.color.g;
+        color[i*3+2] = point.color.b;
       }
     }
     this.updateParticles = function(ev) {
@@ -235,6 +264,7 @@ elation.require(['janusweb.janusbase'], function() {
         var rand_id = Math.floor(Math.random() * this.emitpoints.length);
         point.pos.add(this.emitpoints[rand_id]);
       }
+      point.pos.add(this.emitter_pos);
 
       var vel = point.vel,
           accel = point.accel,
@@ -299,13 +329,15 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.start = function() {
-      if (!this.created) {
+      if (!this.created || this.count >= this.particles.length) {
         this.createParticles();
       } else {
         for (var i = 0; i < this.particles.length; i++) {
           this.particles[i].active = 0;
         }
+        this.resetParticles();
       }
+      this.currentpoint = 0;
       if (this.started) {
         this.stop();
       }
@@ -320,8 +352,8 @@ elation.require(['janusweb.janusbase'], function() {
         elation.events.remove(this.engine, 'engine_frame', this.updateParticles);
       }
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         vel:  [ 'property', 'particle_vel'],
         accel:  [ 'property', 'particle_accel'],
@@ -331,6 +363,9 @@ elation.require(['janusweb.janusbase'], function() {
         rand_col:  [ 'property', 'rand_col'],
         emitter_id:  [ 'property', 'emitter_id'],
         emitter_scale:  [ 'property', 'emitter_scale'],
+        emitter_pos:  [ 'property', 'emitter_pos'],
+        opacity:  [ 'property', 'opacity'],
+        play:  [ 'function', 'start'],
       };
       return proxy;
     }
