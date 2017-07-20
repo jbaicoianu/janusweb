@@ -112,11 +112,16 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
     this.setHead = function(headid, headpos, scale) {
       var objects = this.getGhostObjects();
+      if (this.face) {
+        this.face.die();
+        this.face = false;
+      }
       if (headid && this.head) {
         var assetid = headid;
         if (!this.face || this.face.janusid != assetid) {
           if (objects && objects[headid]) {
-            assetid = this.id + '_head_model';
+            assetid = this.id + '_head_' + objects[headid].src;
+            if (objects[headid].mtl) assetid += '_' + objects[headid].mtl;
             var asset = elation.engine.assets.get({
               assettype: 'model',
               name: assetid,
@@ -146,10 +151,15 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
     this.setBody = function(bodyid, scale) {
       var objects = this.getGhostObjects();
+      if (this.body) {
+        this.body.die();
+        this.body = false;
+      }
       if (bodyid) {
         var assetid = bodyid;
         if (objects && objects[bodyid]) {
-          assetid = this.player_name + '_body_model';
+          assetid = this.player_name + '_body_' + objects[bodyid].src;
+          if (objects[bodyid].mtl) assetid += '_' + objects[bodyid].mtl;
           var asset = elation.engine.assets.get({
             assettype: 'model',
             name: assetid,
