@@ -212,9 +212,10 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       }
 
       //console.log('[MultiplayerManager] player update', moveData);
-      if (this.avatarNeedsUpdate) {
+      if (this.avatarNeedsUpdate || player.avatarNeedsUpdate) {
         moveData["avatar"] = player.getAvatarData().replace(/"/g, "^");
         this.avatarNeedsUpdate = false
+        player.avatarNeedsUpdate = false
       }
 
       if (player.hasVoipData()) {
