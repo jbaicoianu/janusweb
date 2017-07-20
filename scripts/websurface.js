@@ -27,6 +27,11 @@ elation.require(['engine.things.generic'], function() {
 
         this.url = url.replace(/^http:/, 'https:');
       }
+
+      // FIXME - binding of member functions should happen at object creation
+      this.deactivate = elation.bind(this, this.deactivate);
+      this.activate = elation.bind(this, this.activate);
+
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
       elation.events.add(this, 'click', elation.bind(this, this.click));
@@ -54,7 +59,6 @@ elation.require(['engine.things.generic'], function() {
       this.material = mat;
 
       //plane.applyMatrix(new THREE.Matrix4().makeTranslation(.5,-.5,0));
-      elation.events.add(window, 'click', elation.bind(this, this.deactivate));
       var obj = new THREE.Mesh(plane, mat);
 
       var selection = new THREE.Mesh(plane, selectionmat);
@@ -91,24 +95,33 @@ elation.require(['engine.things.generic'], function() {
           this.domobj = obj;
         }
     }
-    this.deactivate = function(ev) {
+    this.activate = function() {
+      if (!this.active) {
+        var canvas = this.engine.client.view.rendersystem.renderer.domElement;
+        canvas.style.pointerEvents = 'none';
+        this.engine.systems.controls.releasePointerLock();
+        this.active = true;
+        this.selectionmaterial.color.copy(this.activecolor);
+setTimeout(elation.bind(this, function() {
+        elation.events.add(window, 'click,dragover,focus', this.deactivate);
+}), 10);
+      }
+    }
+    this.deactivate = function() {
       if (this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'all';
         this.engine.systems.controls.requestPointerLock();
         this.selection.visible = false;
         this.active = false;
+        elation.events.remove(window, 'click,dragover,focus', this.deactivate);
       }
     }
     this.click = function(ev) {
       if (!this.active) {
-        var canvas = this.engine.client.view.rendersystem.renderer.domElement;
-        canvas.style.pointerEvents = 'none';
-        this.engine.systems.controls.releasePointerLock();
-
+        this.activate();
         ev.stopPropagation();
-        this.active = true;
-        this.selectionmaterial.color.copy(this.activecolor);
+        ev.preventDefault();
       }
 
     }
