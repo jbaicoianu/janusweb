@@ -173,8 +173,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.setTextureDirty = function() {
       this.textureNeedsUpdate = true;
     }
-    this.handleFrameUpdates = function() {
-      elation.engine.things.janusobject.extendclass.handleFrameUpdates.call(this);
+    this.handleFrameUpdates = function(ev) {
+      elation.engine.things.janusobject.extendclass.handleFrameUpdates.call(this, ev);
       if (this.textureNeedsUpdate) {
         this.assignTextures();
       }
