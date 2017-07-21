@@ -477,6 +477,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (this.websurface_id) {
         if (!this.websurface) {
+          this.replaceWebsurfaceMaterial();
           this.websurface = this.spawn('januswebsurface', null, {janus: this.janus, room: this.room, websurface_id: this.websurface_id});
           elation.events.add(this, 'mouseover', elation.bind(this.websurface, this.websurface.hover));
           elation.events.add(this, 'mouseout', elation.bind(this.websurface, this.websurface.unhover));
