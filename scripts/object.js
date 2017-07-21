@@ -350,7 +350,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (asset) {
                 if (asset.hasalpha) {
                   m.transparent = true;
-                  m.alphaTest = 0.01;
+                  m.alphaTest = 0.02;
                 }
                 m.map = asset.getInstance();
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
