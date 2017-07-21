@@ -14,18 +14,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         video_id: { type: 'string', set: this.updateMaterial },
         url: { type: 'string' },
         loop: { type: 'boolean' },
-        collision_id: { type: 'string' },
         websurface_id: { type: 'string', set: this.updateMaterial },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         shadows: { type: 'boolean', default: false, set: this.updateMaterial },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
-        collision_id: { type: 'string', set: this.updatePhysics },
-        collision_pos: { type: 'vector3', default: new THREE.Vector3(0,0,0), set: this.updatePhysics },
-        collision_scale: { type: 'vector3', set: this.updatePhysics },
-        collision_static: { type: 'boolean', default: true, set: this.updatePhysics },
-        collision_trigger: { type: 'boolean', default: false, set: this.updatePhysics },
+        collision_id: { type: 'string', set: this.updateCollider },
+        collision_pos: { type: 'vector3', default: new THREE.Vector3(0,0,0), set: this.updateCollider },
+        collision_scale: { type: 'vector3', set: this.updateCollider },
+        collision_static: { type: 'boolean', default: true, set: this.updateCollider },
+        collision_trigger: { type: 'boolean', default: false, set: this.updateCollider },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -77,7 +76,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.createForces = function() {
       elation.engine.things.janusobject.extendclass.createForces.call(this);
       if (!this.collidable) return;
-
+      this.updateCollider();
+    }
+    this.updateCollider = function() {
+      if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
       var collision_scale = this.properties.collision_scale || this.properties.scale;
       if (collision_id) {
