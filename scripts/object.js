@@ -524,8 +524,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         elation.events.add(this.playbutton, 'click', elation.bind(this, this.play));
       }
     }
-    this.getProxyObject = function() {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this);
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         id:  [ 'property', 'janusid'],
         url:  [ 'property', 'url'],
