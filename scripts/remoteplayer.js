@@ -31,7 +31,7 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.neck = this.torso.spawn('generic', this.properties.player_name + '_neck', {
       'position': [0,0.4,0],
     });
-    this.head = this.neck.spawn('generic', this.properties.player_name + '_head', {
+    this.head = this.spawn('generic', this.properties.player_name + '_head', {
       'position': [0,1.4,0],
     });
 /*

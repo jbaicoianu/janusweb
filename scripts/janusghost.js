@@ -145,7 +145,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         }
         //this.head.properties.position.copy(headpos);
         if (scale) {
-          this.head.scale.fromArray(scale);
+          this.face.scale.fromArray(scale);
+          this.label.scale.fromArray(scale);
+          this.label.properties.position.multiply(this.label.scale);
         }
       }
     }
@@ -276,11 +278,14 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (movedata.dir && this.body) {
           this.body.properties.zdir.fromArray(parser.getVectorValue(movedata.dir)).normalize();
           this.body.properties.ydir.set(0,1,0);
-          this.body.properties.xdir.crossVectors(this.body.properties.ydir, this.body.properties.zdir);
-          this.body.properties.zdir.crossVectors(this.body.properties.xdir, this.body.properties.ydir);
+          this.body.properties.xdir.crossVectors(this.body.properties.ydir, this.body.properties.zdir).normalize();
+          this.body.properties.zdir.crossVectors(this.body.properties.xdir, this.body.properties.ydir).normalize();
           this.body.updateVectors(true);
         }
 
+        if (movedata.avatar) {
+          this.setAvatar(movedata.avatar.replace(/\^/g, '"'));
+        }
         if (movedata.view_dir && movedata.up_dir) {
           if (this.head) {
             ydir.fromArray(parser.getVectorValue(movedata.up_dir, [0,1,0]));
@@ -288,7 +293,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             xdir.crossVectors(zdir, ydir);
 
             xdir.crossVectors(zdir, ydir).normalize();
-            zdir.crossVectors(xdir, ydir);
+            zdir.crossVectors(xdir, ydir).normalize();
 
             matrix.makeBasis(xdir, ydir, zdir);
             this.head.properties.orientation.setFromRotationMatrix(matrix);
@@ -296,13 +301,14 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               var headpos = this.head.properties.position;
               var facepos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
-              headpos.fromArray(newpos).add(this.head_pos);
-              facepos.fromArray([-newpos[0], -newpos[1], -newpos[2]]).sub(this.properties.head_pos);
+              headpos.copy(this.head_pos);
+              facepos.fromArray(newpos).sub(this.head_pos);
+              if (this.body) {
+                headpos.multiply(this.body.scale);
+                facepos.multiply(this.body.scale);
+              }
             }
           }
-        }
-        if (movedata.avatar) {
-          this.setAvatar(movedata.avatar.replace(/\^/g, '"'));
         }
         if (movedata.hand0 || movedata.hand1) {
           this.updateHands(movedata.hand0, movedata.hand1);
