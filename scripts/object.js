@@ -465,9 +465,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.video_id) {
         if (this.videoasset && this.videotexture) {
           var texture = this.videotexture;
-          if (!texture.image.playing && this.videoasset.auto_start) {
-            texture.image.play();
+          var video = texture.image;
+          if (!video.playing && this.videoasset.auto_start) {
+            video.play();
             //console.log('start the video!', texture);
+          } else if (video.muted) {
+            video.muted = false;
+            video.play();
           }
         }
       }
