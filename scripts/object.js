@@ -79,6 +79,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.updateCollider();
     }
     this.updateCollider = function() {
+      this.removeCollider();
       if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
       var collision_scale = this.properties.collision_scale || this.properties.scale;
@@ -99,7 +100,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
         } else if (collision_id == 'cylinder') {
-          this.setCollider('cylinder', {height: collision_scale.y, radius: Math.max(collision_scale.x, collision_scale.z) / 2, offset: new THREE.Vector3(0, 0.5 * collision_scale.y, 0)});
+          this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
         } else {
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
@@ -127,6 +128,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               }) );
             }
           }
+        }
+      }
+    }
+    this.removeCollider = function() {
+      if (this.colliders) {
+        for (var i = 0; i < this.colliders.children.length; i++) {
+          var collider = this.colliders.children[i];
+          collider.parent.remove(collider);
         }
       }
     }
