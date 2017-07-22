@@ -118,7 +118,7 @@ setTimeout(elation.bind(this, function() {
       }
     }
     this.click = function(ev) {
-      if (!this.active) {
+      if (!this.active && ev.button == 0) {
         this.activate();
         ev.stopPropagation();
         ev.preventDefault();
