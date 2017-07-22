@@ -78,11 +78,11 @@ elation.require(['elation.collection'], function() {
       var flip = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
       var lastid = false;
       var texts = {};
-      roomdata.texts.forEach(function(t) { texts[t.js_id] = t; });
+      roomdata.text.forEach(function(t) { texts[t.js_id] = t; });
       var offset = 3;
-      for (var i = 0; i < numlinks && i < items.length && i < roomdata.links.length; i++) {
+      for (var i = 0; i < numlinks && i < items.length && i < roomdata.link.length; i++) {
         var item = items[i];
-        var link = roomdata.links[i];
+        var link = roomdata.link[i];
         if (item && link) {
           var thumb = 'reddit_default';
           if (item.over_18) {
@@ -113,7 +113,7 @@ elation.require(['elation.collection'], function() {
       var idx = args.url.indexOf('?');
       var nexturl = (idx == -1 ? args.url : args.url.substr(0, idx)) + '?count=25&after=' + lastid;
       
-      roomdata.links[roomdata.links.length-1].url = nexturl;
+      roomdata.link[roomdata.link.length-1].url = nexturl;
       args.resolve(roomdata);
     }
     this.getRelativeDate = function(ts) {
