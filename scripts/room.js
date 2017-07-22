@@ -64,16 +64,55 @@ elation.require([
       this.videos = {};
       this.loaded = false;
 
+      this.roomscripts = [];
+      this.customElements = {};
+      this.unknownElements = {};
+      this.eventlistenerproxies = {};
+
       if (this.engine.systems.admin) {
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
       }
       //this.showDebug();
-      elation.events.add(window, 'touchstart', elation.bind(this, this.onTouchStart));
+      elation.events.add(window, 'click', elation.bind(this, this.onClick));
       elation.events.add(window, 'keydown', elation.bind(this, this.onKeyDown));
       elation.events.add(window, 'keyup', elation.bind(this, this.onKeyUp));
 
-      elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.onMouseDown));
-      elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.onMouseUp));
+      elation.events.add(this, 'click', elation.bind(this, this.onObjectClick));
+
+      elation.events.add(this.engine.client.container, 'mousedown,touchstart', elation.bind(this, this.onMouseDown));
+      elation.events.add(this.engine.client.container, 'mouseup,touchend', elation.bind(this, this.onMouseUp));
+      elation.events.add(this, 'dragover', elation.bind(this, this.handleDragOver));
+      elation.events.add(this, 'drop', elation.bind(this, this.handleDrop));
+
+      this.roomedit = {
+        snap: .1,
+        modes: ['pos', 'rotation', 'scale', 'col'],
+        modeid: 0,
+        object: false
+      };
+      this.engine.systems.controls.addContext('roomedit', {
+        'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
+        'mode':             [ 'keyboard_tab', this.editObjectToggleMode ],
+        'manipulate_left':  [ 'keyboard_nomod_a,keyboard_a',   this.editObjectManipulateLeft ],
+        'manipulate_right': [ 'keyboard_nomod_d,keyboard_d',   this.editObjectManipulateRight ],
+        'manipulate_up':    [ 'keyboard_nomod_w,keyboard_w',   this.editObjectManipulateUp ],
+        'manipulate_down':  [ 'keyboard_nomod_s,keyboard_s',   this.editObjectManipulateDown ],
+        'manipulate_in':    [ 'keyboard_nomod_q,mouse_wheel_down',   this.editObjectManipulateIn ],
+        'manipulate_out':   [ 'keyboard_nomod_e,mouse_wheel_up',   this.editObjectManipulateOut ],
+        'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
+        'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
+        'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
+        'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
+        'snap_thousandths': [ 'keyboard_4',   this.editObjectSnapThousandths ],
+      });
+      this.engine.systems.controls.addContext('roomedit_togglemove', {
+        'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
+      });
+
+      // FIXME - these should be bound at the component level
+      this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
+      this.editObjectClick = elation.bind(this, this.editObjectClick);
+      this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
 
       if (this.url) {
         this.roomid = md5(this.url);
@@ -84,6 +123,7 @@ elation.require([
     }
     this.createChildren = function() {
       this.createLights();
+      this.setCollider('sphere', {radius: 1e4});
 
       this.lastthink = 0;
       this.thinktime = 0;
@@ -255,15 +295,31 @@ elation.require([
       this.engine.client.player.camera.camera.far = this.properties.far_dist;
     }
     this.showDebug = function() {
-      var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
       if (!this.debugwindow) {
+        var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
+
         this.debugwindow = elation.ui.window({title: 'Janus Room', content: content, append: document.body, center: true});
+        this.debugeditor = elation.ui.textarea({append: content, value: this.roomsrc, classname: 'janusweb_room_source'});
+        this.debugwindow.settitle(this.properties.url);
+
+        var updatebutton = elation.ui.button({label: 'Update'});
+        var buttons = elation.ui.buttonbar({
+          classname: 'janusweb_room_debug_buttons',
+          append: content,
+          buttons: {
+            update: updatebutton
+          }
+        });
+
+        this.debugwindow.setcontent(content);
+
+        elation.events.add(this.debugeditor, 'change', elation.bind(this, this.handleEditorInput));
+        elation.events.add(updatebutton, 'click', elation.bind(this, this.handleEditorUpdate));
       }
 
       //elation.ui.content({append: content, content: this.properties.url, classname: 'janusweb_room_url'});
-      elation.ui.textarea({append: content, value: this.roomsrc, classname: 'janusweb_room_source'});
-      this.debugwindow.settitle(this.properties.url);
-      this.debugwindow.setcontent(content);
+      this.debugwindow.show();
+      this.debugwindow.center();
     }
     this.load = function(url, baseurloverride) {
       if (!url) {
@@ -461,78 +517,17 @@ elation.require([
     }
     this.createRoomObjects = function(roomdata, parent) {
       var room = roomdata.room,
-          assets = roomdata.assets || [],
-          objects = roomdata.objects || [],
-          links = roomdata.links || [],
-          sounds = roomdata.sounds || [],
-          particles = roomdata.particles || [],
-          images = roomdata.images || [],
-          image3ds = roomdata.image3ds || [],
-          texts = roomdata.texts || [],
-          paragraphs = roomdata.paragraphs || [],
-          lights = roomdata.lights || [],
-          ghosts = roomdata.ghosts || [],
-          videos = roomdata.videos || [];
+          assets = roomdata.assets || [];
 
-      if (lights) lights.forEach(elation.bind(this, function(n) {
-        this.createObject('light',  n, parent);
-      }));
-      if (objects) objects.forEach(elation.bind(this, function(n) { 
-        this.createObject('object', n, parent);
-      }));
-      if (links) links.forEach(elation.bind(this, function(n) {
-        this.createObject('link', n, parent);
-      }));
-      if (images) images.forEach(elation.bind(this, function(n) {
-        this.createObject('image', n, parent);
-      }));
-      if (image3ds) image3ds.forEach(elation.bind(this, function(n) {
-        this.createObject('image', n, parent);
-      }));
-      if (texts) texts.forEach(elation.bind(this, function(n) {
-        this.createObject('text', n, parent);
-      }));
-      if (paragraphs) paragraphs.forEach(elation.bind(this, function(n) {
-        this.createObject('paragraph', n, parent);
-      }));
-      if (sounds) sounds.forEach(elation.bind(this, function(n) {
-        this.createObject('sound', n, parent);
-      }));
-      if (particles) particles.forEach(elation.bind(this, function(n) {
-        this.createObject('particle', n, parent);
-      }));
-      if (ghosts) {
-        var ghostassetmap = {};
-        if (assets.ghosts) assets.ghosts.forEach(function(n) { ghostassetmap[n.id] = n; });
-        ghosts.forEach(elation.bind(this, function(n) {
-          var asset = ghostassetmap[n.id];
-          if (asset) {
-            var ghosturl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
-            n.ghost_src = ghostassetmap[n.id].src;
-          }
-          this.createObject('ghost', n, parent);
-        }));
+      // Parse room objects from the XML, and create Janus objects for them
+      var exclude = ['assets', 'room', 'source'];
+      for (var k in roomdata) {
+        if (exclude.indexOf(k) == -1) {
+          roomdata[k].forEach(elation.bind(this, function(n) {
+            this.createObject(k, n, parent);
+          }));
+        }
       }
-
-      var videoassetmap = {};
-      if (assets.video) assets.video.forEach(function(n) { videoassetmap[n.id] = n; });
-      if (videos) videos.forEach(elation.bind(this, function(n) {
-        var asset = videoassetmap[n.id];
-        var videourl = (asset.src.match(/^https?:/) || asset.src[0] == '/' ? asset.src : this.baseurl + asset.src);
-        var video = this.spawn('janusvideo', n.id + '_' + Math.round(Math.random() * 10000), {
-          room: this,
-          js_id: n.js_id,
-          position: n.pos,
-          orientation: n.orientation,
-          scale: n.scale,
-          //src: videourl,
-          video_id: n.id,
-          loop: asset.loop,
-          autoplay: asset.auto_play || false,
-          lighting: n.lighting
-        });
-        this.jsobjects[n.js_id] = video.getProxyObject();
-      }));
       
       if (room && !parent) {
         if (room.use_local_asset && room.visible !== false) {
@@ -578,6 +573,7 @@ elation.require([
         this.properties.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.gravity = room.gravity || -9.8;
+        this.properties.locked = room.locked;
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
@@ -589,7 +585,21 @@ elation.require([
           assets.scripts.forEach(elation.bind(this, function(s) {
             var script = elation.engine.assets.find('script', s.src);
             this.pendingScripts++;
+
+            if (script._loaded) {
+              // If the script is already part of the document, remove it and readd it so it's reevaluated
+              if (script.parentNode) {
+                script.parentNode.removeChild(script);
+              }
+
+              var oldscript = script;
+              script = document.createElement('script');
+              script.src = oldscript.src;
+              document.head.appendChild(script);
+            }
+            this.roomscripts.push(script);
             elation.events.add(script, 'asset_load', elation.bind(this, function() {
+              script._loaded = true;
               document.head.appendChild(script);
               script.onload = elation.bind(this, this.doScriptOnload);
             }));
@@ -614,7 +624,6 @@ elation.require([
       return false;
     }
     this.enable = function() {
-      this.engine.systems.ai.add(this);
       var keys = Object.keys(this.children);
       for (var i = 0; i < keys.length; i++) {
         var obj = this.children[keys[i]];
@@ -622,10 +631,13 @@ elation.require([
           obj.start();
         }
       }
-      elation.events.fire({type: 'room_enable', data: this});
+      if (!this.enabled) {
+        this.enabled = true;
+        this.engine.systems.ai.add(this);
+        elation.events.fire({type: 'room_enable', data: this});
+      }
     }
     this.disable = function() {
-      this.engine.systems.ai.remove(this);
       var keys = Object.keys(this.children);
       for (var i = 0; i < keys.length; i++) {
         var obj = this.children[keys[i]];
@@ -633,7 +645,11 @@ elation.require([
           obj.stop();
         }
       }
-      elation.events.fire({type: 'room_disable', data: this});
+      if (this.enabled) {
+        this.engine.systems.ai.remove(this);
+        elation.events.fire({type: 'room_disable', data: this});
+        this.enabled = false;
+      }
     }
     this.setTitle = function(title) {
       if (!title) title = 'Untitled Page';
@@ -663,13 +679,13 @@ elation.require([
             videos: [],
             sounds: [],
           },
-          objects: [],
-          images: [],
-          image3ds: [],
-          links: [],
-          videos: [],
-          sounds: [],
-          texts: [],
+          object: [],
+          image: [],
+          image3d: [],
+          link: [],
+          video: [],
+          sound: [],
+          text: [],
         };
 //console.log('GOT EDIT', editxml);
         for (var i = 0; i < newobjs.length; i++) {
@@ -691,7 +707,7 @@ elation.require([
             }
           } else {
             hasNew = true;
-            diff[(k.toLowerCase() + 's')].push(newobj);
+            diff[k.toLowerCase()].push(newobj);
             if (newobj.id && newobj.id.match(/^https?:/)) {
               diff.assets.objects.push({assettype: 'model', name: newobj.id, src: newobj.id});
             }
@@ -720,21 +736,26 @@ elation.require([
       }));
     }
     this.createObject = function(type, args, parent) {
-      var typemap = {
-        'object': 'janusobject',
-        'link': 'janusportal',
-        'text': 'janustext',
-        'paragraph': 'janusparagraph',
-        'image': 'janusimage',
-        'image3d': 'janusimage',
-        'video': 'janusvideo',
-        'sound': 'janussound',
-        'light': 'januslight',
-        'particle': 'janusparticle',
-        'ghost': 'janusghost',
-      };
-      var parentobj = (parent ? parent._target : this);
-      var realtype = typemap[type.toLowerCase()] || type;
+      var customElement = false;
+      type = type.toLowerCase();
+      if (this.customElements[type]) {
+        customElement = this.customElements[type];
+      } else if (this.janus.customElements[type]) {
+        customElement = this.janus.customElements[type];
+      }
+
+      //var typemap = this.janus.typemap;
+      //var classmap = this.janus.classmap;
+      if (!args) args = {};
+
+      var parentobj = (parent ? parent._target || parent : this);
+      if (!customElement) {
+        console.log('UNKNOWN TYPE', type, args);
+        if (!this.unknownElements[type]) this.unknownElements[type] = [];
+        this.unknownElements[type].push({args: args, parent: parent});
+        return;
+      }
+      var realtype = customElement.classname; //typemap[type.toLowerCase()] || type;
       //var thingname = args.id + (args.js_id ? '_' + args.js_id : '_' + Math.round(Math.random() * 1000000));
       var thingname = args.js_id;
       var objectargs = {
@@ -800,55 +821,53 @@ elation.require([
           break;
         case 'janusghost':
           objectargs.ghost_id = args.id;
-          objectargs.ghost_datasrc = args.id;
           //objectargs.ghost_scale = args.scale;
           //objectargs.scale = new THREE.Vector3(1,1,1);
           objectargs.orientation = new THREE.Quaternion()
           break;
       }
       //console.log('spawn it', realtype, args, objectargs);
-      if (elation.engine.things[realtype]) {
-        if (!objectargs.js_id) {
-          objectargs.js_id = realtype + '_' + (objectargs.id ? objectargs.id + '_' : '') + window.uniqueId();
-        }
-        if (this.jsobjects[objectargs.js_id]) {
-          objectargs.js_id = objectargs.js_id + '_' + window.uniqueId();
-        }
-        var object = parentobj.spawn(realtype, objectargs.js_id, objectargs);
-        if (objectargs.js_id) {
-          this.jsobjects[objectargs.js_id] = object.getProxyObject();
-        }
-
-        if (realtype == 'janussound') {
-          this.sounds[objectargs.js_id] = object;
-        }
-        if (realtype == 'janusportal') {
-          elation.events.add(object, 'janusweb_portal_open', elation.bind(this, this.registerOpenPortal));
-          elation.events.add(object, 'janusweb_portal_close', elation.bind(this, this.unregisterOpenPortal));
-        }
-
-        elation.events.add(object, 'thing_change_queued', elation.bind(this, this.onThingChange));
-        elation.events.add(object, 'collide', elation.bind(this, this.onCollide));
-        //elation.events.add(object, 'thing_asset_add', elation.bind(this, this.addAsset));
-
-        if (args._children) {
-          var children = {};
-          for (var k in args._children) {
-            var key = k + 's';
-            var objs = args._children[k];
-            if (!elation.utils.isArray(objs)) {
-              objs = [objs];
-            }
-            children[key] = objs;
-          }
-          this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
-        }
-
-
-        return this.jsobjects[objectargs.js_id];
-      } else {
+      if (!elation.engine.things[realtype]) {
         console.log('ERROR - unknown type: ', realtype);
+        realtype = 'janusobject';
       }
+      if (!objectargs.js_id) {
+        objectargs.js_id = realtype + '_' + (objectargs.id ? objectargs.id + '_' : '') + window.uniqueId();
+      }
+      if (this.jsobjects[objectargs.js_id]) {
+        objectargs.js_id = objectargs.js_id + '_' + window.uniqueId();
+      }
+      var object = parentobj.spawn(realtype, objectargs.js_id, objectargs);
+      if (objectargs.js_id) {
+        this.jsobjects[objectargs.js_id] = object.getProxyObject(customElement);
+      }
+
+      if (realtype == 'janussound') {
+        this.sounds[objectargs.js_id] = object;
+      }
+      if (realtype == 'janusportal') {
+        elation.events.add(object, 'janusweb_portal_open', elation.bind(this, this.registerOpenPortal));
+        elation.events.add(object, 'janusweb_portal_close', elation.bind(this, this.unregisterOpenPortal));
+      }
+
+      elation.events.add(object, 'thing_change_queued', elation.bind(this, this.onThingChange));
+      elation.events.add(object, 'collide', elation.bind(this, this.onCollide));
+      //elation.events.add(object, 'thing_asset_add', elation.bind(this, this.addAsset));
+
+      if (args._children) {
+        var children = {};
+        for (var k in args._children) {
+          var objs = args._children[k];
+          if (!elation.utils.isArray(objs)) {
+            objs = [objs];
+          }
+          children[k] = objs;
+        }
+        this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
+      }
+
+
+      return this.jsobjects[objectargs.js_id];
     }
     this.removeObject = function(obj) {
       var proxy = obj;
@@ -904,6 +923,10 @@ elation.require([
       }
       var asset = this.roomassets[type][id];
       if (!asset) {
+        if (type == 'ghost') {
+          // Use a simple file dependency for ghosts
+          type = 'file';
+        }
         asset = elation.engine.assets.find(type, id, true);
         if (!asset) {
           var assetpack = { assettype:type, name:id, src: id, baseurl: this.baseurl }; 
@@ -979,7 +1002,18 @@ elation.require([
     this.onMouseUp = function(ev) { 
       elation.events.fire({type: 'janus_room_mouseup', element: this, event: ev});
     }
-    this.onTouchStart = function(ev) { 
+    this.onObjectClick = function(ev) {
+      if (ev.button == 2 && ev.element !== this) {
+        if (this.roomedit.object) {
+          this.editObjectRevert();
+        } else if ((!this.localasset || !this.localasset.isEqual(ev.element)) && !ev.element.locked && !this.locked) {
+          this.editObject(ev.element.getProxyObject());
+        }
+        // TODO - if the user tries to edit a locked object, currently there's no feedback.
+        // We should show some subtle effect to let the user know why they're unable to edit
+      }
+    }
+    this.onClick = function(ev) {
       if (!this.firsttouch) {
         this.firsttouch = true;
         this.enable();
@@ -1014,8 +1048,8 @@ elation.require([
       }
 */
       this.janus.scriptframeargs[0] = ev.data.delta * 1000;
-      elation.events.fire({element: this, type: 'janusweb_script_frame'});
-      elation.events.fire({element: this, type: 'janusweb_script_frame_end'});
+      elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
+      elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
     }
     this.onCollide = function(ev) { 
       //console.log('objects collided', ev.target, ev.data.other);
@@ -1134,7 +1168,10 @@ elation.require([
         fog_col:       ['property', 'fog_col'],
         bloom:         ['property', 'bloom'],
         col:           ['property', 'col'],
+        locked:        ['property', 'locked'],
 
+        localToWorld:  ['function', 'localToWorld'],
+        worldToLocal:  ['function', 'worldToLocal'],
         loadNewAsset:  ['function', 'loadNewAsset'],
         createObject:  ['function', 'createObject'],
         removeObject:  ['function', 'removeObject'],
@@ -1144,6 +1181,11 @@ elation.require([
         seekSound:     ['function', 'seekSound'],
         getObjectById: ['function', 'getObjectById'],
         openLink:      ['function', 'openLink'],
+
+        registerElement:     ['function', 'registerElement'],
+        extendElement:       ['function', 'extendElement'],
+        addEventListener:    ['function', 'addEventListenerProxy'],
+        removeEventListener: ['function', 'removeEventListenerProxy'],
 
         onLoad:          ['callback', 'janus_room_scriptload'],
         update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
@@ -1156,7 +1198,7 @@ elation.require([
         onKeyDown:       ['callback', 'janus_room_keydown'],
         onKeyUp:         ['callback', 'janus_room_keyup']
       });
-
+      this._proxyobject = proxy;
       return proxy;
     }
     this.hasChanges = function() {
@@ -1169,18 +1211,13 @@ elation.require([
         var xmldoc = document.implementation.createDocument(null, 'edit', null);
         var editroot = xmldoc.documentElement;
 
-        var typemap = {
-          janustext: 'Text',
-          janusobject: 'Object',
-          janusportal: 'Link',
-          janusparagraph: 'Paragraph',
-          janusimage: 'Image',
-          janusvideo: 'Video',
-          janussound: 'Sound',
-          januslight: 'Light',
-          janusparticle: 'Particle',
-          janusghost: 'Ghost',
-        };
+        // Build a reverse type map
+        // FIXME - double check that this works properly with custom elements
+        var typemap = {};
+        for (var k in this.janus.typemap) {
+          var n = this.janus.typemap[k];
+          typemap[n] = k;
+        }
 
 
         changeids.forEach(elation.bind(this, function(id) {
@@ -1189,7 +1226,7 @@ elation.require([
           var real = this.getObjectFromProxy(change);
           if (real) {
             var xmltype = typemap[real.type] || 'Object';
-            xmlnode = xmldoc.createElement(xmltype); // FIXME - determine object's type
+            xmlnode = xmldoc.createElement(xmltype);
             
             var attrs = Object.keys(change);
             for (var i = 0; i < attrs.length; i++) {
@@ -1199,8 +1236,35 @@ elation.require([
                   val instanceof THREE.Vector3) {
                 val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
               } else if (val instanceof THREE.Color) {
-                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+                if (k == 'col' && real.colorIsDefault) {
+                  val = null;
+                } else {
+                  val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+                }
+              } else if (elation.utils.isString(val) && val.indexOf('blob:') == 0) {
+                var xhr = new XMLHttpRequest();
+
+/*
+                xhr.open('GET', val, false);
+                xhr.overrideMimeType('text\/plain; charset=x-user-defined');
+
+                //xhr.responseType = 'ArrayBuffer';
+                xhr.send(null);
+
+                var bytes = new Uint8Array(xhr.responseText.length);
+                for (var i = 0; i < bytes.length; i++) {
+                  bytes[i] = xhr.responseText.charCodeAt(i);
+                }
+                var binary = '';
+                var len = xhr.responseText.length;
+                for (var i = 0; i < len; i++) {
+                    binary += String.fromCharCode( bytes[ i ] );
+                    //binary += String.fromCharCode( xhr.responseText.charCodeAt(i));
+                }
+                val = 'data:image/png;base64,' + btoa(binary);
+*/
               }
+
               if (val !== null && val !== undefined && typeof val != 'function') {
                 // If the property name matches the object type, use a text node rather than setting the property
                 if (xmltype.toLowerCase() == k.toLowerCase()) {
@@ -1222,5 +1286,400 @@ elation.require([
         return changestr;
       }
     }
+    this.registerElement = function(tagname, classobj, extendclass) {
+      tagname = tagname.toLowerCase();
+      var classname = tagname + '_' + this.roomid;
+      var fullextendclass = 'janusobject';
+      if (this.customElements[extendclass]) {
+        fullextendclass = this.customElements[extendclass].classname;
+      } else if (this.janus.customElements[extendclass]) {
+        fullextendclass = this.janus.customElements[extendclass].classname;
+      }
+
+      this.customElements[tagname] = {
+        tagname: tagname,
+        classname: classname,
+        class: classobj,
+        extendclass: fullextendclass
+      };
+
+      // console.log('Register new ROOM tag type:', tagname, classname, classobj, fullextendclass);
+      elation.component.add('engine.things.' + classname, classobj, elation.engine.things[fullextendclass]);
+
+      if (this.unknownElements[tagname]) {
+        var unknownElements = this.unknownElements[tagname];
+        // console.log('Now we know about ' + tagname + ', so make some!', unknownElements);
+        for (var i = 0; i < unknownElements.length; i++) {
+          this.createObject(tagname, unknownElements[i].args, unknownElements[i].parent);
+        }
+      }
+    }
+    this.extendElement = function(extendclass, tagname, classobj) {
+      this.registerElement(tagname, classobj, extendclass);
+    }
+    this.handleEditorInput = function(ev) {
+      console.log('editor changed', this.debugeditor.value);
+    }
+    this.handleEditorUpdate = function(ev) {
+      console.log('set page source', this.debugeditor.value);
+      this.applySourceChanges(this.debugeditor.value);
+      //this.loadFromSource(this.debugeditor.value);
+    }
+    this.applySourceChanges = function(src) {
+        var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+        var roomdata = this.janus.parser.parse(src, this.baseurl, datapath);
+      console.log('apply changes to existing world', roomdata);
+      var exclude = ['#text', 'assets', 'room', 'source'];
+
+      for (var k in roomdata) {
+        if (exclude.indexOf(k) == -1) {
+          var entities = roomdata[k];
+          for (var i = 0; i < entities.length; i++) {
+            var newentity = entities[i],
+                oldentity = this.jsobjects[newentity.js_id];
+            console.log(newentity, oldentity);
+            var changed = false;
+            if (oldentity) {
+              for (var k in newentity) {
+                var newval = newentity[k];
+                if (newval !== null && newval !== undefined && newval != oldentity[k]) {
+                  oldentity[k] = newentity[k];
+                  changed = true;
+                }
+              }
+              if (changed) oldentity.sync = true;
+            }
+          }
+        }
+      }
+    }
+    this.getRoomSource = function() {
+      //console.log(this.jsobjects);
+      var assetsrc = '  <Assets>\n';
+
+      var typemap = {};
+      for (var k in this.janus.typemap) {
+        var n = this.janus.typemap[k];
+        if (!typemap[n]) {
+          typemap[n] = k;
+        }
+      }
+
+      for (var type in this.roomassets) {
+        for (var assetname in this.roomassets[type]) {
+          var asset = this.roomassets[type][assetname];
+
+          if (assetname != asset.src) {
+            assetsrc += '    <asset' + type + ' id="' + assetname + '" src="' + asset.src + '" />\n';
+          }
+        }
+      }
+      assetsrc += '  </Assets>\n';
+
+      var objectsrc = '  <Room>\n';
+      for (var k in this.jsobjects) {
+        var object = this.jsobjects[k];
+        var obj = object._target;
+        var markup = obj.summarizeXML();
+        objectsrc += '    ' + markup.replace('<Object ', '<' + typemap[obj.type] + ' ') + '\n';
+      }
+      objectsrc += '  </Room>\n';
+      var roomsrc = '<FireBoxRoom>\n';
+      roomsrc += assetsrc;
+      roomsrc += objectsrc;
+      roomsrc += '<FireBoxRoom>\n';
+      console.log(roomsrc);
+
+      return roomsrc;
+    }
+
+    // FIXME - room should inherit from janusbase and get this automatically
+    this.addEventListenerProxy = function(name, handler, bubble) {
+      var eventobj = {
+        target: handler,
+        fn: function(ev) {
+          var proxyev = elation.events.clone(ev, {
+            target: ev.target.getProxyObject(),
+          });
+          // Bind stopPropagation and preventDefault functions to the real event
+          proxyev.stopPropagation = elation.bind(ev, ev.stopPropagation),
+          proxyev.preventDefault = elation.bind(ev, ev.preventDefault),
+          handler(proxyev);
+        }
+      };
+      if (!this.eventlistenerproxies[name]) this.eventlistenerproxies[name] = [];
+      this.eventlistenerproxies[name].push(eventobj);
+
+      elation.events.add(this, name, eventobj.fn, bubble);
+    }
+    this.removeEventListenerProxy = function(name, handler, bubble) {
+      if (this.eventlistenerproxies[name]) {
+        for (var i = 0; i < this.eventlistenerproxies[name].length; i++) {
+          var evproxy = this.eventlistenerproxies[name][i];
+          if (evproxy.target === handler) {
+            elation.events.remove(this, name, evproxy.fn, bubble);
+          }
+        }
+      }
+    }
+
+    /* Room editing functionality */
+
+    this.handleDragOver = function(ev) {
+      ev.dataTransfer.dropEffect = "link"
+      ev.preventDefault();
+    }
+    this.handleDrop = function(ev) {
+      console.log('drop!', ev);
+      var files = ev.dataTransfer.files,
+          items = ev.dataTransfer.items;
+      if (files.length > 0) {
+        console.log('dropped files!', files);
+      } else if (items.length > 0) {
+        var types = {};
+        var numitems = items.length;
+        for (var i = 0; i < numitems; i++) {
+          var type = items[i].type;
+          if (type == 'text/uri-list') {
+            items[i].getAsString(elation.bind(this, this.loadObjectFromURIList));
+          }
+        }
+      }
+      ev.preventDefault();
+      this.engine.systems.controls.requestPointerLock();
+    }
+    this.loadObjectFromURIList = function(list) {
+      var newobject = this.createObject('Object', {
+        id: list,
+        sync: true
+      });
+      this.editObject(newobject, true);
+    }
+    this.editObject = function(object, isnew) {
+      this.roomedit.object = object;
+      this.roomedit.modeid = 0;
+      this.roomedit.objectIsNew = isnew;
+      this.roomedit.moving = false;
+
+      object.collision_id = '';
+
+      elation.events.add(this, 'mousemove', this.editObjectMousemove);
+      elation.events.add(this, 'click', this.editObjectClick);
+      elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
+
+      // Back up properties so we can revert if necessary
+      this.roomedit.startattrs = {};
+      for (var i = 0; i < this.roomedit.modes.length; i++) {
+        var mode = this.roomedit.modes[i];
+        if (object[mode]) {
+          var val = object[mode];
+          if (val instanceof THREE.Vector3 ||
+              val instanceof THREE.Color ||
+              val instanceof THREE.Euler) {
+            val = val.toArray().join(' ');
+          }
+          this.roomedit.startattrs[mode] = val;
+        }
+      }
+
+      // activate context
+      this.engine.systems.controls.activateContext('roomedit', this);
+      this.engine.systems.controls.activateContext('roomedit_togglemove', this);
+
+      this.editObjectShowWireframe();
+    }
+
+    this.editObjectShowWireframe = function() {
+      if (this.roomedit.wireframe) {
+        this.editObjectRemoveWireframe();
+      }
+      var object = this.roomedit.object;
+      var obj3d = object._target.objects['3d'];
+      var objchild = obj3d.children[obj3d.children.length-1];
+      var root = objchild.clone();
+      this.roomedit.wireframe = root;
+      root.traverse(function(n) {
+        if (n instanceof THREE.Mesh) {
+          n.material = new THREE.MeshPhongMaterial({wireframe: true, color: 0xff0000, emissive: 0x990000, wireframeLinewidth: 3, depthTest: false, transparent: true, opacity: .2});
+        }
+      });
+      this.roomedit.object._target.objects['3d'].add(root);
+    }
+    this.editObjectRemoveWireframe = function() {
+      if (this.roomedit.wireframe && this.roomedit.wireframe.parent) {
+        this.roomedit.wireframe.parent.remove(this.roomedit.wireframe);
+      }
+    }
+    this.editObjectStop = function(destroy) {
+      if (destroy) {
+        this.roomedit.object.die();
+      } else {
+        this.roomedit.object.collision_id = this.roomedit.object.id;
+      }
+      this.roomedit.object = false;
+      this.editObjectRemoveWireframe();
+
+      elation.events.remove(this, 'mousemove', this.editObjectMousemove);
+      elation.events.remove(this, 'click', this.editObjectClick);
+
+      // deactivate context
+      this.engine.systems.controls.deactivateContext('roomedit', this);
+      this.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
+    }
+    this.editObjectRevert = function() {
+      var object = this.roomedit.object;
+      for (var k in this.roomedit.startattrs) {
+        var value = this.roomedit.startattrs[k];
+        object[k] = value;
+      }
+      this.editObjectStop();
+    }
+    this.editObjectMousemove = function(ev) {
+      if (this.roomedit.object) {
+        if (this.roomedit.moving && ev.element.getProxyObject() !== this.roomedit.object) {
+          this.roomedit.object.pos = this.editObjectSnapVector(this.roomedit.object.parent.worldToLocal(ev.data.point, true), this.roomedit.snap);
+        }
+      }
+    }
+    this.editObjectClick = function(ev) {
+      if (this.roomedit.object) {
+        if (ev.button == 0) {
+          this.editObjectStop();
+        } else if (ev.button == 2) {
+          this.editObjectRevert();
+        }
+      }
+    }
+    this.editObjectGetMode = function() {
+      return this.roomedit.modes[this.roomedit.modeid];
+    }
+    this.editObjectToggleMode = function(ev) {
+      var roomedit = ev.target.roomedit;
+      if (ev.value) {
+        var modes = roomedit.modes,
+            modeid = (roomedit.modeid + 1) % modes.length;
+
+        roomedit.modeid = modeid;
+        console.log('set mode:', roomedit.modes[modeid]);
+      }
+    }
+    this.editObjectManipulate = function(vec) {
+      var mode = this.editObjectGetMode();
+      var obj = this.roomedit.object;
+      var space = 'player'; // 'world', 'local', 'player'
+      var player = this.engine.client.player;
+
+      if (!obj) return;
+      switch (mode) {
+        case 'pos':
+          if (space == 'world') {
+            var newpos = translate(obj.pos, scalarMultiply(vec, this.roomedit.snap));
+            obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
+          } else if (space == 'player') {
+            var dir = player.head.localToWorld(vec).sub(player.head.localToWorld(V(0)));
+            var newpos = translate(obj.pos, scalarMultiply(dir, this.roomedit.snap));
+            obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
+          } else if (space == 'local') {
+            var dir = obj.localToWorld(vec).sub(obj.localToWorld(V(0)));
+            obj.pos = translate(obj.pos, scalarMultiply(dir, this.roomedit.snap));
+          }
+          break;
+        case 'rotation':
+          var amount = Math.PI/2 * this.roomedit.snap;
+          var euler = new THREE.Euler().setFromQuaternion(obj._target.orientation);
+          vec.multiplyScalar(amount);
+          euler.x += vec.x;
+          euler.y += vec.y;
+          euler.z += vec.z;
+          var quat = new THREE.Quaternion().setFromEuler(euler);
+          obj._target.properties.orientation.multiply(quat);
+          //this.roomedit.object.pos = vec;
+          break;
+        case 'scale':
+          if (space == 'world') {
+            obj.scale.add(vec.multiplyScalar(this.roomedit.snap));
+          } else if (space == 'player') {
+            var dir = player.head.localToWorld(vec, true).sub(player.head.localToWorld(V(0)));
+            var newscale = translate(obj.scale, dir.multiplyScalar(this.roomedit.snap));
+            obj.scale = this.editObjectSnapVector(newscale, this.roomedit.snap);
+          } else if (space == 'local') {
+            var newscale = translate(obj.scale, vec.multiplyScalar(this.roomedit.snap));
+            obj.scale = this.editObjectSnapVector(newscale, this.roomedit.snap);
+          }
+          break;
+        case 'col':
+          break;
+      }
+    }
+    this.editObjectSnapVector = function(vector, snap) {
+      vector.x = Math.round(vector.x / snap) * snap;
+      vector.y = Math.round(vector.y / snap) * snap;
+      vector.z = Math.round(vector.z / snap) * snap;
+      return vector;
+    }
+    this.editObjectSetSnap = function(amount) {
+      this.roomedit.snap = amount;
+      console.log('set snap to', amount);
+    }
+
+    // FIXME - the following functions aren't bound to "this", because the control system isn't properly managing context
+    this.editObjectManipulateLeft = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(-1, 0, 0));
+    }
+    this.editObjectManipulateRight = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(1,0,0));
+    }
+    this.editObjectManipulateUp = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(0,1,0));
+    }
+    this.editObjectManipulateDown = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(0,-1,0));
+    }
+    this.editObjectManipulateIn = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(0,0,1));
+    }
+    this.editObjectManipulateOut = function(ev) {
+      if (ev.value) ev.target.editObjectManipulate(V(0,0,-1));
+    }
+    this.editObjectManipulateMouse = function(ev) {
+      ev.target.editObjectManipulate(V(ev.value[0], -ev.value[1], 0));
+    }
+    this.editObjectSnapOnes = function(ev) {
+      if (ev.value) ev.target.editObjectSetSnap(1);
+    }
+    this.editObjectSnapTenths = function(ev) {
+      if (ev.value) ev.target.editObjectSetSnap(.1);
+    }
+    this.editObjectSnapHundredths = function(ev) {
+      if (ev.value) ev.target.editObjectSetSnap(.01);
+    }
+    this.editObjectSnapThousandths = function(ev) {
+      if (ev.value) ev.target.editObjectSetSnap(.001);
+    }
+    this.editObjectCancel = function(ev) {
+      if (ev.value) {
+        if (ev.target.roomedit.objectIsNew) {
+          ev.target.editObjectStop(true);
+        } else {
+          ev.target.editObjectRevert();
+        }
+      }
+    }
+    this.editObjectToggleMove = function(ev) {
+      var roomedit = ev.target.roomedit;
+      if (ev.value == 1) {
+        roomedit.moving = true;
+        this.engine.systems.controls.deactivateContext('roomedit', this);
+      } else if (ev.value == 0) {
+        roomedit.moving = false;
+        this.engine.systems.controls.activateContext('roomedit', this);
+      }
+    }
+    this.editObjectHandlePointerlock = function(ev) {
+      if (!document.pointerLockElement) {
+        this.editObjectRevert();
+      }
+    }
   }, elation.engine.things.generic);
 });
+
