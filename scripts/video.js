@@ -8,7 +8,9 @@ elation.require(['janusweb.janusbase'], function() {
         loop: { type: 'boolean', default: false },
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
+        gain: { type: 'float', default: 1.0, set: this.updateSound },
       });
+      this.audionodes = false;
       elation.events.add(this, 'click', elation.bind(this, this.click));
     }
     this.createObject3D = function() {
@@ -18,6 +20,8 @@ elation.require(['janusweb.janusbase'], function() {
         var mat = this.createMaterial();
         this.video = this.texture.image;
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
+        elation.events.add(this.video, 'loadeddata', elation.bind(this, this.videoloaded));
+        elation.events.add(this.video, 'playing', elation.bind(this, this.videoStartedPlaying));
         return new THREE.Mesh(geo, mat);
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
@@ -62,11 +66,50 @@ elation.require(['janusweb.janusbase'], function() {
       var mat = (this.properties.lighting ? new THREE.MeshPhongMaterial(matargs) : new THREE.MeshBasicMaterial(matargs));
       return mat;
     }
+    this.videoStartedPlaying = function(ev) {
+      if (!this.audionodes) {
+        this.initSound();
+      }
+    }
+    this.initSound = function() {
+      var listener = this.engine.systems.sound.getRealListener(),
+          ctx = listener.context;
+      this.audionodes = {
+        listener: listener,
+        ctx: ctx
+      };
+
+      var gainnode = ctx.createGain();
+      var source = this.getSoundSource();
+
+      gainnode.gain.value = this.gain;
+      source.connect(gainnode);
+
+      gainnode.connect(ctx.destination);
+
+      this.audionodes.source = source;
+      this.audionodes.gain = gainnode;
+    }
+    this.getSoundSource = function() {
+      if (!this.video._audiosource) {
+        var ctx = this.audionodes.ctx;
+        var source = ctx.createMediaElementSource(this.video);
+        this.video._audiosource = source;
+      }
+      return this.video._audiosource;
+    }
+    this.updateSound = function() {
+      if (this.audionodes && this.audionodes.gain) {
+        this.audionodes.gain.gain.value = this.gain;
+      }
+    }
     this.getSize = function(image) {
       return {width: image.videoWidth, height: image.videoHeight};
     }
-    this.click = function() {
-      this.togglePlay();
+    this.click = function(ev) {
+      if (ev.button == 0) {
+        this.togglePlay();
+      }
     }
     this.togglePlay = function() {
       //var texture = this.asset.getInstance();
@@ -115,6 +158,7 @@ elation.require(['janusweb.janusbase'], function() {
       proxy._proxydefs = {
         loop:    [ 'property', 'loop'],
         video:   [ 'property', 'video'],
+        gain:    [ 'property', 'gain'],
 
         isPlaying: [ 'function', 'isPlaying'],
         play:    [ 'function', 'play'],
