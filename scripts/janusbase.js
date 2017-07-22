@@ -24,6 +24,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         rotation_order: { type: 'string', default: 'XYZ', set: this.pushFrameUpdate },
         lighting: { type: 'boolean', default: true },
         sync:     { type: 'boolean', default: false },
+        locked:   { type: 'boolean', default: false },
         rotate_axis: { type: 'string', default: '0 1 0' },
         rotate_deg_per_sec: { type: 'string' },
         onclick: { type: 'object' },
@@ -144,6 +145,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           rotation: ['property', 'rotation'],
           rotation_order: ['property', 'rotation_order'],
           sync:     ['property', 'sync'],
+          locked:   ['property', 'sync'],
           visible:  ['property', 'visible'],
 
           onupdate:     ['callback', 'update'],
@@ -175,7 +177,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           addForce:            ['function', 'addForce'],
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
-          executeCallback:     ['function', 'executeCallback']
+          executeCallback:     ['function', 'executeCallback'],
+          isEqual:             ['function', 'isEqual']
         });
 
         if (classdef) {
@@ -444,6 +447,10 @@ console.error('dunno what this is', other);
       } else if (elation.utils.isString(callback)) {
         eval(callback);
       }
+    }
+    this.isEqual = function(obj) {
+      var realobj = obj.target || obj;
+      return this === realobj;
     }
   }, elation.engine.things.generic);
 });
