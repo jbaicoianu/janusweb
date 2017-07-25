@@ -66,6 +66,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         server:         { type: 'string', default: null },
         port:           { type: 'integer', default: null },
         urltemplate:    { type: 'string', default: false },
+        muted:          { type: 'boolean', default: false },
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
@@ -86,6 +87,10 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         'mute': [ 'keyboard_ctrl_m', elation.bind(this, this.mute) ]
       });
       this.engine.systems.controls.activateContext('janus');
+
+      if (this.muted) {
+        this.mute();
+      }
 
       this.network = elation.janusweb.multiplayermanager({
         janusweb: this,
@@ -400,7 +405,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
     }
     this.mute = function(ev) {
-      if (ev.value == 1) {
+      if (!ev || ev.value == 1) {
         this.engine.systems.sound.toggleMute();
       }
     }

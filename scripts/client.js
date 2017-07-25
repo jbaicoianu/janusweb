@@ -64,6 +64,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       networking: args.networking,
       autoload: args.autoload,
       stats: args.stats,
+      muted: args.muted,
       urltemplate: args.urltemplate,
       useWebVRPolyfill: args.useWebVRPolyfill,
       server: args.server,
@@ -129,6 +130,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           autoload: this.args.autoload,
           urltemplate: this.args.urltemplate,
           server: this.args.server,
+          muted: this.args.muted,
         }
       });
       this.janusweb = things.children.janusweb;
