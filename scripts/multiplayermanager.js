@@ -189,13 +189,14 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
     })();
     this.sendUpdate = function(opts) {
       if (!opts) opts = {};
-      if (!this.activeroom || !player) return;
-
       // opts.first is a bool, if true then we are sending our avatar along with the move update
       // else, we send the avatar on every 15th update
       var player = this.player,
-          room = this.activeroom,
-          server = this.getServerForRoom(room);
+          room = this.activeroom;
+
+      if (!room || !player) return;
+
+      var server = this.getServerForRoom(room);
 
       if (!server.loggedin) return;
 
