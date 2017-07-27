@@ -1,6 +1,16 @@
 #!/bin/bash
 
-VERSION=$(node -pe "require('./package.json').version")
+NODEJS=`which nodejs`
+if [ -z "$NODEJS" ]; then
+  NODEJS=`which node`
+fi
+if [ -z "$NODEJS" ]; then
+  echo "ERROR - Can't find 'nodejs' or 'node' binary in path, exiting"
+  exit
+fi
+
+
+VERSION=$($NODEJS -pe "require('./package.json').version")
 BUILDROOT=$(pwd)/build
 BUILDBASE=${VERSION}
 BUILDDIR=${BUILDROOT}/${BUILDBASE}
