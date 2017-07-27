@@ -177,7 +177,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           lighting: this.lighting,
           cull_face: 'none'
         });
-        if (scale) this.body.scale.fromArray(scale);
+        if (scale && this.body) this.body.scale.fromArray(scale);
       }
     }
     this.setAnimation = function(anim_id) {
