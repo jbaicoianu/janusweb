@@ -1,13 +1,19 @@
 {
   "name": "JanusWeb",
   "short_name": "JanusWeb",
-  "background_color": "#000",
+  "background_color": "#2f363b",
+  "theme_color": "#2f363b",
   "lang": "en-US",
   "orientation": "landscape",
+  "start_url": "index.html",
   
   "description": "Webpages become 3D spaces interconnected by portals.  Explore, collaborate and build, with or without a headset.",
   "icons": [
     {
+      "src": "media/images/icons/janusweb-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }, {
       "src": "media/images/icons/janusweb-256x256.png",
       "sizes": "256x256",
       "type": "image/png"
