@@ -29,7 +29,9 @@ elation.require([
         'fog_start': { type: 'float', default: 0.0 },
         'fog_end': { type: 'float', default: 100.0 },
         'fog_col': { type: 'color', default: 0x000000 },
+        'ambient': { type: 'color', default: 0x666666, set: this.updateLights },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
+        'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'walk_speed': { type: 'float', default: 1.8 },
         'run_speed': { type: 'float', default: 5.4 },
         'jump_velocity': { type: 'float', default: 5.0 },
@@ -130,17 +132,24 @@ elation.require([
       elation.events.add(this, 'thing_think', elation.bind(this, this.onScriptTick));
     }
     this.createLights = function() {
-      this.spawn('light_ambient', this.id + '_ambient', {
-        color: 0x666666
-      });
-      this.spawn('light_directional', this.id + '_sun', {
-        position: [-20,50,25],
-        intensity: 0.1
-      });
-      this.spawn('light_point', this.id + '_point', {
-        position: [22,19,-15],
-        intensity: 0.1
-      });
+      this.roomlights = {
+        ambient: this.spawn('light_ambient', this.id + '_ambient', {
+          color: this.properties.ambient
+        }),
+        directional: this.spawn('light_directional', this.id + '_sun', {
+          position: [-20,50,25],
+          intensity: 0.1
+        }),
+        point: this.spawn('light_point', this.id + '_point', {
+          position: [22,19,-15],
+          intensity: 0.1
+        })
+      };
+    }
+    this.updateLights = function() {
+      if (this.roomlights) {
+        this.roomlights.ambient.properties.color.copy(this.ambient);
+      }
     }
     this.setActive = function() {
       this.setSkybox();
@@ -543,7 +552,8 @@ elation.require([
           fwd: room.fwd,
           xdir: room.xdir,
           ydir: room.ydir,
-          zdir: room.zdir
+          zdir: room.zdir,
+          shadows: true
         });
 //}), Math.random() * 500);
         }
@@ -576,6 +586,7 @@ elation.require([
         this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
         this.properties.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
+        this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.gravity = room.gravity || -9.8;
         this.properties.locked = room.locked;
         //if (room.col) this.properties.col = room.col;
@@ -769,21 +780,9 @@ elation.require([
         'velocity': args.vel,
         'color': args.col,
         'pickable': true,
-        'collidable': true
+        'collidable': true,
+        'shadows': args.shadows || this.shadows
       };
-/*
-        'js_id': args.js_id,
-        'scale': args.scale,
-        'orientation': args.orientation,
-        'visible': args.visible,
-        'rotate_axis': args.rotate_axis,
-        'rotate_deg_per_sec': args.rotate_deg_per_sec,
-        fwd: args.fwd,
-        xdir: args.xdir,
-        ydir: args.ydir,
-        zdir: args.zdir,
-      };
-*/
       elation.utils.merge(args, objectargs);
 
       switch (realtype) {
@@ -1228,7 +1227,9 @@ elation.require([
         fog_start:     ['property', 'fog_start'],
         fog_end:       ['property', 'fog_end'],
         fog_col:       ['property', 'fog_col'],
+        ambient:       ['property', 'ambient'],
         bloom:         ['property', 'bloom'],
+        shadows:       ['property', 'shadows'],
         col:           ['property', 'col'],
         locked:        ['property', 'locked'],
 
