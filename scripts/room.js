@@ -889,7 +889,60 @@ elation.require([
       }
     }
     this.loadNewAsset = function(type, args) {
-      console.log('FIXME - room.loadNewAssets() needs implementing');
+      type = type.toLowerCase();
+      args = args || {};
+
+      var assetlist = [];
+      if (type == 'image') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({ assettype:'image', name:args.id, src: src, baseurl: this.baseurl });
+      } else if (type == 'video') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'video',
+          name:args.id,
+          src: src,
+          loop: args.loop,
+          sbs3d: args.sbs3d,
+          ou3d: args.ou3d,
+          auto_play: args.auto_play,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'sound') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'sound',
+          name:args.id,
+          src: src,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'websurface') {
+        var websurfaces = {};
+        websurfaceassets.forEach(function(n) { websurfaces[n.id] = n; });
+      } else if (type == 'script') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'script',
+          name: src,
+          src: src,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'object') {
+        if (args.src) {
+          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          var mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
+          if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = this.baseurl + mtlsrc;
+          var srcparts = src.split(' ');
+          src = srcparts[0];
+          assetlist.push({assettype: 'model', name: args.id, src: src, mtl: mtlsrc, tex_linear: args.tex_linear, tex0: args.tex || args.tex0 || srcparts[1], tex1: args.tex1 || srcparts[2], tex2: args.tex2 || srcparts[3], tex3: args.tex3 || srcparts[4]});
+        }
+      }
+
+      this.loadRoomAssets({
+        assets: {
+          assetlist: assetlist
+        }
+      });
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
