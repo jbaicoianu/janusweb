@@ -3,6 +3,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.januslight.extendclass.postinit.call(this);
       this.defineProperties({
+        color: { type: 'color', set: this.updateLight },
         light_range: { type: 'float', default: 10, set: this.updateLight },
         light_intensity: { type: 'float', default: 100, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
