@@ -383,6 +383,7 @@ elation.require([
                       this.createRoomObjects(objs);
                       this.loaded = true;
                       this.setActive();
+                      elation.events.fire({element: this, type: 'room_load_processed'});
                       elation.events.fire({type: 'janus_room_load', element: this});
                     }));
         }), 0);
@@ -476,6 +477,7 @@ elation.require([
                       this.createRoomObjects(objs);
                       this.loaded = true;
                       this.setActive();
+                      elation.events.fire({element: this, type: 'room_load_processed'});
                       elation.events.fire({type: 'janus_room_load', element: this});
                     }));
         }), 0);
