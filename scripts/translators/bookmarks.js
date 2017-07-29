@@ -8,8 +8,8 @@ elation.require(['elation.collection'], function() {
             pos: [-18, 0, 0],
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
           },
-          objects: [],
-          links: []
+          object: [],
+          link: []
         };
         //var bookmarks = elation.collection.localindexed({key: 'janusweb.bookmarks'});
         var bookmarks = args.janus.bookmarks;
@@ -21,7 +21,7 @@ elation.require(['elation.collection'], function() {
           var items = bookmarks.items;
           for (var i = 0; i < items.length; i++) {
             var item = items[items.length - i - 1];
-            roomdata.links.push({
+            roomdata.link.push({
               url: item.url,
               title: item.title,
               scale: [1.2, 2, 1],

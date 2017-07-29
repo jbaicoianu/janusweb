@@ -2,10 +2,10 @@ elation.require([], function() {
   elation.component.add('janusweb.translators.error', function() {
     this.init = function() {
       this.errortypes = {
-        404: {color1: '#ff0000', color2: '#190000', text: '404 - Are you lost?'},
-        410: {color1: '#ff0000', color2: '#190000', text: '410 - Are you lost?'},
-        403: {color1: '#0000ff', color2: '#000019', text: '403 - Forbidden'},
-        500: {color1: '#ff00ff', color2: '#190019', text: '500 - Server error'},
+        404: {color1: '#ff0000', color2: '#ff3333', text: '404 - Are you lost?'},
+        410: {color1: '#ff0000', color2: '#ff3333', text: '410 - Are you lost?'},
+        403: {color1: '#0000ff', color2: '#3333ff', text: '403 - Forbidden'},
+        500: {color1: '#ff00ff', color2: '#ff33ff', text: '500 - Server error'},
         'unknown': {color1: '#ffff00', color2: '#191900', text: 'Unknown error'},
       };
     }
@@ -25,17 +25,18 @@ elation.require([], function() {
 
         var roomdata = {
           room: {
-            pos: [0.8, -0.2, 0],
-            orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
+            pos: [0,0,0],
+            xdir: "-1 0 0",
+            zdir: "0 0 -1",
           },
-          objects: [
-            {id: 'stand', js_id: 0, pos: "1 -0.1 4", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"},
-            {id: 'sphere', js_id: 1, pos: "4 350 -1", xdir: "0 0 1", ydir: "0 -1 0", zdir: "1 0 0", scale: "400 400 400", col: error.color2, lighting: "false", cull_face: 'front', image_id: 'static'}
+          object: [
+            {id: 'stand', js_id: 0, pos: "0 -0.1 0", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"},
+            {id: 'sphere', js_id: 1, pos: "0 0 5", xdir: "-1 0 0", ydir: "0 1 0", zdir: "0 0 -1", scale: "400 400 400", col: error.color2, lighting: "false", cull_face: 'front', image_id: 'static'}
           ],
-          texts: [
-            { js_id: 2, pos: "1.3 1.4 12.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: error.color1, '_content': error.text}
+          text: [
+            { js_id: 2, pos: "0 1.4 7.5", xdir: "-1 0 0", zdir: "0 0 -1", scale: "6 6 1", col: error.color1, '_content': error.text}
           ],
-          links: []
+          link: []
         };
         resolve(roomdata);
       }));

@@ -8,8 +8,8 @@ elation.require([], function() {
             pos: [0, 0, 0],
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
           },
-          objects: [],
-          links: []
+          object: [],
+          link: []
         };
         //var bookmarks = elation.collection.localindexed({key: 'janusweb.bookmarks'});
         resolve(roomdata);
