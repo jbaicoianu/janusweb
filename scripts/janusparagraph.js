@@ -2,10 +2,93 @@ elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.janusparagraph', function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
-console.log('new paragraph', this);
+      this.defineProperties({
+        text: {type: 'string', default: '', set: this.updateTexture},
+        font_size: {type: 'integer', default: 16},
+        text_col: {type: 'color', default: 0x000000},
+        back_col: {type: 'color', default: 0xffffff},
+        back_alpha: {type: 'float', default: 1},
+        css: {type: 'string' },
+      });
     }
     this.createObject3D = function() {
-      return new THREE.Mesh(new THREE.CubeGeometry(1,1,1), new THREE.MeshPhongMaterial({color: 0x000ff0}));
+      var material = this.createMaterial();
+      var geo = new THREE.PlaneGeometry(2,2);
+      geo.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,.1));
+      var mesh = new THREE.Mesh(geo, material);
+      return mesh;
+    }
+    this.createMaterial = function() {
+      var texture = this.createTexture();
+      var material = new THREE.MeshPhongMaterial({color: 0xffffff, map: texture, transparent: true});
+      return material;
+    }
+    this.createTexture = function() {
+      this.canvas = document.createElement('canvas');
+      this.canvas.width = 1024;
+      this.canvas.height = 1024;
+      this.texture = new THREE.Texture(this.canvas);
+      this.updateTexture();
+      return this.texture;
+    }
+    this.updateTexture = function() {
+      if (!this.canvas || !this.texture) return;
+      var ctx = this.canvas.getContext('2d'),
+          texture = this.texture;
+      this.canvas.width = 512;
+      this.canvas.height = 512;
+      var text_col = '#' + this.text_col.getHexString(),
+          back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + this.back_alpha + ')';
+      var basestyle = 'font-size: ' + this.font_size + 'px;' +
+                      'color: ' + text_col + ';' +
+                      'background: ' + back_col + ';';
+
+      // We need to sanitize our HTML in case someone provides us with malformed markup.
+      // We use SVG to render the mark-up, and since SVG is XML it means we need well-formed data
+      // However, for whatever reason, <br> amd <hr> seem to break things, so we replace them with
+      // styled divs instead.
+
+      var sanitarydiv = document.createElement('div');
+      sanitarydiv.innerHTML = this.text;
+      var content = sanitarydiv.innerHTML.replace(/<br\s*\/?>/g, '<div class="br"></div>');
+      content = content.replace(/<hr\s*\/?>/g, '<div class="hr"></div>');
+
+      var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+      if (this.css) {
+        styletag += this.css;
+      }
+      styletag +=  '</style>';
+
+
+      var data = '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">' +
+                 '<foreignObject width="100%" height="100%">' +
+                  styletag +
+                 '<div xmlns="http://www.w3.org/1999/xhtml" class="paragraphcontainer">' +
+                 content +
+                 '</div>' +
+                 '</foreignObject>' +
+                 '</svg>';
+
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      var url = 'data:image/svg+xml,' + data;
+
+      img.onload = function() {
+        ctx.drawImage(img, 0, 0);
+        texture.needsUpdate = true;
+      }
+      img.src = url;
+      return texture;
+    }
+    this.getProxyObject = function(classdef) {
+      var proxy = elation.engine.things.janusparagraph.extendclass.getProxyObject.call(this, classdef);
+      proxy._proxydefs = {
+        text:  [ 'property', 'text'],
+        text_col:  [ 'property', 'text_col'],
+        back_col:  [ 'property', 'back_col'],
+        back_opacity:  [ 'property', 'back_opacity'],
+      };
+      return proxy;
     }
   }, elation.engine.things.janusbase);
 });
