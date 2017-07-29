@@ -506,7 +506,9 @@ elation.require([
     this.loadRoomAssets = function(roomdata) {
       if (roomdata && roomdata.assets && roomdata.assets.assetlist && roomdata.assets.assetlist.length > 0) {
         elation.engine.assets.loadJSON(roomdata.assets.assetlist, this.baseurl);
-        this.websurfaces = roomdata.assets.websurfaces;
+        if (roomdata.assets.websurfaces) {
+          elation.utils.merge(roomdata.assets.websurfaces, this.websurfaces);
+        }
       }
     }
     this.clear = function() {
@@ -792,6 +794,11 @@ elation.require([
           elation.utils.merge({
             'text': args.text || args._content || ' ',
             'col': args.col, //(args.col ? new THREE.Color().setRGB(args.col[0], args.col[1], args.col[2]) : new THREE.Color(0xffffff)),
+          }, objectargs);
+          break;
+        case 'janusparagraph':
+          elation.utils.merge({
+            'text': args.text || args._content || '',
           }, objectargs);
           break;
         case 'janusportal':
