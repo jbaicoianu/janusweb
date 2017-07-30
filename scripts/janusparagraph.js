@@ -39,9 +39,12 @@ elation.require(['janusweb.janusbase'], function() {
       this.canvas.height = 512;
       var text_col = '#' + this.text_col.getHexString(),
           back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + this.back_alpha + ')';
-      var basestyle = 'font-size: ' + this.font_size + 'px;' +
+      var basestyle = 'font-family: sans-serif;' +
+                      'font-size: ' + this.font_size + 'px;' +
                       'color: ' + text_col + ';' +
-                      'background: ' + back_col + ';';
+                      'background: ' + back_col + ';' +
+                      'max-width: 502px;' +
+                      'padding: 5px;';
 
       // We need to sanitize our HTML in case someone provides us with malformed markup.
       // We use SVG to render the mark-up, and since SVG is XML it means we need well-formed data
