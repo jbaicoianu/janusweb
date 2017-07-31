@@ -17,6 +17,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         websurface_id: { type: 'string', set: this.updateMaterial },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         shadows: { type: 'boolean', default: false, set: this.updateMaterial },
+        shadows_receive: { type: 'boolean', default: true, set: this.updateMaterial },
+        shadows_cast: { type: 'boolean', default: true, set: this.updateMaterial },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
@@ -25,6 +27,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         collision_scale: { type: 'vector3', set: this.updateCollider },
         collision_static: { type: 'boolean', default: true, set: this.updateCollider },
         collision_trigger: { type: 'boolean', default: false, set: this.updateCollider },
+        envmap_id: { type: 'string', set: this.updateMaterial },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -316,8 +319,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var useSkinning = this.animations && this.animations.length > 0;
 
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
-        n.receiveShadow = this.shadows;
-        n.castShadow = this.shadows;
+        n.receiveShadow = this.shadows && this.shadows_receive;
+        n.castShadow = this.shadows && this.shadows_cast;
 
         if (n.material) {
           var materials = [];
@@ -422,8 +425,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       } else if (oldmat instanceof THREE.PointsMaterial) {
         var m = oldmat.clone(); 
       } else {
-        var m = (this.properties.lighting != false ? new THREE.MeshPhongMaterial() : new THREE.MeshBasicMaterial());
-        //var m = new THREE.MeshBasicMaterial();
+        var m = this.allocateMaterial();
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
@@ -441,11 +443,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
         if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
         if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
-        if (oldmat.reflectivity !== undefined) m.reflectivity = oldmat.reflectivity;
-        var scene = this.engine.systems.world.scene['world-3d'];
-        //m.envMap = scene.background;
+
+        m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .05);
+
         m.roughnessMap = oldmat.alphaMap;
-        m.roughness = 1.0 - (oldmat.shininess / 512); // Convert shininess value to roughness
+        m.roughness = (oldmat.roughnes !== undefined ? oldmat.roughness : .98);
+        if (this.isUsingPBR()) {
+          m.envMap = this.getEnvmap();
+        }
 
         /*
         if (oldmat.specular && oldmat.specular.b != 0 && oldmat.specular.g != 0 && oldmat.specular.b != 0) {
@@ -455,6 +460,31 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
 
       return m;
+    }
+    this.isUsingPBR = function() {
+      return elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
+    }
+    this.allocateMaterial = function() {
+      if (!this.lighting) {
+        return new THREE.MeshBasicMaterial();
+      } else if (this.isUsingPBR()) {
+        return new THREE.MeshPhysicalMaterial();
+      }
+      return new THREE.MeshPhongMaterial();
+    }
+    this.getEnvmap = function() {
+      if (this.envmap_id) {
+        if (this.envmap) return this.envmap;
+        var envmapasset = this.getAsset('image', this.envmap_id);
+        if (envmapasset) {
+          this.envmap = envmapasset.getInstance();
+          this.envmap.mapping = THREE.EquirectangularReflectionMapping;
+          return this.envmap;
+        }
+      } else {
+        var scene = this.engine.systems.world.scene['world-3d'];
+        return scene.background;
+      }
     }
     this.assignTextureParameters = function(texture, modelasset) {
       var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
