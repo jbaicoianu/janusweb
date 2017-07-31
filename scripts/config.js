@@ -7,6 +7,7 @@ elation.config.set('engine.assets.image.mipmaps', true);
 
 elation.config.set('janusweb.tracking.enabled', true);
 elation.config.set('janusweb.tracking.clientid', 'UA-49582649-2');
+elation.config.set('janusweb.materials.pbr', false);
 
 elation.config.set('dependencies.protocol', 'https:');              // "http:" or "https:"
 elation.config.set('dependencies.host', 'bai.dev.supcrit.com');   // Hostname this release will live on
