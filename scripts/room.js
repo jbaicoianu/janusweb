@@ -305,6 +305,7 @@ elation.require([
       this.engine.client.player.camera.camera.far = this.properties.far_dist;
     }
     this.showDebug = function() {
+      this.engine.client.player.disable();
       if (!this.debugwindow) {
         var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
 
