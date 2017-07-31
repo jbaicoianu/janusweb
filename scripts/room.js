@@ -149,7 +149,7 @@ elation.require([
     }
     this.updateLights = function() {
       if (this.roomlights) {
-        this.roomlights.ambient.properties.color.copy(this.ambient);
+        this.roomlights.ambient.lightobj.color = this.ambient;
       }
     }
     this.setActive = function() {
