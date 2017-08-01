@@ -47,6 +47,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     elation.config.set('dependencies.path', fullpath);
 
+    var usetracking = elation.utils.any(args.tracking, elation.config.get('janusweb.tracking.enabled'), false);
+    if (usetracking) {
+      var tracking = elation.janusweb.tracking({});
+    }
+
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = fullpath + 'janusweb.css';
