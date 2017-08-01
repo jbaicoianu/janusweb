@@ -578,6 +578,8 @@ elation.require([
         if (room.server) this.properties.server = room.server;
         if (room.port) this.properties.port = room.port;
         if (room.rate) this.properties.rate = room.rate;
+        if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
+        if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
