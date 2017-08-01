@@ -16,9 +16,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         loop: { type: 'boolean' },
         websurface_id: { type: 'string', set: this.updateMaterial },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
-        shadows: { type: 'boolean', default: false, set: this.updateMaterial },
-        shadows_receive: { type: 'boolean', default: true, set: this.updateMaterial },
-        shadows_cast: { type: 'boolean', default: true, set: this.updateMaterial },
+        shadow: { type: 'boolean', default: false, set: this.updateMaterial },
+        shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial },
+        shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
@@ -319,8 +319,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var useSkinning = this.animations && this.animations.length > 0;
 
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
-        n.receiveShadow = this.shadows && this.shadows_receive;
-        n.castShadow = this.shadows && this.shadows_cast;
+        n.receiveShadow = this.shadow && this.shadow_receive;
+        n.castShadow = this.shadow && this.shadow_cast;
 
         if (n.material) {
           var materials = [];
