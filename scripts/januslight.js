@@ -14,12 +14,12 @@ elation.require(['janusweb.janusbase'], function() {
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
       if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
+        this.light = new THREE.PointLight(this.properties.color.clone(), 1, this.light_range);
         this.light.position.set(0,0,0);
         obj.add(this.light);
       } else if (this.light_cone_angle > 0) {
         var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
+        this.light = new THREE.SpotLight(this.properties.color.cone(), 1, this.light_range, angle);
         //this.light.position.set(0,0,0);
         obj.add(this.light);
       } 
@@ -49,10 +49,11 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateLight = function() {
       if (this.light) {
-        this.light.intensity = this.light_intensity / 100;
+        //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
+        this.light.intensity = this.light_intensity / 100;
         this.light.color.copy(this.color);
-        //this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
+        this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
         this.light.range = this.light_range * avgscale;
         if (this.light_shadow) {
           this.initShadowmap();
@@ -61,9 +62,12 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.initShadowmap = function() {
       this.light.castShadow = true;
-      this.light.shadow.camera.near = 40;
-      this.light.shadow.camera.far = 120;
-      this.light.shadow.camera.fov = 50;
+      this.light.shadow.radius = 2.5;
+      this.light.shadow.camera.near = .1;
+      this.light.shadow.camera.far = 30;
+      this.light.shadow.camera.fov = 90;
+      this.light.shadow.mapSize.set(512, 512);
+      this.light.shadow.bias = .02;
     }
     this.getProxyObject = function(classdef) {
       var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
