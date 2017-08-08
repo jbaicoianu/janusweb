@@ -271,7 +271,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
           this.video = texture.image;
           elation.events.add(this, elation.bind(this, this.handleVideoClick));
-          room.videos[this.video_id] = this;
+          this.room.videos[this.video_id] = this;
         }
       }
       if (this.properties.websurface_id) {
