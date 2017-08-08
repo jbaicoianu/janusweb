@@ -153,17 +153,35 @@ elation.require(['janusweb.janusbase'], function() {
         this.video.src = '';
       }
     }
+    this.seek = function(time) {
+      if (this.video) this.video.currentTime = time;
+    }
+    this.getCurrentTime = function() {
+      if (this.video) {
+        return this.video.currentTime;
+      }
+      return 0;
+    }
+    this.getTotalTime = function() {
+      if (this.video) {
+        return this.video.duration;
+      }
+      return 0;
+    }
     this.getProxyObject = function(classdef) {
       var proxy = elation.engine.things.janusvideo.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         loop:    [ 'property', 'loop'],
         video:   [ 'property', 'video'],
         gain:    [ 'property', 'gain'],
+        current_time: [ 'accessor', 'getCurrentTime'],
+        total_time: [ 'accessor', 'getTotalTime'],
 
         isPlaying: [ 'function', 'isPlaying'],
         play:    [ 'function', 'play'],
         pause:   [ 'function', 'pause'],
         toggle:  [ 'function', 'togglePlay'],
+        seek:    [ 'function', 'seek'],
       };
       return proxy;
     }

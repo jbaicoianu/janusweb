@@ -269,7 +269,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           } else {
             texture.image.pause();
           }
+          this.video = texture.image;
           elation.events.add(this, elation.bind(this, this.handleVideoClick));
+          room.videos[this.video_id] = this;
         }
       }
       if (this.properties.websurface_id) {
@@ -563,15 +565,79 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         elation.events.add(this.playbutton, 'click', elation.bind(this, this.play));
       }
     }
+    this.play = function() {
+      if (!this.isPlaying()) {
+        this.video.play();
+      }
+    }
+    this.pause = function() {
+      if (this.isPlaying()) {
+        this.video.pause();
+      }
+    }
+    this.isPlaying = function() {
+      var video = this.video;
+      return (video.currentTime > 0 && !video.paused && !video.ended);
+    }
+    this.stop = function() {
+      if (this.video) {
+        this.pause();
+        // FIXME - this stops the video from loading any more data, but means we can't easily restart
+        //         so we're hackishly working around that
+        this.video.originalSrc = this.video.src;
+        this.video.src = '';
+      }
+    }
+    this.seek = function(time) {
+      if (this.video) this.video.currentTime = time;
+    }
+    this.getCurrentTime = function() {
+      if (this.video) {
+        return this.video.currentTime;
+      }
+      return 0;
+    }
+    this.getTotalTime = function() {
+      if (this.video) {
+        return this.video.duration;
+      }
+      return 0;
+    }
     this.getProxyObject = function(classdef) {
       var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         id:  [ 'property', 'janusid'],
         url:  [ 'property', 'url'],
+        image_id:  [ 'property', 'image_id'],
+        video_id:  [ 'property', 'video_id'],
+        lmap_id:  [ 'property', 'lmap_id'],
+        envmap_id:  [ 'property', 'envmap_id'],
+        websurface_id:  [ 'property', 'websurface_id'],
+
+        lighting: [ 'property', 'lighting' ],
+        shadow: [ 'property', 'shadow' ],
+        shadow_receive: [ 'property', 'shadow_receive' ],
+        shadow_cast: [ 'property', 'shadow_casr' ],
+        cull_face: [ 'property', 'cull_face' ],
+        blend_src: [ 'property', 'blend_src' ],
+        blend_dest: [ 'property', 'blend_dest' ],
+
         collision_id:  [ 'property', 'collision_id'],
+        collision_pos: [ 'property', 'collision_pos' ],
         collision_scale:  [ 'property', 'collider_scale'],
         collision_static:  [ 'property', 'collision_static'],
         collision_trigger:  [ 'property', 'collision_trigger'],
+
+        // vide properties/functions
+        current_time: [ 'accessor', 'getCurrentTime'],
+        total_time: [ 'accessor', 'getTotalTime'],
+        isPlaying: [ 'function', 'isPlaying'],
+        play:    [ 'function', 'play'],
+        pause:   [ 'function', 'pause'],
+        toggle:  [ 'function', 'togglePlay'],
+        seek:    [ 'function', 'seek'],
+
+
       };
       return proxy;
     }

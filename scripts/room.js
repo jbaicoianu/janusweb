@@ -64,6 +64,7 @@ elation.require([
       this.cookies = {};
       this.websurfaces = {};
       this.images = {};
+      this.sounds = {};
       this.videos = {};
       this.loaded = false;
 
@@ -857,6 +858,9 @@ elation.require([
       if (realtype == 'janussound') {
         this.sounds[objectargs.js_id] = object;
       }
+      if (realtype == 'janusvideo') {
+        this.videos[objectargs.video_id] = object;
+      }
       if (realtype == 'janusportal') {
         elation.events.add(object, 'janusweb_portal_open', elation.bind(this, this.registerOpenPortal));
         elation.events.add(object, 'janusweb_portal_close', elation.bind(this, this.unregisterOpenPortal));
@@ -980,6 +984,31 @@ elation.require([
     this.seekSound = function(name, time) {
       if (this.sounds[name]) {
         this.sounds[name].seek(time);
+      }
+    }
+    this.playVideo = function(name, properties) {
+      if (!this.videos[name]) {
+        this.videos[name] = this.createObject('Video', {
+          id: name
+        });
+      }
+      if (this.videos[name]) {
+        if (properties) {
+          for (var k in properties) {
+            this.videos[name][k] = properties[k];
+          }
+        }
+        this.videos[name].play();
+      }
+    }
+    this.stopVideo = function(name) {
+      if (this.videos[name]) {
+        this.videos[name].pause();
+      }
+    }
+    this.seekVideo = function(name, time) {
+      if (this.videos[name]) {
+        this.videos[name].seek(time);
       }
     }
     this.getAsset = function(type, id, assetargs) {
