@@ -373,7 +373,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc);
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
                 elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
@@ -388,7 +388,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; }));
             } else if (m.lightMap) {
               var imagesrc = m.lightMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc);
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.lightMap = asset.getInstance();
                 elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; }));
