@@ -1276,9 +1276,9 @@ elation.require([
         playSound:     ['function', 'playSound'],
         stopSound:     ['function', 'stopSound'],
         seekSound:     ['function', 'seekSound'],
-        playVideo:     ['function', 'playSound'],
-        stopVideo:     ['function', 'stopSound'],
-        seekVideo:     ['function', 'seekSound'],
+        playVideo:     ['function', 'playVideo'],
+        stopVideo:     ['function', 'stopVideo'],
+        seekVideo:     ['function', 'seekVideo'],
         getObjectById: ['function', 'getObjectById'],
         openLink:      ['function', 'openLink'],
 
