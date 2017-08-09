@@ -4,6 +4,7 @@ elation.require(['engine.things.generic'], function() {
       elation.engine.things.januswebsurface.extendclass.postinit.call(this);
       this.defineProperties({
         websurface_id: { type: 'string' },
+        image_id: { type: 'string' },
         color: { type: 'color', default: 0xffffff },
         hovercolor: { type: 'color', default: 0x009900 },
         activecolor: { type: 'color', default: 0x00ff00 }
@@ -89,7 +90,7 @@ elation.require(['engine.things.generic'], function() {
           iframe.style.height = height + 'px';
 
           var obj = new THREE.CSS3DObject(div);
-          obj.scale.set(1/width, 1/height, 1);
+          obj.scale.set(1/width / devicePixelRatio, 1/height / devicePixelRatio, 1);
 
           this.iframe = iframe;
           this.domobj = obj;
