@@ -40,6 +40,7 @@ body.dark .ui_window:after {
   height: 1000px;
   backface-visibility: hidden;
   pointer-events: all;
+  background: #222;
 }
 .janusweb_websurface * {
   pointer-events: all;
