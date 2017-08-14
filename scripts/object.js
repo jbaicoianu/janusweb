@@ -266,8 +266,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           this.assignTextureParameters(texture, modelasset);
           if (videoasset.auto_play) {
             texture.image.play();
-          } else {
-            texture.image.pause();
           }
           this.video = texture.image;
           elation.events.add(this, elation.bind(this, this.handleVideoClick));
