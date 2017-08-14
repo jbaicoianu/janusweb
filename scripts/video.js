@@ -42,8 +42,6 @@ elation.require(['janusweb.janusbase'], function() {
         }
         if (this.asset.auto_play) {
           texture.image.play();
-        } else {
-          texture.image.pause();
         }
         texture.minFilter = THREE.LinearFilter;
         elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
