@@ -4,7 +4,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janusvideo.extendclass.postinit.call(this);
       this.defineProperties({
         //src: { type: 'string' },
-        video_id: { type: 'string' },
+        video_id: { type: 'string', set: this.updateVideo },
         loop: { type: 'boolean', default: false },
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
@@ -41,7 +41,9 @@ elation.require(['janusweb.janusbase'], function() {
           texture.image.loop = true;
         }
         if (this.asset.auto_play) {
-          texture.image.play();
+          texture.image.addEventListener('canplaythrough', function() {
+            texture.image.play();
+          });
         }
         texture.minFilter = THREE.LinearFilter;
         elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
@@ -96,6 +98,17 @@ elation.require(['janusweb.janusbase'], function() {
       }
       return this.video._audiosource;
     }
+    this.updateVideo = function() {
+      if (this.video) {
+        if (this.asset.name != this.video_id) {
+          var newasset = this.getAsset(this.video_id);
+          if (newasset) {
+            this.texture.image = newasset.getInstance();
+            this.dispatchEvent({type: 'janusweb_video_change', data: this.texture.image});
+          }
+        }
+      }
+    }
     this.updateSound = function() {
       if (this.audionodes && this.audionodes.gain) {
         this.audionodes.gain.gain.value = this.gain;
@@ -119,7 +132,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.isPlaying = function() {
       var video = this.video;
-      return (video.currentTime > 0 && !video.paused && !video.ended);
+      return (video && video.currentTime > 0 && !video.paused && !video.ended);
     }
     this.play = function() {
       if (!this.isPlaying()) {
