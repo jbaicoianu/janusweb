@@ -228,6 +228,9 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       if (room.hasChanges()) {
         moveData.room_edit = room.getChanges().replace(/"/g, "^");
       }
+      if (room.hasDeletions()) {
+        moveData.room_delete = room.getDeletions().replace(/"/g, "^");
+      }
 
       if (player.hasHands()) {
         var hands = player.getHandData();
