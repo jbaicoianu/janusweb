@@ -170,6 +170,10 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       //THREE.Vector3.prototype.toString = function() { return this.toArray().map(function(d) { return d.toFixed(4); }).join(' '); } 
       window.Vector = function(x, y, z) {
+        if (x) {
+          if (x._target && x._target instanceof THREE.Vector3) return x._target.clone();
+          if (x instanceof THREE.Vector3) return x.clone();
+        }
         if (y === undefined) y = x;
         if (z === undefined) z = y;
         var vec = new THREE.Vector3(x, y, z);
