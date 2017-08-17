@@ -67,7 +67,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   }
   imageassets.forEach(function(n) { 
     var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-    assetlist.push({ assettype:'image', name:n.id, src: src, baseurl: baseurl, hasalpha: n.hasalpha });
+    assetlist.push({ assettype:'image', name:n.id, src: src, baseurl: baseurl, hasalpha: n.hasalpha, proxy: n.proxy });
   });
   videoassets.forEach(function(n) { 
     var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
@@ -79,7 +79,8 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       sbs3d: n.sbs3d == 'true',  
       ou3d: n.ou3d == 'true',  
       auto_play: n.auto_play == 'true',  
-      baseurl: baseurl
+      baseurl: baseurl,
+      proxy: n.proxy && n.proxy != 'false'
     }); 
   });
   soundassets.forEach(function(n) { 
