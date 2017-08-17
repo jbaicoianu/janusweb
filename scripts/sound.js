@@ -40,7 +40,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       var listener = this.engine.systems.sound.getRealListener();
       if (listener) {
-        if (false && this.rect) {
+        if (this.rect) {
           this.audio = new THREE.Audio(listener);
         } else {
           this.audio = new THREE.PositionalAudio(listener);
@@ -57,6 +57,7 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.autoplay = this.auto_play;
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
+        this.audio.setPlaybackRate(this.pitch);
         if (src) {
           if (soundcache[src]) {
             this.audio.setBuffer(soundcache[src]);
@@ -74,12 +75,6 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
         }
         this.objects['3d'].add(this.audio);
-      }
-    }
-    this.updateSound = function() {
-      var sound = elation.engine.assets.find('sound', this.sound_id);
-      if (sound) {
-        this.createAudio(sound.getProxiedURL(sound.src));
       }
     }
     this.load = function(url) {
@@ -120,6 +115,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.audio) {
         //this.play();
         this.audio.setVolume(this.gain);
+        this.audio.setPlaybackRate(this.pitch);
       }
       if (this.rect) {
         var parts = this.rect.split(' ');
@@ -150,6 +146,7 @@ elation.require(['janusweb.janusbase'], function() {
       var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
         gain:         [ 'property', 'gain'],
+        pitch:        [ 'property', 'pitch'],
         play:         [ 'function', 'play'],
         pause:        [ 'function', 'pause'],
         stop:         [ 'function', 'stop'],
