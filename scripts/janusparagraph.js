@@ -8,6 +8,7 @@ elation.require(['janusweb.janusbase'], function() {
         text_col: {type: 'color', default: 0x000000},
         back_col: {type: 'color', default: 0xffffff},
         back_alpha: {type: 'float', default: 1},
+        cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         css: {type: 'string' },
       });
     }
@@ -20,8 +21,23 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createMaterial = function() {
       var texture = this.createTexture();
-      var material = new THREE.MeshPhongMaterial({color: 0xffffff, map: texture, transparent: true});
-      return material;
+      var sidemap = {
+        'back': THREE.FrontSide,
+        'front': THREE.BackSide,
+        'none': THREE.DoubleSide
+      };
+      var matargs = {
+        color: 0xffffff,
+        map: texture,
+        transparent: true,
+        side: sidemap[this.cull_face],
+      };
+      if (!this.lighting) {
+        return new THREE.MeshBasicMaterial(matargs);
+      } else {
+        // TODO - support PBR for paragraphs
+        return new THREE.MeshPhongMaterial(matargs);
+      }
     }
     this.createTexture = function() {
       this.canvas = document.createElement('canvas');
@@ -55,6 +71,7 @@ elation.require(['janusweb.janusbase'], function() {
       sanitarydiv.innerHTML = this.text;
       var content = sanitarydiv.innerHTML.replace(/<br\s*\/?>/g, '<div class="br"></div>');
       content = content.replace(/<hr\s*\/?>/g, '<div class="hr"></div>');
+      content = content.replace(/<img(.*?)>/g, "<img$1 />");
 
       var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
       if (this.css) {
@@ -76,9 +93,14 @@ elation.require(['janusweb.janusbase'], function() {
       img.crossOrigin = 'anonymous';
       var url = 'data:image/svg+xml,' + data;
 
+      var timer;
       img.onload = function() {
         ctx.drawImage(img, 0, 0);
-        texture.needsUpdate = true;
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(function() {
+          texture.needsUpdate = true;
+          timer = false;
+        }, 10);
       }
       img.src = url;
       return texture;
