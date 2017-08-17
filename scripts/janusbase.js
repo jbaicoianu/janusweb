@@ -169,7 +169,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
           createObject:        ['function', 'createObject'],
           appendChild:         ['function', 'appendChild'],
+          removeChild:         ['function', 'removeChild'],
           addEventListener:    ['function', 'addEventListenerProxy'],
+          dispatchEvent:       ['function', 'dispatchEvent'],
           removeEventListener: ['function', 'removeEventListenerProxy'],
           localToWorld:        ['function', 'localToWorld'],
           worldToLocal:        ['function', 'worldToLocal'],
@@ -411,6 +413,10 @@ console.error('dunno what this is', other);
     }
     this.dispatchEvent = function(event) {
       if (!event.element) event.element = this;
+      var handlerfn = 'on' + event.type;
+      if (this[handlerfn]) {
+        this.executeCallback(this[handlerfn], event);
+      }
       return elation.events.fire(event);
     }
     this.addEventListenerProxy = function(name, handler, bubble) {
