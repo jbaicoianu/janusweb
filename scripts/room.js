@@ -23,12 +23,12 @@ elation.require([
         'skybox_back': { type: 'string' },
         'cubemap_irradiance_id': { type: 'string' },
         'cubemap_radiance_id': { type: 'string' },
-        'fog': { type: 'boolean', default: false },
-        'fog_mode': { type: 'string', default: 'exp' },
-        'fog_density': { type: 'float', default: 1.0 },
-        'fog_start': { type: 'float', default: 0.0 },
-        'fog_end': { type: 'float', default: 100.0 },
-        'fog_col': { type: 'color', default: 0x000000 },
+        'fog': { type: 'boolean', default: false, set: this.setFog },
+        'fog_mode': { type: 'string', default: 'exp', set: this.setFog },
+        'fog_density': { type: 'float', default: 1.0, set: this.setFog },
+        'fog_start': { type: 'float', default: 0.0, set: this.setFog },
+        'fog_end': { type: 'float', default: 100.0, set: this.setFog },
+        'fog_col': { type: 'color', default: 0x000000, set: this.setFog },
         'ambient': { type: 'color', default: 0x666666, set: this.updateLights },
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
@@ -56,6 +56,7 @@ elation.require([
       this.playerstartorientation = new THREE.Quaternion();
       this.roomsrc = '';
       this.changes = {};
+      this.deletions = [];
       this.appliedchanges = {};
       this.openportals = [];
       this.roomassets = {};
@@ -96,6 +97,7 @@ elation.require([
       };
       this.engine.systems.controls.addContext('roomedit', {
         'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
+        'delete':           [ 'keyboard_delete,keyboard_backspace', this.editObjectDelete ],
         'mode':             [ 'keyboard_tab', this.editObjectToggleMode ],
         'manipulate_left':  [ 'keyboard_nomod_a,keyboard_a',   this.editObjectManipulateLeft ],
         'manipulate_right': [ 'keyboard_nomod_d,keyboard_d',   this.editObjectManipulateRight ],
@@ -274,7 +276,7 @@ elation.require([
       }
     }
     this.setFog = function() {
-      if (this.properties.fog) {
+      if (this.fog) {
         var fogcol = this.properties.fog_col || 0;
         var fogcolor = new THREE.Color();
         if (fogcol[0] == '#') {
@@ -535,6 +537,9 @@ elation.require([
       var room = roomdata.room,
           assets = roomdata.assets || [];
 
+      // Prevent our loads from echoing back to the server as edits
+      this.applyingEdits = true;
+
       // Parse room objects from the XML, and create Janus objects for them
       var exclude = ['assets', 'room', 'source'];
       for (var k in roomdata) {
@@ -589,7 +594,7 @@ elation.require([
         this.properties.fog_density = room.fog_density;
         this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
         this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
-        this.properties.fog_col = room.fog_col || room.fog_color;
+        this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.gravity = room.gravity || -9.8;
@@ -626,6 +631,7 @@ elation.require([
           }));
         }
       }
+      this.applyingEdits = false;
 
       //if (!this.active) {
       //  this.setActive();
@@ -698,6 +704,7 @@ elation.require([
             image: [],
             videos: [],
             sounds: [],
+            assetlist: [],
           },
           object: [],
           image: [],
@@ -727,9 +734,16 @@ elation.require([
             }
           } else {
             hasNew = true;
-            diff[k.toLowerCase()].push(newobj);
-            if (newobj.id && newobj.id.match(/^https?:/)) {
-              diff.assets.objects.push({assettype: 'model', name: newobj.id, src: newobj.id});
+            var k = k.toLowerCase();
+            if (k.indexOf('asset') == 0) {
+              var type = k.substr(5);
+              this.loadNewAsset(type, newobj);
+            } else {
+              if (!diff[k]) diff[k] = [];
+              diff[k].push(newobj);
+              if (newobj.id && newobj.id.match(/^https?:/)) {
+                diff.assets.assetlist.push({assettype: 'model', name: newobj.id, src: newobj.id});
+              }
             }
             //console.log('create new!', newobj.js_id, newobj);
           }
@@ -741,7 +755,6 @@ elation.require([
       }));
       // Clear the list of edits which have been applied this frame
       this.appliedchanges = {};
-      this.applyingEdits = false;
 
     }
     this.applyDeleteXML = function(deletexml) {
@@ -770,7 +783,6 @@ elation.require([
 
       var parentobj = (parent ? parent._target || parent : this);
       if (!customElement) {
-        console.log('UNKNOWN TYPE', type, args);
         if (!this.unknownElements[type]) this.unknownElements[type] = [];
         this.unknownElements[type].push({args: args, parent: parent});
         return;
@@ -860,6 +872,9 @@ elation.require([
       }
       if (realtype == 'janusvideo') {
         this.videos[objectargs.video_id] = object;
+        elation.events.add(object, 'janusweb_video_change', elation.bind(this, function() {
+          this.videos[object.video_id] = object;
+        }));
       }
       if (realtype == 'janusportal') {
         elation.events.add(object, 'janusweb_portal_open', elation.bind(this, this.registerOpenPortal));
@@ -882,6 +897,9 @@ elation.require([
         this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
       }
 
+      if (this.enabled) {
+        object.start();
+      }
 
       return this.jsobjects[objectargs.js_id];
     }
@@ -926,8 +944,9 @@ elation.require([
           baseurl: this.baseurl
         });
       } else if (type == 'websurface') {
-        var websurfaces = {};
-        websurfaceassets.forEach(function(n) { websurfaces[n.id] = n; });
+        if (args.id) {
+          this.websurfaces[args.id] = args;
+        }
       } else if (type == 'script') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({
@@ -1051,6 +1070,7 @@ elation.require([
         if (idx >= 0) {
           this.pendingassets.splice(idx, 1);
           if (this.pendingassets.length == 0) {
+            this.applyingEdits = false;
             setTimeout(elation.bind(this, function() {
               elation.events.fire({element: this, type: 'room_load_complete'});
             }), 0);
@@ -1120,6 +1140,17 @@ elation.require([
         if (proxy.sync) {
           if (!this.appliedchanges[thing.js_id]) {
             this.changes[thing.js_id] = proxy;
+          }
+        }
+      }
+    }
+    this.onThingRemove = function(ev) {
+      var thing = ev.target;
+      if (!this.applyingEdits && thing.js_id && this.jsobjects[thing.js_id]) {
+        var proxy = this.jsobjects[thing.js_id];
+        if (proxy.sync) {
+          if (!this.appliedchanges[thing.js_id]) {
+            this.deletions.push(proxy);
           }
         }
       }
@@ -1334,12 +1365,12 @@ elation.require([
               var val = change[k];
               if (val instanceof THREE.Vector2 ||
                   val instanceof THREE.Vector3) {
-                val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+                val = val.toArray().map(function(n) { return +n.toFixed(4); }).join(' ');
               } else if (val instanceof THREE.Color) {
                 if (k == 'col' && real.colorIsDefault) {
                   val = null;
                 } else {
-                  val = val.toArray().map(function(n) { return n.toFixed(4); }).join(' ');
+                  val = val.toArray().map(function(n) { return +n.toFixed(4); }).join(' ');
                 }
               } else if (elation.utils.isString(val) && val.indexOf('blob:') == 0) {
                 var xhr = new XMLHttpRequest();
@@ -1386,6 +1417,19 @@ elation.require([
         return changestr;
       }
     }
+    this.hasDeletions = function() {
+      return this.deletions.length > 0;
+    }
+    this.getDeletions = function() {
+      var deletions = '';
+      while (this.deletions.length > 0) {
+        var obj = this.deletions.pop();
+        var type = this.getTypeFromClassname(obj.type);
+
+        deletions += '<' + type + ' id="' + obj.janusid + '" js_id="' + obj.js_id + '" />';
+      }
+      return deletions;
+    }
     this.registerElement = function(tagname, classobj, extendclass) {
       tagname = tagname.toLowerCase();
       var classname = tagname + '_' + this.roomid;
@@ -1412,6 +1456,7 @@ elation.require([
         for (var i = 0; i < unknownElements.length; i++) {
           this.createObject(tagname, unknownElements[i].args, unknownElements[i].parent);
         }
+        delete this.unknownElements[tagname];
       }
     }
     this.extendElement = function(extendclass, tagname, classobj) {
@@ -1549,11 +1594,26 @@ elation.require([
       this.engine.systems.controls.requestPointerLock();
     }
     this.loadObjectFromURIList = function(list) {
-      var newobject = this.createObject('Object', {
-        id: list,
-        sync: true
-      });
-      this.editObject(newobject, true);
+      var urls = list.split('\n');
+
+      var player = this.engine.client.player;
+      var objects = [];
+      for (var i = 0; i < urls.length; i++) {
+        var hashidx = urls[i].indexOf('#');
+        var url = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
+        if (url.length > 0) {
+          if (url.indexOf('.obj') != -1) {
+            this.loadNewAsset(url, { id: url, src: url, mtl: url.replace('.obj', '.mtl') });
+          }
+          var newobject = this.createObject('Object', {
+            id: url,
+            sync: true,
+            pos: player.vectors.cursor_pos.clone()
+          });
+          objects.push(newobject);
+        }
+      }
+      this.editObject(objects[0], true);
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
@@ -1611,10 +1671,12 @@ elation.require([
       }
     }
     this.editObjectStop = function(destroy) {
-      if (destroy) {
-        this.roomedit.object.die();
-      } else {
-        this.roomedit.object.collision_id = this.roomedit.object.id;
+      if (this.roomedit.object) {
+        if (destroy) {
+          this.roomedit.object.die();
+        } else {
+          this.roomedit.object.collision_id = this.roomedit.object.id;
+        }
       }
       this.roomedit.object = false;
       this.editObjectRemoveWireframe();
@@ -1756,6 +1818,13 @@ elation.require([
     this.editObjectSnapThousandths = function(ev) {
       if (ev.value) ev.target.editObjectSetSnap(.001);
     }
+    this.editObjectDelete = function(ev) {
+      if (ev.value) {
+        //ev.target.removeObject(ev.target.roomedit.object);
+        ev.target.deletions.push(ev.target.roomedit.object);
+        ev.target.editObjectStop(true);
+      }
+    }
     this.editObjectCancel = function(ev) {
       if (ev.value) {
         if (ev.target.roomedit.objectIsNew) {
@@ -1779,6 +1848,22 @@ elation.require([
       if (!document.pointerLockElement) {
         this.editObjectRevert();
       }
+    }
+    this.getTypeFromClassname = function(classname) {
+      var types = {};
+      for (var k in this.customElements) {
+        var el = this.customElements[k];
+        if (el.classname == classname) {
+          return k;
+        }
+      }
+      for (var k in this.janus.customElements) {
+        var el = this.janus.customElements[k];
+        if (el.classname == classname) {
+          return k;
+        }
+      }
+      return 'object';
     }
   }, elation.engine.things.generic);
 });
