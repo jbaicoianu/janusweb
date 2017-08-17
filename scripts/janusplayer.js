@@ -403,6 +403,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
         localToWorld:  ['function', 'localToWorld'],
         worldToLocal:  ['function', 'worldToLocal'],
+        appendChild:   ['function', 'appendChild'],
+        removeChild:   ['function', 'removeChild'],
       });
       return proxy;
     }
@@ -533,6 +535,32 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor_style = 'crosshair';
       } else {
         this.cursor_style = 'default';
+      }
+    }
+    this.appendChild = function(obj) {
+      var proxyobj = obj
+      if (elation.utils.isString(obj)) {
+        proxyobj = this.room.jsobjects[obj];
+      }
+      if (proxyobj) {
+        //var realobj = this.room.getObjectFromProxy(proxyobj);
+        var realobj = proxyobj._target;
+        if (realobj) {
+          this.add(realobj);
+        }
+      }
+    }
+    this.removeChild = function(obj) {
+      var proxyobj = obj
+      if (elation.utils.isString(obj)) {
+        proxyobj = this.room.jsobjects[obj];
+      }
+      if (proxyobj) {
+        //var realobj = this.room.getObjectFromProxy(proxyobj);
+        var realobj = proxyobj._target;
+        if (realobj) {
+          this.remove(realobj);
+        }
       }
     }
   }, elation.engine.things.player);
