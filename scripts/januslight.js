@@ -4,6 +4,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.januslight.extendclass.postinit.call(this);
       this.defineProperties({
         color: { type: 'color', set: this.updateLight },
+        light_directional: { type: 'bool', default: false, set: this.updateLight },
         light_range: { type: 'float', default: 10, set: this.updateLight },
         light_intensity: { type: 'float', default: 100, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
@@ -13,7 +14,10 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
-      if (this.light_cone_angle == 0) {
+      if (this.light_directional) {
+        this.light = new THREE.DirectionalLight(this.properties.color.clone(), this.light_intensity);
+        obj.add(this.light);
+      } else if (this.light_cone_angle == 0) {
         this.light = new THREE.PointLight(this.properties.color.clone(), 1, this.light_range);
         this.light.position.set(0,0,0);
         obj.add(this.light);
