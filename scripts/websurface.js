@@ -140,10 +140,16 @@ setTimeout(elation.bind(this, function() {
       //this.material.color.setHex(0x000000);
     }
     this.start = function() {
-      this.objects['3d'].add(this.domobj);
+      if (!this.started) {
+        this.objects['3d'].add(this.domobj);
+        this.started = true;
+      }
     }
     this.stop = function() {
-      this.objects['3d'].remove(this.domobj);
+      if (this.started) {
+        this.started = false;
+        this.objects['3d'].remove(this.domobj);
+      }
     }
   }, elation.engine.things.janusbase);
 });
