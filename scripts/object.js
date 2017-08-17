@@ -11,11 +11,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         janusid: { type: 'string', refreshGeometry: true },
         image_id: { type: 'string', set: this.updateMaterial },
         lmap_id: { type: 'string', set: this.updateMaterial },
-        video_id: { type: 'string', set: this.updateMaterial },
+        video_id: { type: 'string', set: this.updateVideo },
         url: { type: 'string' },
         loop: { type: 'boolean' },
-        websurface_id: { type: 'string', set: this.updateMaterial },
-        lighting: { type: 'boolean', default: true, set: this.updateMaterial },
+        websurface_id: { type: 'string', set: this.updateWebsurface },
         shadow: { type: 'boolean', default: false, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial },
@@ -31,19 +30,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
-      if (this.websurface_id) {
-        var websurface = this.room.websurfaces[this.websurface_id];
-        console.log('do a websurface: ' + this.websurface_id, websurface, this.room.baseurl);
-        if (websurface) {
-          var url = websurface.src;
-          if (url && !url.match(/^(https?:)?\/\//)) {
-            url = this.room.baseurl + url;
-          }
-          this.url = url;
-        }
-        this.pickable = false;
-        this.collidable = false;
-      }
       if (this.anim_id) {
         this.setAnimation(this.anim_id);
       }
@@ -170,6 +156,76 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateMaterial = function() {
       this.setTextureDirty();
     }
+    this.updateVideo = function() {
+      if (!this.modelasset) return;
+      if (!this.videoasset || this.videoasset.name != this.video_id) {
+        this.loadVideo(this.video_id);
+        if (this.modelasset) {
+          this.assignTextureParameters(texture, this.modelasset);
+        }
+      }
+      this.setTextureDirty();
+    }
+    this.loadVideo = function(videoid) {
+      var videoasset = this.getAsset('video', videoid);
+      if (videoasset) {
+        this.videoasset = videoasset;
+        texture = videoasset.getInstance();
+        if (videoasset.sbs3d) {
+          texture.repeat.x = 0.5;
+        }
+        if (videoasset.ou3d) {
+          texture.repeat.y = 0.5;
+        }
+        if (videoasset.loop || this.properties.loop) {
+          texture.image.loop = true;
+        }
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+        elation.events.add(texture, 'autoplaystart', elation.bind(this, this.handleAutoplayStart));
+        elation.events.add(texture, 'autoplayfailed', elation.bind(this, this.handleAutoplayFailed));
+        this.videotexture = texture;
+        if (videoasset.auto_play) {
+          texture.image.addEventListener('canplaythrough', function() {
+            texture.image.play();
+          });
+        }
+        this.video = texture.image;
+        elation.events.add(this, elation.bind(this, this.handleVideoClick));
+        this.room.videos[videoid] = this;
+      }
+    }
+    this.updateWebsurface = function() {
+      if (this.websurface_id) {
+        var websurface = this.room.websurfaces[this.websurface_id];
+        //console.log('do a websurface: ' + this.websurface_id, websurface, this.room.baseurl);
+        if (websurface) {
+          var url = websurface.src;
+          if (url && !url.match(/^(https?:)?\/\//)) {
+            url = this.room.baseurl + url;
+          }
+          this.url = url;
+        }
+        this.pickable = false;
+        this.collidable = false;
+
+        if (this.objects['3d']) {
+          if (!this.websurface) {
+            this.createWebsurface();
+          } else {
+            this.websurface.websurface_id = this.websurface_id;
+          }
+        }
+      }
+    }
+    this.createWebsurface = function() {
+      this.websurface = this.spawn('januswebsurface', null, {janus: this.janus, room: this.room, websurface_id: this.websurface_id});
+      elation.events.add(this, 'mouseover', elation.bind(this.websurface, this.websurface.hover));
+      elation.events.add(this, 'mouseout', elation.bind(this.websurface, this.websurface.unhover));
+      this.replaceWebsurfaceMaterial();
+      this.websurface.start();
+    }
     this.replaceWebsurfaceMaterial = function() {
       var blankmaterial = new THREE.MeshBasicMaterial({
         color: 0x000000,
@@ -217,6 +273,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           image_id = modelasset.getFullURL(modelasset.tex0);
         }
       }
+      this.modelasset = modelasset;
       if (image_id) {
         textureasset = this.getAsset('image', image_id);
         if (textureasset) {
@@ -243,34 +300,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           this.assignTextureParameters(textureLightmap, modelasset);
         }
       }
-      if (this.properties.video_id) {
-        var videoasset = this.getAsset('video', this.properties.video_id);
-        if (videoasset) {
-          this.videoasset = videoasset;
-          texture = videoasset.getInstance();
-          if (videoasset.sbs3d) {
-            texture.repeat.x = 0.5;
-          }
-          if (videoasset.ou3d) {
-            texture.repeat.y = 0.5;
-          }
-          if (videoasset.loop || this.properties.loop) {
-            texture.image.loop = true;
-          }
-          texture.minFilter = THREE.LinearFilter;
-          texture.magFilter = THREE.LinearFilter;
-          elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
-          elation.events.add(texture, 'autoplaystart', elation.bind(this, this.handleAutoplayStart));
-          elation.events.add(texture, 'autoplayfailed', elation.bind(this, this.handleAutoplayFailed));
-          this.videotexture = texture;
-          this.assignTextureParameters(texture, modelasset);
-          if (videoasset.auto_play) {
-            texture.image.play();
-          }
-          this.video = texture.image;
-          elation.events.add(this, elation.bind(this, this.handleVideoClick));
-          this.room.videos[this.video_id] = this;
-        }
+      if (this.video_id) {
+        this.loadVideo(this.video_id);
+        texture = this.videotexture;
+        this.assignTextureParameters(texture, modelasset);
       }
       if (this.properties.websurface_id) {
         this.replaceWebsurfaceMaterial();
@@ -377,6 +410,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
             }
+
             if (textureLightmap && textureLightmap.image) {
               if (lightmaptextureasset.loaded) {
                 m.lightMap = textureLightmap; 
@@ -392,6 +426,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; }));
               }
             }
+
             //m.roughness = 0.75;
             m.side = side;
 
@@ -399,7 +434,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (blend_src) m.blendSrc = blend_src;
               if (blend_dest) m.blendDst = blend_dest;
               m.blending = THREE.CustomBlending;
-              m.transparent = true;
+
+              //m.blendSrcAlpha = THREE.SrcAlphaFactor;
+              //m.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
+              if (!blend_src == 'src_alpha' && blend_dest == 'one_minus_src_alpha') {
+                m.transparent = true;
+              }
             } else {
               m.blending = THREE.NormalBlending;
             }
@@ -432,22 +472,30 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         //m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1);
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
+        m.normalMap = oldmat.normalMap;
+
+        if (!(m instanceof THREE.MeshBasicMaterial)) {
+          if (oldmat.emissiveMap) m.emissiveMap = oldmat.emissiveMap;
+          if (oldmat.emissive) m.emissive = oldmat.emissive;
+        }
+
         m.lightMap = oldmat.lightMap;
         if (oldmat.color) {
           m.color.copy(oldmat.color);
         }
         m.transparent = m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
+        m.skinning = oldmat.skinning;
 
         if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
         if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
         if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
         if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
 
-        m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .05);
+        m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
-        m.roughnessMap = oldmat.alphaMap;
-        m.roughness = (oldmat.roughnes !== undefined ? oldmat.roughness : .98);
+        m.roughnessMap = oldmat.specularMap;
+        m.roughness = (oldmat.roughness !== undefined ? oldmat.roughness : .6);
         if (this.isUsingPBR()) {
           m.envMap = this.getEnvmap();
         }
@@ -462,7 +510,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       return m;
     }
     this.isUsingPBR = function() {
-      return elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
+      return this.lighting && elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
     }
     this.allocateMaterial = function() {
       if (!this.lighting) {
@@ -516,10 +564,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (this.websurface_id) {
         if (!this.websurface) {
-          this.replaceWebsurfaceMaterial();
-          this.websurface = this.spawn('januswebsurface', null, {janus: this.janus, room: this.room, websurface_id: this.websurface_id});
-          elation.events.add(this, 'mouseover', elation.bind(this.websurface, this.websurface.hover));
-          elation.events.add(this, 'mouseout', elation.bind(this.websurface, this.websurface.unhover));
+          this.createWebsurface();
         }
         this.websurface.start();
       }
