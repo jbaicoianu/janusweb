@@ -100,6 +100,9 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
 
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
       if (this.urltemplate) {
+        dust.filters.stripunsafe = function(s) {
+          return s.replace(/:\//g, '');
+        }
         elation.template.add('janusweb.url', this.urltemplate);
       }
       this.initScripting();
