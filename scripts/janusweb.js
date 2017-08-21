@@ -341,17 +341,27 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         this.load(url, true);
       }
     }
+    this.getFixedURL = function(url) {
+      // Our 'clean' client URLs don't contain a : because many services have problems parsing them
+      var m = url.match(/^(https?)\/\/?(.*)$/i);
+      if (m) {
+        url = m[1] + '://' + m[2];
+      }
+      return url;
+    }
     this.updateClientURL = function(url) {
       if (this.urltemplate) {
         var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
         var m = document.location.pathname.match(re);
-        if (m && m[1] !== this.currentroom.url) {
-          var url = elation.template.get('janusweb.url', {url: this.currentroom.url});
-          //history.pushState({}, '', '/sites/' + this.currentroom.url);
-          history.pushState({}, '', url);
+        if (m) {
+          var oldurl = this.getFixedURL(m[1]);
+          if (oldurl !== this.currentroom.url) {
+            var fullurl = elation.template.get('janusweb.url', {url: this.currentroom.url});
+            history.pushState({}, '', fullurl);
+          }
         } else {
-          var url = elation.template.get('janusweb.url', {url: this.currentroom.url});
-          history.pushState({}, '', url);
+          var fullurl = elation.template.get('janusweb.url', {url: this.currentroom.url});
+          history.pushState({}, '', fullurl);
         }
       } else {
         var hashargs = elation.url();
@@ -370,8 +380,11 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.urltemplate) {
         var re = new RegExp(elation.template.get('janusweb.url', {url: '(.*)'}).replace('/', '\\/'));
         var m = document.location.pathname.match(re);
-        if (m && m[1] != this.currentroom.url) {
-          this.setActiveRoom(m[1], null, true);
+        if (m) {
+          var url = this.getFixedURL(m[1]);
+          if (url != this.currentroom.url) {
+            this.setActiveRoom(url, null, true);
+          }
         }
       } else {
         var hashargs = elation.url();
