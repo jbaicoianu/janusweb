@@ -11,7 +11,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow: { type: 'boolean', default: false, set: this.updateLight },
         light_shadow_near: { type: 'float', default: .1, set: this.updateLight },
         light_shadow_far: { type: 'float', set: this.updateLight },
-        light_shadow_bias: { type: 'float', default: .02, set: this.updateLight },
+        light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
       });
     }
