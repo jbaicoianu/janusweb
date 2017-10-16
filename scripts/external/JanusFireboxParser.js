@@ -65,12 +65,13 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   if (!datapath) {
     datapath = 'http://web.janusvr.com/media';
   }
+  var fixURLEncoding = this.fixURLEncoding.bind(this);
   imageassets.forEach(function(n) { 
-    var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+    var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
     assetlist.push({ assettype:'image', name:n.id, src: src, baseurl: baseurl, hasalpha: n.hasalpha, proxy: n.proxy });
   });
   videoassets.forEach(function(n) { 
-    var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+    var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
     assetlist.push({ 
       assettype:'video', 
       name:n.id, 
@@ -84,7 +85,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
     }); 
   });
   soundassets.forEach(function(n) { 
-    var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+    var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
     assetlist.push({ 
       assettype:'sound', 
       name:n.id, 
@@ -95,7 +96,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var websurfaces = {};
   websurfaceassets.forEach(function(n) { websurfaces[n.id] = n; });
   scriptassets.forEach(function(n) { 
-    var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+    var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
     assetlist.push({ 
       assettype:'script', 
       name: src,
@@ -107,7 +108,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var objlist = []; 
   objectassets.forEach(function(n) { 
     if (n.src) {
-      var src = (n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
+      var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
       var mtlsrc = (n.mtl && n.mtl.match(/^file:/) ? n.mtl.replace(/^file:/, datapath) : n.mtl);
       if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = baseurl + mtlsrc;
       var srcparts = src.split(' ');
@@ -130,7 +131,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
 
 JanusFireboxParser.prototype.getVectorValue = function(vector, defaultvalue) {
   if (typeof defaultvalue == 'undefined') {
-    defaultvalue = [0,0,0];
+    defaultvalue = null;//[0,0,0];
   }
   if (typeof vector == 'string') {
     return vector.split(' ').map(parseFloat);
@@ -286,4 +287,19 @@ JanusFireboxParser.prototype.arrayget = function(obj, name, defval) {
     return (typeof defval == "undefined" ? null : defval);
   }
   return ptr;
+};
+
+/**
+ * Fixes encoding of URL strings if they weren't properly encoded
+ *
+ * @function JanusFireboxParser.fixURLEncoding
+ * @param {string} url
+ * @returns {string} encoded URL
+*/
+JanusFireboxParser.prototype.fixURLEncoding = function(url) {
+  var fixed = url;
+  if (url.indexOf(' ') != -1) {
+    fixed = encodeURI(url);
+  }
+  return fixed;
 };
