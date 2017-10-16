@@ -91,7 +91,7 @@ elation.require(['engine.things.generic'], function() {
           iframe.style.height = height + 'px';
 
           var obj = new THREE.CSS3DObject(div);
-          obj.scale.set(1/width / devicePixelRatio, 1/height / devicePixelRatio, 1);
+          obj.scale.set(1/width, 1/height, 1);
 
           this.iframe = iframe;
           this.domobj = obj;
