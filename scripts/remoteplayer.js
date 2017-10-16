@@ -22,17 +22,21 @@ elation.component.add('engine.things.remoteplayer', function() {
 */
   
   this.createChildren = function() {
-    this.torso = this.spawn('generic', this.properties.player_name + '_torso', {
+    this.torso = this.spawn('janusbase', this.properties.player_name + '_torso', {
       'position': [0,1,0],
+      'parent': this,
     });
-    this.shoulders = this.torso.spawn('generic', this.properties.player_id + '_shoulders', {
-      'position': [0,0.6,-0.0]
+    this.shoulders = this.torso.spawn('janusbase', this.properties.player_id + '_shoulders', {
+      'position': [0,0.6,-0.0],
+      'parent': this,
     });
-    this.neck = this.torso.spawn('generic', this.properties.player_name + '_neck', {
+    this.neck = this.torso.spawn('janusbase', this.properties.player_name + '_neck', {
       'position': [0,0.4,0],
+      'parent': this,
     });
-    this.head = this.spawn('generic', this.properties.player_name + '_head', {
+    this.head = this.spawn('janusbase', this.properties.player_name + '_head', {
       'position': [0,1.4,0],
+      'parent': this,
     });
 /*
     this.face = this.head.spawn('maskgenerator', this.properties.player_name + '_mask', {
