@@ -3,32 +3,38 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.januslight.extendclass.postinit.call(this);
       this.defineProperties({
-        color: { type: 'color', set: this.updateLight },
         light_directional: { type: 'bool', default: false, set: this.updateLight },
         light_range: { type: 'float', default: 10, set: this.updateLight },
         light_intensity: { type: 'float', default: 100, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
         light_cone_exponent: { type: 'float', default: 1, set: this.updateLight },
         light_shadow: { type: 'boolean', default: false, set: this.updateLight },
+        light_shadow_near: { type: 'float', default: .1, set: this.updateLight },
+        light_shadow_far: { type: 'float', set: this.updateLight },
+        light_shadow_bias: { type: 'float', default: .02, set: this.updateLight },
+        light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
       });
     }
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
       if (this.light_directional) {
-        this.light = new THREE.DirectionalLight(this.properties.color.clone(), this.light_intensity);
+        this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
         obj.add(this.light);
       } else if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color.clone(), 1, this.light_range);
+        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
         this.light.position.set(0,0,0);
         obj.add(this.light);
       } else if (this.light_cone_angle > 0) {
         var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color.cone(), 1, this.light_range, angle);
+        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
         //this.light.position.set(0,0,0);
         obj.add(this.light);
       } 
       this.updateLight();
       return obj;
+    }
+    this.updateColor = function() {
+      this.updateLight();
     }
     this.createChildren = function() {
       // TODO - should be an easy way of toggling helpers
@@ -58,20 +64,21 @@ elation.require(['janusweb.janusbase'], function() {
         this.light.intensity = this.light_intensity / 100;
         this.light.color.copy(this.color);
         this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
-        this.light.range = this.light_range * avgscale;
-        if (this.light_shadow) {
-          this.initShadowmap();
-        }
+        this.light.distance = this.light_range * avgscale;
+        this.updateShadowmap();
       }
     }
-    this.initShadowmap = function() {
-      this.light.castShadow = true;
-      this.light.shadow.radius = 2.5;
-      this.light.shadow.camera.near = .1;
-      this.light.shadow.camera.far = 30;
+    this.updateShadowmap = function() {
+      var player = this.engine.client.player;
+      var shadowSize = player.getSetting('render.shadows.size', elation.config.get('janusweb.materials.shadows.size', 512));
+
+      this.light.castShadow = this.light_shadow;
+      this.light.shadow.radius = this.light_shadow_radius;
+      this.light.shadow.camera.near = elation.utils.any(this.light_shadow_near, 0.1);
+      this.light.shadow.camera.far = elation.utils.any(this.light_shadow_far, this.light_range);
       this.light.shadow.camera.fov = 90;
-      this.light.shadow.mapSize.set(512, 512);
-      this.light.shadow.bias = .02;
+      this.light.shadow.mapSize.set(shadowSize, shadowSize);
+      this.light.shadow.bias = this.light_shadow_bias;
     }
     this.getProxyObject = function(classdef) {
       var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
@@ -80,6 +87,11 @@ elation.require(['janusweb.janusbase'], function() {
         light_intensity:     [ 'property', 'light_intensity'],
         light_cone_angle:    [ 'property', 'light_cone_angle'],
         light_cone_exponent: [ 'property', 'light_cone_exponent'],
+        light_shadow:        [ 'property', 'light_shadow'],
+        light_shadow_near:   [ 'property', 'light_shadow_near'],
+        light_shadow_far:    [ 'property', 'light_shadow_far'],
+        light_shadow_bias:   [ 'property', 'light_shadow_bias'],
+        light_shadow_radius: [ 'property', 'light_shadow_radius'],
       };
       return proxy;
     }
