@@ -29,6 +29,20 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         elation.net.get(url, null, {
           callback: elation.bind(this, this.setGhostData)
         });
+      } else if (this.ghost_id) {
+        var ghostdef = this.room.ghosts[this.ghost_id];
+        //this.room.getAsset('ghost', this.ghost_id);
+        var ghostasset = this.room.getAsset('ghost', this.ghost_id);
+        if (ghostasset) {
+          if (ghostasset.loaded) {
+            this.setGhostData(ghostasset.getInstance());
+          } else {
+            ghostasset.load();
+            elation.events.add(ghostasset, 'asset_load', elation.bind(this, function(ev) {
+              this.setGhostData(ghostasset.getInstance());
+            }));
+          }
+        }
       }
       return new THREE.Object3D();
     }
@@ -44,9 +58,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     this.createChildren = function() {
       elation.engine.things.janusghost.extendclass.createChildren.call(this);
 
-      this.head = this.spawn('generic', null, { position: new THREE.Vector3() });
-      this.shoulders = this.spawn('generic', this.properties.player_id + '_shoulders', {
-        'position': [0,1.0,0]
+      this.head = this.spawn('janusbase', null, { position: new THREE.Vector3(), parent: this });
+      this.shoulders = this.spawn('janusbase', this.properties.player_id + '_shoulders', {
+        'position': [0,1.0,0],
+        'parent': this
       });
       this.setHead(this.head_id, this.properties.head_pos);
       this.setBody(this.body_id);
@@ -64,6 +79,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
     this.setGhostAssets = function(assets) {
       this.ghostassets = assets;
+      this.assetpack = elation.engine.assets.loadJSON(assets.assetlist);
     }
     this.getGhostObjects = function() {
       var objects = {};
@@ -111,24 +127,12 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       }
     }
     this.setHead = function(headid, headpos, scale) {
-      var objects = this.getGhostObjects();
       if (this.face) {
         this.face.die();
         this.face = false;
       }
       if (headid && this.head) {
-        var assetid = headid;
-        if (!this.face || this.face.janusid != assetid) {
-          if (objects && objects[headid]) {
-            assetid = this.id + '_head_' + objects[headid].src;
-            if (objects[headid].mtl) assetid += '_' + objects[headid].mtl;
-            var asset = elation.engine.assets.get({
-              assettype: 'model',
-              name: assetid,
-              src: objects[headid].src,
-              mtl: objects[headid].mtl 
-            });
-          }
+        if (!this.face || this.face.janusid != headid) {
           if (headpos) {
             this.head.properties.position.copy(headpos);
           }
@@ -136,7 +140,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.face = this.head.spawn('janusobject', null, {
             janus: this.janus,
             room: this.room,
-            janusid: assetid,
+            parent: this,
+            janusid: headid,
             position: headpos.clone().negate(),
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
             lighting: this.lighting,
@@ -152,27 +157,16 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       }
     }
     this.setBody = function(bodyid, scale) {
-      var objects = this.getGhostObjects();
       if (this.body) {
         this.body.die();
         this.body = false;
       }
       if (bodyid) {
-        var assetid = bodyid;
-        if (objects && objects[bodyid]) {
-          assetid = this.player_name + '_body_' + objects[bodyid].src;
-          if (objects[bodyid].mtl) assetid += '_' + objects[bodyid].mtl;
-          var asset = elation.engine.assets.get({
-            assettype: 'model',
-            name: assetid,
-            src: objects[bodyid].src,
-            mtl: objects[bodyid].mtl,
-          });
-        }
         this.body = this.spawn('janusobject', null, {
           janus: this.janus,
           room: this.room,
-          janusid: assetid,
+          parent: this,
+          janusid: bodyid,
           orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
           lighting: this.lighting,
           cull_face: 'none'
@@ -378,14 +372,20 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.setGhostAssets(things.assets);
         this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
         this.setBody(ghostdef.body_id, ghostdef.scale);
-
+        if (ghostdef._children) {
+          for (var type in ghostdef._children) {
+            for (var i = 0; i < ghostdef._children[type].length; i++) {
+              this.createObject(type, ghostdef._children[type][i]);
+            }
+          }
+        }
       }
-
     }
     this.updateHands = function(hand0, hand1) {
       if (!this.shoulders) {
-        this.shoulders = this.spawn('generic', this.properties.player_id + '_shoulders', {
-          'position': [0,1.0,0]
+        this.shoulders = this.spawn('janusbase', this.properties.player_id + '_shoulders', {
+          'position': [0,1.0,0],
+          'parent': this
         });
       }
       if (!this.hands) {
