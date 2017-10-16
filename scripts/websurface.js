@@ -81,6 +81,7 @@ elation.require(['engine.things.generic'], function() {
 
           var iframe = elation.html.create('iframe');
           iframe.src = this.url;
+          iframe.allow = 'vr';
           var div = elation.html.create('div');
           div.className = 'janusweb_websurface ';
           div.appendChild(iframe);
