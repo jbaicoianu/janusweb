@@ -6,9 +6,8 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janussound.extendclass.postinit.call(this);
       this.defineProperties({
         sound_id: { type: 'string', set: this.updateSound },
-        rect: { type: 'string', default: "0 0 0 0" },
         loop: { type: 'boolean', default: false },
-        auto_play: { type: 'boolean', default: true },
+        auto_play: { type: 'boolean', default: false },
         play_once: { type: 'boolean', default: false },
         dist: { type: 'float', default: 1.0 },
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
@@ -17,21 +16,25 @@ elation.require(['janusweb.janusbase'], function() {
         rect: { type: 'string', set: this.updateSound }
       });
       Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
-
-      //elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.checkBounds));
+      this.playStarted = false;
+      elation.events.add(this.room, 'janusweb_script_frame', elation.bind(this, this.checkBounds));
     }
     this.createObject3D = function() {
       return new THREE.Object3D();
     }
     this.createChildren = function() {
       if (!this.audio) {
-        var sound = elation.engine.assets.find('sound', this.sound_id);
-        if (sound) {
-          this.createAudio(sound.getProxiedURL(sound.src));
-        }
+        this.createAudio();
       }
     }
     this.createAudio = function(src) {
+      if (!src) {
+        this.currentsound = this.sound_id;
+        var sound = this.getAsset('sound', this.sound_id); //elation.engine.assets.find('sound', this.sound_id);
+        if (sound) {
+          src = sound.getProxiedURL(sound.src);
+        }
+      }
       if (this.audio) {
         if (this.audio.isPlaying) {
           this.audio.stop();
@@ -40,7 +43,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       var listener = this.engine.systems.sound.getRealListener();
       if (listener) {
-        if (this.rect) {
+        if (!this.hasposition) {
           this.audio = new THREE.Audio(listener);
         } else {
           this.audio = new THREE.PositionalAudio(listener);
@@ -54,21 +57,25 @@ elation.require(['janusweb.janusbase'], function() {
             //this.audio.panner.distanceModel = 'linear';
           }
         }
-        this.audio.autoplay = this.auto_play;
+        this.audio.autoplay = this.auto_play || this.playStarted;
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         this.audio.setPlaybackRate(this.pitch);
         if (src) {
           if (soundcache[src]) {
             this.audio.setBuffer(soundcache[src]);
-            this.play();
+            if (this.auto_play || this.playStarted) {
+              this.play();
+            }
           } else {
             var loader = new THREE.AudioLoader();
             loader.load(src, elation.bind(this, function(buffer) {
               if (buffer) {
                 soundcache[src] = buffer;
                 this.audio.setBuffer(buffer);
-                this.play();
+                if (this.auto_play || this.playStarted) {
+                  this.play();
+                }
               }
             }));
           }
@@ -85,7 +92,8 @@ elation.require(['janusweb.janusbase'], function() {
       this.createAudio(url);
     }
     this.play = function() {
-      if (this.audio && this.audio.source && this.audio.source.buffer) {
+      this.playStarted = true;
+      if (this.audio && this.audio.buffer) { //this.audio.source && this.audio.source.buffer) {
         this.audio.setVolume(this.gain);
         if (this.audio.isPlaying) {
           this.audio.source.currentTime = 0;
@@ -101,7 +109,9 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.start = function() {
-      this.play();
+      if (this.auto_play || this.playStarted) {
+        this.play();
+      }
     }
     this.seek = function(time) {
       this.audio.currentTime = time;
@@ -112,6 +122,10 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.updateSound = function() {
+      if (!this.objects['3d']) return;
+      if (this.currentsound != this.sound_id) {
+        this.createAudio();
+      }
       if (this.audio) {
         //this.play();
         this.audio.setVolume(this.gain);
@@ -127,17 +141,13 @@ elation.require(['janusweb.janusbase'], function() {
     this.checkBounds = (function() {
       var worldpos = new THREE.Vector3();
       return function() {
-        if (this.bounds && this.audio) {
+        if (this.bounds && this.audio && !this.playing) {
           var listener = this.engine.systems.sound.getRealListener();
           if (listener) {
             worldpos.set(0,0,0).applyMatrix4(listener.matrixWorld);
           }
           if (this.bounds.containsPoint(worldpos)) {
-            if (!this.audio.isPlaying) {
-              this.play();
-            }
-          } else if (this.audio.isPlaying) {
-            this.pause();
+            this.play();
           }
         }
       }
@@ -145,8 +155,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.getProxyObject = function(classdef) {
       var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
       proxy._proxydefs = {
+        id:           [ 'property', 'sound_id'],
         gain:         [ 'property', 'gain'],
         pitch:        [ 'property', 'pitch'],
+        auto_play:    [ 'property', 'auto_play'],
         play:         [ 'function', 'play'],
         pause:        [ 'function', 'pause'],
         stop:         [ 'function', 'stop'],
