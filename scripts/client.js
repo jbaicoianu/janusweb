@@ -100,7 +100,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
 
-      this.buttons = elation.ui.buttonbar({append: document.body, classname: 'janusweb_ui_buttons'})
+      this.buttons = elation.ui.buttonbar({append: this.container, classname: 'janusweb_ui_buttons'})
       setTimeout(elation.bind(this, function() {
         this.initButtons();
       }), 0);
