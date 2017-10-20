@@ -820,6 +820,13 @@ elation.require([
       }
       elation.utils.merge(args, objectargs);
 
+      objectargs.tag = type.toUpperCase();
+
+      if (objectargs.class) {
+        objectargs.className = objectargs.class;
+        delete objectargs.class;
+      }
+
       switch (realtype) {
         case 'janusobject':
           elation.utils.merge({ 
@@ -1205,6 +1212,27 @@ elation.require([
       }
 */
 
+    }
+    this.getObjectById = function(js_id) {
+      return this.jsobjects[js_id];
+    }
+    this.getObjectsByClassName = function(classname) {
+      var objects = [];
+      for (var k in this.jsobjects) {
+        if (this.jsobjects[k].hasClass(classname)) {
+          objects.push(this.jsobjects[k]);
+        }
+      }
+      return objects;
+    }
+    this.getObjectsByTagName = function(tagname) {
+      var objects = [];
+      for (var k in this.jsobjects) {
+        if (this.jsobjects[k].isType(tagname)) {
+          objects.push(this.jsobjects[k]);
+        }
+      }
+      return objects;
     }
     this.getObjectById = function(js_id) {
       return this.jsobjects[js_id];
