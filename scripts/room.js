@@ -284,6 +284,8 @@ elation.require([
         } else if (elation.utils.isString(fogcol) && fogcol.indexOf(' ') != -1) {
           var rgb = fogcol.split(' ');
           fogcolor.setRGB(rgb[0], rgb[1], rgb[2]);
+        } else if (fogcol instanceof THREE.Color) {
+          fogcolor.copy(fogcol);
         } else {
           fogcolor.setHex(fogcol);
         }
