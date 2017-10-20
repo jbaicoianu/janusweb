@@ -231,14 +231,15 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       var player = this.engine.client.player;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
       //this.initScripting();
-      if (this.autoload) {
-        this.load(starturl, true);
-      }
       this.userId = player.getUsername();
       player.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
       window.player = player.getProxyObject();
       if (this.networking) {
         this.network.enable(player);
+      }
+
+      if (this.autoload) {
+        this.load(starturl, true);
       }
 
       if (this.showchat) {
