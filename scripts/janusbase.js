@@ -272,16 +272,29 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         if (classdef) {
           var propertydefs = {},
               proxydefs = {};
-          for (var k in classdef.class) {
-            var v = classdef.class[k];
-            var proxytype = 'property';
-            if (typeof v == 'function') {
-              proxytype = 'function';
-              this._proxyobject[k] = elation.bind(this._proxyobject, v);
-            } else {
-              propertydefs[k] = {type: 'object', default: v };
+
+          var classdefs = [classdef.class];
+          if (classdef.extendclass) {
+            //var proxyobj = elation.engine.things[classdef.extendclass].base.prototype.getProxyObject.call(this, elation.engine.things[classdef.extendclass].classdef);
+            var customelement = this.room.getCustomElement(classdef.extendclass);
+            //var extendclass = elation.engine.things[classdef.extendclass];
+            if (customelement) {
+              classdefs.unshift(customelement.class);
             }
-            proxydefs[k] = [proxytype, k];
+          }
+          for (var i = 0; i < classdefs.length; i++) {
+            var tclassdef = classdefs[i];
+            for (var k in tclassdef) {
+              var v = tclassdef[k];
+              var proxytype = 'property';
+              if (typeof v == 'function') {
+                proxytype = 'function';
+                this._proxyobject[k] = elation.bind(this._proxyobject, v);
+              } else {
+                propertydefs[k] = {type: 'object', default: v };
+              }
+              proxydefs[k] = [proxytype, k];
+            }
           }
           this.defineProperties(propertydefs);
           this._proxyobject._proxydefs = proxydefs;
