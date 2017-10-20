@@ -29,7 +29,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         rotate_axis: { type: 'string', default: '0 1 0' },
         rotate_deg_per_sec: { type: 'string' },
         onclick: { type: 'object' },
-        anim_id: { type: 'string' },
+        anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
         collision_id: { type: 'string', set: this.updateCollider },
         collision_pos: { type: 'vector3', default: new THREE.Vector3(0,0,0), set: this.updateCollider },
@@ -442,6 +442,10 @@ console.error('dunno what this is', other);
           }
         });
       }
+    }
+    this.updateAnimation = function() {
+      // Triggered whenever this.anim_id changes
+      this.setAnimation(this.anim_id);
     }
     this.setAnimation = function(anim_id) {
       if (!this.activeanimation || anim_id != this.anim_id) {
