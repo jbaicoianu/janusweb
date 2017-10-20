@@ -211,7 +211,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
           executeCallback:     ['function', 'executeCallback'],
-          isEqual:             ['function', 'isEqual']
+          isEqual:             ['function', 'isEqual'],
+          hasClass:            ['function', 'hasClass'],
         });
 
         if (classdef) {
