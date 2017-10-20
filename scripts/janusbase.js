@@ -64,6 +64,71 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     this.updateOpacity = function() {
       this.setOpacity(this.opacity);
     }
+    this.updateCollider = function() {
+      this.removeCollider();
+      if (!this.collidable || !this.objects['dynamics']) return;
+      var collision_id = this.collision_id || this.collider_id;
+      var collision_scale = this.properties.collision_scale || this.properties.scale;
+      if (this.collision_radius !== null) {
+        collision_id = 'sphere';
+        collision_scale = new THREE.Vector3(this.collision_radius, this.collision_radius, this.collision_radius);
+      }
+      if (collision_id) {
+        if ((!this.collision_static || this.collision_static == 'false') && this.room.gravity) { // FIXME - should never receive 'false' as a string here
+          this.objects.dynamics.mass = this.mass = 1;
+          this.objects.dynamics.addForce('static', new THREE.Vector3(0, this.room.gravity, 0));
+        }
+
+        this.collidable = true;
+        if (collision_id == 'sphere') {
+          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2, offset: this.collision_pos});
+        } else if (collision_id == 'cube') {
+          var halfsize = collision_scale.clone().multiplyScalar(.5);
+          this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
+        } else if (collision_id == 'plane') {
+          var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
+          halfsize.z = .1;
+          this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
+        } else if (collision_id == 'cylinder') {
+          this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
+        } else {
+          var colliderasset = this.getAsset('model', collision_id);
+          if (colliderasset) {
+            var collider = colliderasset.getInstance();
+            this.collidermesh = collider;
+            if (collider.userData.loaded) {
+              this.extractColliders(collider, true);
+              collider.userData.thing = this;
+              this.colliders.add(collider);
+            } else {
+              elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {
+                collider.userData.thing = this;
+                this.extractColliders(collider, true);
+
+                //collider.bindPosition(this.position);
+                //collider.bindQuaternion(this.orientation);
+                //collider.bindScale(this.properties.scale);
+
+                collider.traverse(elation.bind(this, function(n) {
+                  if (n.material) n.material = new THREE.MeshLambertMaterial({color: 0x999900, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
+                  n.userData.thing = this;
+                }));
+                this.colliders.add(collider);
+
+              }) );
+            }
+          }
+        }
+      }
+    }
+    this.removeCollider = function() {
+      if (this.colliders) {
+        for (var i = 0; i < this.colliders.children.length; i++) {
+          var collider = this.colliders.children[i];
+          collider.parent.remove(collider);
+        }
+      }
+    }
     this.createForces = function() {
       elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
 
