@@ -242,11 +242,22 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       }
       return childproxies;
     }
-    this.getAsset = function(type, id) {
-      if (!this.assets[type]) {
-        this.assets[type] = {};
+    this.getAsset = function(type, id, nocache) {
+      var parent = this.parent || this.room;
+
+      var asset;
+      if (this.assetpack) {
+        asset = this.assetpack.get(type, id);
       }
-      var asset = this.assets[type][id] = this.room.getAsset(type, id);
+      if (!asset) {
+        asset = parent.getAsset(type, id);
+      }
+      if (asset && !nocache) {
+        if (!this.assets[type]) {
+          this.assets[type] = {};
+        }
+        this.assets[type][id] = asset;
+      }
       return asset;
     }
     this.getActiveAssets = function(assetlist) {
