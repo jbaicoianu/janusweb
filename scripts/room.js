@@ -65,6 +65,7 @@ elation.require([
       this.jsobjects = {};
       this.cookies = {};
       this.websurfaces = {};
+      this.ghosts = {};
       this.images = {};
       this.sounds = {};
       this.videos = {};
@@ -526,9 +527,29 @@ elation.require([
 
     this.loadRoomAssets = function(roomdata) {
       if (roomdata && roomdata.assets && roomdata.assets.assetlist && roomdata.assets.assetlist.length > 0) {
-        elation.engine.assets.loadJSON(roomdata.assets.assetlist, this.baseurl);
+        var assetlist = roomdata.assets.assetlist;
         if (roomdata.assets.websurfaces) {
           elation.utils.merge(roomdata.assets.websurfaces, this.websurfaces);
+        }
+
+        if (roomdata.assets.ghosts) {
+          var ghosts = roomdata.assets.ghosts;
+          for (var i = 0; i < ghosts.length; i++) {
+            var ghost = ghosts[i];
+            this.ghosts[ghost.id] = ghost;
+            assetlist.push({
+              assettype: 'file',
+              name: ghost.id,
+              src: ghost.src
+            });
+          }
+          //elation.utils.merge(roomdata.assets.ghosts, this.ghosts);
+        }
+        //this.assetpack = elation.engine.assets.loadJSON(assetlist, this.baseurl);
+        if (!this.assetpack) {
+          this.assetpack = new elation.engine.assets.pack({name: this.id + '_assets', baseurl: this.baseurl, json: assetlist});
+        } else {
+          this.assetpack.loadJSON(assetlist);
         }
       }
     }
@@ -1005,6 +1026,14 @@ elation.require([
           src = srcparts[0];
           assetlist.push({assettype: 'model', name: args.id, src: src, mtl: mtlsrc, tex_linear: args.tex_linear, tex0: args.tex || args.tex0 || srcparts[1], tex1: args.tex1 || srcparts[2], tex2: args.tex2 || srcparts[3], tex3: args.tex3 || srcparts[4]});
         }
+      } else if (type == 'ghost') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'ghost',
+          name: args.id,
+          src: src,
+          baseurl: this.baseurl
+        });
       }
 
       this.loadRoomAssets({
@@ -1075,25 +1104,22 @@ elation.require([
       if (!this.roomassets[type]) {
         this.roomassets[type] = {};
       }
-      var asset = this.roomassets[type][id];
+      var realtype = type;
+      if (type == 'ghost') {
+        // Use a simple file dependency for ghosts
+        realtype = 'file';
+      }
+      var asset;
+      if (this.assetpack) {
+        asset = this.assetpack.get(type, id, assetargs); ////this.roomassets[type][id];
+      }
       if (!asset) {
-        if (type == 'ghost') {
-          // Use a simple file dependency for ghosts
-          type = 'file';
-        }
-        asset = elation.engine.assets.find(type, id, true);
-        if (!asset) {
-          var assetpack = { assettype:type, name:id, src: id, baseurl: this.baseurl }; 
-          if (assetargs) {
-            for (var k in assetargs) {
-              assetpack[k] = assetargs[k];
-            }
-          }
-          elation.engine.assets.get(assetpack, this.baseurl); 
-          asset = elation.engine.assets.find(type, id, true);
-        }
-        this.roomassets[type][id] = asset;
-        if (asset) {
+        asset = this.janus.getAsset(type, id, assetargs);
+      }
+      if (asset) {
+        if (!this.roomassets[type][id]) {
+          this.roomassets[type][id] = asset;
+        //if (asset) {
           elation.events.fire({element: this, type: 'room_add_asset', data: asset});
           if (!asset.loaded) {
             this.pendingassets.push(asset);
