@@ -31,6 +31,20 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         onclick: { type: 'object' },
         anim_id: { type: 'string' },
         anim_transition_time: { type: 'float', default: .2 },
+        collision_id: { type: 'string', set: this.updateCollider },
+        collision_pos: { type: 'vector3', default: new THREE.Vector3(0,0,0), set: this.updateCollider },
+        collision_scale: { type: 'vector3', set: this.updateCollider },
+        collision_static: { type: 'boolean', default: true, set: this.updateCollider },
+        collision_trigger: { type: 'boolean', default: false, set: this.updateCollider },
+        collision_radius: { type: 'float', set: this.updateCollider },
+        classList: { type: 'object', default: [] },
+        className: { type: 'string', default: '', set: this.setClassName },
+        tag: { type: 'string', default: '' },
+        hasposition: { type: 'boolean', default: true },
+        ongazeenter: { type: 'callback' },
+        ongazeleave: { type: 'callback' },
+        ongazeprogress: { type: 'callback' },
+        ongazeactivate: { type: 'callback' },
       });
 
       this.eventlistenerproxies = {};
@@ -148,6 +162,17 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           sync:     ['property', 'sync'],
           locked:   ['property', 'sync'],
           visible:  ['property', 'visible'],
+          tagName:  ['property', 'tag'],
+          className:  ['property', 'className'],
+          classList:  ['property', 'classList'],
+
+          pickable:  [ 'property', 'pickable'],
+          collision_id:  [ 'property', 'collision_id'],
+          collision_pos: [ 'property', 'collision_pos' ],
+          collision_scale:  [ 'property', 'collider_scale'],
+          collision_static:  [ 'property', 'collision_static'],
+          collision_trigger:  [ 'property', 'collision_trigger'],
+          collision_radius:  [ 'property', 'collision_radius'],
 
           onupdate:     ['callback', 'update'],
           oncollision:  ['callback', 'collision'],
@@ -167,6 +192,11 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           ondragstart:  ['callback', 'dragstart'],
           ondragend:    ['callback', 'dragend'],
           ondrop:       ['callback', 'drop'],
+          ongazeenter:  ['callback', 'gazeenter'],
+          ongazeleave:  ['callback', 'gazeleave'],
+          ongazemove:   ['callback', 'gazemove'],
+          ongazeactivate: ['callback', 'gazeactivate'],
+          ongazeprogress: ['callback', 'gazeprogress'],
 
           createObject:        ['function', 'createObject'],
           appendChild:         ['function', 'appendChild'],
@@ -329,6 +359,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
+        if (proxyobj.parent) {
+          proxyobj.parent.removeChild(proxyobj);
+        }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
@@ -461,6 +494,31 @@ console.error('dunno what this is', other);
     this.isEqual = function(obj) {
       var realobj = obj.target || obj;
       return this === realobj;
+    }
+    this.isType = function(type) {
+      return this.tag == type.toUpperCase();
+    }
+    this.addClass = function(classname) {
+      if (!this.hasClass(classname)) {
+        this.classList.push(classname);
+      }
+      this.updateClassName();
+    }
+    this.removeClass = function(classname) {
+      var idx = this.classList.indexOf(classname);
+      if (idx != -1) {
+        this.classList.splice(idx, 1);
+      }
+      this.updateClassName();
+    }
+    this.hasClass = function(classname) {
+      return this.classList.indexOf(classname) != -1;
+    }
+    this.updateClassName = function() {
+      this.className = this.classList.join(' ');
+    }
+    this.setClassName = function() {
+      this.classList = this.className.split(' ');
     }
   }, elation.engine.things.generic);
 });
