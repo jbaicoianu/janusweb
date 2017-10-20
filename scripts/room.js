@@ -889,7 +889,7 @@ elation.require([
       }
 
       if (realtype == 'janussound') {
-        this.sounds[objectargs.js_id] = object;
+        this.sounds[objectargs.sound_id] = object;
       }
       if (realtype == 'janusvideo') {
         this.videos[objectargs.video_id] = object;
