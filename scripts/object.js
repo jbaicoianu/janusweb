@@ -38,9 +38,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         var asset = this.getAsset('model', this.janusid);
         if (asset) {
           if (asset.loaded) {
-            setTimeout(elation.bind(this, this.setTextureDirty), 0);
+            setTimeout(elation.bind(this, this.handleLoad), 0);
           } else {
-            elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.setTextureDirty));
+            elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.handleLoad));
           }
           object = asset.getInstance();
         }
@@ -87,15 +87,25 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
 */
     }
+    this.handleLoad = function() {
+      this.setTextureDirty();
+      setTimeout(elation.bind(this, function() {
+        elation.events.fire({type: 'load', element: this});
+      }), 0);
+    }
     this.updateMaterial = function() {
       this.setTextureDirty();
     }
     this.updateVideo = function() {
       if (!this.modelasset) return;
       if (!this.videoasset || this.videoasset.name != this.video_id) {
-        this.loadVideo(this.video_id);
-        if (this.modelasset) {
-          this.assignTextureParameters(texture, this.modelasset);
+        if (this.video_id && this.video_id != '') {
+          this.loadVideo(this.video_id);
+          if (this.modelasset) {
+            this.assignTextureParameters(texture, this.modelasset);
+          }
+        } else {
+          this.videotexture = null;
         }
       }
       this.setTextureDirty();
@@ -221,7 +231,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (textureasset.ou3d) {
             texture.repeat.y = 0.5;
           }
-          this.assignTextureParameters(texture, modelasset);
+          this.assignTextureParameters(texture, modelasset, textureasset);
         }
       }
       if (lightmap_image_id) {
@@ -231,10 +241,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           elation.events.add(textureLightmap, 'asset_load', elation.bind(this, this.setTextureDirty));
           elation.events.add(textureLightmap, 'update', elation.bind(this, this.refresh));
 
-          this.assignTextureParameters(textureLightmap, modelasset);
+          this.assignTextureParameters(textureLightmap, modelasset, lightmaptextureasset);
         }
       }
-      if (this.video_id) {
+      if (this.video_id && this.video_id != '') {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         this.assignTextureParameters(texture, modelasset);
@@ -323,7 +333,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.map = texture; 
               elation.events.add(texture, 'asset_update', elation.bind(m, function(ev) { m.map = ev.data; }));
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
-            } else if (m.map) {
+            } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
               var asset = this.getAsset('image', imagesrc);
               if (asset) {
@@ -334,7 +344,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.map = asset.getInstance();
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
               }
-              this.assignTextureParameters(m.map, modelasset);
+              this.assignTextureParameters(m.map, modelasset, asset);
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
@@ -403,7 +413,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
-        //m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1);
+        m.opacity = this.opacity; //(typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
         m.normalMap = oldmat.normalMap;
@@ -468,8 +478,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         return scene.background;
       }
     }
-    this.assignTextureParameters = function(texture, modelasset) {
-      var linear = (modelasset.tex_linear && modelasset.tex_linear !== 'false');
+    this.assignTextureParameters = function(texture, modelasset, textureasset) {
+      var linear = (!modelasset || modelasset.tex_linear && modelasset.tex_linear !== 'false') && (!textureasset || textureasset.tex_linear && textureasset.tex_linear !== 'false');
       texture.minFilter = (linear && !this.video_id ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
