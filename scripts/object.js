@@ -604,7 +604,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lighting: [ 'property', 'lighting' ],
         shadow: [ 'property', 'shadow' ],
         shadow_receive: [ 'property', 'shadow_receive' ],
-        shadow_cast: [ 'property', 'shadow_casr' ],
+        shadow_cast: [ 'property', 'shadow_cast' ],
         cull_face: [ 'property', 'cull_face' ],
         blend_src: [ 'property', 'blend_src' ],
         blend_dest: [ 'property', 'blend_dest' ],
