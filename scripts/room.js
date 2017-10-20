@@ -924,6 +924,19 @@ elation.require([
 
       return this.jsobjects[objectargs.js_id];
     }
+    this.appendChild = function(obj) {
+      var proxyobj = obj
+      if (elation.utils.isString(obj)) {
+        proxyobj = this.jsobjects[obj];
+      }
+      if (proxyobj) {
+        //var realobj = this.room.getObjectFromProxy(proxyobj);
+        var realobj = proxyobj._target;
+        if (realobj) {
+          this.add(realobj);
+        }
+      }
+    }
     this.removeObject = function(obj) {
       var proxy = obj;
       if (elation.utils.isString(obj)) {
