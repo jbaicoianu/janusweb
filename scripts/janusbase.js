@@ -13,6 +13,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.defineProperties({
         room:     { type: 'object' },
         janus:    { type: 'object' },
+        parent:   { type: 'object' },
         js_id:    { type: 'string' },
         color:    { type: 'color', default: this.defaultcolor, set: this.updateColor },
         opacity:  { type: 'float', default: 1.0, set: this.updateOpacity },
@@ -342,6 +343,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
+        if (proxyobj.parent) {
+          proxyobj.parent.removeChild(proxyobj);
+        }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
