@@ -25,7 +25,7 @@ elation.require(['janusweb.janusbase'], function() {
       var thickness = 0.05;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box = new THREE.BoxGeometry(this.size.x, this.size.y, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,offset/2));
+      box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
 
       var mat = this.createMaterial();
 
@@ -42,16 +42,16 @@ elation.require(['janusweb.janusbase'], function() {
         var framemat4 = new THREE.Matrix4();
 
 
-        framemat4.makeTranslation(0,this.size.y - frameheight/2,framedepth/2 + offset);
+        framemat4.makeTranslation(0,this.size.y - frameheight/2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
-        framemat4.makeTranslation(0,frameheight/2,framedepth/2 + offset);
+        framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
         
         framepart = new THREE.BoxGeometry(framewidth,this.size.y,framedepth);
 
-        framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth/2 + offset);
+        framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
-        framemat4.makeTranslation(-this.size.x / 2 + framewidth/2,this.size.y / 2,framedepth/2 + offset);
+        framemat4.makeTranslation(-this.size.x / 2 + framewidth/2,this.size.y / 2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
 
         var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
@@ -247,7 +247,7 @@ elation.require(['janusweb.janusbase'], function() {
       //this.openPortal();
     }
     this.activate = function(ev) {
-      console.log('activate', ev, this.open);
+      //console.log('activate', ev, this.seamless);
       if (this.frame) {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
@@ -286,17 +286,22 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.openPortal = function() {
       if (!this.portalroom) {
-        this.camera = this.engine.systems.render.views.main.actualcamera.clone();
-        this.camera.matrixAutoUpdate = false;
         this.portalroom = this.janus.load(this.properties.url, false);
         console.log('load that room', this.portalroom);
-        var rt = new THREE.WebGLRenderTarget(1024, 1024, {format: THREE.RGBAFormat });
 
         var scene = new THREE.Scene();
         scene.background = this.portalroom.skyboxtexture
         scene.add(this.portalroom.objects['3d']);
-        scene.add(this.camera);
         this.scene = scene;
+        this.scene.updateMatrixWorld(true);
+        this.portal = new THREE.Portal({scene: scene, target: this.portalroom.spawnpoint});
+
+        elation.events.add(this.portalroom, 'room_load_processed', elation.bind(this, function(ev) {
+          console.log('processed!', ev, this.portalroom.spawnpoint);
+          this.mesh.portal = this.portal;
+          scene.updateMatrixWorld(true);
+        }));
+        this.mesh.material.color.setHex(0xff0000);
 
         /*
         var userdata = this.engine.client.player.camera.camera.userData;
@@ -317,14 +322,18 @@ elation.require(['janusweb.janusbase'], function() {
           rendertarget: rt
         };
 
-        */
-        this.janus.subscribe(this.url);
+        //this.janus.subscribe(this.url);
         elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortal));
         this.updatePortal();
+        */
+      } else {
+        this.janus.network.subscribe(this.portalroom);
+        this.mesh.portal = this.portal;
+        this.portalroom.enable();
       }
       this.open = true;
       this.portalstate = 'open';
-      this.group.remove(this.mesh);
+      //this.group.remove(this.mesh);
       console.log('OPEN');
       elation.events.fire({element: this, type: 'janusweb_portal_open'});
     }
@@ -439,9 +448,11 @@ elation.require(['janusweb.janusbase'], function() {
       this.portalstate = 'closed';
       this.open = false;
       console.log('CLOSE');
-      this.group.add(this.mesh);
+      this.mesh.portal = null;
+      //this.group.add(this.mesh);
+      this.portalroom.disable();
       elation.events.fire({element: this, type: 'janusweb_portal_close'});
-      this.janus.unsubscribe(this.url);
+      this.janus.network.unsubscribe(this.portalroom);
     }
   }, elation.engine.things.janusbase);
 });
