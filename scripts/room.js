@@ -54,6 +54,7 @@ elation.require([
       };
       this.playerstartposition = [0,0,0];
       this.playerstartorientation = new THREE.Quaternion();
+      this.spawnpoint = new THREE.Object3D();
       this.roomsrc = '';
       this.changes = {};
       this.deletions = [];
@@ -130,6 +131,8 @@ elation.require([
     this.createChildren = function() {
       this.createLights();
       this.setCollider('sphere', {radius: 1e4});
+
+      this.objects['3d'].add(this.spawnpoint);
 
       this.lastthink = 0;
       this.thinktime = 0;
@@ -570,6 +573,13 @@ elation.require([
         // set player position based on room info
         this.playerstartposition = room.pos;
         this.playerstartorientation = room.orientation;
+
+        if (room.pos) {
+          this.spawnpoint.position.fromArray(room.pos);
+        }
+        this.spawnpoint.quaternion.copy(room.orientation);
+        //this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+        this.spawnpoint.updateMatrixWorld();
 
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
         if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
