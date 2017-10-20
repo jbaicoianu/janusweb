@@ -51,17 +51,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       //if (this.col) this.color = this.col;
       elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
       this.colorIsDefault = true;
-
-      if (this.onclick) {
-        if (elation.utils.isString(this.onclick)) {
-          elation.events.add(this, 'click', elation.bind(this, function() { 
-            eval(this.onclick);
-          }));
-          
-        } else {
-          elation.events.add(this, 'click', elation.bind(this, this.onclick));
-        }
-      }
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
@@ -231,6 +220,21 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           }
           this.defineProperties(propertydefs);
           this._proxyobject._proxydefs = proxydefs;
+        }
+
+        var proxyevents = [
+          'update', 'collision',
+          'mouseover', 'mouseout', 'mousemove', 'mousedown', 'mouseup', 'click',
+          'touchstart', 'touchmove', 'touchend',
+          'dragover', 'drag', 'dragenter', 'dragleave', 'dragstart', 'dragend', 'drop',
+          'gazeenter', 'gazeleave', 'gazemove', 'gazeactivate', 'gazeprogress',
+        ];
+        for (var i = 0; i < proxyevents.length; i++) {
+          var evname = proxyevents[i];
+          if (this['on' + evname]) {
+            //elation.events.add(this, evname, elation.bind(this, this.executeCallback, this['on' + evname]));
+            this._proxyobject['on' + evname] = this['on' + evname];
+          }
         }
       }
       return this._proxyobject;
