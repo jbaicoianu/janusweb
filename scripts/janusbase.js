@@ -470,9 +470,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
-        if (proxyobj.parent) {
-          proxyobj.parent.removeChild(proxyobj);
-        }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
