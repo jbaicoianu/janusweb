@@ -810,8 +810,14 @@ elation.require([
         'color': args.col,
         'pickable': true,
         'collidable': true,
+        'parent': parentobj,
         'shadows': args.shadows || this.shadows
       };
+      if (!args.pos) {
+        args.pos = [0,0,0];
+        objectargs.position = [0,0,0];
+        objectargs.hasposition = false;
+      }
       elation.utils.merge(args, objectargs);
 
       switch (realtype) {
