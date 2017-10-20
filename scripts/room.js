@@ -1339,60 +1339,67 @@ elation.require([
       elation.events.fire({type: 'part', element: this, data: this.url});
     }
     this.getProxyObject = function() {
-      var proxy = new elation.proxy(this, {
-        url:           ['property', 'url', { readonly: true}],
-        objects:       ['property', 'jsobjects'],
-        cookies:       ['property', 'cookies'],
-        walk_speed:    ['property', 'walk_speed'],
-        run_speed:     ['property', 'run_speed'],
-        jump_velocity: ['property', 'jump_velocity'],
-        gravity:       ['property', 'gravity'],
-        fog:           ['property', 'fog'],
-        fog_mode:      ['property', 'fog_mode'],
-        fog_density:   ['property', 'fog_density'],
-        fog_start:     ['property', 'fog_start'],
-        fog_end:       ['property', 'fog_end'],
-        fog_col:       ['property', 'fog_col'],
-        ambient:       ['property', 'ambient'],
-        bloom:         ['property', 'bloom'],
-        pbr:           ['property', 'pbr'],
-        shadows:       ['property', 'shadows'],
-        col:           ['property', 'col'],
-        locked:        ['property', 'locked'],
+      if (!this._proxyobject) {
+        var proxy = new elation.proxy(this, {
+          url:           ['property', 'url', { readonly: true}],
+          objects:       ['property', 'jsobjects'],
+          cookies:       ['property', 'cookies'],
+          walk_speed:    ['property', 'walk_speed'],
+          run_speed:     ['property', 'run_speed'],
+          jump_velocity: ['property', 'jump_velocity'],
+          gravity:       ['property', 'gravity'],
+          fog:           ['property', 'fog'],
+          fog_mode:      ['property', 'fog_mode'],
+          fog_density:   ['property', 'fog_density'],
+          fog_start:     ['property', 'fog_start'],
+          fog_end:       ['property', 'fog_end'],
+          fog_col:       ['property', 'fog_col'],
+          ambient:       ['property', 'ambient'],
+          bloom:         ['property', 'bloom'],
+          pbr:           ['property', 'pbr'],
+          shadows:       ['property', 'shadows'],
+          col:           ['property', 'col'],
+          locked:        ['property', 'locked'],
 
-        localToWorld:  ['function', 'localToWorld'],
-        worldToLocal:  ['function', 'worldToLocal'],
-        loadNewAsset:  ['function', 'loadNewAsset'],
-        createObject:  ['function', 'createObject'],
-        removeObject:  ['function', 'removeObject'],
-        addCookie:     ['function', 'addCookie'],
-        playSound:     ['function', 'playSound'],
-        stopSound:     ['function', 'stopSound'],
-        seekSound:     ['function', 'seekSound'],
-        playVideo:     ['function', 'playVideo'],
-        stopVideo:     ['function', 'stopVideo'],
-        seekVideo:     ['function', 'seekVideo'],
-        getObjectById: ['function', 'getObjectById'],
-        openLink:      ['function', 'openLink'],
+          localToWorld:  ['function', 'localToWorld'],
+          worldToLocal:  ['function', 'worldToLocal'],
+          loadNewAsset:  ['function', 'loadNewAsset'],
+          createObject:  ['function', 'createObject'],
+          removeObject:  ['function', 'removeObject'],
+          appendChild:   ['function', 'appendChild'],
+          removeChild:   ['function', 'removeObject'],
+          addCookie:     ['function', 'addCookie'],
+          playSound:     ['function', 'playSound'],
+          stopSound:     ['function', 'stopSound'],
+          seekSound:     ['function', 'seekSound'],
+          playVideo:     ['function', 'playVideo'],
+          stopVideo:     ['function', 'stopVideo'],
+          seekVideo:     ['function', 'seekVideo'],
+          openLink:      ['function', 'openLink'],
 
-        registerElement:     ['function', 'registerElement'],
-        extendElement:       ['function', 'extendElement'],
-        addEventListener:    ['function', 'addEventListenerProxy'],
-        removeEventListener: ['function', 'removeEventListenerProxy'],
+          getObjectById:         ['function', 'getObjectById'],
+          getObjectsByClassName: ['function', 'getObjectsByClassName'],
+          getObjectsByTagName:  ['function', 'getObjectsByTagName'],
 
-        onLoad:          ['callback', 'janus_room_scriptload'],
-        update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
-        onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
-        onColliderEnter: ['callback', 'janus_room_collider_enter'],
-        onColliderExit:  ['callback', 'janus_room_collider_exit'],
-        onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
-        onMouseDown:     ['callback', 'janus_room_mousedown'],
-        onMouseUp:       ['callback', 'janus_room_mouseup'],
-        onKeyDown:       ['callback', 'janus_room_keydown'],
-        onKeyUp:         ['callback', 'janus_room_keyup']
-      });
-      this._proxyobject = proxy;
-      return proxy;
+          registerElement:     ['function', 'registerElement'],
+          extendElement:       ['function', 'extendElement'],
+          addEventListener:    ['function', 'addEventListenerProxy'],
+          removeEventListener: ['function', 'removeEventListenerProxy'],
+
+          onLoad:          ['callback', 'janus_room_scriptload'],
+          update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
+          onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
+          onColliderEnter: ['callback', 'janus_room_collider_enter'],
+          onColliderExit:  ['callback', 'janus_room_collider_exit'],
+          onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
+          onMouseDown:     ['callback', 'janus_room_mousedown'],
+          onMouseUp:       ['callback', 'janus_room_mouseup'],
+          onKeyDown:       ['callback', 'janus_room_keydown'],
+          onKeyUp:         ['callback', 'janus_room_keyup']
+        });
+        this._proxyobject = proxy;
+      }
+      return this._proxyobject;
     }
     this.hasChanges = function() {
       return Object.keys(this.changes).length > 0;
