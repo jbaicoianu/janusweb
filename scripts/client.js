@@ -236,6 +236,18 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
   if (typeof customElements != 'undefined') {
     elation.extend('janusweb.viewer.base', class extends HTMLElement {
+      get fullscreen() {
+        return this.getAttribute('fullscreen');
+      }
+      set autostart(fullscreen) {
+        return this.setAttribute('fullscreen', fullscreen);
+      }
+      get autostart() {
+        return this.getAttribute('autostart');
+      }
+      set autostart(autostart) {
+        return this.setAttribute('autostart', autostart);
+      }
       get src() {
         return this.getAttribute('src');
       }
@@ -259,21 +271,35 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
       init() {
         var iframe = document.createElement('iframe');
-        iframe.width = this.width;
-        iframe.height = this.height;
+        var fullscreen = this.fullscreen;
+        iframe.width = (this.fullscreen ? window.innerWidth : this.width);
+        iframe.height = (this.fullscreen ? window.innerHeight : this.height);
+        iframe.setAttribute('allowvr', 'yes');
+        iframe.setAttribute('allowfullscreen', true);
+        iframe.setAttribute('allow', 'vr');
+        iframe.style = "border: 0px;";
         this.appendChild(iframe);
         var content = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument;
         content.document.open();
         content.document.write('<html><body style="overflow: hidden">');
         content.document.write('<script src="' + clientScript.src + '"></script>');
-        content.document.write('<script>elation.janusweb.init(' + JSON.stringify(this.getClientArgs()) + ')</script>');
+        content.document.write('<script>function startWidget() { elation.janusweb.init(' + JSON.stringify(this.getClientArgs()) + '); }</script>');
+        if (this.autostart) {
+          content.document.write('<script>startWidget()</script>');
+        } else {
+          content.document.write('<img id="play" src="https://janusvr.com/widget/JanusWidget/images/play.svg" style="top: calc(50% - 65px); cursor: pointer; ">');
+          content.document.write('<script>document.getElementById("play").addEventListener("click", function() { startWidget(); console.log("dur", this); this.parentNode.removeChild(this); })</script>');
+        }
         content.document.write('</body></html>');
         content.document.close();
       }
       getClientArgs() {
+        var fullscreen = this.fullscreen,
+            width = (this.fullscreen ? window.innerWidth : this.width),
+            height = (this.fullscreen ? window.innerHeight : this.height);
         var args = {
           url: this.getRoomURL(),
-          resolution: this.width + 'x' + this.height,
+          //resolution: width + 'x' + height,
           shownavigation: false,
         };
         return args;
