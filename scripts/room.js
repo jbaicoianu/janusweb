@@ -783,11 +783,7 @@ elation.require([
     this.createObject = function(type, args, parent) {
       var customElement = false;
       type = type.toLowerCase();
-      if (this.customElements[type]) {
-        customElement = this.customElements[type];
-      } else if (this.janus.customElements[type]) {
-        customElement = this.janus.customElements[type];
-      }
+      var customElement = this.getCustomElement(type);
 
       //var typemap = this.janus.typemap;
       //var classmap = this.janus.classmap;
@@ -1476,14 +1472,27 @@ elation.require([
       }
       return deletions;
     }
+    this.getCustomElement = function(classname) {
+      if (classname.substr(classname.length - this.roomid.length - 1, this.roomid.length + 1) == '_' + this.roomid) {
+        classname = classname.substring(0, classname.length - this.roomid.length - 1);
+      }
+      if (this.customElements[classname]) {
+        return this.customElements[classname];
+      } else if (this.janus.customElements[classname]) {
+        return this.janus.customElements[classname];
+      }
+      return null;
+    }
     this.registerElement = function(tagname, classobj, extendclass) {
       tagname = tagname.toLowerCase();
       var classname = tagname + '_' + this.roomid;
       var fullextendclass = 'janusobject';
-      if (this.customElements[extendclass]) {
-        fullextendclass = this.customElements[extendclass].classname;
-      } else if (this.janus.customElements[extendclass]) {
-        fullextendclass = this.janus.customElements[extendclass].classname;
+      if (extendclass) {
+        extendclass = extendclass.toLowerCase();
+        var customelement = this.getCustomElement(extendclass);
+        if (customelement) {
+          fullextendclass = customelement.classname;
+        }
       }
 
       this.customElements[tagname] = {
