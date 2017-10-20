@@ -946,6 +946,9 @@ elation.require([
         var obj = this.getObjectFromProxy(proxy);
         if (obj && obj.parent) {
           obj.parent.remove(obj);
+          if (obj.js_id && this.jsobjects[obj.js_id]) {
+            delete this.jsobjects[obj.js_id];
+          }
         }
       }
     }
