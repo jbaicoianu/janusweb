@@ -75,7 +75,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       if (this.corsproxy != '') {
         elation.engine.assets.setCORSProxy(this.corsproxy);
       }
-      elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
+      this.assetpack = elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
       this.parser = new JanusFireboxParser();
       this.scriptingInitialized = false;
 
@@ -556,6 +556,13 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
           class: elation.engine.things[classname]
         };
       }
+    }
+    this.getAsset = function(type, name, assetargs) {
+      var asset;
+      if (this.assetpack) {
+        asset = this.assetpack.get(type, name, assetargs);
+      }
+      return asset;
     }
   }, elation.engine.things.generic);
 });
