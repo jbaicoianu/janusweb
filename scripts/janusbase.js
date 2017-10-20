@@ -510,7 +510,8 @@ console.error('dunno what this is', other);
       }
     }
     this.setOpacity = function(opacity) {
-      if (this.objects['3d']) {
+      if (this.objects['3d'] && this.currentopacity != opacity) {
+        this.currentopacity = opacity;
         this.objects['3d'].traverse(function(n) {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
