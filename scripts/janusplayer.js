@@ -180,120 +180,129 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         history.go(1);
       }
     }
-    this.engine_frame = function(ev) {
-      elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
-      if (this.tracker && this.tracker.hasHands()) {
-        var transform = new THREE.Matrix4();
-        var hands = this.tracker.getHands();
-        if (hands) {
-          this.hands.left.active = hands.left && hands.left.active;
-          this.hands.right.active = hands.right && hands.right.active;
-          if (hands.left && hands.left.position) {
-            var pos = hands.left.palmPosition || hands.left.position,
-                orient = hands.left.palmOrientation || hands.left.orientation;
-            if (pos instanceof THREE.Vector3) pos = pos.toArray();
-            if (orient instanceof THREE.Quaternion) orient = orient.toArray();
-            //this.localToWorld(this.hands.left.position.fromArray(pos));
-            if (pos) {
-              this.hands.left.position.fromArray(pos);
-            }
+    this.engine_frame = (function() {
+      var _transform = new THREE.Matrix4();
+      var _tmpquat = new THREE.Quaternion();
 
-            if (orient) {
-              transform.makeRotationFromQuaternion(orient);
-              transform.extractBasis(this.hands.left.xdir, this.hands.left.ydir, this.hands.left.zdir);
-              this.hands.left.xdir.normalize();
-              this.hands.left.ydir.normalize();
-              this.hands.left.zdir.normalize();
-            }
+      return function(ev) {
+        elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
+        if (this.tracker && this.tracker.hasHands()) {
+          var hands = this.tracker.getHands();
+          if (hands) {
+            this.hands.left.active = hands.left && hands.left.active;
+            this.hands.right.active = hands.right && hands.right.active;
+            if (hands.left && hands.left.position) {
+              var pos = hands.left.palmPosition || hands.left.position,
+                  orient = hands.left.palmOrientation || hands.left.orientation;
+              if (pos instanceof THREE.Vector3) pos = pos.toArray();
+              if (orient instanceof THREE.Quaternion) orient = orient.toArray();
+              //this.localToWorld(this.hands.left.position.fromArray(pos));
+              if (pos) {
+                this.hands.left.position.fromArray(pos);
+              }
 
-            if (hands.left.fingerTips) {
-              this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
-              this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
-              this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
-              this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
-              this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
-            }
-          }
-          if (hands.right && hands.right.position) {
-            var pos = hands.right.palmPosition || hands.right.position,
-                orient = hands.right.palmOrientation || hands.right.orientation;
-            if (pos instanceof THREE.Vector3) pos = pos.toArray();
-            if (orient instanceof THREE.Quaternion) orient = orient.toArray();
-            //this.localToWorld(this.hands.right.position.fromArray(pos));
-            if (pos) {
-              this.hands.right.position.fromArray(pos);
-            }
+              if (orient) {
+                _transform.makeRotationFromQuaternion(_tmpquat.fromArray(orient));
+                _transform.extractBasis(this.hands.left.xdir, this.hands.left.ydir, this.hands.left.zdir);
+                this.hands.left.xdir.normalize();
+                this.hands.left.ydir.normalize();
+                this.hands.left.zdir.normalize();
+              }
 
-            if (orient) {
-              transform.makeRotationFromQuaternion(orient);
-              transform.extractBasis(this.hands.right.xdir, this.hands.right.ydir, this.hands.right.zdir);
-              this.hands.right.xdir.normalize();
-              this.hands.right.ydir.normalize();
-              this.hands.right.zdir.normalize();
+              if (hands.left.fingerTips) {
+                this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
+                this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
+                this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
+                this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
+                this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+              }
             }
+            if (hands.right && hands.right.position) {
+              var pos = hands.right.palmPosition || hands.right.position,
+                  orient = hands.right.palmOrientation || hands.right.orientation;
+              if (pos instanceof THREE.Vector3) pos = pos.toArray();
+              if (orient instanceof THREE.Quaternion) orient = orient.toArray();
+              //this.localToWorld(this.hands.right.position.fromArray(pos));
+              if (pos) {
+                this.hands.right.position.fromArray(pos);
+              }
 
-            if (hands.right.fingerTips) {
-              this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
-              this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
-              this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
-              this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
-              this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
-            }
-          }
-        }
-      }
-    }
-    this.updateCursor = function() {
-      if (this.cursor_object == '') {
-        this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-10));
-      }
-      if (this.cursor) {
-        // Show system cursor when the mouse is unlocked and we're not in VR
-        // Otherwise, we'll render one in the 3d scene
+              if (orient) {
+                //_transform.makeRotationFromQuaternion(orient);
+                _transform.makeRotationFromQuaternion(_tmpquat.fromArray(orient));
+                _transform.extractBasis(this.hands.right.xdir, this.hands.right.ydir, this.hands.right.zdir);
+                this.hands.right.xdir.normalize();
+                this.hands.right.ydir.normalize();
+                this.hands.right.zdir.normalize();
+              }
 
-        var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
-        var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay));
-        if (useSystemCursor) {
-          this.cursor.visible = false;
-          var view = this.engine.systems.render.views.main;
-          if (!view.hasclass('cursor_' + this.cursor_style)) {
-            var cursortypes = Object.keys(this.cursors);
-            for (var i = 0; i < cursortypes.length; i++) { 
-              var thistype = cursortypes[i] == this.cursor_style,
-                  hasclass = view.hasclass('cursor_' + cursortypes[i]);
-              if (thistype && !hasclass) {
-                view.addclass('cursor_' + this.cursor_style);
-              } else if (hasclass) {
-                view.removeclass('cursor_' + cursortypes[i]);
+              if (hands.right.fingerTips) {
+                this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
+                this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
+                this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
+                this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
+                this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
               }
             }
           }
-        } else {
-          this.cursor.visible = this.cursor_visible;
-          var distance = this.camera.localToWorld(new THREE.Vector3()).distanceTo(this.vectors.cursor_pos);
-          var size = distance / 12; // FIXME - add cursor scaling
-          this.cursor.position.copy(this.vectors.cursor_pos);
-          this.cursor.scale.set(size,size,size);
-
-          if (this.cursor_object == '') {
-            this.cursor.material.opacity = .5;
-          } else {
-            this.cursor.material.opacity = 1;
-          }
-
-          if (this.cursors[this.cursor_style]) {
-            this.cursor.material.map = this.cursors[this.cursor_style];
-          } else if (this.cursors['default']) {
-            this.cursor.material.map = this.cursors['default'];
-          } else {
-            this.cursor.material.map = null;
-            this.cursor.visible = false;
-          }
         }
       }
-      this.camera.objects['3d'].updateMatrix();
-      this.camera.objects['3d'].updateMatrixWorld();
-    }
+    })();
+    this.updateCursor = (function() {
+      var _tmpvec = new THREE.Vector3();
+
+      return function() {
+        if (this.cursor_object == '') {
+          this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-10));
+        }
+        if (this.cursor) {
+          // Show system cursor when the mouse is unlocked and we're not in VR
+          // Otherwise, we'll render one in the 3d scene
+
+          var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+          var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay));
+          if (useSystemCursor) {
+            this.cursor.visible = false;
+            var view = this.engine.systems.render.views.main;
+            if (!view.hasclass('cursor_' + this.cursor_style)) {
+              var cursortypes = Object.keys(this.cursors);
+              for (var i = 0; i < cursortypes.length; i++) { 
+                var thistype = cursortypes[i] == this.cursor_style,
+                    hasclass = view.hasclass('cursor_' + cursortypes[i]);
+                if (thistype && !hasclass) {
+                  view.addclass('cursor_' + this.cursor_style);
+                } else if (hasclass) {
+                  view.removeclass('cursor_' + cursortypes[i]);
+                }
+              }
+            }
+          } else {
+            this.cursor.visible = this.cursor_visible;
+            var distance = this.camera.localToWorld(_tmpvec.set(0,0,0)).distanceTo(this.vectors.cursor_pos);
+            var size = distance / 12; // FIXME - add cursor scaling
+            this.cursor.position.copy(this.vectors.cursor_pos);
+            this.cursor.scale.set(size,size,size);
+
+            if (this.cursor_object == '') {
+              this.cursor.material.opacity = .5;
+            } else {
+              this.cursor.material.opacity = 1;
+            }
+
+            if (this.cursors[this.cursor_style]) {
+              this.cursor.material.map = this.cursors[this.cursor_style];
+            } else if (this.cursors['default']) {
+              this.cursor.material.map = this.cursors['default'];
+            } else {
+              this.cursor.material.map = null;
+              this.cursor.visible = false;
+            }
+          }
+        }
+        this.camera.objects['3d'].updateMatrix();
+        this.camera.objects['3d'].updateMatrixWorld();
+      }
+    })();
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
@@ -326,23 +335,28 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor_active = false;
       }
     }
-    this.updateFocusObject = function(ev) {
-      var obj = ev.element;
-      if ((ev.type == 'mouseover' || ev.type == 'mousemove') && obj && obj.js_id) {
-        this.cursor_object = obj.js_id;
-        var worldpos = this.camera.localToWorld(new THREE.Vector3(0,0,0));
-        var diff = ev.data.point.clone().sub(worldpos);
-        this.vectors.cursor_pos.copy(diff).multiplyScalar(-.05).add(ev.data.point);
+    this.updateFocusObject = (function() {
+      var _tmpvec = new THREE.Vector3(),
+          _diff = new THREE.Vector3();
 
-        this.lookat_object = obj.js_id;
-        this.vectors.lookat_pos.copy(ev.data.point);
-      } else {
-        this.cursor_object = '';
-        this.lookat_object = '';
-        var distance = 20;
-        this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-distance));
+      return function(ev) {
+        var obj = ev.element;
+        if ((ev.type == 'mouseover' || ev.type == 'mousemove') && obj && obj.js_id) {
+          this.cursor_object = obj.js_id;
+          var worldpos = this.camera.localToWorld(_tmpvec.set(0,0,0));
+          _diff.copy(ev.data.point).sub(worldpos);
+          this.vectors.cursor_pos.copy(_diff).multiplyScalar(-.05).add(ev.data.point);
+
+          this.lookat_object = obj.js_id;
+          this.vectors.lookat_pos.copy(ev.data.point);
+        } else {
+          this.cursor_object = '';
+          this.lookat_object = '';
+          var distance = 20;
+          this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-distance));
+        }
       }
-    }
+    })();
     this.toggleCursorVisibility = function() {
       if (this.cursor) {
         this.cursor.visible = this.cursor_visible;
