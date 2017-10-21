@@ -44,6 +44,9 @@ elation.require([
         'server': { type: 'string' },
         'port': { type: 'int' },
         'rate': { type: 'int', default: 200 },
+        'classList': { type: 'object', default: [] },
+        'className': { type: 'string', default: '', set: this.setClassName },
+        'gazetime': { type: 'float', default: 1000 },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
@@ -617,6 +620,7 @@ elation.require([
         if (room.server) this.properties.server = room.server;
         if (room.port) this.properties.port = room.port;
         if (room.rate) this.properties.rate = room.rate;
+        if (room.gazetime) this.properties.gazetime = room.gazetime;
         if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
 
@@ -1402,6 +1406,7 @@ elation.require([
           stopVideo:     ['function', 'stopVideo'],
           seekVideo:     ['function', 'seekVideo'],
           openLink:      ['function', 'openLink'],
+          raycast:       ['function', 'raycast'],
 
           getObjectById:         ['function', 'getObjectById'],
           getObjectsByClassName: ['function', 'getObjectsByClassName'],
@@ -1973,6 +1978,58 @@ elation.require([
       }
       return 'object';
     }
+    this.addClass = function(classname) {
+      if (!this.hasClass(classname)) {
+        this.classList.push(classname);
+      }
+      this.updateClassName();
+    }
+    this.removeClass = function(classname) {
+      var idx = this.classList.indexOf(classname);
+      if (idx != -1) {
+        this.classList.splice(idx, 1);
+      }
+      this.updateClassName();
+    }
+    this.hasClass = function(classname) {
+      return this.classList.indexOf(classname) != -1;
+    }
+    this.updateClassName = function() {
+      this.className = this.classList.join(' ');
+    }
+    this.setClassName = function() {
+      this.classList = this.className.split(' ');
+    }
+    this.raycast = (function() {
+      var _pos = new THREE.Vector3(),
+          _dir = new THREE.Vector3(0,0,-1),
+          _ray = new THREE.Raycaster();
+      return function(dir, pos, classname) {
+        _ray.set(pos, dir);
+        var intersections = _ray.intersectObject(this.colliders, true);
+        var hits = intersections;
+        if (classname) {
+          hits = [];
+          for (var i = 0; i < intersections.length; i++) {
+            var obj = intersections[i].object,
+                thing = obj.userData.thing;
+            if (thing.hasClass(classname)) {
+              intersections[i].mesh = obj;
+              intersections[i].object = thing.getProxyObject();
+              hits.push(intersections[i]);
+            }
+          }
+        } else {
+          for (var i = 0; i < hits.length; i++) {
+            var obj = hits[i].object,
+                  thing = obj.userData.thing;
+            hits[i].mesh = hits[i].object;
+            hits[i].object = thing.getProxyObject();
+          }
+        }
+        return hits;
+      }
+    })();
   }, elation.engine.things.generic);
 });
 
