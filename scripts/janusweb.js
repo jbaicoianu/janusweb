@@ -1,4 +1,4 @@
-elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy'], function() {
+elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy', 'janusweb.elements.raycaster'], function() {
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
@@ -106,6 +106,8 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         elation.template.add('janusweb.url', this.urltemplate);
       }
       this.initScripting();
+      // TODO - this should be config-driven
+      this.registerAdditionalElements(['raycaster']);
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
@@ -168,7 +170,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
         resetavatar:       ['function', 'resetAvatar'],
         hasFocus:          ['function', 'hasFocus'],
         registerElement:   ['function', 'registerElement'],
-
+        extendElement:     ['function', 'extendElement'],
       });
 
       //THREE.Vector3.prototype.toString = function() { return this.toArray().map(function(d) { return d.toFixed(4); }).join(' '); } 
@@ -547,6 +549,9 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
         extendclass: extendclass
       };
     }
+    this.extendElement = function(extendclass, tagname, classobj) {
+      this.registerElement(tagname, classobj, extendclass);
+    }
     this.registerBuiltinElements = function(elements) {
       for (var k in elements) {
         var tagname = k.toLowerCase(),
@@ -556,6 +561,11 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
           classname: classname,
           class: elation.engine.things[classname]
         };
+      }
+    }
+    this.registerAdditionalElements = function(elements) {
+      for (var k in elation.janusweb.elements) {
+        this.registerElement(k, elation.janusweb.elements[k].classdef);
       }
     }
     this.getAsset = function(type, name, assetargs) {
