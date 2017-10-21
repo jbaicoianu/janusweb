@@ -112,6 +112,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createForces = function() {
       elation.engine.things.janusparticle.extendclass.createForces.call(this);
+      this.properties.particle_vel.copy(this.properties.velocity);
       this.properties.velocity.set(0,0,0); // FIXME - hack to override "vel" property mapping
     }
     this.createParticles = function() {
@@ -361,6 +362,7 @@ elation.require(['janusweb.janusbase'], function() {
         rand_vel:  [ 'property', 'rand_vel'],
         rand_accel:  [ 'property', 'rand_accel'],
         rand_col:  [ 'property', 'rand_col'],
+        particle_vel:  [ 'property', 'particle_vel'],
         emitter_id:  [ 'property', 'emitter_id'],
         emitter_scale:  [ 'property', 'emitter_scale'],
         emitter_pos:  [ 'property', 'emitter_pos'],
