@@ -376,16 +376,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (!ev || ev.value == 1) {
         var room = this.engine.client.janusweb.currentroom;
         if (room) {
-          var pos = room.playerstartposition;
-          // If startpos is < 3 elements, pad it with 0s
-          if (pos.length < 3) {
-            var len = pos.length;
-            pos.length = 3;
-            pos.fill(0, len, 3);
-          }
-          this.properties.position.fromArray(room.playerstartposition);
-          this.properties.orientation.copy(room.playerstartorientation);
-          this.properties.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+          this.properties.position.copy(room.spawnpoint.position);
+          this.properties.orientation.copy(room.spawnpoint.quaternion);
           this.head.properties.orientation.copy(this.properties.startcameraorientation);
           this.properties.velocity.set(0,0,0);
           this.objects.dynamics.angular.set(0,0,0);
