@@ -159,6 +159,7 @@ elation.require(['janusweb.janusbase'], function() {
         gain:         [ 'property', 'gain'],
         pitch:        [ 'property', 'pitch'],
         auto_play:    [ 'property', 'auto_play'],
+        playing:      [ 'property', 'playing'],
         play:         [ 'function', 'play'],
         pause:        [ 'function', 'pause'],
         stop:         [ 'function', 'stop'],
