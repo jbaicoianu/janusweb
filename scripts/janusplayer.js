@@ -315,9 +315,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         v.view_zdir.negate();
       }
 
-      if (this.gaze) {
+      if (this.gaze && this.gaze.object) {
         var now = performance.now();
-        var gazetime = this.gaze.object.gazetime || this.gaze.object.room.gazetime || 1000;;
+        var gazetime = 1000;
+        if (this.gaze.object.gazetime) {
+          gazetime = this.gaze.object.gazetime;
+        } else if (this.gaze.object.room && this.gaze.object.room.gazetime) {
+          gazetime = this.gaze.object.room.gazetime;;
+        }
         var diff = now - this.gaze.start;
         var percent = diff / gazetime;
         if (percent < 1) {
