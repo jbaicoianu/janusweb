@@ -1066,6 +1066,10 @@ elation.require([
             this.sounds[name][k] = properties[k];
           }
         }
+        if (this.sounds[name].playing) {
+          this.sounds[name].stop();
+          this.sounds[name].seek(0);
+        }
         this.sounds[name].play();
       }
     }
