@@ -41,6 +41,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         className: { type: 'string', default: '', set: this.setClassName },
         tag: { type: 'string', default: '' },
         hasposition: { type: 'boolean', default: true },
+        gazetime: { type: 'float' },
         ongazeenter: { type: 'callback' },
         ongazeleave: { type: 'callback' },
         ongazeprogress: { type: 'callback' },
@@ -219,6 +220,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           tagName:  ['property', 'tag'],
           className:  ['property', 'className'],
           classList:  ['property', 'classList'],
+          gazetime:  ['property', 'gazetime'],
 
           pickable:  [ 'property', 'pickable'],
           collision_id:  [ 'property', 'collision_id'],
@@ -266,7 +268,10 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           die:                 ['function', 'die'],
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
+          addClass:            ['function', 'addClass'],
+          removeClass:         ['function', 'removeClass'],
           hasClass:            ['function', 'hasClass'],
+          raycast:             ['function', 'raycast'],
         });
 
         if (classdef) {
@@ -616,5 +621,23 @@ console.error('dunno what this is', other);
     this.setClassName = function() {
       this.classList = this.className.split(' ');
     }
+    this.raycast = (function() {
+      var _pos = new THREE.Vector3(),
+          _dir = new THREE.Vector3(0,0,-1);
+      return function(dir, offset, classname) {
+        if (dir) {
+          _dir.copy(dir);
+        } else {
+          _dir.set(0,0,-1);
+        }
+        _pos.set(0,0,0);
+        if (offset) {
+          _pos.add(offset);
+        }
+        this.localToWorld(_pos);
+        this.objects.dynamics.localToWorldDir(_dir);
+        return this.room.raycast(_dir, _pos, classname);
+      };
+    })();
   }, elation.engine.things.generic);
 });
