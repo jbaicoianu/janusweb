@@ -584,6 +584,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor_style = 'default';
       }
     }
+    this.createObject = function(type, args) {
+      return this.room.createObject(type, args, this);
+    }
     this.appendChild = function(obj) {
       var proxyobj = obj
       if (elation.utils.isString(obj)) {
