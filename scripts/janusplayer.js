@@ -15,6 +15,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false }
       });
+
+      var controllerconfig = this.getSetting('controls.settings');
+      if (controllerconfig) {
+        elation.utils.merge(controllerconfig, this.engine.systems.controls.settings);
+      }
+      elation.events.add(this.engine.systems.controls, 'settings_change', elation.bind(this, function() {
+        this.setSetting('controls.settings', this.engine.systems.controls.settings);
+      }));
+
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
         'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
