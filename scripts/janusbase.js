@@ -120,6 +120,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
             }
           }
         }
+        this.colliders.updateMatrixWorld();
       }
     }
     this.removeCollider = function() {
