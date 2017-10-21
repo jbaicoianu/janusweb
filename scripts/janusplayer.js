@@ -112,6 +112,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
         this.engine.systems.world.scene['world-3d'].add(this.cursor);
       }), 1000);
+
+      this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
+      elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
+      elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -300,6 +304,20 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         v.head_pos.setFromMatrixPosition(this.head.objects['3d'].matrixWorld);
         v.view_zdir.negate();
       }
+
+      if (this.gaze) {
+        var now = performance.now();
+        var gazetime = this.gaze.object.gazetime || this.gaze.object.room.gazetime || 1000;;
+        var diff = now - this.gaze.start;
+        var percent = diff / gazetime;
+        if (percent < 1) {
+          this.gaze.object.dispatchEvent({type: 'gazeprogress', data: percent});
+        } else if (!this.gaze.fired) {
+          this.gaze.object.dispatchEvent({type: 'gazeprogress', data: 1});
+          this.gaze.object.dispatchEvent({type: 'gazeactivate', data: null});
+          this.gaze.fired = true;
+        }
+      }
     }
     this.updateMouseStatus = function(ev) {
       if (ev.type == 'mousedown' && ev.button === 0) {
@@ -336,6 +354,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
       this.room = room;
       this.room.join();
+      if (this.gazecaster) {
+        this.gazecaster.room = room;
+      }
     }
     this.reset_position = function(ev) {
       if (!ev || ev.value == 1) {
@@ -570,6 +591,49 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (realobj) {
           this.remove(realobj);
         }
+      }
+    }
+    this.raycast = (function() {
+      var _pos = new THREE.Vector3(),
+          _dir = new THREE.Vector3(0,0,-1);
+      return function(dir, offset, classname) {
+        if (dir) {
+          _dir.copy(dir);
+        } else {
+          _dir.set(0,0,-1);
+        }
+        _pos.set(0,0,0);
+        if (offset) {
+          _pos.add(offset);
+        }
+        this.head.localToWorld(_pos);
+        this.head.objects.dynamics.localToWorldDir(_dir);
+        return this.room.raycast(_dir, _pos, classname);
+      };
+    })();
+    this.cancelGaze = function() {
+      //this.gaze.object.dispatchEvent({type: 'gazecancel'});
+      this.gaze = false;
+    }
+    this.handleGazeEnter = function(ev) {
+      var obj = ev.data.object;
+      if (obj && obj.dispatchEvent) {
+        obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
+
+        if (this.gaze) {
+          this.cancelGaze();
+        }
+        this.gaze = {
+          start: performance.now(),
+          object: obj,
+          fired: false
+        };
+      }
+    }
+    this.handleGazeLeave = function(ev) {
+      var obj = ev.data.object;
+      if (obj && obj.dispatchEvent) {
+        obj.dispatchEvent({type: 'gazeleave', data: ev.data.intersection});
       }
     }
   }, elation.engine.things.player);
