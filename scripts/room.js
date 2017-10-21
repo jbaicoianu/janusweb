@@ -883,7 +883,7 @@ elation.require([
           //objectargs.volume = args.scale[0];
           break;
         case 'janusparticle':
-          objectargs.particle_vel = args.vel;
+          objectargs.particle_vel = V(args.vel);
           objectargs.particle_accel = args.accel;
           objectargs.particle_scale = args.scale;
           objectargs.vel = new THREE.Vector3();
