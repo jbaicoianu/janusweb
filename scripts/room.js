@@ -134,7 +134,7 @@ elation.require([
     }
     this.createChildren = function() {
       this.createLights();
-      this.setCollider('sphere', {radius: 1e4});
+      //this.setCollider('sphere', {radius: 1e4});
 
       this.objects['3d'].add(this.spawnpoint);
 
