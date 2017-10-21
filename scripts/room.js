@@ -602,7 +602,7 @@ elation.require([
           this.spawnpoint.position.fromArray(room.pos);
         }
         this.spawnpoint.quaternion.copy(room.orientation);
-        //this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+        this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
         this.spawnpoint.updateMatrixWorld();
 
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
