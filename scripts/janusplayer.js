@@ -13,7 +13,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         janus: {type: 'object' },
         room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
-        usevoip: {type: 'boolean', default: false }
+        usevoip: {type: 'boolean', default: false },
+        collision_radius: {type: 'float', set: this.updateCollider}
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -437,6 +438,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         hand1_p4:      ['property', 'hands.right.p4'],
         url:           ['property', 'parent.currentroom.url'],
 
+        collision_radius: ['property', 'collision_radius'],
+
         localToWorld:  ['function', 'localToWorld'],
         worldToLocal:  ['function', 'worldToLocal'],
         appendChild:   ['function', 'appendChild'],
@@ -603,6 +606,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (realobj) {
           this.remove(realobj);
         }
+      }
+    }
+    this.updateCollider = function() {
+      if (this.objects['dynamics']) {
+        this.setCollider('sphere', {
+          radius: this.collision_radius,
+          offset: V(0, this.collision_radius / 2, 0)
+        });
       }
     }
     this.raycast = (function() {
