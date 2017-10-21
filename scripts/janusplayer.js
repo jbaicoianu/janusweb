@@ -449,6 +449,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         worldToLocal:  ['function', 'worldToLocal'],
         appendChild:   ['function', 'appendChild'],
         removeChild:   ['function', 'removeChild'],
+        addForce:      ['function', 'addForce'],
+        removeForce:   ['function', 'removeForce'],
+        raycast:       ['function', 'raycast'],
       });
       return proxy;
     }
