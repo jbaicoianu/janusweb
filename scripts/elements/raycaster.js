@@ -15,6 +15,10 @@ elation.component.add('janusweb.elements.raycaster', {
         this.dispatchEvent({type: 'raycastenter', data: {object: hit.object, intersection: hit}});
         this.lasthitobject = hitobject;
       }
+    } else if (this.lasthitobject) {
+      this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: null}});
+      this.dispatchEvent({type: 'raycastenter', data: {object: this.lasthitobject.room, intersection: null}});
+      this.lasthitobject = this.lasthitobject.room;
     }
   }
 }, elation.janusweb.janusbase);
