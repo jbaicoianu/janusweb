@@ -1,4 +1,7 @@
-elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy', 'janusweb.elements.raycaster'], function() {
+elation.require([
+  'janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy',
+  'janusweb.elements.raycaster', 'janusweb.elements.teleporter'], function() {
+
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
@@ -107,7 +110,7 @@ elation.require(['janusweb.config', 'engine.things.generic','janusweb.remoteplay
       }
       this.initScripting();
       // TODO - this should be config-driven
-      this.registerAdditionalElements(['raycaster']);
+      this.registerAdditionalElements(['raycaster', 'teleporter']);
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
