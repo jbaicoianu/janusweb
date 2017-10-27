@@ -17,7 +17,8 @@
     "jasmine-core": "*",
     "karma-jasmine": "*",
     "karma-jasmine-imagediff": "*",
-    "karma-chrome-launcher": "*"
+    "karma-chrome-launcher": "*",
+    "uglify-es": "*"
   },
   "repository": {
     "type": "git",
