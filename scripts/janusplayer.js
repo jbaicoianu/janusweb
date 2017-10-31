@@ -644,6 +644,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       }
     }
+    this.removeCollider = function() {
+      if (this.colliders) {
+        for (var i = 0; i < this.colliders.children.length; i++) {
+          var collider = this.colliders.children[i];
+          collider.parent.remove(collider);
+        }
+      }
+    }
     this.raycast = (function() {
       var _pos = new THREE.Vector3(),
           _dir = new THREE.Vector3(0,0,-1);
