@@ -35,7 +35,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
       var object = null, geometry = null, material = null;
       if (this.janusid) {
-        var asset = this.getAsset('model', this.janusid);
+        var asset = this.getAsset('model', this.janusid, true);
         if (asset) {
           if (asset.loaded) {
             setTimeout(elation.bind(this, this.handleLoad), 0);
@@ -209,17 +209,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           normal_image_id = false,
           lightmap_image_id = this.lmap_id;
       if (this.janusid) {
-        modelasset = this.getAsset('model', this.janusid);
+        modelasset = this.getAsset('model', this.janusid, true);
         if (modelasset.tex) {
-          image_id = modelasset.getFullURL(modelasset.tex);
+          image_id = modelasset.tex;
         }
         if (modelasset.tex0) {
-          image_id = modelasset.getFullURL(modelasset.tex0);
+          image_id = modelasset.tex0;
         }
       }
       this.modelasset = modelasset;
       if (image_id) {
-        textureasset = this.getAsset('image', image_id);
+        textureasset = this.getAsset('image', image_id, true);
         if (textureasset) {
           texture = textureasset.getInstance();
           elation.events.add(texture, 'asset_load', elation.bind(this, this.setTextureDirty));
@@ -335,7 +335,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
-              var asset = this.getAsset('image', imagesrc);
+              var asset = this.getAsset('image', imagesrc, true);
               if (asset) {
                 if (asset.hasalpha) {
                   m.transparent = true;
