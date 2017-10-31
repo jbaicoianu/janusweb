@@ -445,7 +445,14 @@ elation.require([
           failurecallback: elation.bind(this, function(xhr) {
             var translator = this.translators['^error$'];
             translator.exec({janus: this.properties.janus, room: this, error: xhr.status || 404})
-                      .then(elation.bind(this, this.createRoomObjects));
+                      .then(elation.bind(this, function(objs) {
+                        var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+                        var assetpath = datapath + 'assets/translator/errors/';
+                        this.baseurl = assetpath;
+                        this.loadRoomAssets(objs);
+                        this.createRoomObjects(objs);
+                        this.enable();
+                      }));
             
           }),
           onprogress: elation.bind(this, function(ev) {
