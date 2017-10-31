@@ -379,6 +379,23 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.gazecaster) {
         this.gazecaster.room = room;
       }
+      if (!this.teleporter) {
+        this.teleporter = this.room.createObject('teleporter');
+      } else {
+        this.teleporter.setRoom(room.getProxyObject());
+      }
+      //room.add(this);
+      this.updateGravity();
+    }
+    this.updateGravity = function(gravity) {
+      if (typeof gravity == 'undefined' && this.room) {
+        gravity = this.room.gravity;
+      }
+      if (!this.gravity) {
+        this.gravity = this.addForce('gravity', V(0, gravity, 0));
+      } else {
+        this.gravity.update(V(0, gravity, 0));
+      }
     }
     this.reset_position = function(ev) {
       if (!ev || ev.value == 1) {
