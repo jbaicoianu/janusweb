@@ -42,7 +42,6 @@ elation.require(['elation.collection'], function() {
       room.baseurl = fullpath;
       var roomdata = this.janus.parser.parse(source.source, room.baseurl, datapath);
 
-console.log('DEFAULT GUY STUFF', roomdata, args, datapath, room.baseurl);
       roomdata.assets.websurfaces.web1.src = args.url;
 
       args.resolve(roomdata);
