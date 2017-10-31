@@ -346,22 +346,28 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       }
       return childproxies;
     }
-    this.getAsset = function(type, id, nocache) {
+    this.getAsset = function(type, id, autocreate) {
       var parent = this.parent || this.room;
 
       var asset;
       if (this.assetpack) {
         asset = this.assetpack.get(type, id);
       }
-      if (!asset) {
+      if (!asset && typeof parent.getAsset == 'function') {
         asset = parent.getAsset(type, id);
       }
-      if (asset && !nocache) {
-        if (!this.assets[type]) {
-          this.assets[type] = {};
-        }
-        this.assets[type][id] = asset;
+      if (!asset && autocreate) {
+        // Asset definition wasn't found, so we'll assume it's a URL and define a new asset
+        this.room.loadNewAsset(type, {id: id, src: id}, false);
+        asset = this.room.getAsset(type, id);
       }
+
+      // Store a reference so we know which assets are in use by which objects
+      if (!this.assets[type]) {
+        this.assets[type] = {};
+      }
+      this.assets[type][id] = asset;
+
       return asset;
     }
     this.getActiveAssets = function(assetlist) {
