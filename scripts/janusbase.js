@@ -107,16 +107,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         } else {
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
-            var collider = colliderasset.getInstance();
-            this.collidermesh = collider;
-            if (collider.userData.loaded) {
+            var processMeshCollider = elation.bind(this, function(collider) {
               this.extractColliders(collider, true);
-              collider.userData.thing = this;
-              this.colliders.add(collider);
-            } else {
-              elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {
-                collider.userData.thing = this;
-                this.extractColliders(collider, true);
+                //collider.userData.thing = this;
 
                 //collider.bindPosition(this.position);
                 //collider.bindQuaternion(this.orientation);
@@ -127,7 +120,17 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
                   n.userData.thing = this;
                 }));
                 this.colliders.add(collider);
+              //this.setCollider('threejs', {mesh: collider.children[0], scale: this.properties.scale});
 
+            });
+            var collider = colliderasset.getInstance();
+            this.collidermesh = collider;
+            if (collider.userData.loaded) {
+              //this.colliders.add(collider);
+              processMeshCollider(collider);
+            } else {
+              elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {
+                processMeshCollider(collider);
               }) );
             }
           }
