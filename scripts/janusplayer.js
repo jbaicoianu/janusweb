@@ -14,7 +14,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
-        collision_radius: {type: 'float', set: this.updateCollider}
+        collision_radius: {type: 'float', default: .25, set: this.updateCollider}
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -117,6 +117,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
+
+      this.updateCollider();
     }
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
@@ -615,10 +617,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.updateCollider = function() {
       if (this.objects['dynamics']) {
-        this.setCollider('sphere', {
-          radius: this.collision_radius,
-          offset: V(0, this.collision_radius / 2, 0)
-        });
+        if (this.collision_radius > 0) {
+          this.setCollider('sphere', {
+            radius: this.collision_radius,
+            offset: V(0, this.collision_radius, 0)
+          });
+        } else {
+          this.removeCollider();
+        }
       }
     }
     this.raycast = (function() {
