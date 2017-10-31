@@ -643,8 +643,8 @@ elation.require([
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.shadows = elation.utils.any(room.shadows, false);
-        this.properties.gravity = room.gravity || -9.8;
         this.properties.locked = room.locked;
+        this.gravity = elation.utils.any(room.gravity, 0);
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
@@ -1353,6 +1353,17 @@ elation.require([
     this.updateLocalAsset = function() {
       if (this.localasset) {
         this.localasset.col = this.col;
+      }
+    }
+    this.updateGravity = function() {
+      if (this.loaded) {
+        player.updateGravity(this.gravity);
+        this.gravityInitialized = true;
+      } else if (!this.gravityInitialized) {
+        elation.events.add(this, 'room_load_complete', elation.bind(this, function() {
+          player.updateGravity(this.gravity);
+        }));
+        this.gravityInitialized = true;
       }
     }
     this.save = function() {
