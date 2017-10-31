@@ -16,14 +16,16 @@ elation.require([], function() {
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
         var assetpath = datapath + 'assets/translator/errors/';
 
-        elation.engine.assets.loadJSON([
-          {assettype: 'model', name: 'stand', src: 'error.obj', tex: 'lightmap.png'},
-          {assettype: 'image', name: 'static', src: 'static.gif'}
-        ], assetpath);
-
         var error = this.errortypes[args.error] || this.errortypes['unknown'];
 
         var roomdata = {
+          assets: {
+            assetlist: [
+              {assettype: 'model', name: 'stand', src: 'error.obj', tex0: 'lightmap'},
+              {assettype: 'image', name: 'static', src: 'static.gif'},
+              {assettype: 'image', name: 'lightmap', src: 'lightmap.png'}
+            ]
+          },
           room: {
             pos: [0,0,0],
             xdir: "-1 0 0",
