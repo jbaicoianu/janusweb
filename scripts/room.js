@@ -124,6 +124,7 @@ elation.require([
       this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
       this.editObjectClick = elation.bind(this, this.editObjectClick);
       this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
+      this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       if (this.url) {
         this.roomid = md5(this.url);
@@ -140,7 +141,6 @@ elation.require([
 
       this.lastthink = 0;
       this.thinktime = 0;
-      elation.events.add(this, 'thing_think', elation.bind(this, this.onScriptTick));
     }
     this.createLights = function() {
       this.roomlights = {
@@ -701,6 +701,7 @@ elation.require([
         this.engine.systems.ai.add(this);
         elation.events.fire({type: 'room_enable', data: this});
       }
+      elation.events.add(this, 'thing_think', this.onScriptTick);
     }
     this.disable = function() {
       var keys = Object.keys(this.children);
@@ -715,6 +716,7 @@ elation.require([
         elation.events.fire({type: 'room_disable', data: this});
         this.enabled = false;
       }
+      elation.events.remove(this, 'thing_think', this.onScriptTick);
     }
     this.setTitle = function(title) {
       if (!title) title = 'Untitled Page';
@@ -960,7 +962,9 @@ elation.require([
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
+          realobj.room = this;
           this.add(realobj);
+          obj.start();
         }
       }
     }
@@ -972,7 +976,9 @@ elation.require([
       if (proxy) {
         var obj = this.getObjectFromProxy(proxy);
         if (obj && obj.parent) {
+          obj.stop();
           obj.parent.remove(obj);
+          realobj.room = false;
           if (obj.js_id && this.jsobjects[obj.js_id]) {
             delete this.jsobjects[obj.js_id];
           }
