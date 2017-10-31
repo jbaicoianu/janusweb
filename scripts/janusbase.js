@@ -7,7 +7,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
     this.postinit = function() {
       elation.engine.things.janusbase.extendclass.postinit.call(this);
-      this.frameupdates = [];
+      this.frameupdates = {};
       this.jschildren = [];
       this.assets = {};
       this.defineProperties({
@@ -47,6 +47,12 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         ongazeprogress: { type: 'callback' },
         ongazeactivate: { type: 'callback' },
       });
+      this.lastframevalues = {
+        xdir: new THREE.Vector3(1,0,0),
+        ydir: new THREE.Vector3(0,1,0),
+        zdir: new THREE.Vector3(0,0,1),
+        rotation: new THREE.Euler()
+      };
 
       this.eventlistenerproxies = {};
       //if (this.col) this.color = this.col;
@@ -360,96 +366,104 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       return this.assets;
     }
     this.start = function() {
+      elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
+      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
     }    
     this.stop = function() {
+      elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
+      elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
     }    
     this.pushFrameUpdate = function(key, value) {
-//console.log('frame update!', key, value);
-      this.frameupdates[key] = value;
+      this.frameupdates[key] = true;
     }
-    this.handleFrameUpdates = function(ev) {
-      this.dispatchEvent({type: 'update', data: ev.data});
-
-      var updatenames = Object.keys(this.frameupdates);
-      var xdir = this.properties.xdir,
-          ydir = this.properties.ydir,
-          zdir = this.properties.zdir,
-          m = this.objects['3d'].matrix.elements;
-      var diff = (
-          xdir.x != m[0] || xdir.y != m[1] || xdir.z != m[2] ||
-          ydir.x != m[4] || ydir.y != m[5] || ydir.z != m[6] ||
-          zdir.x != m[8] || zdir.y != m[9] || zdir.z != m[10]
-      );
-      if (updatenames.length > 0 || diff) {
-        var updates = this.frameupdates;
-        if ('rotation' in updates) {
-        }
-        if ('fwd' in updates) {
-          this.properties.zdir.copy(this.fwd);
-          updates.zdir = this.properties.zdir;
-        }
-
-        if ( ('xdir' in updates) && 
-            !('ydir' in updates) && 
-            !('zdir' in updates)) {
-          zdir.crossVectors(xdir, ydir);
-          this.updateVectors(true);
-        } 
-        if (!('xdir' in updates) && 
-            !('ydir' in updates) && 
-             ('zdir' in updates)) {
-          xdir.crossVectors(ydir, zdir);
-          this.updateVectors(true);
-        } 
-        if (!('xdir' in updates) && 
-             ('ydir' in updates) && 
-             ('zdir' in updates)) {
-          xdir.crossVectors(zdir, ydir);
-          this.updateVectors(true);
-        } 
-        if ( ('xdir' in updates) && 
-            !('ydir' in updates) && 
-             ('zdir' in updates)) {
-          ydir.crossVectors(xdir, zdir).multiplyScalar(-1);
-          this.updateVectors(true);
-        } 
-        if ( ('xdir' in updates) && 
-             ('ydir' in updates) && 
-            !('zdir' in updates)) {
-          zdir.crossVectors(xdir, ydir);
-          this.updateVectors(true);
-        } 
-
-        if (!('xdir' in updates) && 
-            !('ydir' in updates) && 
-            !('zdir' in updates)) {
-          // None specified, so update the vectors from the orientation quaternion
-          this.updateVectors(false);
-        }
-        this.frameupdates = {};
+    this.handleFrameStart = function() {
+      this.resetFrameUpdates();
+      if (!this.lastframerotation) {
+        this.lastframerotation = this.rotation.clone();
       } else {
-        this.updateVectors(false);
+        this.lastframerotation.copy(this.rotation);
       }
     }
-    this.updateVectors = (function() {
-      // Closure scratch variables
-      var mat4 = new THREE.Matrix4();
-      var quat = new THREE.Quaternion();
-      var pos = new THREE.Vector3();
-      var scale = new THREE.Vector3();
+    this.handleFrameUpdates = function(ev) {
+      if (this.hasScriptChangedDirvecs()) {
+        this.updateOrientationFromDirvecs();
+        this.updateEulerFromOrientation();
+      } else if (this.hasScriptChangedEuler()) {
+        this.updateOrientationFromEuler();
+        this.updateDirvecsFromOrientation();
+      } else if (this.hasPhysicsChangedOrientation()) {
+        this.updateEulerFromOrientation();
+        this.updateDirvecsFromOrientation();
+      }
+      this.resetFrameUpdates();
+      this.dispatchEvent({type: 'update', data: ev.data});
+      var proxy = this.getProxyObject();
+      if (typeof proxy.update == 'function') {
+        proxy.update();
+      }
+    }
+    this.updateOrientationFromDirvecs = (function() {
+      var tmpmat = new THREE.Matrix4(),
+          xdir = new THREE.Vector3(),
+          ydir = new THREE.Vector3(),
+          zdir = new THREE.Vector3();
+      return function() {
 
-      return function(updateOrientation) {
-        if (updateOrientation) {
-          mat4.makeBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
+    //SetYDir((dy - dz * QVector3D::dotProduct(dy, dz)).normalized());
+    //SetXDir(QVector3D::crossProduct(dy, dz));
 
-          quat.setFromRotationMatrix(mat4);
-          this.properties.orientation.copy(quat);
-          this.properties.rotation.setFromRotationMatrix(mat4);
-        } else if (this.objects['3d']) {
-          //this.objects['3d'].matrix.extractBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
-        }
-      };
+        ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(this.properties.zdir).multiplyScalar(this.properties.ydir.dot(this.properties.zdir))).normalize();
+        xdir.crossVectors(ydir, this.properties.zdir).normalize();
+
+
+        tmpmat.makeBasis(xdir, ydir, zdir);
+        this.properties.orientation.setFromRotationMatrix(tmpmat);
+//console.log(xdir, ydir, zdir, this.properties.xdir, this.properties.ydir, this.properties.zdir);
+        // Copy back the orthonormalized values
+        this.properties.xdir.copy(xdir);
+        this.properties.ydir.copy(ydir);
+        //this.properties.zdir.copy(zdir);
+      }
     })();
+    this.updateOrientationFromEuler = function() {
+      this.properties.orientation.setFromEuler(this.properties.rotation);
+    }
+    this.updateEulerFromOrientation = function() {
+      this.properties.rotation.setFromQuaternion(this.properties.orientation);
+    }
+    this.updateDirvecsFromOrientation = (function() {
+      var tmpmat = new THREE.Matrix4();
+      return function() {
+        tmpmat.makeRotationFromQuaternion(this.properties.orientation);
+        tmpmat.extractBasis(this.properties.xdir, this.properties.ydir, this.properties.zdir);
+      }
+    })();
+    this.hasScriptChangedDirvecs = function() {
+      var changes = this.frameupdates;
+      return (changes['xdir'] || changes['ydir'] || changes['zdir'] ||
+              !this.lastframevalues.xdir.equals(this.properties.xdir) ||
+              !this.lastframevalues.ydir.equals(this.properties.ydir) ||
+              !this.lastframevalues.zdir.equals(this.properties.zdir));
+    }
+    this.hasScriptChangedEuler = function() {
+      var changes = this.frameupdates;
+      return (changes['rotation'] || changes['rotation_dir'] || !this.lastframevalues.rotation.equals(this.properties.rotation));
+    }
+    this.hasPhysicsChangedOrientation = function() {
+      return false; // TODO
+    }
+    this.resetFrameUpdates = function() {
+      this.frameupdates['xdir'] = false;
+      this.frameupdates['ydir'] = false;
+      this.frameupdates['zdir'] = false;
+      this.frameupdates['rotation'] = false;
+      this.frameupdates['rotation_dir'] = false;
+
+      for (var k in this.lastframevalues) {
+        this.lastframevalues[k].copy(this.properties[k]);
+      }
+    }
+
     this.createObject = function(type, args) {
       return room.createObject(type, args, this);
     }
