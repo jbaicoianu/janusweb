@@ -79,20 +79,20 @@ elation.require([
       this.unknownElements = {};
       this.eventlistenerproxies = {};
 
-      if (this.engine.systems.admin) {
-        elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
-      }
-      //this.showDebug();
-      elation.events.add(window, 'click', elation.bind(this, this.onClick));
-      elation.events.add(window, 'keydown', elation.bind(this, this.onKeyDown));
-      elation.events.add(window, 'keyup', elation.bind(this, this.onKeyUp));
-
-      elation.events.add(this, 'click', elation.bind(this, this.onObjectClick));
-
-      elation.events.add(this.engine.client.container, 'mousedown,touchstart', elation.bind(this, this.onMouseDown));
-      elation.events.add(this.engine.client.container, 'mouseup,touchend', elation.bind(this, this.onMouseUp));
-      elation.events.add(this, 'dragover', elation.bind(this, this.handleDragOver));
-      elation.events.add(this, 'drop', elation.bind(this, this.handleDrop));
+      // FIXME - binding functions to this instance so we can unbind events later.  Should be done at a lower level
+      this.onRoomEdit = elation.bind(this, this.onRoomEdit);
+      this.onClick = elation.bind(this, this.onClick);
+      this.onKeyDown = elation.bind(this, this.onKeyDown);
+      this.onKeyUp = elation.bind(this, this.onKeyUp);
+      this.onObjectClick = elation.bind(this, this.onObjectClick);
+      this.onMouseDown = elation.bind(this, this.onMouseDown);
+      this.onMouseUp = elation.bind(this, this.onMouseUp);
+      this.handleDragOver = elation.bind(this, this.handleDragOver);
+      this.handleDragDrop = elation.bind(this, this.handleDragDrop);
+      this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
+      this.editObjectClick = elation.bind(this, this.editObjectClick);
+      this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
+      this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       this.roomedit = {
         snap: .1,
@@ -119,12 +119,6 @@ elation.require([
       this.engine.systems.controls.addContext('roomedit_togglemove', {
         'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
       });
-
-      // FIXME - these should be bound at the component level
-      this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
-      this.editObjectClick = elation.bind(this, this.editObjectClick);
-      this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
-      this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       if (this.url) {
         this.roomid = md5(this.url);
@@ -709,6 +703,18 @@ elation.require([
         elation.events.fire({type: 'room_enable', data: this});
       }
       elation.events.add(this, 'thing_think', this.onScriptTick);
+      if (this.engine.systems.admin) {
+        elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
+      }
+      //this.showDebug();
+      elation.events.add(window, 'click', this.onClick);
+      elation.events.add(window, 'keydown', this.onKeyDown);
+      elation.events.add(window, 'keyup', this.onKeyUp);
+      elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
+      elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+      elation.events.add(this, 'click', this.onObjectClick);
+      elation.events.add(this, 'dragover', this.handleDragOver);
+      elation.events.add(this, 'drop', this.handleDrop);
     }
     this.disable = function() {
       var keys = Object.keys(this.children);
@@ -724,6 +730,14 @@ elation.require([
         this.enabled = false;
       }
       elation.events.remove(this, 'thing_think', this.onScriptTick);
+      elation.events.remove(window, 'click', this.onClick);
+      elation.events.remove(window, 'keydown', this.onKeyDown);
+      elation.events.remove(window, 'keyup', this.onKeyUp);
+      elation.events.remove(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
+      elation.events.remove(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+      elation.events.remove(this, 'click', this.onObjectClick);
+      elation.events.remove(this, 'dragover', this.handleDragOver);
+      elation.events.remove(this, 'drop', this.handleDrop);
     }
     this.setTitle = function(title) {
       if (!title) title = 'Untitled Page';
