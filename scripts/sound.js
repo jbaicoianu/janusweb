@@ -83,6 +83,7 @@ elation.require(['janusweb.janusbase'], function() {
         }
         this.objects['3d'].add(this.audio);
       }
+      this.updateSound();
     }
     this.load = function(url) {
       this.src = url;
