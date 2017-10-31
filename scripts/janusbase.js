@@ -56,8 +56,14 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
       this.eventlistenerproxies = {};
       //if (this.col) this.color = this.col;
-      elation.events.add(this.room, 'janusweb_script_frame_end', elation.bind(this, this.handleFrameUpdates));
       this.colorIsDefault = true;
+
+      // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
+      this.handleFrameStart = elation.bind(this, this.handleFrameStart);
+      this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
+//      elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
+//      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
