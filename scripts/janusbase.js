@@ -26,8 +26,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         lighting: { type: 'boolean', default: true },
         sync:     { type: 'boolean', default: false },
         locked:   { type: 'boolean', default: false },
-        rotate_axis: { type: 'string', default: '0 1 0' },
-        rotate_deg_per_sec: { type: 'string' },
+        rotate_axis: { type: 'string', default: '0 1 0', set: this.updateRotationSpeed },
+        rotate_deg_per_sec: { type: 'float', default: 0, set: this.updateRotationSpeed },
         onclick: { type: 'object' },
         anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
@@ -139,17 +139,18 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.createForces = function() {
       elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
-
+      this.updateRotationSpeed();
+    }
+    this.updateRotationSpeed = function() {
       var rotate_axis = this.properties.rotate_axis,
-          rotate_speed = this.properties.rotate_deg_per_sec;
-      if (rotate_axis && rotate_speed) {
+          rotate_speed = this.properties.rotate_deg_per_sec || 0;
+      if (this.objects.dynamics && rotate_axis) {
         var speed = (rotate_speed * Math.PI/180);
         var axisparts = rotate_axis.split(' ');
         var axis = new THREE.Vector3().set(axisparts[0], axisparts[1], axisparts[2]);
         axis.multiplyScalar(speed);
         this.objects.dynamics.setAngularVelocity(axis);
       }
-
     }
     this.setProperties = function(props) {
       var n = this.janus.parser.parseNode(props);
