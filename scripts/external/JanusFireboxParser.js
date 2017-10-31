@@ -169,31 +169,24 @@ JanusFireboxParser.prototype.parseNode = function(n) {
 }
 
 JanusFireboxParser.prototype.getOrientation = function(xdir, ydir, zdir) {
-  if (xdir) xdir = (xdir instanceof THREE.Vector3 ? xdir : new THREE.Vector3().fromArray(xdir.split(' '))).normalize();
-  if (ydir) ydir = (ydir instanceof THREE.Vector3 ? ydir : new THREE.Vector3().fromArray(ydir.split(' '))).normalize();
-  if (zdir) zdir = (zdir instanceof THREE.Vector3 ? zdir : new THREE.Vector3().fromArray(zdir.split(' '))).normalize();
-
-  if (xdir && !ydir && !zdir) {
+  if (xdir) {
+    xdir = (xdir instanceof THREE.Vector3 ? xdir : new THREE.Vector3().fromArray(xdir.split(' '))).normalize();
+  } else {
+    xdir = new THREE.Vector3(1,0,0);
+  }
+  if (ydir) {
+    ydir = (ydir instanceof THREE.Vector3 ? ydir : new THREE.Vector3().fromArray(ydir.split(' '))).normalize();
+  } else {
     ydir = new THREE.Vector3(0,1,0);
-    zdir = new THREE.Vector3().crossVectors(xdir, ydir);
   }
-  if (!xdir && !ydir && zdir) {
-    ydir = new THREE.Vector3(0,1,0);
-    xdir = new THREE.Vector3().crossVectors(ydir, zdir);
+  if (zdir) {
+    zdir = (zdir instanceof THREE.Vector3 ? zdir : new THREE.Vector3().fromArray(zdir.split(' '))).normalize();
+  } else {
+    zdir = new THREE.Vector3(0,0,1);
   }
 
-  if (!xdir && ydir && zdir) {
-    xdir = new THREE.Vector3().crossVectors(zdir, ydir);
-  }
-  if (xdir && !ydir && zdir) {
-    ydir = new THREE.Vector3().crossVectors(xdir, zdir).multiplyScalar(-1);
-  }
-  if (xdir && ydir && !zdir) {
-    zdir = new THREE.Vector3().crossVectors(xdir, ydir);
-  }
-  if (!xdir) xdir = new THREE.Vector3(1,0,0);
-  if (!ydir) ydir = new THREE.Vector3(0,1,0);
-  if (!zdir) zdir = new THREE.Vector3(0,0,1);
+  var newydir = ydir.clone().sub(zdir).multiplyScalar(ydir.dot(zdir)).normalize();
+  xdir.crossVectors(ydir, zdir).normalize();
 
   var mat4 = new THREE.Matrix4().makeBasis(xdir, ydir, zdir);
   var quat = new THREE.Quaternion();
