@@ -343,6 +343,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 }
                 m.map = asset.getInstance();
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
+                elation.events.add(m.map, 'asset_load', elation.bind(this, function(m, asset, ev) {
+                  if (asset.hasalpha) {
+                    m.transparent = true;
+                    m.alphaTest = 0.02;
+                    m.needsUpdate = true;
+                  }
+                }, m, asset));
               }
               this.assignTextureParameters(m.map, modelasset, asset);
             }
