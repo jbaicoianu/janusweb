@@ -274,7 +274,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.body.properties.ydir.set(0,1,0);
           this.body.properties.xdir.crossVectors(this.body.properties.ydir, this.body.properties.zdir).normalize();
           this.body.properties.zdir.crossVectors(this.body.properties.xdir, this.body.properties.ydir).normalize();
-          this.body.updateVectors(true);
+          this.body.updateOrientationFromDirvecs();
         }
 
         if (movedata.avatar) {
