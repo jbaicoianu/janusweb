@@ -192,11 +192,13 @@ elation.require(['janusweb.janusbase'], function() {
       this.refresh();
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusimage.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        id:  [ 'property', 'image_id'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusimage.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          id:  [ 'property', 'image_id'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });

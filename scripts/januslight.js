@@ -81,19 +81,21 @@ elation.require(['janusweb.janusbase'], function() {
       this.light.shadow.bias = this.light_shadow_bias;
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        light_range:         [ 'property', 'light_range'],
-        light_intensity:     [ 'property', 'light_intensity'],
-        light_cone_angle:    [ 'property', 'light_cone_angle'],
-        light_cone_exponent: [ 'property', 'light_cone_exponent'],
-        light_shadow:        [ 'property', 'light_shadow'],
-        light_shadow_near:   [ 'property', 'light_shadow_near'],
-        light_shadow_far:    [ 'property', 'light_shadow_far'],
-        light_shadow_bias:   [ 'property', 'light_shadow_bias'],
-        light_shadow_radius: [ 'property', 'light_shadow_radius'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          light_range:         [ 'property', 'light_range'],
+          light_intensity:     [ 'property', 'light_intensity'],
+          light_cone_angle:    [ 'property', 'light_cone_angle'],
+          light_cone_exponent: [ 'property', 'light_cone_exponent'],
+          light_shadow:        [ 'property', 'light_shadow'],
+          light_shadow_near:   [ 'property', 'light_shadow_near'],
+          light_shadow_far:    [ 'property', 'light_shadow_far'],
+          light_shadow_bias:   [ 'property', 'light_shadow_bias'],
+          light_shadow_radius: [ 'property', 'light_shadow_radius'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });

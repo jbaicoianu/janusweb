@@ -154,19 +154,21 @@ elation.require(['janusweb.janusbase'], function() {
       }
     })();
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        id:           [ 'property', 'sound_id'],
-        gain:         [ 'property', 'gain'],
-        pitch:        [ 'property', 'pitch'],
-        auto_play:    [ 'property', 'auto_play'],
-        playing:      [ 'property', 'playing'],
-        play:         [ 'function', 'play'],
-        pause:        [ 'function', 'pause'],
-        stop:         [ 'function', 'stop'],
-        seek:         [ 'function', 'seek'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          id:           [ 'property', 'sound_id'],
+          gain:         [ 'property', 'gain'],
+          pitch:        [ 'property', 'pitch'],
+          auto_play:    [ 'property', 'auto_play'],
+          playing:      [ 'property', 'playing'],
+          play:         [ 'function', 'play'],
+          pause:        [ 'function', 'pause'],
+          stop:         [ 'function', 'stop'],
+          seek:         [ 'function', 'seek'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });

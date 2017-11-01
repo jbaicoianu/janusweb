@@ -165,13 +165,15 @@ GEOMCACHE[text] = geometry;
       this.objects['3d'].geometry = geometry;
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janustext.extendclass.getProxyObject.call(this, classdef);
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janustext.extendclass.getProxyObject.call(this, classdef);
 
-      proxy._proxydefs = {
-        text:  [ 'property', 'text'],
-        emissive:  [ 'property', 'emissive'],
-      };
-      return proxy;
+        this._proxyobject._proxydefs = {
+          text:  [ 'property', 'text'],
+          emissive:  [ 'property', 'emissive'],
+        };
+      }
+      return this._proxyobject;
     }
     this.updateMaterial = function() {
       if (this.material) {

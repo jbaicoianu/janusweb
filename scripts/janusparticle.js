@@ -354,22 +354,24 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        vel:  [ 'property', 'particle_vel'],
-        accel:  [ 'property', 'particle_accel'],
-        rand_pos:  [ 'property', 'rand_pos'],
-        rand_vel:  [ 'property', 'rand_vel'],
-        rand_accel:  [ 'property', 'rand_accel'],
-        rand_col:  [ 'property', 'rand_col'],
-        particle_vel:  [ 'property', 'particle_vel'],
-        emitter_id:  [ 'property', 'emitter_id'],
-        emitter_scale:  [ 'property', 'emitter_scale'],
-        emitter_pos:  [ 'property', 'emitter_pos'],
-        opacity:  [ 'property', 'opacity'],
-        play:  [ 'function', 'start'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          vel:  [ 'property', 'particle_vel'],
+          accel:  [ 'property', 'particle_accel'],
+          rand_pos:  [ 'property', 'rand_pos'],
+          rand_vel:  [ 'property', 'rand_vel'],
+          rand_accel:  [ 'property', 'rand_accel'],
+          rand_col:  [ 'property', 'rand_col'],
+          particle_vel:  [ 'property', 'particle_vel'],
+          emitter_id:  [ 'property', 'emitter_id'],
+          emitter_scale:  [ 'property', 'emitter_scale'],
+          emitter_pos:  [ 'property', 'emitter_pos'],
+          opacity:  [ 'property', 'opacity'],
+          play:  [ 'function', 'start'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });

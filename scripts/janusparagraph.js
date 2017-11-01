@@ -106,14 +106,16 @@ elation.require(['janusweb.janusbase'], function() {
       return texture;
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusparagraph.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        text:  [ 'property', 'text'],
-        text_col:  [ 'property', 'text_col'],
-        back_col:  [ 'property', 'back_col'],
-        back_opacity:  [ 'property', 'back_opacity'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusparagraph.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          text:  [ 'property', 'text'],
+          text_col:  [ 'property', 'text_col'],
+          back_col:  [ 'property', 'back_col'],
+          back_opacity:  [ 'property', 'back_opacity'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });

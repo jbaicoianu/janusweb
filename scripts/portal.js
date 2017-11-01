@@ -276,13 +276,15 @@ elation.require(['janusweb.janusbase'], function() {
       this.unhover();
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        url: ['property', 'url'],
-        title: ['property', 'title'],
-        thumb_id: ['property', 'thumb_id'],
-      };
-      return proxy;
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          url: ['property', 'url'],
+          title: ['property', 'title'],
+          thumb_id: ['property', 'thumb_id'],
+        };
+      }
+      return this._proxyobject;
     }
     this.openPortal = function() {
       if (!this.portalroom) {

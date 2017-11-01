@@ -601,36 +601,36 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       return 0;
     }
     this.getProxyObject = function(classdef) {
-      var proxy = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
-      proxy._proxydefs = {
-        id:  [ 'property', 'janusid'],
-        url:  [ 'property', 'url'],
-        image_id:  [ 'property', 'image_id'],
-        video_id:  [ 'property', 'video_id'],
-        lmap_id:  [ 'property', 'lmap_id'],
-        envmap_id:  [ 'property', 'envmap_id'],
-        websurface_id:  [ 'property', 'websurface_id'],
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          id:  [ 'property', 'janusid'],
+          url:  [ 'property', 'url'],
+          image_id:  [ 'property', 'image_id'],
+          video_id:  [ 'property', 'video_id'],
+          lmap_id:  [ 'property', 'lmap_id'],
+          envmap_id:  [ 'property', 'envmap_id'],
+          websurface_id:  [ 'property', 'websurface_id'],
 
-        lighting: [ 'property', 'lighting' ],
-        shadow: [ 'property', 'shadow' ],
-        shadow_receive: [ 'property', 'shadow_receive' ],
-        shadow_cast: [ 'property', 'shadow_cast' ],
-        cull_face: [ 'property', 'cull_face' ],
-        blend_src: [ 'property', 'blend_src' ],
-        blend_dest: [ 'property', 'blend_dest' ],
+          lighting: [ 'property', 'lighting' ],
+          shadow: [ 'property', 'shadow' ],
+          shadow_receive: [ 'property', 'shadow_receive' ],
+          shadow_cast: [ 'property', 'shadow_cast' ],
+          cull_face: [ 'property', 'cull_face' ],
+          blend_src: [ 'property', 'blend_src' ],
+          blend_dest: [ 'property', 'blend_dest' ],
 
-        // vide properties/functions
-        current_time: [ 'accessor', 'getCurrentTime'],
-        total_time: [ 'accessor', 'getTotalTime'],
-        isPlaying: [ 'function', 'isPlaying'],
-        play:    [ 'function', 'play'],
-        pause:   [ 'function', 'pause'],
-        toggle:  [ 'function', 'togglePlay'],
-        seek:    [ 'function', 'seek'],
-
-
-      };
-      return proxy;
+          // vide properties/functions
+          current_time: [ 'accessor', 'getCurrentTime'],
+          total_time: [ 'accessor', 'getTotalTime'],
+          isPlaying: [ 'function', 'isPlaying'],
+          play:    [ 'function', 'play'],
+          pause:   [ 'function', 'pause'],
+          toggle:  [ 'function', 'togglePlay'],
+          seek:    [ 'function', 'seek'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });
