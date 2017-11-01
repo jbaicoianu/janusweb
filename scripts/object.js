@@ -25,6 +25,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
+      this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
       if (this.anim_id) {
         this.setAnimation(this.anim_id);
       }
