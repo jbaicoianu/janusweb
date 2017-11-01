@@ -437,16 +437,17 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           zdir = new THREE.Vector3();
       return function() {
 
-    //SetYDir((dy - dz * QVector3D::dotProduct(dy, dz)).normalized());
-    //SetXDir(QVector3D::crossProduct(dy, dz));
+        // Determine ydir and xdir given the specified zdir.  Based on the following code from the native client:
+        //    SetYDir((dy - dz * QVector3D::dotProduct(dy, dz)).normalized());
+        //    SetXDir(QVector3D::crossProduct(dy, dz));
 
         ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(this.properties.zdir).multiplyScalar(this.properties.ydir.dot(this.properties.zdir))).normalize();
         xdir.crossVectors(ydir, this.properties.zdir).normalize();
 
 
-        tmpmat.makeBasis(xdir, ydir, zdir);
+        tmpmat.makeBasis(xdir, ydir, this.properties.zdir);
         this.properties.orientation.setFromRotationMatrix(tmpmat);
-//console.log(xdir, ydir, zdir, this.properties.xdir, this.properties.ydir, this.properties.zdir);
+
         // Copy back the orthonormalized values
         this.properties.xdir.copy(xdir);
         this.properties.ydir.copy(ydir);
