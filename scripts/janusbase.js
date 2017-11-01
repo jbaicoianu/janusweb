@@ -382,12 +382,24 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       return this.assets;
     }
     this.start = function() {
-      elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
-      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+      if (!this.started) {
+        elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
+        elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        this.started = true;
+      }
+      for (var k in this.children) {
+        this.children[k].start();
+      }
     }    
     this.stop = function() {
-      elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
-      elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+      for (var k in this.children) {
+        this.children[k].stop();
+      }
+      if (this.started) {
+        elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
+        elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        this.started = false;
+      }
     }    
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
@@ -497,6 +509,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         if (realobj) {
           this.add(realobj);
           this.updateScriptChildren();
+          realobj.start();
         }
       }
     }
@@ -509,6 +522,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
+          realobj.stop();
           this.remove(realobj);
           this.updateScriptChildren();
         }
