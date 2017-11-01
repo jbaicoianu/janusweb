@@ -137,7 +137,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           });
         }
         this.video = texture.image;
-        elation.events.add(this, elation.bind(this, this.handleVideoClick));
+        elation.events.add(this, 'click', elation.bind(this, this.handleVideoClick));
         this.room.videos[videoid] = this;
       }
     }
