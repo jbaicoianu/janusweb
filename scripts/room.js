@@ -1002,7 +1002,7 @@ elation.require([
         if (obj && obj.parent) {
           obj.stop();
           obj.parent.remove(obj);
-          realobj.room = false;
+          obj.room = false;
           if (obj.js_id && this.jsobjects[obj.js_id]) {
             delete this.jsobjects[obj.js_id];
           }
