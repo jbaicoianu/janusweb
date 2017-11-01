@@ -33,6 +33,10 @@ elation.require(['engine.things.generic'], function() {
       this.deactivate = elation.bind(this, this.deactivate);
       this.activate = elation.bind(this, this.activate);
 
+      // Used for debouncing clicks
+      this.lastinteraction = performance.now();
+      this.cooldown = 200;
+
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
       elation.events.add(this, 'click', elation.bind(this, this.click));
@@ -107,20 +111,26 @@ elation.require(['engine.things.generic'], function() {
 setTimeout(elation.bind(this, function() {
         elation.events.add(window, 'click,dragover,focus', this.deactivate);
 }), 10);
+        this.lastinteraction = performance.now();
       }
     }
-    this.deactivate = function() {
+    this.deactivate = function(ev) {
       if (this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'all';
+        console.log('request plock!', this.engine.systems.controls.pointerLockActive);
         this.engine.systems.controls.requestPointerLock();
+        ev.stopPropagation();
+        ev.preventDefault();
         this.selection.visible = false;
         this.active = false;
         elation.events.remove(window, 'click,dragover,focus', this.deactivate);
+        this.lastinteraction = performance.now();
       }
     }
     this.click = function(ev) {
-      if (!this.active && ev.button == 0) {
+      var now = performance.now();
+      if (!this.active && ev.button == 0 && now - this.lastinteraction > this.cooldown) {
         this.activate();
         ev.stopPropagation();
         ev.preventDefault();
