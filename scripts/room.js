@@ -700,6 +700,16 @@ elation.require([
       if (!this.enabled) {
         this.enabled = true;
         this.engine.systems.ai.add(this);
+
+        elation.events.add(window, 'click', this.onClick);
+        elation.events.add(window, 'keydown', this.onKeyDown);
+        elation.events.add(window, 'keyup', this.onKeyUp);
+        elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
+        elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+        elation.events.add(this, 'click', this.onObjectClick);
+        elation.events.add(this, 'dragover', this.handleDragOver);
+        elation.events.add(this, 'drop', this.handleDrop);
+
         elation.events.fire({type: 'room_enable', data: this});
       }
       elation.events.add(this, 'thing_think', this.onScriptTick);
@@ -707,14 +717,6 @@ elation.require([
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
       }
       //this.showDebug();
-      elation.events.add(window, 'click', this.onClick);
-      elation.events.add(window, 'keydown', this.onKeyDown);
-      elation.events.add(window, 'keyup', this.onKeyUp);
-      elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
-      elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
-      elation.events.add(this, 'click', this.onObjectClick);
-      elation.events.add(this, 'dragover', this.handleDragOver);
-      elation.events.add(this, 'drop', this.handleDrop);
     }
     this.disable = function() {
       var keys = Object.keys(this.children);
@@ -728,16 +730,17 @@ elation.require([
         this.engine.systems.ai.remove(this);
         elation.events.fire({type: 'room_disable', data: this});
         this.enabled = false;
+
+        elation.events.remove(this, 'thing_think', this.onScriptTick);
+        elation.events.remove(window, 'click', this.onClick);
+        elation.events.remove(window, 'keydown', this.onKeyDown);
+        elation.events.remove(window, 'keyup', this.onKeyUp);
+        elation.events.remove(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
+        elation.events.remove(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+        elation.events.remove(this, 'click', this.onObjectClick);
+        elation.events.remove(this, 'dragover', this.handleDragOver);
+        elation.events.remove(this, 'drop', this.handleDrop);
       }
-      elation.events.remove(this, 'thing_think', this.onScriptTick);
-      elation.events.remove(window, 'click', this.onClick);
-      elation.events.remove(window, 'keydown', this.onKeyDown);
-      elation.events.remove(window, 'keyup', this.onKeyUp);
-      elation.events.remove(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
-      elation.events.remove(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
-      elation.events.remove(this, 'click', this.onObjectClick);
-      elation.events.remove(this, 'dragover', this.handleDragOver);
-      elation.events.remove(this, 'drop', this.handleDrop);
     }
     this.setTitle = function(title) {
       if (!title) title = 'Untitled Page';
