@@ -388,12 +388,16 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         this.started = true;
       }
       for (var k in this.children) {
-        this.children[k].start();
+        if (this.children[k].start) {
+          this.children[k].start();
+        }
       }
     }    
     this.stop = function() {
       for (var k in this.children) {
-        this.children[k].stop();
+        if (this.children[k].stop) {
+          this.children[k].stop();
+        }
       }
       if (this.started) {
         elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
