@@ -317,6 +317,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         v.view_zdir.negate();
       }
 
+      if (this.gazecaster) {
+        this.gazecaster.update();
+      }
       if (this.gaze && this.gaze.object) {
         var now = performance.now();
         var gazetime = 1000;
