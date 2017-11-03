@@ -709,10 +709,10 @@ elation.require([
         elation.events.add(this, 'click', this.onObjectClick);
         elation.events.add(this, 'dragover', this.handleDragOver);
         elation.events.add(this, 'drop', this.handleDrop);
+        elation.events.add(this, 'thing_think', this.onScriptTick);
 
         elation.events.fire({type: 'room_enable', data: this});
       }
-      elation.events.add(this, 'thing_think', this.onScriptTick);
       if (this.engine.systems.admin) {
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
       }
