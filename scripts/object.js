@@ -447,7 +447,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
         m.roughnessMap = oldmat.specularMap;
-        m.roughness = (oldmat.roughness !== undefined ? oldmat.roughness : .6);
+        if (oldmat.roughness !== undefined) {
+          m.roughness = oldmat.roughness;
+        } else if (oldmat.shininess !== undefined) {
+          m.roughness = 1 - oldmat.shininess / 512;
+        } else {
+          m.roughness = 0.6;
+        }
         if (this.isUsingPBR()) {
           m.envMap = this.getEnvmap();
         }
