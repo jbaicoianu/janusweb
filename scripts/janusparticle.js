@@ -36,7 +36,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.started = false;
       this.pickable = false;
       this.collidable = false;
-
+      this.lastboundingsphereupdate = 0;
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
     this.createObject3D = function() {
@@ -152,9 +152,6 @@ elation.require(['janusweb.janusbase'], function() {
       this.lasttime = performance.now();
 
       this.updateBoundingSphere();
-      if (this.duration > 0) {
-        setInterval(elation.bind(this, this.updateBoundingSphere), this.duration * 1000);
-      }
     }
     this.resetParticles = function() {
       var geo = this.geometry;
@@ -212,6 +209,11 @@ elation.require(['janusweb.janusbase'], function() {
 
       this.geometry.attributes.position.needsUpdate = true;
       this.geometry.attributes.color.needsUpdate = true;
+
+      if (now - this.lastboundingsphereupdate > this.duration * 1000) {
+        this.updateBoundingSphere();
+        this.lastboundingsphereupdate = now;
+      }
       this.refresh();
     }
     this.updateBoundingSphere = function() {
