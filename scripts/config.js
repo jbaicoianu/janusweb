@@ -1,6 +1,6 @@
 elation.config.set('janusweb.network.host', 'wss://presence.janusvr.com:5567');        // Default presence server
 elation.config.set('engine.assets.corsproxy', 'https://p.janusvr.com/'); // CORS proxy URL
-elation.config.set('engine.assets.workers', (navigator.hardwareConcurrency ? navigator.hardwareConcurrency - 1 : 4)); // Number of workers to use for asset parsing
+elation.config.set('engine.assets.workers', 'auto'); // Number of workers to use for asset parsing
 //elation.config.set('engine.assets.image.maxsize', 16384); 
 elation.config.set('engine.assets.image.anisotropy', 16); 
 elation.config.set('engine.assets.image.mipmaps', true); 
