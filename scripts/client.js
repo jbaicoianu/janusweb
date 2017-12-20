@@ -239,7 +239,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       get fullscreen() {
         return this.getAttribute('fullscreen');
       }
-      set autostart(fullscreen) {
+      set fullscreen(fullscreen) {
         return this.setAttribute('fullscreen', fullscreen);
       }
       get autostart() {
