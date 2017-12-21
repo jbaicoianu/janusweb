@@ -235,41 +235,41 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
   }, elation.engine.client);
 
   if (typeof customElements != 'undefined') {
-    elation.extend('janusweb.viewer.base', class extends HTMLElement {
+    elation.extend('janusweb.viewer.base', Object.create( HTMLElement, {
       get fullscreen() {
         return this.getAttribute('fullscreen');
-      }
+      },
       set fullscreen(fullscreen) {
         return this.setAttribute('fullscreen', fullscreen);
-      }
+      },
       get autostart() {
         return this.getAttribute('autostart');
-      }
+      },
       set autostart(autostart) {
         return this.setAttribute('autostart', autostart);
-      }
+      },
       get src() {
         return this.getAttribute('src');
-      }
+      },
       set src(src) {
         return this.setAttribute('src', src);
-      }
+      },
       get width() {
         return this.getAttribute('width') || 640;
-      }
+      },
       set width(width) {
         return this.setAttribute('width', width);
-      }
+      },
       get height() {
         return this.getAttribute('height') || 480;
-      }
+      },
       set height(height) {
         return this.setAttribute('height', width);
-      }
-      connectedCallback() {
+      },
+      connectedCallback : function() {
         this.init();
-      }
-      init() {
+      },
+      init : function() {
         var iframe = document.createElement('iframe');
         var fullscreen = this.fullscreen;
         iframe.width = (this.fullscreen ? window.innerWidth : this.width);
@@ -292,8 +292,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         }
         content.document.write('</body></html>');
         content.document.close();
-      }
-      getClientArgs() {
+      },
+      getClientArgs : function() {
         var fullscreen = this.fullscreen,
             width = (this.fullscreen ? window.innerWidth : this.width),
             height = (this.fullscreen ? window.innerHeight : this.height);
@@ -303,45 +303,45 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           shownavigation: false,
         };
         return args;
-      }
-      getRoomURL() {
+      },
+      getRoomURL : function() {
         return this.src || document.location.href;
       }
-    });
+    }));
     customElements.define('janus-viewer', elation.janusweb.viewer.base);
 
-    elation.extend('janusweb.viewer.image360', class extends elation.janusweb.viewer.base {
-      getRoomURL() {
+    elation.extend('janusweb.viewer.image360', Object.create( elation.janusweb.viewer.base, {
+      getRoomURL : function() {
         return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetimage id="image360" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" image_id="image360" lighting="false" /></room></fireboxroom>');
       }
-    });
+    }));
     customElements.define('janus-viewer-image360', elation.janusweb.viewer.image360);
 
-    elation.extend('janusweb.viewer.video', class extends elation.janusweb.viewer.base {
+    elation.extend('janusweb.viewer.video', Object.create( elation.janusweb.viewer.base, {
       get loop() {
         return this.getAttribute('loop');
-      }
+      },
       set loop(loop) {
         return this.setAttribute('loop', loop);
-      }
-      getRoomURL() {
+      },
+      getRoomURL : function() {
         return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room use_local_asset="room1" skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><Video video_id="video" pos="0 2.5 -5" scale="4 2.5 .1" lighting="false" /></room></fireboxroom>');
       }
-    });
+    }));
     customElements.define('janus-viewer-video', elation.janusweb.viewer.video);
 
-    elation.extend('janusweb.viewer.video360', class extends elation.janusweb.viewer.video {
-      getRoomURL() {
+    elation.extend('janusweb.viewer.video360', Object.create( elation.janusweb.viewer.video, {
+      getRoomURL : function() {
         return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video360" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" video_id="video360" lighting="false" /></room></fireboxroom>');
       }
-    });
+    }));
     customElements.define('janus-viewer-video360', elation.janusweb.viewer.video360);
 
-    elation.extend('janusweb.viewer.model', class extends elation.janusweb.viewer.base {
-      getRoomURL() {
+    elation.extend('janusweb.viewer.model', Object.create( elation.janusweb.viewer.base, {
+      getRoomURL : function() {
         return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetobject id="model" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="model" lighting="true" pos="0 0 -5" rotate_deg_per_sec="10" /></room></fireboxroom>');
       }
-    });
+    }));
     customElements.define('janus-viewer-model', elation.janusweb.viewer.model);
   }
 });
