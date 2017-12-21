@@ -17,15 +17,15 @@
     "jasmine-core": "*",
     "karma-jasmine": "*",
     "karma-jasmine-imagediff": "*",
-    "karma-chrome-launcher": "*",
-    "uglify-es": "*"
+    "karma-chrome-launcher": "*"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/jbaicoianu/janusweb"
   },
   "dependencies": {
-    "elation-engine": ">=0.9.3"
+    "elation-engine": ">=0.9.3",
+    "uglify-es": "*"
   },
   "keywords": [
     "elation",
