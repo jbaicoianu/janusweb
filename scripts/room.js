@@ -89,7 +89,7 @@ elation.require([
       this.onMouseDown = elation.bind(this, this.onMouseDown);
       this.onMouseUp = elation.bind(this, this.onMouseUp);
       this.handleDragOver = elation.bind(this, this.handleDragOver);
-      this.handleDragDrop = elation.bind(this, this.handleDragDrop);
+      this.handleDrop = elation.bind(this, this.handleDrop);
       this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
       this.editObjectClick = elation.bind(this, this.editObjectClick);
       this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
