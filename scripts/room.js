@@ -11,6 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'deferload': { type: 'boolean', default: false },
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
@@ -122,7 +123,9 @@ elation.require([
 
       if (this.url) {
         this.roomid = md5(this.url);
-        this.load(this.url, this.baseurl);
+        if (!this.deferload) {
+          this.load(this.url, this.baseurl);
+        }
       } else if (this.source) {
         this.loadFromSource(this.source);
       }
