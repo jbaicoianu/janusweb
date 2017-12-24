@@ -199,17 +199,30 @@ JanusFireboxParser.prototype.getOrientation = function(xdir, ydir, zdir) {
   return quat;
 }
 JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
-  var node, root, parent;
+  var node, root, parent, xmldoc;
   if (imgxml.nodeName) {
-    node = imgxml;
+    xmldoc = node = imgxml;
   } else {
-    if (window.DOMParser) {
-      var parser = new DOMParser();
-      node = parser.parseFromString(imgxml,"application/xml").firstChild;
-    } else {
-      node = new ActiveXObject("Microsoft.XMLDOM");
-      node.async = "false";
-      node.loadXML(imgxml).firstChild; 
+    try {
+      if (window.DOMParser) {
+        var parser = new DOMParser();
+        xmldoc = parser.parseFromString(imgxml,"application/xml");
+        node = xmldoc.firstChild;
+      } else {
+        node = new ActiveXObject("Microsoft.XMLDOM");
+        node.async = "false";
+        node.loadXML(imgxml).firstChild;
+      }
+
+      // Chrome doesn't throw an exception for malformed XML, so we look for a <parsererror> xml tag
+      var parsererrors = node.getElementsByTagName("parsererror");
+      if (parsererrors.length > 0) {
+        // Extract the message from the first div child of the <parsererror> element
+        var errorel = parsererrors[0].getElementsByTagName('div')[0] || parsererrors[0];
+        throw new JanusFireboxParserException(errorel.innerHTML);
+      }
+    } catch (e) {
+      throw new JanusFireboxParserException(e.message);
     }
   }
   root = {};
@@ -296,3 +309,10 @@ JanusFireboxParser.prototype.fixURLEncoding = function(url) {
   }
   return fixed;
 };
+
+/**
+ * Exception class for XML parse errors
+ */
+function JanusFireboxParserException(msg) {
+  this.message = msg;
+}
