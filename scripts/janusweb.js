@@ -138,7 +138,7 @@ elation.require([
         networkstatus:     ['property', 'network.status', {readonly: true}],
         networkerror:      ['property', 'network.error', {readonly: true}],
         roomserver:        ['property', 'network.server'],
-        playercount:       ['property', 'playerCount'],
+        playercount:       ['property', 'network.playerCount'],
         bookmarkurl:       ['property', 'bookmarks.items'],
         bookmarkthumb:     ['property', 'bookmarks.items'], // FIXME - need to filter?
         playerlist:        ['property', ''],
