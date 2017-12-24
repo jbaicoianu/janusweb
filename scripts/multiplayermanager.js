@@ -21,6 +21,8 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       this.enabled = false;
       this.player = this.args.player;
       this.parser = new JanusFireboxParser();
+      this.playerCount = 1;
+      this.remotePlayerCount = 0;
 
       this.avatarNeedsUpdate = true;
       this.avatarUpdateRate = 5000;
@@ -169,8 +171,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         tmpMat.makeRotationFromQuaternion(player.properties.orientation);
         tmpMat.extractBasis(tmpVecX, tmpVecY, tmpVecZ);
         var ret = {
-          dir: tmpVecZ.clone().negate().toArray().join(' '),
-          //up_dir: this.tmpVecY.toArray().join(' '),
+          dir: (-tmpVecZ.x) + ' ' + (-tmpVecZ.y) + ' ' + (-tmpVecZ.z),
           up_dir: '0 1 0',
           //view_dir: this.tmpVecZ.toArray().join(' ')
         }
@@ -178,7 +179,8 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
           //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
           tmpMat.copy(head.objects['3d'].matrixWorld);
           tmpMat.extractBasis(tmpVecX, tmpVecY, tmpVecZ);
-          ret.view_dir = tmpVecZ.clone().negate().toArray().join(' ');
+          ret.view_dir = (-tmpVecZ.x) + ' ' + (-tmpVecZ.y) + ' ' + (-tmpVecZ.z),
+
           ret.up_dir = tmpVecY.toArray().join(' ');
           var headpos = head.properties.position.clone();//.sub(new THREE.Vector3(0,1.3,0));
           headpos.x *= -1;
@@ -207,35 +209,48 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       if (!server.loggedin) return;
 
       var dirs = this.getJanusOrientation(player, player.head)
-      var moveData = {
-        "pos": player.properties.position.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" "),
-        "vel": player.properties.velocity.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" "),
-        "rotvel": player.properties.angular.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" "),
-        "dir": dirs.dir,
-        "up_dir": dirs.up_dir,
-        "view_dir": dirs.view_dir,
-        "head_pos": dirs.head_pos,
-        "anim_id": player.getAnimationID()
+      if (!this.movedata) {
+        this.movedata = {};
       }
+      var moveData = this.movedata;
+      moveData.pos = player.properties.position.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
+      moveData.vel = player.properties.velocity.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
+      moveData.rotvel = player.properties.angular.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
+      moveData.dir = dirs.dir;
+      moveData.up_dir = dirs.up_dir;
+      moveData.view_dir = dirs.view_dir;
+      moveData.head_pos = dirs.head_pos;
+      moveData.anim_id = player.getAnimationID();
 
       //console.log('[MultiplayerManager] player update', moveData);
       if (this.avatarNeedsUpdate || player.avatarNeedsUpdate) {
-        moveData["avatar"] = player.getAvatarData().replace(/"/g, "^");
+        moveData.avatar = player.getAvatarData().replace(/"/g, "^");
         this.avatarNeedsUpdate = false
         player.avatarNeedsUpdate = false
+      } else if (moveData.avatar) {
+        delete moveData.avatar;
       }
 
       if (player.hasVoipData()) {
         var voipdata = player.getVoipData();
         moveData.speaking = true;
         moveData.audio = window.btoa(voipdata);
+      } else {
+        moveData.speaking = false;
+        if (moveData.audio) {
+          delete moveData.audio;
+        }
       }
 
       if (room.hasChanges()) {
         moveData.room_edit = room.getChanges().replace(/"/g, "^");
+      } else if (moveData.room_edit) {
+        delete moveData.room_edit;
       }
       if (room.hasDeletions()) {
         moveData.room_delete = room.getDeletions().replace(/"/g, "^");
+      } else if (moveData.room_delete) {
+        delete moveData.room_delete;
       }
 
       if (player.hasHands()) {
