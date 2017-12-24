@@ -65,6 +65,11 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 //      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
 
     }
+    this.createChildren = function() {
+      if (typeof this.create == 'function') {
+        this.create();
+      }
+    }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
         if (this.color.r != 1 || this.color.g != 1 || this.color.b != 1) {
