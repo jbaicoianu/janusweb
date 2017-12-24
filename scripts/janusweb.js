@@ -234,6 +234,7 @@ elation.require([
       }
       window.print = function() {
         console.log.apply(console, arguments);
+        janus._target.chat.addmessage({userId: 'room', message: arguments[0]});
       }
       window.debug = function() {
         console.log.apply(console, arguments);
