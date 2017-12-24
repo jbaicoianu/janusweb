@@ -5,6 +5,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       this.defineProperties({
         ghost_id: { type: 'string' },
         ghost_src: { type: 'string' },
+        avatar_src: { type: 'string' },
         head_id: { type: 'string' },
         head_pos: { type: 'vector3', default: [0,1,0] },
         body_id: { type: 'string' },
@@ -44,6 +45,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           }
         }
       }
+
       return new THREE.Object3D();
     }
     this.isURLLocal = function(src) {
@@ -83,6 +85,15 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         pickable: false,
         collidable: false
       });
+
+      if (this.avatar_src) {
+        elation.net.get(this.avatar_src, null, {
+          callback: elation.bind(this, function(data) {
+            this.setAvatar(data);
+            this.refresh();
+          })
+        });
+      }
     }
     this.setGhostAssets = function(assets) {
       this.ghostassets = assets;
