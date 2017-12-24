@@ -73,7 +73,7 @@ elation.require(['janusweb.janusbase'], function() {
               if (buffer) {
                 soundcache[src] = buffer;
                 this.audio.setBuffer(buffer);
-                if (this.auto_play || this.playStarted) {
+                if ((this.auto_play || this.playStarted) && this.room == this.janus.currentroom) {
                   this.play();
                 }
               }
