@@ -214,6 +214,24 @@ elation.require([
       window.equals = function(v1, v2) {
         return v1.equals(v2);
       }
+      window.copy = function(v1, x, y, z) {
+        if (x instanceof THREE.Vector3) {
+          v1.copy(x);
+        } else if (elation.utils.isnumeric(x)) {
+          if (typeof y != 'undefined' && typeof z != 'undefined') {
+            v1.set(x, y, z);
+          } else {
+            v1.set(x, x, x);
+          }
+        }
+        return v1;
+      }
+      window.add = function(v1, v2) {
+        return v1.add(v2);
+      }
+      window.scale = function(v1, s) {
+        return v1.multiplyScalar(s);
+      }
       window.print = function() {
         console.log.apply(console, arguments);
       }
