@@ -416,9 +416,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     this.handleFrameStart = function() {
       this.resetFrameUpdates();
       if (!this.lastframerotation) {
-        this.lastframerotation = this.rotation.clone();
+        this.lastframerotation = this.properties.rotation.clone();
       } else {
-        this.lastframerotation.copy(this.rotation);
+        this.lastframerotation.copy(this.properties.rotation);
       }
     }
     this.handleFrameUpdates = function(ev) {
