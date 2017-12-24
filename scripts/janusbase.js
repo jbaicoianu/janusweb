@@ -436,7 +436,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.dispatchEvent({type: 'update', data: ev.data});
       var proxy = this.getProxyObject();
       if (typeof proxy.update == 'function') {
-        proxy.update();
+        proxy.update(ev.data);
       }
     }
     this.updateOrientationFromDirvecs = (function() {
