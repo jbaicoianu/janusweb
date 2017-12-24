@@ -274,7 +274,9 @@ elation.require([
           var texture = new THREE.CubeTexture( images );
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
-          this.skybox.setTexture(this.skyboxtexture);
+          if (this.janus.currentroom === this) {
+            this.skybox.setTexture(this.skyboxtexture);
+          }
           return true;
         }
       }
