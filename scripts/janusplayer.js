@@ -398,6 +398,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.updateGravity();
     }
     this.updateGravity = function(gravity) {
+      // FIXME - gravity is currently disabled, pending ongoing work with mesh colliders
+      return;
+
       if (typeof gravity == 'undefined' && this.room) {
         gravity = this.room.gravity;
       }
