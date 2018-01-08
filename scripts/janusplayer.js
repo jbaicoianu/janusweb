@@ -523,7 +523,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         animid = 'walk_right';
       } else if (this.controlstate.move_backward) {
         animid = 'walk_back';
-      } else if (document.activeElement && this.janus.chat && document.activeElement === this.janus.chat.input.inputelement) {
+      } else if (document.activeElement && this.properties.janus.chat && document.activeElement === this.properties.janus.chat.input.inputelement) {
         animid = 'type';
       } else if (this.hasVoipData()) {
         animid = 'speak';
