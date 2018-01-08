@@ -585,6 +585,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.settings.add({key: key, value: value});
       this.settings.save();
     }
+    this.removeSetting = function(key) {
+      this.settings.remove(key);
+      return true;
+    }
     this.getUsername = function() {
       var username = this.getSetting('username');;
       if (!username) {
