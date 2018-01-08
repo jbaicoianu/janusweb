@@ -15,6 +15,7 @@ elation.require(['janusweb.janusbase'], function() {
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
         rect: { type: 'string', set: this.updateSound }
       });
+      //this.playing = false;
       Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
       this.playStarted = false;
       elation.events.add(this.room, 'janusweb_script_frame', elation.bind(this, this.checkBounds));
@@ -61,6 +62,7 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         this.audio.setPlaybackRate(this.pitch);
+        elation.events.add(this.audio, 'playing,pause,ended', elation.bind(this, this.updatePlaying));
         if (src) {
           if (soundcache[src]) {
             this.audio.setBuffer(soundcache[src]);
@@ -153,12 +155,17 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
     })();
+    this.updatePlaying = function(ev) {
+      this.playing = (this.audio ? this.audio.isPlaying : false);
+      return this.playing;
+    }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janussound.extendclass.getProxyObject.call(this, classdef);
         this._proxyobject._proxydefs = {
           id:           [ 'property', 'sound_id'],
           gain:         [ 'property', 'gain'],
+          playing:      [ 'property', 'playing', 'sound.isPlaying'],
           pitch:        [ 'property', 'pitch'],
           auto_play:    [ 'property', 'auto_play'],
           playing:      [ 'property', 'playing'],

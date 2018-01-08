@@ -24,6 +24,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.systems.controls, 'settings_change', elation.bind(this, function() {
         this.setSetting('controls.settings', this.engine.systems.controls.settings);
       }));
+      elation.events.add(this.engine.client.view.container, 'touchstart', elation.bind(this, this.handleTouchStart));
+      elation.events.add(this.engine.client.view.container, 'touchmove', elation.bind(this, this.handleTouchMove));
+      elation.events.add(this.engine.client.view.container, 'touchend', elation.bind(this, this.handleTouchEnd));
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
@@ -89,15 +92,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         elation.events.add(this.voip, 'voip_data', elation.bind(this, this.handleVOIPData));
         elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
       }
-      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.updateVectors));
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updateCursor));
-      elation.events.add(null, 'mouseover', elation.bind(this, this.updateFocusObject));
-      elation.events.add(null, 'mousemove', elation.bind(this, this.updateFocusObject));
-      elation.events.add(null, 'mouseout', elation.bind(this, this.updateFocusObject));
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
       elation.events.add(this.room, 'mouseover,mouseout', elation.bind(this, this.updateCursorStyle));
+
+      this.touchcache = {
+        positions: []
+      };
 
       this.updateVRButton();
     }
@@ -117,6 +120,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
+      elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
 
       this.updateCollider();
     }
@@ -188,6 +192,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var _tmpquat = new THREE.Quaternion();
 
       return function(ev) {
+        // FIXME - this should be called in a pre-frame function, so that hands get updated before the renderer runs, for minimal delay
         elation.engine.things.janusplayer.extendclass.engine_frame.call(this, ev);
         if (this.tracker && this.tracker.hasHands()) {
           var hands = this.tracker.getHands();
@@ -255,6 +260,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var _tmpvec = new THREE.Vector3();
 
       return function() {
+        this.updateMouseControls({data: this.controlstate});
+        this.updateVectors();
         if (this.cursor_object == '') {
           this.camera.localToWorld(this.vectors.cursor_pos.set(0,0,-10));
         }
@@ -697,6 +704,42 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (obj && obj.dispatchEvent) {
         obj.dispatchEvent({type: 'gazeleave', data: ev.data.intersection});
       }
+    }
+    this.handleGazeMove = function(ev) {
+      var obj = ev.data.object;
+      if (obj && obj.dispatchEvent) {
+        this.cursor_object = obj.js_id || '';
+
+        this.vectors.cursor_pos.copy(ev.data.intersection.point);
+      }
+    }
+    this.handleTouchStart = function(ev) {
+      if (ev.touches.length == 1) {
+        this.touchcache.positions[0] = [ev.touches[0].clientX, ev.touches[0].clientY];
+      }
+    }
+    this.handleTouchMove = function(ev) {
+      if (ev.defaultPrevented) return;
+      if (ev.touches.length == 1) {
+        var touch = ev.touches[0];
+        var distanceX = touch.clientX - this.touchcache.positions[0][0],
+            distanceY = touch.clientY - this.touchcache.positions[0][1];
+
+        //this.controlstate.turn_right = distanceX / 20;
+        //this.controlstate.look_down = distanceY / 20;
+        this.updateMouseControls({
+          data: {
+            mouse_look: [-distanceX / 5, -distanceY / 5]
+          }
+        }, true);
+
+        this.touchcache.positions[0][0] = ev.touches[0].clientX;
+        this.touchcache.positions[0][1] = ev.touches[0].clientY;
+      }
+    }
+    this.handleTouchEnd = function(ev) {
+      this.controlstate.turn_right = 0;
+      this.controlstate.look_down = 0;
     }
   }, elation.engine.things.player);
 });
