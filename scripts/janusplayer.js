@@ -630,6 +630,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
       if (proxyobj) {
         //var realobj = this.room.getObjectFromProxy(proxyobj);
+        if (proxyobj.parent) {
+          proxyobj.parent.removeChild(proxyobj);
+        }
         var realobj = proxyobj._target;
         if (realobj) {
           this.add(realobj);
