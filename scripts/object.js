@@ -340,14 +340,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (asset) {
                 if (asset.hasalpha) {
                   m.transparent = true;
-                  m.alphaTest = 0.02;
+                  m.alphaTest = this.alphatest;
                 }
                 m.map = asset.getInstance();
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
                 elation.events.add(m.map, 'asset_load', elation.bind(this, function(m, asset, ev) {
                   if (asset.hasalpha) {
                     m.transparent = true;
-                    m.alphaTest = 0.02;
+                    m.alphaTest = this.alphatest;
                     m.needsUpdate = true;
                   }
                 }, m, asset));
@@ -422,6 +422,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.name = oldmat.name;
         m.map = oldmat.map;
         m.opacity = this.opacity; //(typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
+        m.alphaTest = this.alphatest;
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
         m.normalMap = oldmat.normalMap;

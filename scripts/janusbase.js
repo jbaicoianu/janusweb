@@ -1,6 +1,6 @@
 elation.require(['engine.things.generic', 'utils.template'], function() {
   elation.template.add('janusweb.edit.object', 
-      '<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
+      '<Object id=^{id}^ js_id=^{js_id}^ alphatest=^{alphatest}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
   elation.component.add('engine.things.janusbase', function() {
     this.defaultcolor = new THREE.Color(0xffffff);
@@ -17,6 +17,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         js_id:    { type: 'string' },
         color:    { type: 'color', default: this.defaultcolor, set: this.updateColor },
         opacity:  { type: 'float', default: 1.0, set: this.updateOpacity },
+        alphatest:  { type: 'float', default: 0.05, set: this.updateAlphaTest },
         fwd:      { type: 'vector3', default: new THREE.Vector3(0,0,1), set: this.pushFrameUpdate },
         xdir:     { type: 'vector3', default: new THREE.Vector3(1,0,0), set: this.pushFrameUpdate },
         ydir:     { type: 'vector3', default: new THREE.Vector3(0,1,0), set: this.pushFrameUpdate },
@@ -78,6 +79,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.updateOpacity = function() {
       this.setOpacity(this.opacity);
+    },
+    this.updateAlphaTest = function() {
+      this.setAlphaTest(this.alphatest);
     }
     this.updateCollider = function() {
       this.removeCollider();
@@ -227,6 +231,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           scale:    ['property', 'scale'],
           col:      ['property', 'color'],
           opacity:  ['property', 'opacity'],
+          alphatest:  ['property', 'alphatest'],
           fwd:      ['property', 'zdir'],
           xdir:     ['property', 'xdir'],
           ydir:     ['property', 'ydir'],
@@ -567,6 +572,7 @@ console.error('dunno what this is', other);
       }
     }
     this.setOpacity = function(opacity) {
+
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
         this.objects['3d'].traverse(function(n) {
@@ -576,7 +582,22 @@ console.error('dunno what this is', other);
               m[i].opacity = opacity;
               m[i].transparent = (opacity < 1);
               if (m[i].transparent) {
-                m[i].alphaTest = 0.02;
+                m[i].alphaTest = this.alphatest;
+              }
+            }
+          }
+        });
+      }
+    }
+    this.setAlphaTest = function(alphatest) {
+      if (this.objects['3d'] && this.currentalphatest != alphatest) {
+        this.currentalphatest = alphatest;
+        this.objects['3d'].traverse(function(n) {
+          if (n.material) {
+            var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+            for (var i = 0; i < m.length; i++) {
+              if (m[i].transparent) {
+                m[i].alphaTest =alphatest;
               }
             }
           }
