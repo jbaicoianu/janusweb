@@ -10,7 +10,7 @@ if [ -z "$NODEJS" ]; then
 fi
 
 
-VERSION=$($NODEJS -pe "require('./package.json').version")
+VERSION=$("$NODEJS" -pe "require('./package.json').version")
 BUILDROOT=$(pwd)/build
 BUILDBASE=${VERSION}
 BUILDDIR=${BUILDROOT}/${BUILDBASE}
