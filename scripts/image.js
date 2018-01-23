@@ -175,7 +175,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.sidetex.image = this.texture.image;
       this.sidetex.needsUpdate = true;
 
-      if (this.properties.sbs3d) {
+      if (this.properties.sbs3d || this.asset.sbs3d) {
         // TODO - to really support 3d video, we need to set offset based on which eye is being rendered
         var texture = new THREE.SBSTexture(this.texture.image);
         texture.reverse = this.properties.reverse3d;
@@ -187,6 +187,7 @@ elation.require(['janusweb.janusbase'], function() {
         this.sidematerial.map.needsUpdate = true;
         this.sidematerial.map.repeat.x = .0001;
         */
+        this.objects['3d'].onBeforeRender = () => { texture.swap(); }
       }
 
       this.refresh();
