@@ -6,7 +6,13 @@ elation.require([], function() {
           room: {
             use_local_asset: 'room_plane',
             pos: [0, 0, 0],
-            orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0))
+            orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,0,0)),
+            skybox_left_id: 'black',
+            skybox_right_id: 'black',
+            skybox_back_id: 'black',
+            skybox_front_id: 'black',
+            skybox_up_id: 'black',
+            skybox_down_id: 'black',
           },
           object: [],
           link: []
