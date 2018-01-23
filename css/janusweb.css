@@ -67,7 +67,7 @@ body.dark .ui_window:after {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 500;
+  z-index: 4;
   margin: .4em;
   white-space: nowrap;
 }
