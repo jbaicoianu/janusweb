@@ -68,7 +68,17 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var fixURLEncoding = this.fixURLEncoding.bind(this);
   imageassets.forEach(function(n) { 
     var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
-    assetlist.push({ assettype:'image', name:n.id, src: src, baseurl: baseurl, hasalpha: n.hasalpha, proxy: n.proxy });
+    assetlist.push({
+      assettype: 'image',
+      name: n.id,
+      src: src,
+      baseurl: baseurl,
+      hasalpha: n.hasalpha,
+      proxy: n.proxy,
+      sbs3d: n.sbs3d,
+      ou3d: n.ou3d,
+      reverse3d: n.reverse3d,
+    });
   });
   videoassets.forEach(function(n) { 
     var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
