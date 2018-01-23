@@ -1,4 +1,4 @@
-elation.require(['engine'], function() {
+elation.require(['engine.engine'], function() {
   elation.component.add('janusweb.configuration', function() {
     this.initPanels = function(panels) {
       if (!panels) panels = {};
