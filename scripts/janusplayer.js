@@ -736,11 +736,20 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         var distanceX = touch.clientX - this.touchcache.positions[0][0],
             distanceY = touch.clientY - this.touchcache.positions[0][1];
 
+        var flip = this.getSetting('controls.touch.flip'),
+            flipx = 0,
+            flipy = 0;
+
+        if (flip) {
+          flipx = flip.x;
+          flipy = flip.y;
+        }
+
         //this.controlstate.turn_right = distanceX / 20;
         //this.controlstate.look_down = distanceY / 20;
         this.updateMouseControls({
           data: {
-            mouse_look: [-distanceX / 5, -distanceY / 5]
+            mouse_look: [(flipx ? -1 : 1) * distanceX / 5, (flipy ? -1 : 1 ) * distanceY / 5]
           }
         }, true);
 
