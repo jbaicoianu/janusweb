@@ -1,9 +1,22 @@
-#JanusWeb
+##JanusWeb
 
 JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
 written in HTML and JavaScript, hosted in the same manner as regular websites, merging 
 the 2d and 3d web into one experience.  JanusWeb allows users to view and interact with 
 others in these environments using only their web browser.
+
+## Examples
+
+<a href="https://github.com/janusvr/janusvr-examples/tree/master/360/3">
+  <img alt="Crystalball" target="_blank" src="https://i.imgur.com/mw0Um3C.gif" height="190" width="32%">
+</a>
+<a href="https://www.augmentedperception.com/">
+  <img alt="Augmented Perception" target="_blank" src="https://i.imgur.com/V6fqjVG.gif" height="190" width="32%">
+</a>
+<a href="https://github.com/janusvr/janusvr-examples/tree/master/cinema">
+  <img alt="Cinema" target="_blank" src="https://i.imgur.com/uUwjtcX.gif" height="190" width="32%">
+</a>
+
 
 ## Features
 
