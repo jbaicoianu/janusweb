@@ -1,4 +1,4 @@
-## JanusWeb
+<p align="center"><a href="https://web.janusvr.com" target="_blank"><img width="480" alt="JanusWeb" src="https://imgur.com/ejvyphR.jpg"></a></p>
 
 JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
 written in HTML and JavaScript, hosted in the same manner as regular websites, merging 
@@ -15,6 +15,15 @@ others in these environments using only their web browser.
 </a>
 <a href="https://github.com/janusvr/janusvr-examples/tree/master/cinema">
   <img alt="Cinema" target="_blank" src="https://i.imgur.com/uUwjtcX.gif" height="190" width="32%">
+</a>
+<a href="https://vesta.janusvr.com/bepis/mansion">
+  <img alt="Mansion" target="_blank" src="https://i.imgur.com/hYuRKE.gif" height="190" width="32%">
+</a>
+<a href="https://imgur.com/FX3skXb.gif">
+  <img alt="Drag n' Drop" target="_blank" src="https://i.imgur.com/FX3skXb.gif" height="190" width="32%">
+</a>
+<a href="https://vesta.janusvr.com/bepis/vrhouse">
+  <img alt="Livestream" target="_blank" src="https://imgur.com/IdVN6bj.gif" height="190" width="32%">
 </a>
 
 
