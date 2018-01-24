@@ -17,7 +17,7 @@ others in these environments using only their web browser.
   <img alt="Cinema" target="_blank" src="https://i.imgur.com/uUwjtcX.gif" height="190" width="32%">
 </a>
 <a href="https://vesta.janusvr.com/bepis/mansion">
-  <img alt="Mansion" target="_blank" src="https://i.imgur.com/hYuRKE.gif" height="190" width="32%">
+  <img alt="Mansion" target="_blank" src="https://i.imgur.com/hYutRKE.gif" height="190" width="32%">
 </a>
 <a href="https://imgur.com/FX3skXb.gif">
   <img alt="Drag n' Drop" target="_blank" src="https://i.imgur.com/FX3skXb.gif" height="190" width="32%">
