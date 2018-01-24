@@ -557,7 +557,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           //console.log('I collided', proxy, this);
           elation.events.fire({type: 'collision', element: this, data: proxy});
 
-          if (proxy.collision_trigger) {
+          if (this.collision_trigger || proxy.collision_trigger) {
             ev.preventDefault();
             ev.stopPropagation();
           }
