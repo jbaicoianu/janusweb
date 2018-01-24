@@ -1,9 +1,15 @@
 <p align="center"><a href="https://web.janusvr.com" target="_blank"><img width="480" alt="JanusWeb" src="https://imgur.com/ejvyphR.jpg"></a></p>
 
-JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
-written in HTML and JavaScript, hosted in the same manner as regular websites, merging 
-the 2d and 3d web into one experience.  JanusWeb allows users to view and interact with 
-others in these environments using only their web browser.
+<p align="center"><b>A web framework for building social virtual reality experiences.</b></p>
+
+<div align="center">
+  <a href="https://janusvr.com">Site</a>
+  &mdash;
+  <a href="https://vesta.janusvr.com">Vesta</a>
+  &mdash;
+  <a href="https://github.com/janusvr/janusvr-examples">Examples</a>
+</div>
+
 
 ## Examples
 
