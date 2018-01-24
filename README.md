@@ -1,4 +1,4 @@
-##JanusWeb
+## JanusWeb
 
 JanusWeb is a web-based client for JanusVR rooms.  JanusVR rooms are 3D environments 
 written in HTML and JavaScript, hosted in the same manner as regular websites, merging 
