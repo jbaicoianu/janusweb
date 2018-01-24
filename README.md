@@ -13,8 +13,8 @@ others in these environments using only their web browser.
 <a href="https://www.augmentedperception.com/">
   <img alt="Augmented Perception" target="_blank" src="https://i.imgur.com/V6fqjVG.gif" height="190" width="32%">
 </a>
-<a href="https://github.com/janusvr/janusvr-examples/tree/master/cinema">
-  <img alt="Cinema" target="_blank" src="https://vesta.janusvr.com/bai/movie-theater-dynamic-lighting" height="190" width="32%">
+<a href="https://vesta.janusvr.com/bai/movie-theater-dynamic-lighting">
+  <img alt="Cinema" target="_blank" src="https://i.imgur.com/i1nIXI8.gif" height="190" width="32%">
 </a>
 <a href="https://vesta.janusvr.com/bepis/mansion">
   <img alt="Mansion" target="_blank" src="https://i.imgur.com/mNIzcFD.gif" height="190" width="32%">
