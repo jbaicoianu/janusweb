@@ -20,7 +20,7 @@ others in these environments using only their web browser.
   <img alt="Drag n' Drop" target="_blank" src="https://i.imgur.com/FX3skXb.gif" height="190" width="32%">
 </a>
 <a href="http://www.metacade.com">
-  <img alt="Livestream" target="_blank" src="https://i.imgur.com/c0UJtIS.gif" height="190" width="32%">
+  <img alt="Metacade" target="_blank" src="https://imgur.com/JU3oups.gif" height="190" width="32%">
 </a>
 <a href="https://vesta.janusvr.com/bepis/mansion">
   <img alt="Mansion" target="_blank" src="https://imgur.com/pQAQ4yt.gif" height="190" width="32%">
