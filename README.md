@@ -16,14 +16,14 @@ others in these environments using only their web browser.
 <a href="https://vesta.janusvr.com/bai/movie-theater-dynamic-lighting">
   <img alt="Cinema" target="_blank" src="https://i.imgur.com/i1nIXI8.gif" height="190" width="32%">
 </a>
-<a href="https://vesta.janusvr.com/bepis/mansion">
-  <img alt="Mansion" target="_blank" src="https://i.imgur.com/mNIzcFD.gif" height="190" width="32%">
-</a>
 <a href="https://imgur.com/FX3skXb.gif">
   <img alt="Drag n' Drop" target="_blank" src="https://i.imgur.com/FX3skXb.gif" height="190" width="32%">
 </a>
 <a href="https://vesta.janusvr.com/bepis/vrhouse">
   <img alt="Livestream" target="_blank" src="https://imgur.com/IdVN6bj.gif" height="190" width="32%">
+</a>
+<a href="https://vesta.janusvr.com/bepis/mansion">
+  <img alt="Mansion" target="_blank" src="https://i.imgur.com/mNIzcFD.gif" height="190" width="32%">
 </a>
 
 
