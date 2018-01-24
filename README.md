@@ -19,11 +19,11 @@ others in these environments using only their web browser.
 <a href="https://imgur.com/FX3skXb.gif">
   <img alt="Drag n' Drop" target="_blank" src="https://i.imgur.com/FX3skXb.gif" height="190" width="32%">
 </a>
-<a href="https://vesta.janusvr.com/bepis/vrhouse">
-  <img alt="Livestream" target="_blank" src="https://imgur.com/IdVN6bj.gif" height="190" width="32%">
+<a href="http://www.metacade.com">
+  <img alt="Livestream" target="_blank" src="https://i.imgur.com/c0UJtIS.gif" height="190" width="32%">
 </a>
 <a href="https://vesta.janusvr.com/bepis/mansion">
-  <img alt="Mansion" target="_blank" src="https://i.imgur.com/mNIzcFD.gif" height="190" width="32%">
+  <img alt="Mansion" target="_blank" src="https://imgur.com/pQAQ4yt.gif" height="190" width="32%">
 </a>
 
 
