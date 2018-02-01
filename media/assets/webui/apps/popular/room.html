@@ -1,0 +1,4 @@
+<a href="{roomUrl}" class="popularroom" onclick="janus.setActiveRoom(this.href); return false;" title="{?roomName}{roomName} | {/roomName}{roomUrl}">
+  {?thumbnail}<img class="popularroom_thumb" src="{thumbnail}"/>{/thumbnail}
+  <h4>{?roomName}{roomName}{:else}{roomUrl}{/roomName}</h4>
+</a>

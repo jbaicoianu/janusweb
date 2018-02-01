@@ -1,0 +1,8 @@
+{
+  "templates": {
+  },
+  "scripts":  ["./virtualgamepad.js"],
+  "css":      ["./virtualgamepad.css"]
+}
+
+

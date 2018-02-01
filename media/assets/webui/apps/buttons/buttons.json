@@ -1,0 +1,11 @@
+{
+  "templates": {
+  },
+  "css": [
+    "./buttons.css"
+  ],
+  "scripts": [
+    "./buttons.js"
+  ]
+}
+

@@ -1,0 +1,29 @@
+    <collection-jsonapi id="models"
+      host="https://poly.googleapis.com"
+      endpoint="/v1/assets"
+      itempath="assets"
+      apiargs.keywords="sword"
+      apiargs.format="OBJ"
+      apiargs.key="AIzaSyC9ngd4hqQ9YmaBpUAQP4R9KJEY3dIZ4hM">
+    </collection-jsonapi>
+    <collection-jsonapi id="entities"
+      host="https://baicoianu.com"
+      endpoint="/~bai/janusweb/test/entities.json">
+    </collection-jsonapi>
+
+    <ui-tabs>
+      <ui-tab label="Models"> 
+        <ui-flexpanel id="poly" vertical>
+          <ui-input noflex value="sword" onkeypress="if (event.keyCode == 13) { models.apiargs.keywords = this.value; delete models.apiargs.pageToken; itemlist.clear(); models.load(); pagination.disabled = false; }"></ui-input>
+          <ui-grid scrollable-y flex="1" class="models" id="itemlist" itemtemplate="janus.ui.inventory.item.poly" collection="models"></ui-grid>
+          <ui-button noflex id="pagination" onclick="if (models.rawdata.nextPageToken) { models.apiargs.pageToken = models.rawdata.nextPageToken; models.append(); } else { this.disabled = true; }">Next Page</ui-button>
+        </ui-flexpanel>
+      </ui-tab>
+
+      <ui-tab label="Entities">
+        <ui-flexpanel id="poly" vertical>
+<a href="#" ondragstart="console.log('poops'); event.dataTransfer.setData('text/x-jml', '<Door>');">ding</a>
+        </ui-flexpanel>
+      </ui-tab>
+    </ui-tabs>
+

@@ -1,0 +1,13 @@
+{
+  "templates": {
+    "janus.ui.bookmarks": "./bookmarks.html",
+    "janus.ui.bookmarks.room": "./room.html"
+  },
+  "css": [
+    "./bookmarks.css"
+  ],
+  "scripts": [
+    "./bookmarks.js"
+  ]
+}
+

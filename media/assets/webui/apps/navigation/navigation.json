@@ -1,0 +1,8 @@
+{
+  "templates": {
+    "janus.ui.navigation": "./navigation.html"
+  },
+  "scripts":  ["./navigation.js"],
+  "css":      ["./navigation.css"]
+}
+

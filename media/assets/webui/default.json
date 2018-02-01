@@ -1,0 +1,25 @@
+{
+  "includes": [
+    "./apps/splash/splash.json",
+    "./apps/popular/popular.json",
+    "./apps/partymode/partymode.json",
+    "./apps/bookmarks/bookmarks.json",
+    "./apps/navigation/navigation.json",
+    "./apps/appdrawer/appdrawer.json",
+    "./apps/virtualgamepad/virtualgamepad.json",
+    "./apps/buttons/buttons.json",
+    "./apps/chat/chat.json",
+    "./apps/inventory/inventory.json",
+    "./apps/avatar/avatar.json",
+    "./apps/notifications/notifications.json",
+    "./apps/settings/settings.json"
+  ],
+  "templates": {
+    "janusweb.ui": "./default.html"
+  },
+  "css": [
+    "./themes/default.css"
+  ],
+  "scripts": [
+  ]
+}

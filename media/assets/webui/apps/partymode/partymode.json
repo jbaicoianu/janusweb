@@ -1,0 +1,13 @@
+{
+  "templates": {
+    "janus.ui.partymode": "./partymode.html",
+    "janus.ui.partymode.user": "./user.html"
+  },
+  "css": [
+    "./partymode.css"
+  ],
+  "scripts": [
+    "./partymode.js"
+  ]
+}
+
