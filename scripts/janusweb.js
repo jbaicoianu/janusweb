@@ -267,10 +267,6 @@ elation.require([
       } else {
         player.disable();
       }
-
-      if (this.showchat) {
-        this.chat = elation.janusweb.chat({append: document.body, client: this.engine.client, network: this.network});
-      }
     }
     this.clear = function() {
       if (this.currentroom) {
