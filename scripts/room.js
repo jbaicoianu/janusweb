@@ -34,6 +34,7 @@ elation.require([
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
+        'party_mode': { type: 'bool', default: true },
         'walk_speed': { type: 'float', default: 1.0 },
         'run_speed': { type: 'float', default: 2.0 },
         'jump_velocity': { type: 'float', default: 5.0 },
@@ -642,6 +643,7 @@ elation.require([
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.shadows = elation.utils.any(room.shadows, false);
+        this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
         this.gravity = elation.utils.any(room.gravity, 0);
         //if (room.col) this.properties.col = room.col;
