@@ -194,12 +194,9 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         return ret;
       }
     })();
-    this.sendUpdate = function(opts) {
+    this.sendUpdate = function() {
       if (!this.enabled) return;
 
-      if (!opts) opts = {};
-      // opts.first is a bool, if true then we are sending our avatar along with the move update
-      // else, we send the avatar on every 15th update
       var player = this.player,
           room = this.activeroom;
 
