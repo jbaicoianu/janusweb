@@ -159,7 +159,8 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       // Tell the server we're now in the new room
       this.activeroom = room;
       var server = this.getServerForRoom(room);
-      server.enter_room(room.url);
+      var partymode = this.player.party_mode && room.party_mode;
+      server.enter_room(room.url, partymode);
     }
     this.getJanusOrientation = (function() { 
       var tmpMat = new THREE.Matrix4(),
@@ -290,7 +291,8 @@ console.log('[MultiplayerManager] unsubscribe', room.url);
 
 console.log('[MultiplayerManager] join', room.url);
       var server = this.getServerForRoom(room);
-      server.enter_room(room.url);
+      var partymode = this.player.party_mode && room.party_mode;
+      server.enter_room(room.url, partymode);
     }
     this.part = function(room) {
       if (!this.enabled) return;
