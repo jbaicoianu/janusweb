@@ -584,15 +584,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var video = this.video;
       return (video.currentTime > 0 && !video.paused && !video.ended);
     }
-    this.stop = function() {
-      if (this.video) {
-        this.pause();
-        // FIXME - this stops the video from loading any more data, but means we can't easily restart
-        //         so we're hackishly working around that
-        this.video.originalSrc = this.video.src;
-        this.video.src = '';
-      }
-    }
     this.seek = function(time) {
       if (this.video) this.video.currentTime = time;
     }
