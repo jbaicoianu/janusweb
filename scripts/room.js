@@ -75,6 +75,7 @@ elation.require([
       this.sounds = {};
       this.videos = {};
       this.loaded = false;
+      this.parseerror = false;
 
       this.roomscripts = [];
       this.customElements = {};
@@ -475,8 +476,12 @@ elation.require([
         var source = this.parseSource(sourcecode);
 
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-        var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
-        resolve(true);
+        try {
+          var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
+          resolve(true);
+        } catch (e) {
+          reject();
+        }
       }));
     }
     this.loadFromSource = function(sourcecode, baseurl) {
@@ -487,15 +492,22 @@ elation.require([
       if (source && source.source) {
         this.roomsrc = source.source;
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-        var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
-        this.loadRoomAssets(roomdata);
-        this.createRoomObjects(roomdata);
-        this.loaded = true;
-        if (this.active) {
-          this.setActive();
+        try {
+          var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
+          this.loadRoomAssets(roomdata);
+          this.createRoomObjects(roomdata);
+          this.loaded = true;
+          if (this.active) {
+            this.setActive();
+          }
+          //this.parseerror = false;
+          elation.events.fire({element: this, type: 'room_load_processed'});
+          elation.events.fire({type: 'janus_room_load', element: this});
+        } catch (e) {
+          console.error('Janus room parse error:', e.message);
+          this.parseerror = e.message;
+          elation.events.fire({type: 'room_load_error', element: this, data: e.message});
         }
-        elation.events.fire({element: this, type: 'room_load_processed'});
-        elation.events.fire({type: 'janus_room_load', element: this});
       } else {
         var translator = this.getTranslator('default');
         setTimeout(elation.bind(this, function() {
