@@ -262,8 +262,10 @@ elation.require([
         this.network.enable(player);
       }
 
-      if (this.autoload) {
+      if (this.autoload || starturl != this.properties.homepage) {
         this.load(starturl, true);
+      } else {
+        player.disable();
       }
 
       if (this.showchat) {
@@ -289,8 +291,11 @@ elation.require([
         url: url,
         janus: this,
         baseurl: baseurl,
-        corsproxy: this.corsproxy
+        corsproxy: this.corsproxy,
+        deferload: true
       });
+      elation.events.fire({element: this, type: 'room_load_start', data: room});
+      room.load();
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
 
