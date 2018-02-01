@@ -83,7 +83,7 @@ elation.require([
       this.scriptingInitialized = false;
 
       this.engine.systems.controls.addContext('janus', {
-        'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
+        //'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
         'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
         'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ],
