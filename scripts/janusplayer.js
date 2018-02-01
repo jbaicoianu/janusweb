@@ -14,7 +14,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
-        collision_radius: {type: 'float', default: .25, set: this.updateCollider}
+        collision_radius: {type: 'float', default: .25, set: this.updateCollider},
+        party_mode: { type: 'boolean', set: this.updatePartyMode }
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -103,6 +104,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       };
 
       this.updateVRButton();
+      this.party_mode = this.getSetting('partymode.enabled', true);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -760,6 +762,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.handleTouchEnd = function(ev) {
       this.controlstate.turn_right = 0;
       this.controlstate.look_down = 0;
+    }
+    this.updatePartyMode = function(key, value) {
+      if (typeof value != 'undefined') {
+        this.setSetting('partymode.enabled', value);
+      }
     }
   }, elation.engine.things.player);
 });
