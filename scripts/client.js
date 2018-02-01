@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui', 'janusweb.configuration', 'janusweb.external.document-register-element'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui', 'janusweb.configuration', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -62,6 +62,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       append: container, 
       homepage: homepage, 
       shownavigation: args.shownavigation,
+      uiconfig: args.uiconfig,
       showchat: elation.utils.any(args.showchat, true),
       usevoip: elation.utils.any(args.usevoip, false),
       resolution: args.resolution, 
@@ -99,11 +100,6 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.crosshair = false;
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
-
-      this.buttons = elation.ui.buttonbar({append: this.container, classname: 'janusweb_ui_buttons'})
-      setTimeout(elation.bind(this, function() {
-        this.initButtons();
-      }), 0);
     }
     this.initButtons = function() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
@@ -149,8 +145,10 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       });
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + '/assets/webui/default.json');
       if (this.shownavigation) {
-        this.ui = elation.janusweb.ui({append: document.body, client: this});
+        this.ui = elation.janusweb.ui.main({append: this, client: this, config: this.uiconfig});
       }
     }
     this.initLoader = function() {
