@@ -45,7 +45,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
           object = asset.getInstance();
         }
-      } else {
+      }
+      if (!object) {
         object = new THREE.Object3D();
       }
 
