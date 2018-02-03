@@ -59,10 +59,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.colorIsDefault = true;
 
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
-      this.handleFrameStart = elation.bind(this, this.handleFrameStart);
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
-//      elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
-//      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
 
     }
     this.createChildren = function() {
@@ -388,7 +385,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.start = function() {
       if (!this.started) {
-        elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
         elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
         this.started = true;
       }
@@ -405,21 +401,12 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         }
       }
       if (this.started) {
-        elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
         elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
         this.started = false;
       }
     }    
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
-    }
-    this.handleFrameStart = function() {
-      this.resetFrameUpdates();
-      if (!this.lastframerotation) {
-        this.lastframerotation = this.properties.rotation.clone();
-      } else {
-        this.lastframerotation.copy(this.properties.rotation);
-      }
     }
     this.handleFrameUpdates = function(ev) {
       if (this.hasScriptChangedDirvecs()) {
@@ -463,9 +450,15 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         //this.properties.zdir.copy(zdir);
       }
     })();
-    this.updateOrientationFromEuler = function() {
-      this.properties.orientation.setFromEuler(this.properties.rotation);
-    }
+    this.updateOrientationFromEuler = (function() {
+      var tmpeuler = new THREE.Euler();
+      return function() {
+        var rot = this.properties.rotation,
+            scale = Math.PI/180;
+        tmpeuler.set(rot.x * scale, rot.y * scale, rot.z * scale);
+        this.properties.orientation.setFromEuler(tmpeuler);
+      };
+    })();
     this.updateEulerFromOrientation = function() {
       this.properties.rotation.setFromQuaternion(this.properties.orientation);
     }
@@ -478,8 +471,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     })();
     this.hasScriptChangedDirvecs = function() {
       var changes = this.frameupdates;
-      return (changes['xdir'] || changes['ydir'] || changes['zdir'] ||
-              !this.lastframevalues.xdir.equals(this.properties.xdir) ||
+      return (!this.lastframevalues.xdir.equals(this.properties.xdir) ||
               !this.lastframevalues.ydir.equals(this.properties.ydir) ||
               !this.lastframevalues.zdir.equals(this.properties.zdir));
     }
