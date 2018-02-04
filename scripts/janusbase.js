@@ -51,6 +51,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         xdir: new THREE.Vector3(1,0,0),
         ydir: new THREE.Vector3(0,1,0),
         zdir: new THREE.Vector3(0,0,1),
+        fwd: new THREE.Vector3(0,0,1),
         rotation: new THREE.Euler()
       };
 
@@ -60,7 +61,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
-
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
@@ -430,18 +430,25 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       var tmpmat = new THREE.Matrix4(),
           xdir = new THREE.Vector3(),
           ydir = new THREE.Vector3(),
-          zdir = new THREE.Vector3();
+          zdir = new THREE.Vector3(),
+          fwd = new THREE.Vector3();
       return function() {
 
         // Determine ydir and xdir given the specified zdir.  Based on the following code from the native client:
         //    SetYDir((dy - dz * QVector3D::dotProduct(dy, dz)).normalized());
         //    SetXDir(QVector3D::crossProduct(dy, dz));
 
-        ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(this.properties.zdir).multiplyScalar(this.properties.ydir.dot(this.properties.zdir))).normalize();
-        xdir.crossVectors(ydir, this.properties.zdir).normalize();
+        if (!this.lastframevalues.fwd.equals(this.properties.fwd)) {
+          this.properties.zdir.copy(this.properties.fwd);
+          fwd.copy(this.properties.fwd);
+        } else {
+          fwd.copy(this.properties.zdir);
+        }
+        ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(fwd).multiplyScalar(this.properties.ydir.dot(fwd))).normalize();
+        xdir.crossVectors(ydir, fwd).normalize();
 
 
-        tmpmat.makeBasis(xdir, ydir, this.properties.zdir);
+        tmpmat.makeBasis(xdir, ydir, fwd);
         this.properties.orientation.setFromRotationMatrix(tmpmat);
 
         // Copy back the orthonormalized values
@@ -473,7 +480,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       var changes = this.frameupdates;
       return (!this.lastframevalues.xdir.equals(this.properties.xdir) ||
               !this.lastframevalues.ydir.equals(this.properties.ydir) ||
-              !this.lastframevalues.zdir.equals(this.properties.zdir));
+              !this.lastframevalues.zdir.equals(this.properties.zdir) ||
+              !this.lastframevalues.fwd.equals(this.properties.fwd));
     }
     this.hasScriptChangedEuler = function() {
       var changes = this.frameupdates;
