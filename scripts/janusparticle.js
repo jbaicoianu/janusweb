@@ -183,6 +183,9 @@ elation.require(['janusweb.janusbase'], function() {
           count = this.count,
           loop = this.loop;
 
+      // If we have no particles to render, there's nothing to do!
+      if (count <= 0) return;
+
       if (count != this.particles.length) {
         this.createParticles();
       }
