@@ -701,6 +701,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var obj = ev.data.object;
       if (obj && obj.dispatchEvent) {
         obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
+        this.cursor_object = obj;
 
         if (this.gaze) {
           this.cancelGaze();
