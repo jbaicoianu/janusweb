@@ -1,6 +1,6 @@
 elation.component.add('janusweb.elements.teleporter', {
     active: false,
-    longpresstime: 250,
+    longpresstime: 350,
     deadzone: 5,
 
     create() {
