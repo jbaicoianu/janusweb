@@ -3,7 +3,7 @@ elation.component.add('janusweb.elements.teleporter', {
     longpresstime: 250,
     deadzone: 5,
 
-    createChildren() {
+    create() {
       this.marker = this.createObject('Object', {
         id: 'pipe',
         col: '#009',
@@ -54,6 +54,7 @@ elation.component.add('janusweb.elements.teleporter', {
     handleMouseDown(ev) {
       this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
       this.mousediff = [0,0];
+      this.active = false;
     },
     handleMouseMove(ev) {
       if (this.longpresstimer) {
