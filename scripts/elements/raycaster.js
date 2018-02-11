@@ -1,6 +1,8 @@
 elation.component.add('janusweb.elements.raycaster', {
   createChildren() {
     this.lasthitobject = null;
+    this.lasthitpos = V();
+    this.fwdvec = V();
   },
   update() {
     var hits = this.raycast(null, null, this.class);
@@ -15,10 +17,22 @@ elation.component.add('janusweb.elements.raycaster', {
         this.dispatchEvent({type: 'raycastenter', data: {object: hit.object, intersection: hit}});
         this.lasthitobject = hitobject;
       }
-    } else if (this.lasthitobject) {
-      this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: null}});
-      this.dispatchEvent({type: 'raycastenter', data: {object: this.lasthitobject.room, intersection: null}});
-      this.lasthitobject = this.lasthitobject.room;
+
+      if (!hit.point.equals(this.lasthitpos)) {
+        this.dispatchEvent({type: 'raycastmove', data: {object: hit.object, intersection: hit}});
+      }
+      this.lasthitpos.copy(hit.point);
+    } else {
+      if (this.lasthitobject) {
+        this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: null}});
+        this.dispatchEvent({type: 'raycastenter', data: {object: this.lasthitobject.room, intersection: null}});
+        this.lasthitobject = this.lasthitobject.room;
+      }
+      this.localToWorld(this.fwdvec.set(0,0,-1));
+      if (!this.fwdvec.equals(this.lasthitpos)) {
+        this.dispatchEvent({type: 'raycastmove', data: {object: this.lasthitobject, intersection: this.fwdvec}});
+      }
+      this.lasthitpos.copy(this.fwdvec);
     }
   }
 }, elation.janusweb.janusbase);
