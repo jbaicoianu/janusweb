@@ -46,7 +46,9 @@ elation.require(['janusweb.janusbase'], function() {
           });
         }
         texture.minFilter = THREE.LinearFilter;
-        elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+
+        // Refresh this object whenever the video has a new frame for us to display
+        this.texture.onUpdate = (e) => this.refresh();
       }
 
       this.texture.minFilter = THREE.LinearFilter;
