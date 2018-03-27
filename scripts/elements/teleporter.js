@@ -53,8 +53,10 @@ elation.require(['janusweb.janusbase'], function() {
       this.disableCursor();
     },
     handleMouseDown(ev) {
-      this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
-      this.mousediff = [0,0];
+      if (ev.button == 0) {
+        this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
+        this.mousediff = [0,0];
+      }
     },
     handleMouseMove(ev) {
       if (this.longpresstimer) {
