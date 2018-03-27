@@ -233,54 +233,21 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
   }, elation.engine.client);
 
   if (typeof customElements != 'undefined') {
-    elation.extend('janusweb.viewer.base', Object.create( HTMLElement.prototype, {
-      fullscreen: {
-        get: function() {
-          return this.getAttribute('fullscreen');
-        },
-        set: function(fullscreen) {
-          return this.setAttribute('fullscreen', fullscreen);
-        }
-      },
-      autostart: {
-        get: function() {
-          return this.getAttribute('autostart');
-        },
-        set: function(autostart) {
-          return this.setAttribute('autostart', autostart);
-        }
-      },
-      src: {
-        get: function() {
-          return this.getAttribute('src');
-        },
-        set: function(src) {
-          return this.setAttribute('src', src);
-        }
-      },
-      width: {
-        get: function() {
-          return this.getAttribute('width') || 640;
-        },
-        set: function(width) {
-          return this.setAttribute('width', width);
-        }
-      },
-      height: {
-        get: function() {
-          return this.getAttribute('height') || 480;
-        },
-        set height(height) {
-          return this.setAttribute('height', width);
-        }
-      },
-      connectedCallback: function() {
-        setTimeout(() => this.init(), 10);
-      },
-      init: function() {
+    elation.elements.define('janus.viewer.base', class extends elation.elements.base {
+      init() {
+        super.init();
+        this.defineAttributes({
+          fullscreen: { type: 'boolean', default: true },
+          autostart: { type: 'boolean', default: true },
+          src: { type: 'string' },
+          width: { type: 'integer', default: 640 },
+          height: { type: 'integer', default: 480 },
+        });
+      }
+      create() {
         elation.janusweb.init(this.getClientArgs());
-      },
-      getClientArgs: function() {
+      }
+      getClientArgs() {
         var fullscreen = this.fullscreen,
             width = (this.fullscreen ? window.innerWidth : this.width),
             height = (this.fullscreen ? window.innerHeight : this.height);
@@ -290,16 +257,20 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           //shownavigation: false,
         };
         return args;
-      },
-      getRoomURL: function() {
+      }
+      getRoomURL() {
         return this.src || document.location.href;
       }
-    }));
-    document.registerElement('janus-viewer', elation.janusweb.viewer.base);
+    });
+    //document.registerElement('janus-viewer', elation.janusweb.viewer.base);
 
 
-    elation.extend('janusweb.viewer.frame', Object.create( elation.janusweb.viewer.base, {
-      init: function() {
+    elation.elements.define('janus.viewer.frame', class extends elation.elements.janus.viewer.base {
+      init() {
+        super.init();
+        console.log('init frame', this);
+      }
+      create() {
         if (this.iframe) return;
         var iframe = document.createElement('iframe');
         var fullscreen = this.fullscreen;
@@ -326,58 +297,71 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
         this.iframe = iframe;
       }
-    }));
-    document.registerElement('janus-viewer-frame', elation.janusweb.viewer.frame);
-
-    elation.extend('janusweb.viewer.image360', Object.create( elation.janusweb.viewer.frame, {
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetimage id="image360" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" image_id="image360" lighting="false" /></room></fireboxroom>');
+    });
+    //document.registerElement('janus-viewer-frame', elation.janusweb.viewer.frame);
+    elation.elements.define('janus.viewer.generatedframe', class extends elation.elements.janus.viewer.frame {
+      getRoomURL() {
+        return 'data:text/html,' + encodeURIComponent(this.getRoomSource());
       }
-    }));
-    document.registerElement('janus-viewer-image360', elation.janusweb.viewer.image360);
-
-    elation.extend('janusweb.viewer.video', Object.create( elation.janusweb.viewer.frame, {
-      loop: {
-        get: function() {
-          return this.getAttribute('loop');
-        },
-        set: function(loop) {
-          return this.setAttribute('loop', loop);
+      getTemplate() {
+        return '';
+      }
+      getRoomSource() {
+        if (!this.tplname) {
+          this.tplname = this.type + '.src';
+          elation.template.add(this.tplname, this.getTemplate());
         }
-      },
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room use_local_asset="room1" skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><Video video_id="video" pos="0 2.5 -5" scale="4 2.5 .1" lighting="false" /></room></fireboxroom>');
+        return elation.template.get(this.tplname, this);
       }
-    }));
-    document.registerElement('janus-viewer-video', elation.janusweb.viewer.video);
+    });
 
-    elation.extend('janusweb.viewer.video360', Object.create( elation.janusweb.viewer.frame, {
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video360" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" video_id="video360" lighting="false" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.image360', class extends elation.elements.janus.viewer.generatedframe {
+      getTemplate() {
+        return '<title>360° Image | {src}</title><fireboxroom><assets><assetimage id="image360" src="{src}"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" image_id="image360" lighting="false" /></room></fireboxroom>';
       }
-    }));
-    document.registerElement('janus-viewer-video360', elation.janusweb.viewer.video360);
+    });
 
-    elation.extend('janusweb.viewer.model', Object.create( elation.janusweb.viewer.frame, {
-      getRoomURL: function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetobject id="model" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="model" lighting="true" pos="0 0 -5" rotate_deg_per_sec="10" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.video', class extends elation.elements.janus.viewer.generatedframe {
+      init() {
+        super.init();
+        this.defineAttributes({
+          loop: { type: 'boolean', default: false },
+          vidtitle: { type: 'string' }
+        });
       }
-    }));
-    document.registerElement('janus-viewer-model', elation.janusweb.viewer.model);
+      getTemplate() {
+        return '<title>Video | {?vidtitle}{vidtitle} | {/vidtitle} {src}</title><fireboxroom><assets><assetvideo id="video" src="{src}" auto_play="true" loop="{?loop}true{else}false{/loop}" /></assets><room use_local_asset="room1" skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1" ><Video video_id="video" pos="0 2.5 -5" scale="4 2.5 .1" lighting="false" /></room></fireboxroom>';
+      }
+    });
 
-    elation.extend('janusweb.viewer.avatar', Object.create( elation.janusweb.viewer.frame, {
-      userid: {
-        get: function() {
-          return this.getAttribute('userid') || 'avatar';
-        },
-        set: function(src) {
-          return this.setAttribute('userid', src);
-        }
-      },
-      getRoomURL: function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" use_local_asset="room_plane"><ghost id="' + this.userid + '" avatar_src="' + this.src + '" lighting="true" pos="0 0 1" rotate_deg_per_sec="20" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.video360', class extends elation.elements.janus.viewer.video {
+      getTemplate() {
+        return '<title>360° Video | {?vidtitle}{vidtitle} | {/vidtitle} {src}</title><fireboxroom><assets><assetvideo id="video360" src="{src}" auto_play="true" loop="{?loop}true{else}false{/loop}" /></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1"><object id="sphere" scale="-500 500 500" video_id="video360" lighting="false" rotation="0 90 0" /></room></fireboxroom>';
       }
-    }));
-    document.registerElement('janus-viewer-avatar', elation.janusweb.viewer.avatar);
+    });
+
+    elation.elements.define('janus.viewer.model', class extends elation.elements.janus.viewer.generatedframe {
+      init() {
+        super.init();
+        this.defineAttributes({
+          modelname: { type: 'string' }
+        });
+      }
+      getTemplate() {
+        return '<title>Model | {?modelname}{modelname} | {/modelname} {src}</title><fireboxroom><assets><assetobject id="model" src="{src}"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1"><object id="model" lighting="true" pos="0 0 -5" rotate_deg_per_sec="10" /></room></fireboxroom>';
+      }
+    });
+
+    elation.elements.define('janus.viewer.avatar', class extends elation.elements.janus.viewer.frame {
+      init() {
+        super.init();
+        this.defineAttributes({
+          userid: { type: 'string' }
+        });
+      }
+      getTemplate() {
+        return '<fireboxroom><assets></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" use_local_asset="room_plane zdir="0 0 -1""><ghost id="{userid}" avatar_src="{src}" lighting="true" pos="0 0 1" rotate_deg_per_sec="20" /></room></fireboxroom>';
+      }
+    });
   }
 });
