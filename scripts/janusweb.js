@@ -290,6 +290,10 @@ elation.require([
         corsproxy: this.corsproxy,
         deferload: true
       });
+
+      if (this.currentroom) {
+        room.referrer = this.currentroom.url;
+      }
       elation.events.fire({element: this, type: 'room_load_start', data: room});
       room.load();
       // FIXME - should be able to spawn without adding to the heirarchy yet
@@ -311,7 +315,7 @@ elation.require([
       return this.load(dataurl, makeactive, baseurl)
     }
     this.setActiveRoom = function(url, pos, skipURLUpdate) {
-      this.clear();
+      var oldroom = this.currentroom;
 
       var room = false;
       this.loading = true;
@@ -334,7 +338,13 @@ elation.require([
         } else {
           this.properties.url = url;
         }
-        if (this.currentroom !== room) {
+        if (oldroom !== room) {
+          // Set referrer so we know where this link came from
+          if (oldroom) {
+            room.referrer = oldroom.url;
+          }
+
+          this.clear();
           this.currentroom = room;
 
           window.room = this.currentroom.getProxyObject();
