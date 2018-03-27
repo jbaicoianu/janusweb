@@ -3,11 +3,12 @@ elation.require(['engine.things.label'], function() {
     this.postinit = function() {
       elation.engine.things.janustext.extendclass.postinit.call(this);
       this.frameupdates = [];
-      this.textcache = [];
+      this.textcache = this.engine.getScratchObject('textcache');
       this.defineProperties({
         'text':            { type: 'string', default: '', refreshGeometry: true },
         'font':            { type: 'string', default: 'helvetiker', refreshGeometry: true },
         'font_size':       { type: 'float', default: 1.0, refreshGeometry: true },
+        'font_scale':      { type: 'bool', default: true, refreshGeometry: true },
         'align':           { type: 'string', default: 'left', refreshGeometry: true },
         'verticalalign':   { type: 'string', default: 'bottom', refreshGeometry: true },
         'zalign':          { type: 'string', default: 'back', refreshGeometry: true },
@@ -27,15 +28,17 @@ elation.require(['engine.things.label'], function() {
     }
     this.createObject3D = function() {
       var text = this.properties.text || '';//this.name;
-      var geometry = this.textcache[text];
+      var cachename = this.getCacheName(text);
+      var geometry = this.textcache[cachename];
       if (!geometry) {
         geometry = this.createTextGeometry(text);
 
-        geometry.computeBoundingBox();
-
-        var geosize = new THREE.Vector3().subVectors(geometry.boundingBox.max, geometry.boundingBox.min);
-        var geoscale = 1 / Math.max(1e-6, text.length * this.font_size);
-        geometry.applyMatrix(new THREE.Matrix4().makeScale(geoscale, geoscale, geoscale));
+        if (this.font_scale) {
+          geometry.computeBoundingBox();
+          var geosize = new THREE.Vector3().subVectors(geometry.boundingBox.max, geometry.boundingBox.min);
+          var geoscale = 1 / Math.max(1e-6, text.length * this.font_size);
+          geometry.applyMatrix(new THREE.Matrix4().makeScale(geoscale, geoscale, geoscale));
+        }
 
         if (this.properties.opacity < 1.0) {
           this.material.opacity = this.properties.opacity;
@@ -43,7 +46,7 @@ elation.require(['engine.things.label'], function() {
         }
 
         if (geometry !== this.emptygeomety) {
-          this.textcache[text] = geometry;
+          this.textcache[cachename] = geometry;
         }
       }
       var mesh;
@@ -81,10 +84,13 @@ elation.require(['engine.things.label'], function() {
         return this.emptygeometry;
       }
 
+      var cachename = this.getCacheName(text);
+      if (this.textcache[cachename]) {
+        return this.textcache[cachename];
+      }
+
       var font = elation.engine.assets.find('font', this.properties.font);
       if (!font) font = elation.engine.assets.find('font', 'helvetiker');
-if (!window.GEOMCACHE) window.GEOMCACHE = {};
-if (GEOMCACHE[text]) return GEOMCACHE[text];
 
       var geometry = new THREE.TextGeometry( text, {
         size: this.font_size,
@@ -130,7 +136,7 @@ if (GEOMCACHE[text]) return GEOMCACHE[text];
         geometry.applyMatrix(geomod);
       }
       geometry.computeBoundingBox();
-GEOMCACHE[text] = geometry;
+      this.textcache[cachename] = geometry;
       return geometry;
     }
     this.setText = function(text) {
@@ -179,6 +185,9 @@ GEOMCACHE[text] = geometry;
       if (this.material) {
         this.material.color = this.color;
       }
+    }
+    this.getCacheName = function(text) {
+      return text + '_' + this.font + '_' + this.font_size + (this.font_scale ? '_scaled' : '');
     }
   }, elation.engine.things.janusbase);
 });
