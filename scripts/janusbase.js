@@ -296,6 +296,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           removeClass:         ['function', 'removeClass'],
           hasClass:            ['function', 'hasClass'],
           raycast:             ['function', 'raycast'],
+          getElementsByTagName:['function', 'getElementsByTagName'],
         });
 
         if (classdef) {
@@ -716,5 +717,18 @@ console.error('dunno what this is', other);
         return this.room.raycast(_dir, _pos, classname);
       };
     })();
+    this.getElementsByTagName = function(tagname, elements) {
+      var tag = tagname.toUpperCase();
+      if (!elements) elements = [];
+      var children = this.getChildProxies();
+      for (var i = 0; i < children.length; i++) {
+        var el = children[i];
+        if (el.tag == tag) {
+          elements.push(el);
+        }
+        el.getElementsByTagName(tagname, elements);
+      };
+      return elements;
+    }
   }, elation.engine.things.generic);
 });
