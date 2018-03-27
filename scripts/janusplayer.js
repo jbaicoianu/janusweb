@@ -103,8 +103,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         positions: []
       };
 
-      this.updateVRButton();
-      this.party_mode = this.getSetting('partymode.enabled', true);
+      //this.updateVRButton();
+      this.party_mode = this.getSetting('partymode.enabled', false);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -159,7 +159,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.updateHMD = function(vrdevice) {
       if (vrdevice && !this.vrbutton) {
-        this.updateVRButton();
+        //this.updateVRButton();
       }
       elation.engine.things.janusplayer.extendclass.updateHMD.call(this, vrdevice);
     }
