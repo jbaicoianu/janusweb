@@ -144,7 +144,7 @@ JanusFireboxParser.prototype.getVectorValue = function(vector, defaultvalue) {
     defaultvalue = null;//[0,0,0];
   }
   if (typeof vector == 'string') {
-    return vector.split(' ').map(parseFloat);
+    return vector.trim().split(' ').map(parseFloat);
   } else if (vector instanceof THREE.Vector3) {
     return vector.toArray();
   } else if (typeof vector == 'undefined') {
