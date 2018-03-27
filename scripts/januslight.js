@@ -17,26 +17,14 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
-      if (this.light_directional) {
-        this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
-        obj.add(this.light);
-      } else if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
-        this.light.position.set(0,0,0);
-        obj.add(this.light);
-      } else if (this.light_cone_angle > 0) {
-        var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
-        //this.light.position.set(0,0,0);
-        obj.add(this.light);
-      } 
-      this.updateLight();
       return obj;
     }
     this.updateColor = function() {
       this.updateLight();
     }
     this.createChildren = function() {
+      this.createLight();
+      this.updateLight();
       // TODO - should be an easy way of toggling helpers
       /*
       var scene = this.objects['3d'];
@@ -57,8 +45,23 @@ elation.require(['janusweb.janusbase'], function() {
       this.localToWorld(this.light.target.position.set(0,0,-1));
       this.light.target.updateMatrixWorld();
     }
+    this.createLight = function() {
+      if (this.light_directional) {
+        this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
+      } else if (this.light_cone_angle == 0) {
+        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
+        this.light.position.set(0,0,0);
+      } else if (this.light_cone_angle > 0) {
+        var angle = Math.acos(this.light_cone_angle);
+        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
+        //this.light.position.set(0,0,0);
+      }
+    }
     this.updateLight = function() {
       if (this.light) {
+        if (this.light.parent !== this.objects['3d']) {
+          this.objects['3d'].add(this.light);
+        }
         //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
         this.light.intensity = this.light_intensity / 100;
