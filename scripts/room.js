@@ -250,7 +250,7 @@ elation.require([
         var images = [];
         assets.forEach(function(asset) { 
           var t = asset.getInstance();
-          images.push(t.image); 
+          images.push(t.image);
         });
       
         // Handle skyboxes with missing textures.  We need to figure out 
@@ -432,9 +432,9 @@ elation.require([
             if (responseURL != this.properties.url) {
               var url = responseURL;
               if (!baseurloverride) {
-                baseurl = url.split('/'); 
-                baseurl.pop(); 
-                baseurl = baseurl.join('/') + '/'; 
+                baseurl = url.split('/');
+                baseurl.pop();
+                baseurl = baseurl.join('/') + '/';
                 this.baseurl = baseurl;
               }
               this.properties.url = url;
@@ -526,9 +526,9 @@ elation.require([
     }
     this.parseSource = function(data) { 
       this.fullsource = data;
-      var titlere = /<title>([\s\S]*?)<\/title>/mi; 
-      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi; 
-      var mtitle = data.match(titlere); 
+      var titlere = /<title>([\s\S]*?)<\/title>/mi;
+      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi;
+      var mtitle = data.match(titlere);
       var parsed = {
         title: 'Untitled Room',
         source: false 
@@ -539,7 +539,7 @@ elation.require([
       } else {
         this.setTitle(null);
       }
-      var m = data.match(re); 
+      var m = data.match(re);
       if (m) { 
         parsed.source = m[0];
       }
@@ -840,7 +840,7 @@ elation.require([
           }
         }
         if (hasNew) {
-          //elation.engine.assets.loadJSON(diff.assets.objects, this.baseurl); 
+          //elation.engine.assets.loadJSON(diff.assets.objects, this.baseurl);
           this.createRoomObjects(diff);
         }
       }));
@@ -906,7 +906,7 @@ elation.require([
         case 'janusobject':
           elation.utils.merge({ 
             'janusid': args.id, 
-          }, objectargs); 
+          }, objectargs);
           break;
         case 'janustext':
           elation.utils.merge({
