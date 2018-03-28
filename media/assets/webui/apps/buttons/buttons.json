@@ -1,8 +1,8 @@
 {
   "templates": {
+    "janus.ui.buttons": "./buttons.html"
   },
   "css": [
-    "./buttons.css"
   ],
   "scripts": [
     "./buttons.js"

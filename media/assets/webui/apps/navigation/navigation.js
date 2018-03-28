@@ -43,6 +43,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     this.tooltip = elation.elements.create('ui-tooltip', {
       append: this,
     });
+    setTimeout(() => { this.tooltip.hide(); }, 1000);
 
     this.canvas = document.createElement('canvas');
     this.inner.appendChild(this.canvas);
@@ -84,7 +85,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
       room = this.janusweb.currentroom;
     }
     if (this.room !== room) {
-console.log('room changed!', this.room, room);
+//console.log('room changed!', this.room, room);
 
       elation.events.add(room, 'room_load_queued', elation.bind(this, this.updateStatus, 'queued'));
       elation.events.add(room, 'room_load_start', elation.bind(this, this.updateStatus, 'downloading'));
@@ -174,7 +175,7 @@ console.log('room changed!', this.room, room);
       total += this.loading[k].total;
     }
     var percent = loaded / total;
-    console.log('room had some progress', count + ' files, ' + loaded + ' / ' + total + ' bytes, ' + (percent * 100).toFixed(2) + '%', url);
+    //console.log('room had some progress', count + ' files, ' + loaded + ' / ' + total + ' bytes, ' + (percent * 100).toFixed(2) + '%', url);
 
     this.percent = percent;
 
@@ -198,6 +199,7 @@ console.log('room changed!', this.room, room);
     this.tooltip.hide();
   }
   updateTooltip() {
+return;
     var summary = this.getSummary();
     this.tooltip.setcontent(summary);
     this.tooltip.show();

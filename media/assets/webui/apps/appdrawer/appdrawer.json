@@ -2,7 +2,7 @@
   "templates": {
   },
   "scripts":  ["./appdrawer.js"],
-  "css":      ["./appdrawer.css"]
+  "css":      []
 }
 
 

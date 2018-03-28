@@ -69,7 +69,15 @@ ui-checklist>ui-checklistitem[hover] {
 }
 ui-list>ui-item.state_selected,
 ui-checklist>ui-checklistitem.state_selected {
-  background: #eef;
+  background: rgba(128,128,255,.5);
+}
+ui-list[selectable] {
+  cursor: text;
+  user-select: text;
+}
+ui-list>[selectable] {
+  cursor: text;
+  user-select: text;
 }
 
 /* <ui-grid> */
@@ -92,8 +100,6 @@ ui-grid[scrollable-y] {
 }
 ui-grid>ui-item {
   display: inline-block;
-  width: 10em;
-  height: 6em;
   border-radius: .5em;
   border: 1px solid #111;
   background: rgba(0,0,0,.1);
@@ -102,6 +108,36 @@ ui-grid>ui-item {
 }
 ui-grid>ui-item[hover] {
   background-color: rgba(128,128,255,.2);
+}
+ui-grid.twocolumn>ui-item {
+  width: 50%;
+}
+ui-grid.threecolumn>ui-item {
+  width: calc(33% - .8em - 2px);
+}
+ui-grid.fourcolumn>ui-item {
+  width: 25%;
+}
+ui-grid.fivecolumn>ui-item {
+  width: 20%;
+}
+ui-grid.sixcolumn>ui-item {
+  width: 16%;
+}
+ui-grid.sevencolumn>ui-item {
+  width: 14%;
+}
+ui-grid.eightcolumn>ui-item {
+  width: 12.5%;
+}
+ui-grid.ninecolumn>ui-item {
+  width: 11%;
+}
+ui-grid.tencolumn>ui-item {
+  width: 10%;
+}
+ui-grid.fivecolumn>ui-item {
+  width: 20%;
 }
 
 /* <ui-tabs> */

@@ -1,6 +1,5 @@
 {
   "includes": [
-    "./apps/splash/splash.json",
     "./apps/popular/popular.json",
     "./apps/partymode/partymode.json",
     "./apps/bookmarks/bookmarks.json",

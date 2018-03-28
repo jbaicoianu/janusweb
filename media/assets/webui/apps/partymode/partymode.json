@@ -4,7 +4,6 @@
     "janus.ui.partymode.user": "./user.html"
   },
   "css": [
-    "./partymode.css"
   ],
   "scripts": [
     "./partymode.js"
