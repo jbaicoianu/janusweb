@@ -359,7 +359,7 @@ elation.require([
         if (!pos) pos = this.currentroom.spawnpoint.position;
         if (pos) {
           player.properties.position.fromArray(pos);
-          player.properties.orientation.copy(this.currentroom.spawnpoint.orientation);
+          player.properties.orientation.copy(this.currentroom.spawnpoint.quaternion);
         }
         if (changed && !skipURLUpdate) {
           this.updateClientURL(url);
