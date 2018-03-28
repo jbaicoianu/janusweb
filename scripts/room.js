@@ -11,6 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'referrer': { type: 'string' },
         'deferload': { type: 'boolean', default: false },
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
@@ -57,8 +58,6 @@ elation.require([
         '^error$': elation.janusweb.translators.error({janus: this.janus}),
         '^default$': elation.janusweb.translators.default({janus: this.janus})
       };
-      this.playerstartposition = [0,0,0];
-      this.playerstartorientation = new THREE.Quaternion();
       this.spawnpoint = new THREE.Object3D();
       this.roomsrc = '';
       this.changes = {};
@@ -172,8 +171,8 @@ elation.require([
     }
     this.setPlayerPosition = function(pos, orientation) {
       if (!pos) {
-        pos = this.playerstartposition;
-        orientation = this.playerstartorientation;
+        pos = this.spawnpoint.position;
+        orientation = this.spawnpoint.orientation;
       }
       var player = this.engine.client.player;
       player.reset_position();
@@ -613,17 +612,25 @@ elation.require([
         });
 //}), Math.random() * 500);
         }
-        // set player position based on room info
-        this.playerstartposition = room.pos;
-        this.playerstartorientation = room.orientation;
-
+        // set player spawnpoint based on room info
         if (room.pos) {
           this.spawnpoint.position.fromArray(room.pos);
         }
         if (room.orientation) {
           this.spawnpoint.quaternion.copy(room.orientation);
-          this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+          this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0))); // Janus Native starts the player backwards
           this.spawnpoint.updateMatrixWorld();
+        }
+
+        // If we have a referrer, check to see if a reciprocal link exists.  If it does, use this as our spawn point.
+        if (roomdata.link && this.referrer) {
+          roomdata.link.forEach(link => {
+            if (link.url == this.referrer) {
+              this.spawnpoint.quaternion.copy(link.orientation.inverse());
+              this.spawnpoint.position.fromArray(link.pos);
+              this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
+            }
+          });
         }
 
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
@@ -1439,6 +1446,7 @@ elation.require([
       if (!this._proxyobject) {
         var proxy = new elation.proxy(this, {
           url:           ['property', 'url', { readonly: true}],
+          referrer:      ['property', 'referrer'],
           objects:       ['property', 'jsobjects'],
           cookies:       ['property', 'cookies'],
           walk_speed:    ['property', 'walk_speed'],
