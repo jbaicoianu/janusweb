@@ -172,7 +172,7 @@ elation.require([
     this.setPlayerPosition = function(pos, orientation) {
       if (!pos) {
         pos = this.spawnpoint.position;
-        orientation = this.spawnpoint.orientation;
+        orientation = this.spawnpoint.quaternion;
       }
       var player = this.engine.client.player;
       player.reset_position();
