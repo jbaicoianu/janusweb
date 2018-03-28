@@ -351,12 +351,16 @@ elation.require([
         this.properties.url = url;
       }
       var baseurl = baseurloverride;
-      if (!baseurl && url) {
-        baseurl = url.split('/'); 
-        if (baseurl.length > 3) baseurl.pop(); 
-        baseurl = baseurl.join('/') + '/'; 
+      if (!baseurl) {
+        if (url && !this.baseurl) {
+          baseurl = url.split('/');
+          if (baseurl.length > 3) baseurl.pop();
+          baseurl = baseurl.join('/') + '/';
+          this.baseurl = baseurl;
+        }
+      } else {
+        this.baseurl = baseurl;
       }
-      this.baseurl = baseurl;
 
       this.jsobjects = {};
       this.cookies = {};
