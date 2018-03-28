@@ -1,7 +1,6 @@
 elation.elements.define('janus.ui.buttons', class extends elation.elements.base {
   create() {
     this.innerHTML = elation.template.get('janus.ui.buttons');
-alert('new buttons' + this.innerHTML);
   }
 });
 elation.elements.define('janus-buttons-display', class extends elation.elements.ui.dropdownbutton {
