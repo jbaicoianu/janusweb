@@ -354,10 +354,10 @@ elation.require(['janusweb.janusbase'], function() {
         var portalcam = this.portalrender.camera;
         var playerpos = player.parent.localToWorld(player.properties.position.clone());
         var portalpos = this.parent.localToWorld(this.properties.position.clone());
-        var startpos = new THREE.Vector3().fromArray(this.portalroom.playerstartposition);
+        var startpos = new THREE.Vector3().fromArray(this.portalroom.spawnpoint.position);
 
         var currentRoomRotation = new THREE.Matrix4().extractRotation(this.objects['3d'].matrixWorld);
-        var blah = new THREE.Matrix4().makeRotationFromQuaternion(this.portalroom.playerstartorientation);
+        var blah = new THREE.Matrix4().makeRotationFromQuaternion(this.portalroom.spawnpoint.orientation);
         var el = blah.elements;
         var otherRoomRotation = new THREE.Matrix4().set(
            el[0],  el[1],  el[2], el[3],

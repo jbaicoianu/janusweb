@@ -356,10 +356,10 @@ elation.require([
           this.loading = false;
           elation.events.fire({element: this, type: 'room_change', data: url});
         }
-        if (!pos) pos = this.currentroom.playerstartposition;
+        if (!pos) pos = this.currentroom.spawnpoint.position;
         if (pos) {
           player.properties.position.fromArray(pos);
-          player.properties.orientation.copy(this.currentroom.playerstartorientation);
+          player.properties.orientation.copy(this.currentroom.spawnpoint.orientation);
         }
         if (changed && !skipURLUpdate) {
           this.updateClientURL(url);
