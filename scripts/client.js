@@ -199,7 +199,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     this.toggleFullscreen = function(ev, updateOnly) {
       var view = this.view;
-      if (!updateOnly && view && (ev.value == 1 || typeof ev.value == 'undefined')) {
+      if (!updateOnly && view && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
         view.toggleFullscreen();
       }
       if (view.isFullscreen()) {
