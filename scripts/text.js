@@ -67,9 +67,11 @@ elation.require(['engine.things.label'], function() {
         emissive: this.properties.emissive, 
         shading: THREE.SmoothShading, 
         depthTest: this.properties.depthTest,
-        roughness: .5,
         reflectivity: .5
       };
+      if (this.room.pbr) {
+        matargs.roughness = .5;
+      }
       var material = (this.room.pbr ? new THREE.MeshPhysicalMaterial(matargs) : new THREE.MeshPhongMaterial(matargs));
 
       if (this.properties.opacity < 1.0) {
