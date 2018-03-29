@@ -112,7 +112,7 @@ elation.require([
         'manipulate_down':  [ 'keyboard_nomod_s,keyboard_s',   this.editObjectManipulateDown ],
         'manipulate_in':    [ 'keyboard_nomod_q,mouse_wheel_down',   this.editObjectManipulateIn ],
         'manipulate_out':   [ 'keyboard_nomod_e,mouse_wheel_up',   this.editObjectManipulateOut ],
-        'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
+        //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
         'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
         'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
         'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
@@ -1793,9 +1793,12 @@ elation.require([
         var numitems = items.length;
         for (var i = 0; i < numitems; i++) {
           var type = items[i].type;
-          if (type == 'text/uri-list') {
-            items[i].getAsString(elation.bind(this, this.loadObjectFromURIList));
-          }
+          types[type] = items[i];
+        }
+        if (types['text/x-jml']) {
+          types['text/x-jml'].getAsString(elation.bind(this, this.loadObjectFromJML));
+        } else if (types['text/uri-list']) {
+          types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
         }
       }
       ev.preventDefault();
@@ -1815,19 +1818,31 @@ elation.require([
           }
           var newobject = this.createObject('Object', {
             id: url,
+            js_id: player.userid + '-' + url + '-' + window.uniqueId(),
             sync: true,
             pos: player.vectors.cursor_pos.clone()
           });
           objects.push(newobject);
         }
       }
-      this.editObject(objects[0], true);
+      if (objects[0]) {
+        this.editObject(objects[0], true);
+      }
+    }
+    this.loadObjectFromJML = function(jml) {
+      console.log('cool guy', jml);
+      this.applyEditXML(jml);
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
       this.roomedit.modeid = 0;
       this.roomedit.objectIsNew = isnew;
-      this.roomedit.moving = false;
+      this.roomedit.moving = true;
+
+      object.sync = true;
+      if (!object.js_id) {
+        object.js_id = player.userid + '-' + window.uniqueId();
+      }
 
       object.collision_id = '';
 
@@ -1851,7 +1866,7 @@ elation.require([
       }
 
       // activate context
-      this.engine.systems.controls.activateContext('roomedit', this);
+      //this.engine.systems.controls.activateContext('roomedit', this);
       this.engine.systems.controls.activateContext('roomedit_togglemove', this);
 
       this.editObjectShowWireframe();
@@ -2046,10 +2061,10 @@ elation.require([
       var roomedit = ev.target.roomedit;
       if (ev.value == 1) {
         roomedit.moving = true;
-        this.engine.systems.controls.deactivateContext('roomedit', this);
-      } else if (ev.value == 0) {
-        roomedit.moving = false;
         this.engine.systems.controls.activateContext('roomedit', this);
+      } else if (ev.value == 0) {
+        roomedit.moving = true;
+        this.engine.systems.controls.deactivateContext('roomedit', this);
       }
     }
     this.editObjectHandlePointerlock = function(ev) {
@@ -2107,7 +2122,7 @@ elation.require([
           hits = [];
           for (var i = 0; i < intersections.length; i++) {
             var obj = intersections[i].object,
-                thing = obj.userData.thing;
+                thing = this.getThingForObject(obj);
             if (thing.hasClass(classname)) {
               intersections[i].mesh = obj;
               intersections[i].object = thing.getProxyObject();
@@ -2117,7 +2132,7 @@ elation.require([
         } else {
           for (var i = 0; i < hits.length; i++) {
             var obj = hits[i].object,
-                  thing = obj.userData.thing;
+                  thing = this.getThingForObject(obj);
             hits[i].mesh = hits[i].object;
             hits[i].object = thing.getProxyObject();
           }
@@ -2125,6 +2140,15 @@ elation.require([
         return hits;
       }
     })();
+    this.getThingForObject = function(obj) {
+      while (obj) {
+        if (obj.userData && obj.userData.thing) {
+          return obj.userData.thing;
+        }
+        obj = obj.parent;
+      }
+      return null;
+    }
   }, elation.engine.things.generic);
 });
 
