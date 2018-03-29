@@ -863,7 +863,7 @@ elation.require([
         }
       }));
     }
-    this.createObject = function(type, args, parent) {
+    this.createObject = function(type, args, parent, skipstart) {
       var customElement = false;
       type = type.toLowerCase();
       var customElement = this.getCustomElement(type);
@@ -1002,7 +1002,7 @@ elation.require([
         this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
       }
 
-      if (this.enabled) {
+      if (this.enabled && !skipstart) {
         object.start();
       }
 
