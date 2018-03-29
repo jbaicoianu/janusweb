@@ -1088,15 +1088,27 @@ elation.require([
           src: src,
           baseurl: this.baseurl
         });
-      } else if (type == 'object') {
+      } else if (type == 'object' || type == 'model') {
+        var src, mtlsrc, srcparts = [];
         if (args.src) {
-          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-          var mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
+          src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
           if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = this.baseurl + mtlsrc;
-          var srcparts = src.split(' ');
+          srcparts = src.split(' ');
           src = srcparts[0];
-          assetlist.push({assettype: 'model', name: args.id, src: src, mtl: mtlsrc, tex_linear: args.tex_linear, tex0: args.tex || args.tex0 || srcparts[1], tex1: args.tex1 || srcparts[2], tex2: args.tex2 || srcparts[3], tex3: args.tex3 || srcparts[4]});
         }
+        assetlist.push({
+          assettype: 'model',
+          name: args.id,
+          src: src,
+          mtl: mtlsrc,
+          object: args.object,
+          tex_linear: args.tex_linear,
+          tex0: args.tex || args.tex0 || srcparts[1],
+          tex1: args.tex1 || srcparts[2],
+          tex2: args.tex2 || srcparts[3],
+          tex3: args.tex3 || srcparts[4]
+        });
       } else if (type == 'ghost') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({
@@ -1186,7 +1198,7 @@ elation.require([
       }
       var asset;
       if (this.assetpack) {
-        asset = this.assetpack.get(type, id, assetargs); ////this.roomassets[type][id];
+        asset = this.assetpack.get(realtype, id, assetargs); ////this.roomassets[type][id];
       }
       if (!asset) {
         asset = this.janus.getAsset(type, id, assetargs);
@@ -1194,9 +1206,9 @@ elation.require([
       if (asset) {
         if (!this.roomassets[type][id]) {
           this.roomassets[type][id] = asset;
-        //if (asset) {
+
           elation.events.fire({element: this, type: 'room_add_asset', data: asset});
-          if (!asset.loaded) {
+          if (!asset.loaded && asset.assettype != 'sound') { // FIXME - skip load tracking for sounds, the engine should be handling this
             this.pendingassets.push(asset);
             elation.events.add(asset, 'asset_load_complete,asset_error', elation.bind(this, this.assetLoaded, asset));
             elation.events.add(asset, 'asset_load_dependency', elation.bind(this, this.assetLoadDependency, asset));
