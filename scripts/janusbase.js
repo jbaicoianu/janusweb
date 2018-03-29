@@ -126,7 +126,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
                   n.userData.thing = this;
                 }));
                 this.colliders.add(collider);
-              //this.setCollider('threejs', {mesh: collider.children[0], scale: this.properties.scale});
+                //this.setCollider('mesh', {mesh: collider.children[0], scale: this.properties.scale});
 
             });
             var collider = colliderasset.getInstance();
