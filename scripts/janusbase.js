@@ -508,8 +508,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       }
     }
 
-    this.createObject = function(type, args) {
-      return room.createObject(type, args, this);
+    this.createObject = function(type, args, skipstart) {
+      return room.createObject(type, args, this, !this.started);
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
