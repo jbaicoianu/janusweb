@@ -446,7 +446,7 @@ if (!m.map.uploaded) {
         m.alphaTest = this.alphatest;
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
-        m.normalMap = oldmat.normalMap;
+        m.bumpMap = oldmat.bumpMap;
 
         if (!(m instanceof THREE.MeshBasicMaterial)) {
           if (oldmat.emissiveMap) m.emissiveMap = oldmat.emissiveMap;
@@ -462,18 +462,23 @@ if (!m.map.uploaded) {
         m.skinning = oldmat.skinning;
 
         if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
+        if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
         if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
         if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
         if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
 
         m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
-        m.roughnessMap = oldmat.specularMap;
+        if (oldmat.roughnessMap !== undefined) {
+          m.roughnessMap = oldmat.roughnessMap;
+        } else if (oldmat.specularMap !== undefined) {
+          m.roughnessMap = oldmat.specularMap;
+        }
         if (oldmat.roughness !== undefined) {
           m.roughness = oldmat.roughness;
         } else if (oldmat.shininess !== undefined) {
           m.roughness = 1 - oldmat.shininess / 512;
-        } else {
+        } else if (!m.roughnessMap) {
           m.roughness = 0.6;
         }
         if (this.isUsingPBR()) {
