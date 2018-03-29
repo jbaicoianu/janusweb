@@ -630,7 +630,7 @@ console.error('dunno what this is', other);
       if (!event.element) event.element = this;
       var handlerfn = 'on' + event.type;
       if (this[handlerfn]) {
-        //this.executeCallback(this[handlerfn], event);
+        this.executeCallback(this[handlerfn], event);
       }
       return elation.events.fire(event);
     }
