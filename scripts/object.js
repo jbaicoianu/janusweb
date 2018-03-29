@@ -530,6 +530,8 @@ if (!m.map.uploaded) {
     }
     this.start = function() {
       elation.engine.things.janusobject.extendclass.start.call(this);
+      /*
+      // TODO - should double check that gifs stop playing when you leave a room
       if (this.image_id) {
         var textureasset = this.getAsset('image', this.image_id);
         if (textureasset) {
@@ -537,6 +539,7 @@ if (!m.map.uploaded) {
           //console.log('start the image!', texture);
         }
       }
+      */
       if (this.video_id) {
         if (this.videoasset && this.videotexture) {
           var texture = this.videotexture;
@@ -564,9 +567,14 @@ if (!m.map.uploaded) {
         console.log('stop the image!', texture);
       }
       if (this.video_id) {
-        var texture = elation.engine.assets.find('video', this.video_id);
-        texture.image.pause();
-        console.log('stop the video!', texture);
+        //var texture = elation.engine.assets.find('video', this.video_id);
+        //texture.image.pause();
+        //console.log('stop the video!', texture);
+        this.pause();
+        // FIXME - this stops the video from loading any more data, but means we can't easily restart
+        //         so we're hackishly working around that
+        this.video.originalSrc = this.video.src;
+        this.video.src = '';
       }
       if (this.websurface_id && this.websurface) {
         this.websurface.stop();
