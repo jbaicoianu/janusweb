@@ -884,6 +884,7 @@ elation.require([
       var objectargs = {
         'room': this,
         'janus': this.properties.janus,
+        'js_id': args.js_id,
         'position': args.pos,
         'velocity': args.vel,
         'color': args.col,
