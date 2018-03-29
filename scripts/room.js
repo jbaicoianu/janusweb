@@ -1015,6 +1015,9 @@ elation.require([
         proxyobj = this.jsobjects[obj];
       }
       if (proxyobj) {
+        if (proxyobj.parent) {
+          proxyobj.parent.removeChild(proxyobj);
+        }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
