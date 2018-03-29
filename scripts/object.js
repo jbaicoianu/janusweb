@@ -132,6 +132,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         elation.events.add(texture, 'autoplaystart', elation.bind(this, this.handleAutoplayStart));
         elation.events.add(texture, 'autoplayfailed', elation.bind(this, this.handleAutoplayFailed));
         this.videotexture = texture;
+
+        // Refresh this object whenever the video has a new frame for us to display
+        texture.onUpdate = (e) => this.refresh();
+
         if (videoasset.auto_play) {
           texture.image.addEventListener('canplaythrough', function() {
             texture.image.play();
@@ -325,7 +329,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
 
           for (var i = 0; i < materials.length; i++) {
-            var m = materials[i];
+            let m = materials[i];
             //m.envMap = scene.background;
             if (color) {
               m.color = color;
@@ -333,7 +337,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (texture && texture.image) {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
-              elation.events.add(texture, 'asset_update', elation.bind(m, function(ev) { m.map = ev.data; }));
+              elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
@@ -346,21 +350,37 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.map = asset.getInstance();
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
                 elation.events.add(m.map, 'asset_load', elation.bind(this, function(m, asset, ev) {
-                  if (asset.hasalpha) {
+                  if (asset.hasalpha && !m.transparent) {
                     m.transparent = true;
                     m.alphaTest = this.alphatest;
                     m.needsUpdate = true;
                   }
+if (!m.map.uploaded) {
+  //console.log('diffuse load', m.map.sourceFile, m.map);
+  renderer.setTexture2D(m.map, 0);
+  m.map.uploaded = true;
+}
+                  this.refresh();
                 }, m, asset));
               }
               this.assignTextureParameters(m.map, modelasset, asset);
+            }
+            if (m.bumpMap) {
+              var imagesrc = m.bumpMap.sourceFile;
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+              if (asset) {
+                m.normalMap = asset.getInstance();
+                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                elation.events.add(m.bumpMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+              }
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
+                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                elation.events.add(m.normalMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
               }
             }
 
@@ -368,15 +388,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (lightmaptextureasset.loaded) {
                 m.lightMap = textureLightmap; 
               } else {
-                elation.events.add(textureLightmap, 'asset_load', elation.bind(m, function(ev) { m.lightMap = ev.data; }));
               }
-              elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; }));
+              elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
             } else if (m.lightMap) {
               var imagesrc = m.lightMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.lightMap = asset.getInstance();
-                elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; }));
+                elation.events.add(m.lightMap, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
+                elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
               }
             }
 
