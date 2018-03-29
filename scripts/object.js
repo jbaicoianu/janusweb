@@ -200,7 +200,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.assignTextures = function() {
       //console.log('assign textures', this.name, this.objects['3d']);
       if (!this.objects['3d']) return;
-      var modelasset = false,
+      var modelasset = this.modelasset,
           texture = false,
           textureLightmap = false,
           color = false,
@@ -215,7 +215,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           normal_image_id = false,
           lightmap_image_id = this.lmap_id;
       if (this.janusid) {
-        modelasset = this.getAsset('model', this.janusid, true);
+        if (!modelasset || modelasset.name != this.janusid) {
+          modelasset = this.getAsset('model', this.janusid, true);
+          this.modelasset = modelasset;
+        }
         if (modelasset.tex) {
           image_id = modelasset.tex;
         }
@@ -223,7 +226,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           image_id = modelasset.tex0;
         }
       }
-      this.modelasset = modelasset;
       if (image_id) {
         textureasset = this.getAsset('image', image_id, true);
         if (textureasset) {
