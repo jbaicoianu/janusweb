@@ -257,7 +257,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         texture = this.videotexture;
         this.assignTextureParameters(texture, modelasset);
       }
-      if (this.properties.websurface_id) {
+      if (this.websurface_id) {
         this.replaceWebsurfaceMaterial();
         return;
       }
