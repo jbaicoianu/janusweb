@@ -606,6 +606,11 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       if (this.assetpack) {
         asset = this.assetpack.get(type, name, assetargs);
       }
+
+      if (!asset) {
+        asset = elation.engine.assets.find(type, name, true);
+      }
+
       return asset;
     }
   }, elation.engine.things.generic);
