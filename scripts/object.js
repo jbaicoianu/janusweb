@@ -332,7 +332,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
           for (var i = 0; i < materials.length; i++) {
             let m = materials[i];
-            //m.envMap = scene.background;
             if (color) {
               m.color = color;
             }
@@ -400,6 +399,10 @@ if (!m.map.uploaded) {
                 elation.events.add(m.lightMap, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
                 elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
               }
+            }
+
+            if (this.isUsingPBR()) {
+              m.envMap = this.getEnvmap();
             }
 
             //m.roughness = 0.75;
