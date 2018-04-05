@@ -45,16 +45,27 @@ elation.require(['janusweb.janusbase'], function() {
       this.localToWorld(this.light.target.position.set(0,0,-1));
       this.light.target.updateMatrixWorld();
     }
+    this.update = function() {
+      if (!this.light) {
+        this.createLight();
+        this.updateLight();
+      }
+      if (this.light && !this.light.parent) {
+        this.objects['3d'].add(this.light);
+      }
+    }
     this.createLight = function() {
-      if (this.light_directional) {
-        this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
-      } else if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
-        this.light.position.set(0,0,0);
-      } else if (this.light_cone_angle > 0) {
-        var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
-        //this.light.position.set(0,0,0);
+      if (!this.light) {
+        if (this.light_directional) {
+          this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
+        } else if (this.light_cone_angle == 0) {
+          this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
+          this.light.position.set(0,0,0);
+        } else if (this.light_cone_angle > 0) {
+          var angle = Math.acos(this.light_cone_angle);
+          this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
+          //this.light.position.set(0,0,0);
+        }
       }
     }
     this.updateLight = function() {
