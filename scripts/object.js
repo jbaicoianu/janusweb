@@ -364,7 +364,9 @@ if (!m.map.uploaded) {
                   this.refresh();
                 }, m, asset));
               }
-              this.assignTextureParameters(m.map, modelasset, asset);
+              if (m.map) {
+                this.assignTextureParameters(m.map, modelasset, asset);
+              }
             }
             if (m.bumpMap) {
               var imagesrc = m.bumpMap.sourceFile;
