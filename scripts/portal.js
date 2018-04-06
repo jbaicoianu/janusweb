@@ -24,7 +24,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.createObject3D = function() {
       var thickness = 0.05;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
-      var box = new THREE.BoxGeometry(this.size.x, this.size.y, thickness);
+      var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
       box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
 
       var mat = this.createMaterial();
@@ -37,8 +37,8 @@ elation.require(['janusweb.janusbase'], function() {
         var framewidth = .05, 
             frameheight = .05, 
             framedepth = .01 / this.properties.size.z;
-        var framegeo = new THREE.Geometry();
-        var framepart = new THREE.BoxGeometry(this.size.x,frameheight,framedepth);
+        var framegeo = new THREE.BufferGeometry();
+        var framepart = new THREE.BoxBufferGeometry(this.size.x,frameheight,framedepth);
         var framemat4 = new THREE.Matrix4();
 
 
@@ -47,7 +47,7 @@ elation.require(['janusweb.janusbase'], function() {
         framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
         
-        framepart = new THREE.BoxGeometry(framewidth,this.size.y,framedepth);
+        framepart = new THREE.BoxBufferGeometry(framewidth,this.size.y,framedepth);
 
         framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth + offset);
         framegeo.merge(framepart, framemat4);
