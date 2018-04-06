@@ -233,13 +233,14 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
   }, elation.engine.client);
 
   if (typeof customElements != 'undefined') {
-    elation.elements.define('janus.viewer.base', class extends elation.elements.base {
+    elation.elements.define('janus.viewer', class extends elation.elements.base {
       init() {
         super.init();
         this.defineAttributes({
           fullscreen: { type: 'boolean', default: true },
           autostart: { type: 'boolean', default: true },
           src: { type: 'string' },
+          homepage: { type: 'string' },
           width: { type: 'integer', default: 640 },
           height: { type: 'integer', default: 480 },
         });
@@ -253,6 +254,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
             height = (this.fullscreen ? window.innerHeight : this.height);
         var args = {
           url: this.getRoomURL(),
+          homepage: this.homepage,
           //resolution: width + 'x' + height,
           //shownavigation: false,
         };
@@ -262,10 +264,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         return this.src || document.location.href;
       }
     });
-    //document.registerElement('janus-viewer', elation.janusweb.viewer.base);
 
 
-    elation.elements.define('janus.viewer.frame', class extends elation.elements.janus.viewer.base {
+    elation.elements.define('janus.viewer.frame', class extends elation.elements.janus.viewer {
       init() {
         super.init();
         console.log('init frame', this);
