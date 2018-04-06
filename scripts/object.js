@@ -418,7 +418,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else {
               m.blending = THREE.NormalBlending;
             }
-            m.needsUpdate = true;
+            //m.needsUpdate = true;
             m.skinning = useSkinning;
           }
         } else if (n instanceof THREE.Light) {
@@ -431,6 +431,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.refresh();
     }
     this.copyMaterial = function(oldmat) {
+console.log('cloning material', oldmat);
       if (elation.utils.isArray(oldmat)) {
         var materials = [];
         for (var i = 0; i < oldmat.length; i++) {
