@@ -1201,7 +1201,7 @@ elation.require([
         asset = this.assetpack.get(realtype, id, assetargs); ////this.roomassets[type][id];
       }
       if (!asset) {
-        asset = this.janus.getAsset(type, id, assetargs);
+        asset = this.janus.getAsset(realtype, id, assetargs);
       }
       if (asset) {
         if (!this.roomassets[type][id]) {
