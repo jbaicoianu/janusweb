@@ -356,11 +356,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                     m.alphaTest = this.alphatest;
                     m.needsUpdate = true;
                   }
-if (!m.map.uploaded) {
-  //console.log('diffuse load', m.map.sourceFile, m.map);
-  renderer.setTexture2D(m.map, 0);
-  m.map.uploaded = true;
-}
                   this.refresh();
                 }, m, asset));
               }
