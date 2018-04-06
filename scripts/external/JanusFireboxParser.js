@@ -165,7 +165,7 @@ JanusFireboxParser.prototype.parseNode = function(n) {
   nodeinfo.orientation = this.getOrientation(n.xdir, n.ydir || n.up, n.zdir || n.fwd);
   nodeinfo.col = (n.col ? (n.col[0] == '#' ? [parseInt(n.col.substr(1,2), 16)/255, parseInt(n.col.substr(3, 2), 16)/255, parseInt(n.col.substr(5, 2), 16)/255] : n.col) : null);
   
-  var minscale = 1e-6;
+  var minscale = 1e-20;
 /*
   nodeinfo.scale[0] = Math.max(minscale, nodeinfo.scale[0]);
   nodeinfo.scale[1] = Math.max(minscale, nodeinfo.scale[1]);
