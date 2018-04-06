@@ -301,12 +301,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var hasalpha = this.hasalpha;
       var remove = [];
       var cloneMaterial = true;//(texture !== false);
-      var useSkinning = this.animations && this.animations.length > 0;
 
       this.objects['3d'].traverse(elation.bind(this, function(n) { 
         n.receiveShadow = this.shadow && this.shadow_receive;
         n.castShadow = this.shadow && this.shadow_cast;
 
+        var useSkinning = n instanceof THREE.SkinnedMesh;
         if (n.material) {
           var materials = [];
           if (elation.utils.isArray(n.material)) {
