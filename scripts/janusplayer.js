@@ -607,7 +607,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var obj = ev.target || ev.element;
       var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
 
-      if (ev.type == 'mouseover' && (
+
+      if (obj && proxyobj && (ev.type == 'mouseover' || ev.type == 'mousemove') && (
             obj.onclick ||
             elation.events.hasEventListener(obj, 'click') ||
             elation.events.hasEventListener(proxyobj, 'click') ||
@@ -716,6 +717,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.handleGazeLeave = function(ev) {
       var obj = ev.data.object;
       if (obj && obj.dispatchEvent) {
+        this.cursor_object = '';
         obj.dispatchEvent({type: 'gazeleave', data: ev.data.intersection});
       }
     }
