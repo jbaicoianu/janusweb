@@ -141,6 +141,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             texture.image.play();
           });
         }
+
+        // Refresh this object whenever the video has a new frame for us to display
+        texture.onUpdate = (e) => this.refresh();
+
         this.video = texture.image;
         elation.events.add(this, 'click', elation.bind(this, this.handleVideoClick));
         this.room.videos[videoid] = this;
