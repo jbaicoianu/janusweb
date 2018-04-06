@@ -25,6 +25,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.createChildren = function() {
       this.createLight();
       this.updateLight();
+      this.created = true;
       // TODO - should be an easy way of toggling helpers
       /*
       var scene = this.objects['3d'];
