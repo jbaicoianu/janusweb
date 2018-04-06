@@ -62,11 +62,13 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
 
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
+      this.created = false;
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
         this.create();
       }
+      this.created = true;
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
@@ -431,7 +433,7 @@ console.log('got collider', collider, collision_id);
       this.resetFrameUpdates();
       this.dispatchEvent({type: 'update', data: ev.data});
       var proxy = this.getProxyObject();
-      if (typeof proxy.update == 'function') {
+      if (typeof proxy.update == 'function' && this.created) {
         proxy.update(ev.data);
       }
     }
@@ -520,7 +522,7 @@ console.log('got collider', collider, collision_id);
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
-        if (proxyobj.parent) {
+        if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
           proxyobj.parent.removeChild(proxyobj);
         }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
@@ -528,7 +530,9 @@ console.log('got collider', collider, collision_id);
         if (realobj) {
           this.add(realobj);
           this.updateScriptChildren();
-          realobj.start();
+          if (typeof realobj.start == 'function') {
+            realobj.start();
+          }
         }
       }
     }
