@@ -339,7 +339,9 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
 });
 elation.elements.define('janus.ui.urlbar.suggestions', class extends elation.elements.ui.panel {
   create() {
-    this.popular = elation.elements.create('collection.jsonapi', {
+    this.suggestions = elation.elements.create('collection.jsonapi', {
+      id: 'suggested_popular',
+      append: this,
       host: "https://api.janusvr.com",
       endpoint: "/getPopularRooms",
       itempath: "data",
@@ -349,15 +351,23 @@ elation.elements.define('janus.ui.urlbar.suggestions', class extends elation.ele
         urlContains: ''
       }
     });
-    this.poplist = elation.elements.create('ui.list', {
-      collection: this.popular,
-      append: this,
-      itemtemplate: 'janus.ui.popular.room'
+    this.panel = elation.elements.create('div', {
+      append: this
     });
+/*
+    this.list = elation.elements.create('ui.list', {
+      collection: this.suggestions,
+      append: this,
+      itemtemplate: 'janus.ui.navigation.suggestion.room'
+    });
+*/
   }
   update(search) {
-    this.popular.apiargs.urlContains = search;
-    this.popular.load();
-console.log(this.popular.items);
+    this.suggestions.apiargs.urlContains = search;
+    this.suggestions.load();
+    var tplvars = {
+      popular: this.suggestions.items
+    };
+    this.panel.innerHTML = elation.template.get('janus.ui.navigation.suggestions', tplvars);
   }
 })

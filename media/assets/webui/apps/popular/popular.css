@@ -37,4 +37,5 @@
   text-overflow: ellipsis;
   overflow: hidden;
   padding: 0 .2em;
+  margin: 0;
 }

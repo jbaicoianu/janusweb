@@ -121,3 +121,27 @@ janus-ui-statusindicator>ui-tooltip ul {
   font-size: .8em;
   margin-left: 1em;
 }
+janus-ui-urlbar-suggestions {
+  display: block;
+  background: #333;
+  border: 1px solid black;
+  width: 50em;
+  max-width: 100%;
+}
+janus-ui-urlbar-suggestions h2 {
+  padding: 0 .2em;
+  font-size: 1em;
+}
+janus-ui-urlbar-suggestions ui-list{
+  max-height: 20em;
+  overflow-x: hidden;
+}
+janus-ui-urlbar-suggestions ui-item a {
+  display: flex;
+}
+janus-ui-urlbar-suggestions ui-item img.suggestedroom_thumb {
+  flex: 0;
+  order: -1;
+  width: 60px;
+  height: 60px;
+}
