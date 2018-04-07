@@ -24,6 +24,7 @@ elation.require(['janusweb.janusbase'], function() {
       return new THREE.Object3D();
     }
     this.createChildren = function() {
+      elation.engine.things.janussound.extendclass.createChildren.call(this);
       if (!this.audio) {
         this.createAudio();
       }

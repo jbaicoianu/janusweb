@@ -89,6 +89,7 @@ elation.require(['janusweb.janusbase'], function() {
       return group;
     }
     this.createChildren = function() {
+      elation.engine.things.janusportal.extendclass.createChildren.call(this);
       /*
       if (this.auto_load) {
         this.openPortal();

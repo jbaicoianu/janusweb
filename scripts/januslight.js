@@ -23,6 +23,8 @@ elation.require(['janusweb.janusbase'], function() {
       this.updateLight();
     }
     this.createChildren = function() {
+      elation.engine.things.januslight.extendclass.createChildren.call(this);
+
       this.createLight();
       this.updateLight();
       this.created = true;

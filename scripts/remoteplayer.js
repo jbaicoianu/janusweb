@@ -22,6 +22,7 @@ elation.component.add('engine.things.remoteplayer', function() {
 */
   
   this.createChildren = function() {
+    elation.engine.things.remoteplayer.extendclass.createChildren.call(this);
     this.torso = this.spawn('janusbase', this.properties.player_name + '_torso', {
       'position': [0,1,0],
       'parent': this,
