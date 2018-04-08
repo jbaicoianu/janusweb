@@ -44,10 +44,6 @@ elation.require(['janusweb.janusbase'], function() {
       }
       */
     }
-    this.physics_update = function() {
-      this.localToWorld(this.light.target.position.set(0,0,-1));
-      this.light.target.updateMatrixWorld();
-    }
     this.update = function() {
       if (!this.light) {
         this.createLight();
