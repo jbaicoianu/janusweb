@@ -58,6 +58,7 @@ elation.require(['janusweb.janusbase'], function() {
           } else {
             //this.audio.panner.distanceModel = 'linear';
           }
+          this.audio.panner.panningModel = 'HRTF';
         }
         this.audio.autoplay = this.auto_play || this.playStarted;
         this.audio.setLoop(this.loop);
