@@ -136,8 +136,12 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.setPlaybackRate(this.pitch);
       }
       if (this.rect) {
-        var parts = this.rect.split(' ');
-        this.bounds = new THREE.Box3(new THREE.Vector3(parts[0], -Infinity, parts[1]), new THREE.Vector3(parts[2], Infinity, parts[3]));
+        var parts = this.rect.split(' '),
+            minx = Math.min(parts[0], parts[2]),
+            maxx = Math.max(parts[0], parts[2]),
+            minz = Math.min(parts[1], parts[3]),
+            maxz = Math.max(parts[1], parts[3]);
+        this.bounds = new THREE.Box3(new THREE.Vector3(minx, -Infinity, minz), new THREE.Vector3(maxx, Infinity, maxz));
       } else {
         this.bounds = false;
       }
