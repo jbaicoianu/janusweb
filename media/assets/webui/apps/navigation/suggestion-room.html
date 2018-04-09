@@ -1,0 +1,8 @@
+<a href="{roomUrl}" class="suggestedroom" onclick="janus.setActiveRoom(this.href); return false;" title="{?roomName}{roomName} | {/roomName}{roomUrl}">
+  <div>
+    <h4>{?roomName}{roomName}{:else}{roomUrl}{/roomName}</h4>
+    <h5>{roomUrl}</h5>
+  </div>
+  <img class="suggestedroom_thumb" src="{thumbnail}"/>
+</a>
+
