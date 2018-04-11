@@ -269,9 +269,22 @@ elation.require([
               images[i].width = width;
               images[i].height = height;
             }
+            // flip skybox 180 degrees
+            if (images[i] instanceof HTMLCanvasElement) {
+              var ctx = images[i].getContext('2d');
+              if (i == 2 || i == 3) { // Y+ or Y-
+                // Y+
+                ctx.translate(images[i].width/2, images[i].height/2);
+                ctx.rotate(Math.PI);
+                ctx.translate(-images[i].width/2, -images[i].height/2);
+              }
+              ctx.drawImage(images[i],0,0,images[i].width,images[i].height);
+            }
           }
         }
         if (images[0] && images[1] && images[2] && images[3] && images[4] && images[5]) {
+          // flip skybox 180 degrees
+          images = [images[1],images[0],images[2],images[3],images[5],images[4]];
           var texture = new THREE.CubeTexture( images );
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
