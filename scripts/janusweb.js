@@ -145,6 +145,7 @@ elation.require([
         settings:          ['property', 'settings'],
         userid:            ['property', 'userId'],
         avatarlighting:    ['property', 'settings.avatarlighting'],
+        ui:                ['property', 'engine.client.ui'],
 
         currenturl:        ['function', 'getCurrentURL'],
         tricount:          ['function', 'getTriangleCount'],
