@@ -2,10 +2,12 @@ elation.require(['janusweb.janusbase'], function() {
   elation.component.add('janusweb.elements.raycaster', {
     create() {
       this.lasthitobject = null;
-      this.lasthitpos = V();
-      this.fwdvec = V();
     },
     update() {
+      if (!this.fwdvec) {
+        this.fwdvec = V();
+        this.lasthitpos = V();
+      }
       var hits = this.raycast(null, null, this.class);
       if (hits.length > 0) {
         var hit = hits[0],
