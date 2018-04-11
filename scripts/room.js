@@ -1308,7 +1308,6 @@ elation.require([
           if (!this.appliedchanges[thing.js_id]) {
             this.changes[thing.js_id] = proxy;
           }
-          proxy.sync = false;
         }
       }
     }
@@ -1912,7 +1911,6 @@ elation.require([
         if (destroy) {
           this.roomedit.object.die();
         } else {
-          this.roomedit.object.sync = true;
           this.roomedit.object.collision_id = this.roomedit.object.id;
         }
       }
@@ -1938,7 +1936,6 @@ elation.require([
       if (this.roomedit.object) {
         if (this.roomedit.moving && ev.element.getProxyObject() !== this.roomedit.object) {
           this.roomedit.object.pos = this.editObjectSnapVector(this.roomedit.object.parent.worldToLocal(ev.data.point, true), this.roomedit.snap);
-          this.roomedit.object.sync = true;
         }
       }
     }
