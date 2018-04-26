@@ -1,6 +1,7 @@
 elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elements.collection.all'], function() {
   elation.component.add('janusweb.ui.main', function() {
     this.init = function() {
+      this.apps = {};
       this.addclass('janusweb_ui_main');
 /*
       var template = document.getElementById('janus-ui');
@@ -55,6 +56,7 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
       var promises = [];
       if (apps) {
         for (var k in apps) {
+          this.apps[k] = apps[k];
           //console.log(' - load app', k, apps[k], baseurl);
           promises.push(this.loadConfig(baseurl + '/' + apps[k]));
         }
