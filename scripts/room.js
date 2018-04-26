@@ -44,6 +44,7 @@ elation.require([
         'cursor_visible': { type: 'bool', default: true },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
         'col': { type: 'color', set: this.updateLocalAsset },
+        'private': { type: 'bool', default: false },
         'server': { type: 'string' },
         'port': { type: 'int' },
         'rate': { type: 'int', default: 200 },
@@ -659,6 +660,7 @@ elation.require([
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
         this.properties.fog = room.fog;
+        this.properties.private = room.private;
         this.properties.fog_mode = room.fog_mode || 'exp';
         this.properties.fog_density = room.fog_density;
         this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
@@ -1485,6 +1487,7 @@ elation.require([
           shadows:       ['property', 'shadows'],
           col:           ['property', 'col'],
           locked:        ['property', 'locked'],
+          private:       ['property', 'private'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
