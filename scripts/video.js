@@ -23,7 +23,15 @@ elation.require(['janusweb.janusbase'], function() {
         elation.events.add(this.video, 'loadeddata', elation.bind(this, this.videoloaded));
         elation.events.add(this.video, 'playing', elation.bind(this, this.videoStartedPlaying));
 
-        return new THREE.Mesh(geo, mat);
+        var mesh = new THREE.Mesh(geo, mat);
+        if (this.asset.sbs3d || this.asset.ou3d) {
+          mesh.onBeforeRender = (renderer, scene, camera) => {
+            if (camera.name) {
+              texture.setEye(camera.name);
+            }
+          }
+        }
+        return mesh;
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
       }
