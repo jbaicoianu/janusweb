@@ -1457,7 +1457,7 @@ elation.require([
       return urls;
     }
     this.getServer = function() {
-      if (!this._server) {
+      if (!this._server && !this.private) {
         var hashargs = elation.url();
         var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
             port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
