@@ -1,42 +1,4 @@
 elation.require(['janusweb.janusbase'], function() {
-
-  THREE.SBSTexture = function ( image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy ) {
-    THREE.Texture.call( this, image, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
-
-    this.repeat.x = 0.5;
-    this.reverse = false;
-  }
-  THREE.SBSTexture.prototype = Object.create( THREE.Texture.prototype );
-  THREE.SBSTexture.prototype.constructor = THREE.SBSTexture;
-  THREE.SBSTexture.prototype.setEye = function(eye) {
-    if (eye == 'left') {
-      this.offset.x = (this.reverse ? 0.5 : 0);
-    } else {
-      this.offset.x = (this.reverse ? 0 : 0.5);
-    }
-    this.eye = eye;
-  }
-  THREE.SBSTexture.prototype.swap = function() {
-    if (this.eye == 'right') {
-      this.setEye('left');
-    } else {
-      this.setEye('right');
-    }
-  }
-  THREE.SBSTexture.prototype.animate = function() {
-    this.swap();
-    setTimeout(this.animate.bind(this), 100);
-  }
-
-  THREE.SBSVideoTexture = function ( video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy ) {
-    THREE.VideoTexture.call( this, video, mapping, wrapS, wrapT, magFilter, minFilter, format, type, anisotropy );
-
-    this.repeat.x = 0.5;
-    this.reverse = false;
-  }
-  THREE.SBSVideoTexture.prototype = Object.create( THREE.Texture.prototype );
-  THREE.SBSVideoTexture.prototype.constructor = THREE.SBSVideoTexture;
-
   elation.component.add('engine.things.janusimage', function() {
     this.postinit = function() {
       elation.engine.things.janusimage.extendclass.postinit.call(this);
@@ -50,9 +12,15 @@ elation.require(['janusweb.janusbase'], function() {
     this.createObject3D = function() {
       var geo = this.createGeometry();
       var mat = this.createMaterial();
-      return new THREE.Mesh(geo, mat);
+      var mesh = new THREE.Mesh(geo, mat);
 
-
+      if (this.texture && this.texture instanceof THREE.SBSTexture) {
+        mesh.onBeforeRender = (renderer, scene, camera) => {
+          if (camera.name) {
+            this.texture.setEye(camera.name);
+          }
+        }
+      }
 /*
         var geo = this.createGeometry();
         var mat = this.createMaterial();
@@ -61,6 +29,7 @@ elation.require(['janusweb.janusbase'], function() {
         console.log('ERROR - could not find image ' + this.properties.image_id);
       }
 */
+      return mesh;
     }
     this.createGeometry = function() {
       var aspect = this.getAspect(),
@@ -178,7 +147,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.properties.sbs3d || this.asset.sbs3d) {
         // TODO - to really support 3d video, we need to set offset based on which eye is being rendered
         var texture = new THREE.SBSTexture(this.texture.image);
-        texture.reverse = this.properties.reverse3d;
+        texture.reverse = this.properties.reverse3d || this.asset.reverse3d;
         texture.needsUpdate = true;
         this.texture = texture;
         this.frontmaterial.map = texture;
@@ -187,7 +156,7 @@ elation.require(['janusweb.janusbase'], function() {
         this.sidematerial.map.needsUpdate = true;
         this.sidematerial.map.repeat.x = .0001;
         */
-        this.objects['3d'].onBeforeRender = () => { texture.swap(); }
+        //this.objects['3d'].onBeforeRender = () => { texture.swap(); }
       }
 
       this.refresh();
