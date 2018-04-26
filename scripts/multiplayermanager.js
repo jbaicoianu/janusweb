@@ -91,6 +91,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       return protocol + '://' + host + ':' + port;
     }
     this.getServerURLForRoom = function(room, force) {
+      if (room.private) return false;
       if (force || !this.roomservers[room.roomid]) {
         var roomserver = this.defaultserver;
         if (room.server) {
@@ -102,7 +103,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
     }
     this.getServerForRoom = function(room) {
       var serverurl = this.getServerURLForRoom(room, true);
-      if (!this.servers[serverurl]) {
+      if (serverurl && !this.servers[serverurl]) {
         var server = new JanusClientConnection({
           host: serverurl,
           userId: this.janusweb.userId,
@@ -158,9 +159,11 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       // Tell the server we're now in the new room
       this.activeroom = room;
-      var server = this.getServerForRoom(room);
-      var partymode = this.player.party_mode && room.party_mode;
-      server.enter_room(room.url, partymode);
+      if (!room.private) {
+        var server = this.getServerForRoom(room);
+        var partymode = this.player.party_mode && room.party_mode;
+        server.enter_room(room.url, partymode);
+      }
     }
     this.getJanusOrientation = (function() { 
       var tmpMat = new THREE.Matrix4(),
@@ -204,7 +207,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       var server = this.getServerForRoom(room);
 
-      if (!server.loggedin) return;
+      if (!server || !server.loggedin) return;
 
       var dirs = this.getJanusOrientation(player, player.head)
       if (!this.movedata) {
@@ -274,14 +277,18 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       var server = this.getServerForRoom(room);
 console.log('[MultiplayerManager] subscribe', room.url);
-      server.subscribe(room.url);
+      if (server) {
+        server.subscribe(room.url);
+      }
     }
     this.unsubscribe = function(room) {
       if (!this.enabled) return;
 
 console.log('[MultiplayerManager] unsubscribe', room.url);
       var server = this.getServerForRoom(room);
-      server.unsubscribe(room.url);
+      if (server) {
+        server.unsubscribe(room.url);
+      }
     }
     this.join = function(room) {
       if (!this.enabled) return;
@@ -289,14 +296,18 @@ console.log('[MultiplayerManager] unsubscribe', room.url);
 console.log('[MultiplayerManager] join', room.url);
       var server = this.getServerForRoom(room);
       var partymode = this.player.party_mode && room.party_mode;
-      server.enter_room(room.url, partymode);
+      if (server) {
+        server.enter_room(room.url, partymode);
+      }
     }
     this.part = function(room) {
       if (!this.enabled) return;
 
 console.log('[MultiplayerManager] part', room.url);
       var server = this.getServerForRoom(room);
-      server.leave_room(room.url);
+      if (server) {
+        server.leave_room(room.url);
+      }
     }
     this.spawnRemotePlayer = function(data) {
       var userId = data.userId;
