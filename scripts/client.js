@@ -48,10 +48,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     elation.config.set('dependencies.path', fullpath);
 
     var usetracking = elation.utils.any(args.tracking, elation.config.get('janusweb.tracking.enabled'), false);
-    if (usetracking) {
+    if (usetracking && usetracking != 'false') {
       var tracking = elation.janusweb.tracking({});
     }
-
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = fullpath + 'janusweb.css';
@@ -74,6 +73,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       urltemplate: args.urltemplate,
       useWebVRPolyfill: args.useWebVRPolyfill,
       server: args.server,
+      tracking: usetracking,
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -243,6 +243,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           homepage: { type: 'string' },
           width: { type: 'integer', default: 640 },
           height: { type: 'integer', default: 480 },
+          tracking: { type: 'boolean', default: true },
+          networking: { type: 'boolean', default: true },
         });
       }
       create() {
@@ -255,6 +257,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         var args = {
           url: this.getRoomURL(),
           homepage: this.homepage,
+          tracking: this.tracking,
+          networking: this.networking,
           //resolution: width + 'x' + height,
           //shownavigation: false,
         };
