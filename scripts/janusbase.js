@@ -673,7 +673,11 @@ console.error('dunno what this is', other);
       if (callback instanceof Function) {
         callback(args);
       } else if (elation.utils.isString(callback)) {
-        eval(callback);
+        (function(fn) {
+          var event = args;
+          return eval(callback);
+        }).call(this.getProxyObject(), callback);
+
       }
     }
     this.isEqual = function(obj) {
