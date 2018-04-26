@@ -95,11 +95,13 @@ elation.require([
         this.mute();
       }
 
-      this.network = elation.janusweb.multiplayermanager({
-        janusweb: this,
-        server: this.server,
-        player: this.engine.client.player
-      });
+      if (this.networking) {
+        this.network = elation.janusweb.multiplayermanager({
+          janusweb: this,
+          server: this.server,
+          player: this.engine.client.player
+        });
+      }
 
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
       if (this.urltemplate) {
@@ -300,7 +302,9 @@ elation.require([
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
 
-      this.network.registerRoom(room, true);
+      if (this.networking) {
+        this.network.registerRoom(room, true);
+      }
 
       this.rooms[room.roomid] = room;
       //console.log('made new room', url, room);
