@@ -1793,11 +1793,16 @@ elation.require([
       ev.preventDefault();
     }
     this.handleDrop = function(ev) {
-      console.log('drop!', ev);
+      ev.preventDefault();
       var files = ev.dataTransfer.files,
           items = ev.dataTransfer.items;
       if (files.length > 0) {
-        console.log('dropped files!', files);
+        var objects = [];
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          objects[i] = this.loadObjectFromFile(file);
+        }
+        this.editObject(objects[0], true);
       } else if (items.length > 0) {
         var types = {};
         var numitems = items.length;
@@ -1811,7 +1816,6 @@ elation.require([
           types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
         }
       }
-      ev.preventDefault();
       this.engine.systems.controls.requestPointerLock();
     }
     this.loadObjectFromURIList = function(list) {
@@ -1840,8 +1844,41 @@ elation.require([
       }
     }
     this.loadObjectFromJML = function(jml) {
-      console.log('cool guy', jml);
       this.applyEditXML(jml);
+    }
+    this.loadObjectFromFile = function(file) {
+      var name = file.name,
+          url = URL.createObjectURL(file);
+
+      var type = 'object',
+          args = {
+            id: name,
+            pos: player.vectors.cursor_pos.clone(),
+            sync: true
+          },
+          assetargs = {
+            id: name,
+            src: url
+          };
+
+      var mimeparts = file.type.split('/');
+      if (mimeparts[0] == 'image') {
+        type = 'image';
+      } else if (mimeparts[0] == 'video') {
+        type = 'video';
+        args.video_id = name;
+        assetargs.auto_play = true;
+      } else if (mimeparts[0] == 'audio') {
+        type = 'sound';
+        args.sound_id = name;
+        args.auto_play = true;
+        assetargs.auto_play = true;
+      } else {
+        type = 'object';
+        args.collision_id = name;
+      }
+      this.loadNewAsset(type, assetargs);
+      return this.createObject(type, args);
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
@@ -1854,6 +1891,7 @@ elation.require([
         object.js_id = player.userid + '-' + window.uniqueId();
       }
 
+      this.roomedit.collision_id = object.collision_id;
       object.collision_id = '';
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
@@ -1888,14 +1926,29 @@ elation.require([
       }
       var object = this.roomedit.object;
       var obj3d = object._target.objects['3d'];
-      var objchild = obj3d.children[obj3d.children.length-1];
-      var root = objchild.clone();
-      this.roomedit.wireframe = root;
-      root.traverse(function(n) {
-        if (n instanceof THREE.Mesh) {
-          n.material = new THREE.MeshPhongMaterial({wireframe: true, color: 0xff0000, emissive: 0x990000, wireframeLinewidth: 3, depthTest: false, transparent: true, opacity: .2});
-        }
+
+      var material = new THREE.MeshPhongMaterial({
+        wireframe: true,
+        color: 0xff0000,
+        emissive: 0x990000,
+        wireframeLinewidth: 3,
+        depthTest: false,
+        transparent: true,
+        opacity: .2
       });
+      var root = false;
+      if (obj3d instanceof THREE.Mesh) {
+        root = new THREE.Mesh(obj3d.geometry, material);
+      } else {
+        var objchild = obj3d.children[obj3d.children.length-1] || obj3d;
+        root = objchild.clone();
+        root.traverse(function(n) {
+          if (n instanceof THREE.Mesh) {
+            n.material = material;
+          }
+        });
+      }
+      this.roomedit.wireframe = root;
       this.roomedit.object._target.objects['3d'].add(root);
     }
     this.editObjectRemoveWireframe = function() {
@@ -1907,8 +1960,8 @@ elation.require([
       if (this.roomedit.object) {
         if (destroy) {
           this.roomedit.object.die();
-        } else {
-          this.roomedit.object.collision_id = this.roomedit.object.id;
+        } else if (this.roomedit.collision_id) {
+          this.roomedit.object.collision_id = this.roomedit.collision_id;
         }
       }
       this.roomedit.object = false;
