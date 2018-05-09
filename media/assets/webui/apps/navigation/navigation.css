@@ -2,6 +2,7 @@ janus-ui-navigation {
   top: .5em;
   left: .5em;
   position: relative;
+  display: flex;
 }
 janus-ui-statusindicator {
   font-size: .7em;
@@ -9,7 +10,7 @@ janus-ui-statusindicator {
   height: 5em;
   border-radius: 50%;
   border: 1px solid #999;
-  position: absolute;
+  position: relative;
   top: -1px;
   left: -1px;
   background: white;
@@ -38,14 +39,17 @@ janus-ui-statusindicator .inner:after {
   right: 0;
 }
 janus-ui-urlbar>ui-input>input {
-  margin-left: 1.5em;
   margin-top: .1em;
-  padding-left: 1.5em;
   border: 1px solid #999;
+  padding: 0 .2em;
   outline: none;
   box-shadow: 0 0 2px rgba(0,0,0,.8);
   font-size: 1.2em;
   width: 20em;
+}
+janus-ui-navigation janus-ui-urlbar>ui-input>input {
+  margin-left: -20px;
+  padding-left: 26px;
 }
 @keyframes indicator-pulsate {
   0% {

@@ -24,7 +24,6 @@ elation.elements.define('janus.ui.navigation', class extends elation.elements.ui
   }
   updateCurrentURL() {
     var room = this.janusweb.currentroom;
-    console.log('this is the room guy', room);
   }
 });
 elation.elements.define('janus.ui.statusindicator', class extends elation.elements.ui.indicator {
@@ -41,14 +40,14 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     this.updateCurrentURL();
 
     this.tooltip = elation.elements.create('ui-tooltip', {
-      append: this,
+      //append: this,
     });
     setTimeout(() => { this.tooltip.hide(); }, 1000);
 
     this.canvas = document.createElement('canvas');
     this.inner.appendChild(this.canvas);
 
-    elation.events.add(this.janusweb, 'room_load_start', (ev) => this.updateCurrentURL(ev.data));
+    elation.events.add(this.janusweb, 'room_load_start', (ev) => this.updateCurrentURL());
 
     this.percent = 0;
 
@@ -82,19 +81,22 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
   }
   updateCurrentURL(room) {
     if (!room) {
-      room = this.janusweb.currentroom;
+      room = this.janusweb.currentroom.getProxyObject();
     }
     if (this.room !== room) {
 //console.log('room changed!', this.room, room);
 
-      elation.events.add(room, 'room_load_queued', elation.bind(this, this.updateStatus, 'queued'));
-      elation.events.add(room, 'room_load_start', elation.bind(this, this.updateStatus, 'downloading'));
-      elation.events.add(room, 'room_load_processing', elation.bind(this, this.updateStatus, 'processing'));
-      elation.events.add(room, 'room_load_processed', elation.bind(this, this.updateRoomAssets));
-      elation.events.add(room, 'room_load_complete', elation.bind(this, this.updateStatus, 'complete'));
-      elation.events.add(room, 'room_load_error', elation.bind(this, this.updateStatus, 'error'));
-      elation.events.add(room, 'room_load_progress', elation.bind(this, this.updateProgress));
-      elation.events.add(room, 'room_add_asset', elation.bind(this, this.roomAddAsset));
+      // Set up some event listeners for the new room, so we can respond as it loads
+      room.addEventListener('room_load_queued', (ev) => this.updateStatus('queued', ev));
+      room.addEventListener('room_load_start', (ev) => this.updateStatus('downloading', ev));
+      room.addEventListener('room_load_processing', (ev) => this.updateStatus('processing', ev));
+      room.addEventListener('room_load_complete', (ev) => this.updateStatus('complete', ev));
+      room.addEventListener('room_load_error', (ev) => this.updateStatus('error', ev));
+
+      // Update our list of assets as they're added
+      room.addEventListener('room_load_processed', (ev) => this.updateRoomAssets(ev));
+      room.addEventListener('room_load_progress', (ev) => this.updateProgress(ev));
+      room.addEventListener('room_add_asset', (ev) => this.roomAddAsset(ev));
 
       this.room = room;
 
@@ -113,6 +115,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
       status = 'error';
     }
 
+    // Set our current status as a class name on this element.  Clear our previous status, if set
     if (this.currentstatus && this.currentstatus != status) {
       this.removeclass(this.currentstatus);
     }
