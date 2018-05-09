@@ -1,0 +1,21 @@
+{?app.toplevel}
+<ui-flexpanel>
+  <ui-toggle label="{app.name}" checked align="left" {^app.removable}disabled{/app.removable}></ui-toggle>
+  <ui-content align="right">
+    <ui-button {^app.removable}disabled{:else}onclick="janus.ui.uninstallApp('{app.name}')"{/app.removable}>Remove</ui-button>
+  </ui-content>
+</ui-flexpanel>
+{:else}
+<h3>{app.name}</h3>
+{/app.toplevel}
+<!-- sup>{app.src}</sup -->
+<ui-list class="apps">
+{#app.applist}
+  <ui-item><janus-ui-settings-ui-app name="{name}" app="{.}"></janus-ui-settings-ui-app></ui-item>
+{/app.applist}
+</ui-list>
+<ui-grid class="components">
+{#app.components}
+  <ui-item><janus-ui-settings-ui-component component="{.}" draggable="true"></janus-ui-settings-ui-component></ui-item>
+{/app.components}
+</ui-grid>

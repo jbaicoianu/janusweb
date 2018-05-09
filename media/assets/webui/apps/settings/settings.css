@@ -1,0 +1,133 @@
+janus-ui-settings {
+  width: 100%;
+  min-height: 20em;
+  display: flex;
+}
+janus-ui-settings>ui-tabs{
+  flex: 1 1;
+}
+janus-ui-settings-ui ui-list.apps {
+  margin-left: 1em;
+}
+
+janus-ui-settings-button {
+  border: none;
+  border-radius: .5em;
+  padding: .25em .5em;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  background-color: transparent;
+  display: inline-block;
+}
+janus-ui-settings-button[hover] {
+  background-image: linear-gradient(#323232, #404142 40%, #393b3d);
+}
+janus-ui-settings-button:active {
+  background-image: linear-gradient(#020202, #101112 40%, #191b1d);
+}
+janus-ui-settings-button[disabled] {
+  color: #999;
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  cursor: not-allowed;
+}
+
+janus-ui-settings-ui-component {
+  flex: 1 1;
+  flex-direction: column;
+  cursor: move;
+  cursor: -webkit-grab;
+  cursor: grab;
+  overflow: hidden;
+  position: relative;
+}
+janus-ui-settings-ui-component h3 {
+  font-size: 1em;
+  flex 0 0;
+  padding-bottom: .2em;
+  border-bottom: 1px solid black;
+  margin-bottom: .5em;
+  white-space: nowrap;
+}
+janus-ui-settings-ui-component .preview {
+  display: block;
+  filter: brightness(60%);
+  transition: filter 150ms linear;
+  pointer-events: none;
+  position: relative;
+  flex: 1 1;
+  height: 4em;
+}
+janus-ui-settings-ui-component:hover .preview {
+  filter: brightness(90%)
+}
+
+ui-grid.components {
+  font-size: .7em;
+  display: relative;
+  grid-template-columns: repeat(auto-fill, minmax(12em, 1fr))
+}
+ui-grid.components>ui-item {
+  display: flex;
+}
+ui-grid.components>ui-item:hover janus-ui-settings-ui-component {
+  position: relative;
+  overflow: visible;
+  /* setting a transform forces the renderer to treat this element as a separate layer, and avoids graphical bugs from overflowing elements */
+  transform: rotate(0deg);
+  z-index: 100;
+}
+
+/*
+janus-ui-main[editing] {
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 300;
+}
+*/
+janus-ui-main[editing] ui-panel,
+janus-ui-main[editing] ui-collapsiblepanel {
+  outline: 1px solid red;
+  padding: .5em;
+}
+janus-ui-main[editing] ui-collapsiblepanel[left],
+janus-ui-main[editing] ui-collapsiblepanel[right] {
+  min-width: 40px;
+}
+janus-ui-main[editing] ui-collapsiblepanel[top],
+janus-ui-main[editing] ui-collapsiblepanel[bottom] {
+  min-height: 40px;
+}
+janus-ui-main[editing] ui-panel.candrop {
+  background: rgba(0,255,0,.1);
+}
+janus-ui-applayout {
+  display: block;
+  position: absolute;
+  border: 1px solid blue;
+  background: rgba(0, 0, 255, .2);
+  pointer-events: none;
+  box-shadow: 0 0 5px white;
+  z-index: 1000;
+}
+janus-ui-applayout>ui-label {
+  position: absolute;
+  top: -1.6em;
+  left: 0;
+  background: rgba(0,0,255,.6);
+  border: 1px solid blue;
+  border-bottom: 0;
+}
+.janus-settings>ui-window-content {
+  width: 60em;
+  height: 50em;
+}
