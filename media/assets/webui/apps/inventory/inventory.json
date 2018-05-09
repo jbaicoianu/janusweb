@@ -4,5 +4,8 @@
     "janus.ui.inventory.item.poly": "./inventory-item-poly.html"
   },
   "scripts":  ["./inventory.js"],
-  "css":      ["./inventory.css"]
+  "css":      ["./inventory.css"],
+  "components": [
+    "janus-ui-inventory"
+  ]
 }
