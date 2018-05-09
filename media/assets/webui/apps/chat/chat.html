@@ -1,5 +1,5 @@
     <ui-flexpanel vertical>
       <ui-list scrollable-y autoscroll-bottom flex="1" class="chatmessages" items="janus.chat"></ui-list>
-      <ui-input noflex value="sword" onkeypress="if (event.keyCode == 13) { models.apiargs.keywords = this.value; delete models.apiargs.pageToken; itemlist.clear(); models.load(); pagination.disabled = false; }"></ui-input>
+      <ui-input noflex value="" placeholder="Press T for text chat"></ui-input>
     </ui-flexpanel>
 
