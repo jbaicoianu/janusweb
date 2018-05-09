@@ -29,6 +29,10 @@ h2 {
   color: red;
 }
 
+*[hidden] {
+  display: none !important;
+}
+
 /**************
  * Containers *
  **************/
@@ -65,7 +69,7 @@ ui-checklist>ui-checklistitem:last-of-type {
 }
 ui-list>ui-item[hover],
 ui-checklist>ui-checklistitem[hover] {
-  background-color: rgba(128,128,255,.2);
+  background-color: rgba(128,128,255,.05);
 }
 ui-list>ui-item.state_selected,
 ui-checklist>ui-checklistitem.state_selected {
@@ -84,7 +88,8 @@ ui-list>[selectable] {
 ui-grid {
   margin: 0;
   padding: 0;
-  display: block;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10em, 1fr));
 }
 ui-grid[scrollable] {
   overflow-x: auto;
@@ -142,12 +147,13 @@ ui-grid.fivecolumn>ui-item {
 
 /* <ui-tabs> */
 ui-tabs {
-  display: block;
+  display: flex;
+  flex-direction: column;
   position: relative;
+  flex: 1 1;
 }
 /* <ui-tab> */
 ui-tab {
-  display: block
 }
 ui-tabs>ui-tab {
   display: none;
@@ -164,6 +170,8 @@ ui-tabs>ui-tabbar {
   border-bottom: 1px solid #1c1e22;
   font-size: .8em;
   z-index: -1px;
+  order: -1;
+  white-space: nowrap;
 }
 ui-tabs>ui-tabbar>ui-button {
   min-width: 5em;
@@ -173,17 +181,19 @@ ui-tabs>ui-tabbar>ui-button {
   border-bottom: 1px solid #1c1e22;
   border-radius: .5em .5em 0 0;
   margin-bottom: 0;
+  white-space: nowrap;
+  display: inline-block;
 }
 ui-tabs>ui-tabbar>ui-button[selected],
 ui-tabs>ui-tabbar>ui-button[selected][hover] {
-  background-image: linear-gradient(rgba(128,255,128,.25), rgba(128,255,128,.28) 60%, rgba(128,255,128,.3));
+  background-color: #4cb96f;
   background-repeat: no-repeat;
 
   border: 1px solid #1c1e22;
   border-bottom-color: transparent;
 }
 ui-tabs>ui-tabbar>ui-button[hover] {
-  background-image: linear-gradient(rgba(128,128,128,.25), rgba(128,128,128,.28) 60%, rgba(128,128,128,.3));
+  background-image: linear-gradient(rgba(128,128,128,1), rgba(128,128,128,1) 60%, rgba(128,128,128,1));
   background-repeat: no-repeat;
   border-color: #1c1e22 #1c1e22 transparent #1c1e22;
 }
@@ -191,23 +201,30 @@ ui-tabs>ui-tabbar>ui-button[disabled] {
   color: #777;
 }
 ui-tabs>ui-tab[selected] {
-  display: block;
+  display: flex;
+  flex: 1 1;
+  flex-direction: column;
 }
 /* <ui-panel> */
-ui-panel {
+ui-panel,
+ui-collapsiblepanel {
   position: absolute;
   z-index: 5;
 }
-ui-panel[top] {
+ui-panel[top],
+ui-collapsiblepanel[top] {
   top: 0;
 }
-ui-panel[bottom] {
+ui-panel[bottom],
+ui-collapsiblepanel[bottom] {
   bottom: 0;
 }
-ui-panel[left] {
+ui-panel[left],
+ui-collapsiblepanel[left] {
   left: 0;
 }
-ui-panel[right] {
+ui-panel[right],
+ui-collapsiblepanel[right] {
   right: 0;
 }
 
@@ -298,12 +315,16 @@ ui-window>.ui_window_content {
   -moz-box-sizing: border-box;
   position: relative;
 }
+ui-window[scrollable]>ui-window-content {
+  overflow: auto;
+  display: block;
+}
 ui-window[maximized] {
   z-index: 1000;
   border-width: 0;
   border-radius: 0;
 }
-ui-window[maximized]>.ui_window_content {
+ui-window[maximized]>ui-window-content {
   max-width: none;
   max-height: none;
   padding: 0;
@@ -433,6 +454,9 @@ ui-slider:disabled ui-slider-handle {
 }
 
 /* <ui-toggle> */
+ui-toggle {
+  display: flex;
+}
 ui-toggle>div {
   border: 1px solid black;
   border-radius: .5em;
@@ -446,6 +470,9 @@ ui-toggle>div {
   width: 2em;
   vertical-align: middle;
   margin: .2em .8em .2em .4em;
+}
+ui-toggle[align="left"]>div {
+  order: -1;
 }
 ui-toggle input {
   display: none;
@@ -504,7 +531,7 @@ ui-toggle[disabled]>div::before {
 
 /* <ui-checkbox> */
 ui-checkbox {
-  display: inline-block;
+  display: flex;
   white-space: nowrap;
   min-width: 6em;
   cursor: pointer;
@@ -523,6 +550,11 @@ ui-checkbox>input {
   position: relative;
   vertical-align: middle;
   cursor: pointer;
+  margin-right: .5em;
+  height: 1em;
+}
+ui-checkbox[align="left"]>input {
+  order: -1;
 }
 ui-checkbox>input:active, ui-checkbox>input:checked:active {
   box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0px 1px 3px rgba(0,0,0,0.1);
@@ -604,6 +636,7 @@ ui-button,
 ui-togglebutton,
 ui-dropdownbutton,
 ui-notificationbutton {
+  display: inline-block;
   border: none;
   border-radius: .5em;
   padding: .25em .5em;
@@ -694,6 +727,7 @@ ui-dropdownbutton:active>ui-button {
 /* <ui-notificationbutton> */
 ui-notificationbutton {
   position: relative;
+  padding: .5em;
 }
 ui-notificationbutton ui-indicator {
   position: absolute;
@@ -756,3 +790,180 @@ ui-buttonlist>ui-button:last-of-type {
   border-right: 1px solid transparent;
 }
 
+ui-label {
+  cursor: pointer;
+  user-select: none;
+}
+ui-select>select {
+  background: #444;
+  color: white;
+  border: 1px solid #222;
+  box-shadow: 0 0 2px #222;
+}
+ui-select:hover>select {
+  background: #555;
+}
+
+ui-formgroup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: .5em 0;
+  width: 100%;
+}
+ui-formgroup>ui-label.groupheader {
+  display: block;
+  order: -1;
+  font-weight: bold;
+  border-bottom: 1px solid #666;
+  width: 100%;
+}
+ui-formgroup>ui-input,
+ui-formgroup>ui-select,
+ui-formgroup>ui-toggle,
+ui-formgroup>ui-slider,
+ui-formgroup>ui-textarea {
+  display: flex;
+  padding: .2em;
+}
+ui-formgroup>ui-input>input,
+ui-formgroup>ui-textarea>textarea,
+ui-formgroup>ui-select>select,
+ui-formgroup>ui-slider>ui-slider-track {
+  flex: 1;
+}
+ui-formgroup ui-label,
+ui-formgroup ui-text {
+  display: inline-block;
+  width: 10em;
+}
+
+/* Column layout */
+ui-columnlayout {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+}
+ui-columnlayout>* {
+  width: calc(33% - 1px - 1em);
+  border-left: 1px solid #666;
+  margin-left: .5em;
+  padding-left: .5em;
+  flex: 1 1;
+  display: flex;
+  flex-direction: column;
+}
+ui-columnlayout>*:first-child {
+  border-left: 0;
+  margin-left: 0;
+}
+
+/* Collapsible panel */
+ui-collapsiblepanel {
+  display: flex;
+  flex-direction: column;
+  max-width: calc(100% - 2em);
+  max-height: calc(100% - 2em);
+  min-height: .8em;
+  position: relative;
+  border: 1px solid black;
+  background: #333;
+  border-radius: 0;
+  padding: .2em;
+  transition: width 150ms ease-out,height 150ms ease-out,min-height 150ms ease-out;
+  box-shadow: 0 0 8px black;
+}
+ui-collapsiblepanel.default {
+  width: 24em;
+}
+ui-collapsiblepanel>.container {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+}
+ui-collapsiblepanel>.container>.container-inner {
+  transition: transform 150ms ease-out;
+  transform: translate(0, 0);
+  display: flex;
+  flex: 1 1;
+}
+ui-collapsiblepanel>.container>.container-inner>* {
+  flex: 1 1;
+}
+ui-collapsiblepanel[top],
+ui-collapsiblepanel[bottom] {
+  min-height: 12em
+}
+ui-collapsiblepanel[top] {
+  border-radius: 0 0 .5em 0;
+}
+ui-collapsiblepanel[bottom] {
+  border-radius: 0 .5em 0 0;
+}
+ui-collapsiblepanel[left] {
+  border-radius: 0 0 .5em 0;
+}
+ui-collapsiblepanel[right] {
+  border-radius: 0 0 0 .5em;
+}
+ui-collapsiblepanel[top][collapsed] {
+  height: 0;
+  min-height: 0;
+  padding-top: 0;
+}
+ui-collapsiblepanel[top][collapsed]>.container {
+  transform: translate(0, -100%);
+}
+ui-collapsiblepanel[bottom][collapsed] {
+  height: 0;
+  min-height: 0;
+  padding-bottom: 0;
+}
+ui-collapsiblepanel[left][collapsed] {
+  width: 0;
+  padding-left: 0;
+}
+ui-collapsiblepanel[left][collapsed]>.container {
+  transform: translate(-100%,0);
+}
+ui-collapsiblepanel[right][collapsed] {
+  width: 0;
+  padding-right: 0;
+}
+ui-collapsiblepanel>ui-togglebutton.collapse {
+  position: absolute;
+  transform-origin: bottom left;
+  background: #333;
+  border: 1px solid black;
+  line-height: 1em;
+}
+ui-collapsiblepanel[top]>ui-togglebutton.collapse {
+  bottom: -1.4em;
+  left: -1px;
+  border-radius: 0 0 .5em .5em;
+  border-top: none;
+}
+ui-collapsiblepanel[bottom]>ui-togglebutton.collapse {
+  top: -1.4em;
+  left: -1px;
+  border-radius: .5em .5em 0 0;
+  border-bottom: none;
+}
+ui-collapsiblepanel[left]>ui-togglebutton.collapse {
+  right: -1.4em;
+  top: -1px;
+  border-radius: 0 .5em .5em 0;
+  border-left: none;
+}
+ui-collapsiblepanel[right]>ui-togglebutton.collapse {
+  left: -1.4em;
+  top: -1px;
+  border-radius: .5em 0 0 .5em;
+  border-right: none;
+}
+janus-ui-main {
+  overflow: hidden;
+}
+ui-content[align="right"] {
+  align-content: end;
+}
