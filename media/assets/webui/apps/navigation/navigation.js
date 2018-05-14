@@ -274,12 +274,17 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     this.client = this.getClient();
     this.janusweb = this.client.janusweb;
 
+    this.titlelabel = elation.elements.create('h1', {
+      append: this,
+      value: (this.janusweb.currentroom ? this.janusweb.currentroom.title : 'Untitled Room')
+    });
     this.input = elation.elements.create('ui.input', {
       append: this,
-      value: (this.janusweb.currentroom ? this.janusweb.currentroom.title : 'JanusWeb')
+      value: (this.janusweb.currentroom ? this.janusweb.currentroom.url : '')
     });
     elation.events.add(this.input, 'input', (ev) => this.handleInput(ev));
     elation.events.add(this.input, 'focus', (ev) => this.handleFocus(ev));
+    elation.events.add(this.input, 'accept', (ev) => this.handleAccept(ev));
     elation.events.add(this.input, 'blur', (ev) => this.handleBlur(ev));
     this.suggestions = elation.elements.create('janus.ui.urlbar.suggestions', {
       append: this
@@ -306,14 +311,14 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
   updateRoom() {
     elation.events.remove(this.room, 'room_load_processed', this.updateTitle);
     this.room = this.janusweb.currentroom;
-    console.log('this is the room guy', this.room);
     elation.events.add(this.room, 'room_load_processed', this.updateTitle);
     this.updateTitle();
   }
   updateTitle() {
     var room = this.janusweb.currentroom;
     if (room) {
-      this.input.value = room.title;
+      this.titlelabel.innerHTML = room.title;
+      this.input.value = room.url;
     }
   }
   handleInput(ev) {
@@ -329,7 +334,13 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
       this.suggestions.hide();
     }
   }
+  handleAccept(ev) {
+    if (this.input.value.length > 0) {
+      janus.setActiveRoom(this.input.value);
+    }
+  }
   handleFocus(ev) {
+    this.input.selectall();
     if (this.input.value.length > 0) {
       this.suggestions.show();
     }

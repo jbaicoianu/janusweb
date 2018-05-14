@@ -38,18 +38,37 @@ janus-ui-statusindicator .inner:after {
   left: 0;
   right: 0;
 }
+janus-ui-urlbar h1 {
+}
 janus-ui-urlbar>ui-input>input {
   margin-top: .1em;
   border: 1px solid #999;
   padding: 0 .2em;
   outline: none;
   box-shadow: 0 0 2px rgba(0,0,0,.8);
+  font-size: .9em;
+  width: 100%;
+  background: rgba(128,128,128,.5);
+  color: white;
+  text-shadow: 0 0 1px black;
+}
+janus-ui-urlbar>ui-input>input:hover {
+  background: rgba(128,128,128,.8);
+}
+janus-ui-urlbar>ui-input>input:focus {
+  background: rgba(255,255,255,1);
+  color: black;
+  padding: .2em;
+  text-shadow: none;
+}
+janus-ui-navigation janus-ui-urlbar {
+  margin-left: 6px;
+}
+janus-ui-navigation janus-ui-urlbar h1 {
   font-size: 1.2em;
-  width: 20em;
+  text-shadow: 0 0 5px rgba(0,0,0,.5);
 }
 janus-ui-navigation janus-ui-urlbar>ui-input>input {
-  margin-left: -20px;
-  padding-left: 26px;
 }
 @keyframes indicator-pulsate {
   0% {
