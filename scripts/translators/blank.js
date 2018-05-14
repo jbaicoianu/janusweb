@@ -13,7 +13,8 @@ elation.require([], function() {
             skybox_front_id: 'black',
             skybox_up_id: 'black',
             skybox_down_id: 'black',
-            private: true
+            private: true,
+            title: 'about:blank'
           },
           object: [],
           link: []
