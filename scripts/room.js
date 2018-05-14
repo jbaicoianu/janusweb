@@ -419,6 +419,9 @@ elation.require([
           // TODO - use the new official translators here!
           translator.exec({url: url, janus: this.properties.janus, room: this})
                     .then(elation.bind(this, function(objs) {
+                      if (objs.room.title) {
+                        this.setTitle(objs.room.title);
+                      }
                       this.roomsrc = objs.source;
                       this.loadRoomAssets(objs);
                       this.createRoomObjects(objs);
