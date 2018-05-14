@@ -436,7 +436,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.refresh();
     }
     this.copyMaterial = function(oldmat) {
-console.log('cloning material', oldmat);
+//console.log('cloning material', oldmat);
       if (elation.utils.isArray(oldmat)) {
         var materials = [];
         for (var i = 0; i < oldmat.length; i++) {
