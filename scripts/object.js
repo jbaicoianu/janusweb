@@ -344,6 +344,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
               elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
+
+              // Set up per-eye render hooks if we're using a 3D texture
+              if (texture instanceof THREE.SBSTexture) {
+                n.onBeforeRender = (renderer, scene, camera) => {
+                  if (camera.name) {
+                    texture.setEye(camera.name);
+                  }
+                }
+              }
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
