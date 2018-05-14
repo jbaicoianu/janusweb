@@ -449,7 +449,7 @@ console.log('cloning material', oldmat);
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
-        m.opacity = this.opacity; //(typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
+        m.opacity = parseFloat(oldmat.opacity); //(typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
         m.alphaTest = this.alphatest;
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
