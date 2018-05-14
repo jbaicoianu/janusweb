@@ -94,6 +94,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       setTimeout(elation.bind(this, function() {
         elation.events.fire({type: 'load', element: this});
       }), 0);
+      this.jsparts.updateParts();
     }
     this.updateMaterial = function() {
       this.setTextureDirty();
