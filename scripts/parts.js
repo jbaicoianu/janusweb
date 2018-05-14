@@ -5,11 +5,9 @@ elation.require([], function() {
       this._object = object;
       this._parts = {};
       this._proxies = {};
-      console.log('new shit', object);
       //this.updateParts();
     }
     definePart(name, part) {
-      console.log('had a part', name, part);
       Object.defineProperty(this, name, {
         get: () => this.getPart(name),
         enumerable: true,
