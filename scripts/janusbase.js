@@ -29,6 +29,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         locked:   { type: 'boolean', default: false },
         rotate_axis: { type: 'string', default: '0 1 0', set: this.updateRotationSpeed },
         rotate_deg_per_sec: { type: 'float', default: 0, set: this.updateRotationSpeed },
+        object: { type: 'object' },
         onclick: { type: 'object' },
         anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
@@ -63,6 +64,14 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
       this.created = false;
+    }
+    this.createObject3D = function() {
+      if (this.object && this.object instanceof THREE.Object3D) {
+        this.properties.position.copy(this.object.position);
+        this.properties.orientation.copy(this.object.quaternion);
+        return this.object;
+      }
+      return new THREE.Object3D();
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
