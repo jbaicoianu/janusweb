@@ -90,16 +90,20 @@ elation.require(['janusweb.janusbase'], function() {
         ctx: ctx
       };
 
-      var gainnode = ctx.createGain();
       var source = this.getSoundSource();
 
-      gainnode.gain.value = this.gain;
-      source.connect(gainnode);
+      this.soundobj = new THREE.PositionalAudio(listener);
+      this.objects['3d'].add(this.soundobj);
+      //this.panner = this.context.createPanner();
 
-      gainnode.connect(ctx.destination);
+      //this.panner.connect(ctx.destination);
+      //gainnode.connect(this.panner);
+      source.connect(this.soundobj.panner);
 
       this.audionodes.source = source;
-      this.audionodes.gain = gainnode;
+      this.audionodes.gain = this.soundobj.gain;
+      this.audionodes.panner = this.soundobj.panner;
+      this.autionodes.gain.value = this.gain;
     }
     this.getSoundSource = function() {
       if (!this.video._audiosource) {
