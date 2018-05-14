@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic', 'utils.template'], function() {
+elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], function() {
   elation.template.add('janusweb.edit.object', 
       '<Object id=^{id}^ js_id=^{js_id}^ alphatest=^{alphatest}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
@@ -10,6 +10,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.frameupdates = {};
       this.jschildren = [];
       this.assets = {};
+
+      this.jsparts = new elation.janusweb.parts(this);
+
       this.defineProperties({
         room:     { type: 'object' },
         janus:    { type: 'object' },
@@ -237,6 +240,7 @@ console.log('got collider', collider, collision_id);
         this._proxyobject = new elation.proxy(this, {
           parent:   ['accessor', 'parent.getProxyObject'],
           children: ['accessor', 'getChildProxies'],
+          parts:    ['property', 'jsparts'],
           js_id:    ['property', 'properties.js_id'],
           pos:      ['property', 'position'],
           vel:      ['property', 'velocity'],
