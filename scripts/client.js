@@ -148,8 +148,13 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + '/assets/webui/default.json');
       if (this.shownavigation) {
-        this.ui = elation.janusweb.ui.main({append: this, client: this, config: this.uiconfig});
+        this.ui = elation.elements.create('janus.ui.main', {
+          append: this,
+          client: this,
+          config: this.uiconfig
+        });
       }
+      this.view.pickingactive = true;
     }
     this.initLoader = function() {
       var loader = document.getElementsByClassName('engine_loading')[0];
