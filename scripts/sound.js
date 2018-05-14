@@ -150,7 +150,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.checkBounds = (function() {
       var worldpos = new THREE.Vector3();
       return function() {
-        if (this.bounds && this.audio && !this.playing && !(this.play_once && this.playStarted) {
+        if (this.bounds && this.audio && !this.playing && !(this.play_once && this.playStarted)) {
           var listener = this.engine.systems.sound.getRealListener();
           if (listener) {
             worldpos.set(0,0,0).applyMatrix4(listener.matrixWorld);
