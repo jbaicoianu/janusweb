@@ -762,6 +762,7 @@ elation.require([
         elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
         elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
         elation.events.add(this, 'click', this.onObjectClick);
+        elation.events.add(this, 'dragenter', this.handleDragOver);
         elation.events.add(this, 'dragover', this.handleDragOver);
         elation.events.add(this, 'drop', this.handleDrop);
         elation.events.add(this, 'thing_think', this.onScriptTick);
@@ -794,6 +795,7 @@ elation.require([
         elation.events.remove(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
         elation.events.remove(this, 'click', this.onObjectClick);
         elation.events.remove(this, 'dragover', this.handleDragOver);
+        elation.events.remove(this, 'dragenter', this.handleDragOver);
         elation.events.remove(this, 'drop', this.handleDrop);
       }
     }
@@ -1806,7 +1808,7 @@ elation.require([
     /* Room editing functionality */
 
     this.handleDragOver = function(ev) {
-      ev.dataTransfer.dropEffect = "link"
+      //ev.dataTransfer.dropEffect = "link"
       ev.preventDefault();
     }
     this.handleDrop = function(ev) {
@@ -1838,18 +1840,28 @@ elation.require([
     this.loadObjectFromURIList = function(list) {
       var urls = list.split('\n');
 
-      var player = this.engine.client.player;
       var objects = [];
       for (var i = 0; i < urls.length; i++) {
         var hashidx = urls[i].indexOf('#');
-        var url = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
-        if (url.length > 0) {
-          if (url.indexOf('.obj') != -1) {
-            this.loadNewAsset(url, { id: url, src: url, mtl: url.replace('.obj', '.mtl') });
+        let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
+        let type = 'Object';
+        if (id.length > 0) {
+          var schemeidx = id.indexOf(':');
+          if (schemeidx != -1) {
+            // Handle special schemes which are used for internal primitives
+            var scheme = id.substr(0, schemeidx);
+            if (scheme == 'janus-object') {
+              id = id.substr(schemeidx+1);
+            } else if (scheme == 'janus-light') {
+              type = 'light';
+              if (id == 'point') {
+                // set up the point light
+              }
+            }
           }
-          var newobject = this.createObject('Object', {
-            id: url,
-            js_id: player.userid + '-' + url + '-' + window.uniqueId(),
+          var newobject = this.createObject(type, {
+            id: id,
+            js_id: player.userid + '-' + id + '-' + window.uniqueId(),
             sync: true,
             pos: player.vectors.cursor_pos.clone()
           });
@@ -1909,7 +1921,8 @@ elation.require([
       }
 
       this.roomedit.collision_id = object.collision_id;
-      object.collision_id = '';
+      object.collision_id = false;
+      object.collision_radius = null;
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
       elation.events.add(this, 'click', this.editObjectClick);
@@ -1956,6 +1969,7 @@ elation.require([
       var root = false;
       if (obj3d instanceof THREE.Mesh) {
         root = new THREE.Mesh(obj3d.geometry, material);
+        root.scale.copy(obj3d.scale);
       } else {
         var objchild = obj3d.children[obj3d.children.length-1] || obj3d;
         root = objchild.clone();
@@ -1981,9 +1995,12 @@ elation.require([
           this.roomedit.object.sync = true;
           if (this.roomedit.collision_id) {
             // restore collider
-            this.roomedit.object.collision_id = this.roomedit.collision_id;
-            this.roomedit.collision_id = false;
+            //this.roomedit.object.collision_id = this.roomedit.collision_id;
+            //this.roomedit.collision_id = false;
           }
+          var bsphere = this.roomedit.object.getBoundingSphere(true);
+          this.roomedit.object.collision_id = 'sphere';
+          this.roomedit.object.collision_radius = bsphere.radius;
         }
       }
       this.roomedit.object = false;
@@ -2006,9 +2023,17 @@ elation.require([
     }
     this.editObjectMousemove = function(ev) {
       if (this.roomedit.object) {
-        if (this.roomedit.moving && ev.element.getProxyObject() !== this.roomedit.object) {
-          this.roomedit.object.pos = this.editObjectSnapVector(this.roomedit.object.parent.worldToLocal(ev.data.point, true), this.roomedit.snap);
-          this.roomedit.object.sync = true;
+        var obj = this.roomedit.object;
+        if (this.roomedit.moving && ev.element.getProxyObject() !== obj) {
+          var bbox = obj.getBoundingBox(true);
+          var newpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
+          obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
+          var dir = V(player.pos).sub(obj.pos).normalize();
+          // 
+          obj.ydir = V(ev.data.face.normal);
+          obj.xdir = V(dir).cross(obj.ydir);
+          obj.zdir = V(obj.xdir).cross(obj.ydir);
+          obj.sync = true;
         }
       }
     }
@@ -2081,6 +2106,7 @@ elation.require([
         case 'col':
           break;
       }
+      obj.sync = true;
     }
     this.editObjectSnapVector = function(vector, snap) {
       vector.x = Math.round(vector.x / snap) * snap;
