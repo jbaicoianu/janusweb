@@ -39,6 +39,8 @@ janus-ui-statusindicator .inner:after {
   right: 0;
 }
 janus-ui-urlbar h1 {
+  font-size: 1.2em;
+  text-shadow: 0 0 5px rgba(0,0,0,.5);
 }
 janus-ui-urlbar>ui-input>input {
   margin-top: .1em;
@@ -65,8 +67,6 @@ janus-ui-navigation janus-ui-urlbar {
   margin-left: 6px;
 }
 janus-ui-navigation janus-ui-urlbar h1 {
-  font-size: 1.2em;
-  text-shadow: 0 0 5px rgba(0,0,0,.5);
 }
 janus-ui-navigation janus-ui-urlbar>ui-input>input {
 }
