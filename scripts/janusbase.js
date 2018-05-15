@@ -257,7 +257,7 @@ console.log('got collider', collider, collision_id);
           rotation: ['property', 'rotation'],
           rotation_order: ['property', 'rotation_order'],
           sync:     ['property', 'sync'],
-          locked:   ['property', 'sync'],
+          locked:   ['property', 'locked'],
           visible:  ['property', 'visible'],
           tagName:  ['property', 'tag'],
           className:  ['property', 'className'],
