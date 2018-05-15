@@ -854,6 +854,7 @@ elation.require([
               var attrname = k.toLowerCase();
               existing[attrname] = newobj._content;
             }
+            existing.sync = false;
           } else {
             hasNew = true;
             var k = k.toLowerCase();
@@ -876,6 +877,7 @@ elation.require([
         }
       }));
       // Clear the list of edits which have been applied this frame
+      this.applyingEdits = false;
       this.appliedchanges = {};
 
     }
