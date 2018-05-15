@@ -885,6 +885,7 @@ ui-collapsiblepanel>.container>.container-inner {
   transition: transform 150ms ease-out;
   transform: translate(0, 0);
   display: flex;
+  flex-direction: column;
   flex: 1 1;
 }
 ui-collapsiblepanel>.container>.container-inner>* {
