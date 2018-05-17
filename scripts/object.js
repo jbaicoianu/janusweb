@@ -426,7 +426,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
               m.blendSrcAlpha = THREE.SrcAlphaFactor;
               m.blendDstAlpha = THREE.OneFactor;
-              if (!blend_src == 'src_alpha' && blend_dest == 'one_minus_src_alpha') {
+              if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
                 m.transparent = true;
               }
             } else {
