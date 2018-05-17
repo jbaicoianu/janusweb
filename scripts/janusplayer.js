@@ -392,7 +392,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.gazecaster.room = room;
       }
       if (!this.teleporter) {
-        this.teleporter = this.room.createObject('teleporter');
+        this.teleporter = this.room.createObject('user_teleporter');
       } else {
         this.teleporter.setRoom(room.getProxyObject());
       }

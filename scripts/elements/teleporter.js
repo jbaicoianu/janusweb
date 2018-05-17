@@ -1,5 +1,5 @@
 elation.require(['janusweb.janusbase'], function() {
-  elation.component.add('janusweb.elements.teleporter', {
+  elation.component.add('janusweb.elements.user_teleporter', {
     active: false,
     longpresstime: 350,
     deadzone: 5,
