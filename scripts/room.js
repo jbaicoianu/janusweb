@@ -1181,6 +1181,11 @@ elation.require([
         this.sounds[name].play();
       }
     }
+    this.pauseSound = function(name) {
+      if (this.sounds[name]) {
+        this.sounds[name].pause();
+      }
+    }
     this.stopSound = function(name) {
       if (this.sounds[name]) {
         this.sounds[name].stop();
@@ -1204,6 +1209,11 @@ elation.require([
           }
         }
         this.videos[name].play();
+      }
+    }
+    this.pauseVideo = function(name) {
+      if (this.videos[name]) {
+        this.videos[name].pause();
       }
     }
     this.stopVideo = function(name) {
@@ -1528,9 +1538,11 @@ elation.require([
           playSound:     ['function', 'playSound'],
           stopSound:     ['function', 'stopSound'],
           seekSound:     ['function', 'seekSound'],
+          pauseSound:    ['function', 'pauseSound'],
           playVideo:     ['function', 'playVideo'],
           stopVideo:     ['function', 'stopVideo'],
           seekVideo:     ['function', 'seekVideo'],
+          pauseVideo:    ['function', 'pauseVideo'],
           openLink:      ['function', 'openLink'],
           raycast:       ['function', 'raycast'],
 
