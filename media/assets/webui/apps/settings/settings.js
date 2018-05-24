@@ -97,7 +97,7 @@ elation.elements.define('janus.ui.settings.panels', class extends elation.elemen
       'default': {
         'topleft': ['janus-ui-navigation'],
         'right': ['janus-ui-inventory'],
-        'bottom': ['janus-comms-userlist'],
+        'left': ['janus-comms-panel'],
         'bottomright': ['janus-ui-buttons'],
       }
     };
