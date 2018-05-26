@@ -1,7 +1,7 @@
 {
   "apps": {
     "navigation": "./apps/navigation/navigation.json",
-    "chat": "./apps/chat/chat.json",
+    "comms": "./apps/comms/comms.json",
     "settings": "./apps/settings/settings.json",
     "inventory": "./apps/inventory/inventory.json"
   },
