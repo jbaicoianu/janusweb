@@ -235,10 +235,10 @@ elation.require([
       window.scale = function(v1, s) {
         return v1.multiplyScalar(s);
       }
-      window.print = function() {
-        console.log.apply(console, arguments);
-        janus._target.chat.addmessage({userId: 'room', message: arguments[0]});
-      }
+      window.print = function(...args) {
+        console.log.apply(console, args);
+        elation.events.fire({type: 'clientprint', element: this, data: args});
+      }.bind(this);
       window.debug = function() {
         console.log.apply(console, arguments);
       }
