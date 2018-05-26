@@ -5,7 +5,7 @@ elation.require([
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
-    this.version = 'janusweb-1.0rc3';
+    this.version = 'janusweb-1.2';
     this.settings = {
       multiplayer: true,
       sessiontracking: true,

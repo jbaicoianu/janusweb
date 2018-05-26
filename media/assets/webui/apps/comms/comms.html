@@ -1,0 +1,9 @@
+<h3>Communications</h3>
+<janus-comms-status name="status"></janus-comms-status>
+
+{?room.private}
+  <h3>Private Room</h3>
+  <p>This room is marked as private.  You are not broadcasting your location while here - others can't see you, and you can't see them.</p>
+{/room.private}
+<janus-comms-userlist></janus-comms-userlist>
+<janus-comms-chat></janus-comms-chat>
