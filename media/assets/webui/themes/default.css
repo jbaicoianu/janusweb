@@ -173,7 +173,8 @@ ui-tabs>ui-tabbar {
   order: -1;
   white-space: nowrap;
 }
-ui-tabs>ui-tabbar>ui-button {
+ui-tabs>ui-tabbar>ui-button,
+ui-tabs>ui-tabbar>ui-tabcountbutton {
   min-width: 5em;
   text-align: center;
   padding: .25em .4em;
@@ -185,25 +186,35 @@ ui-tabs>ui-tabbar>ui-button {
   display: inline-block;
 }
 ui-tabs>ui-tabbar>ui-button[selected],
-ui-tabs>ui-tabbar>ui-button[selected][hover] {
+ui-tabs>ui-tabbar>ui-button[selected][hover],
+ui-tabs>ui-tabbar>ui-tabcountbutton[selected],
+ui-tabs>ui-tabbar>ui-tabcountbutton[selected][hover] {
   background-color: #4cb96f;
   background-repeat: no-repeat;
 
   border: 1px solid #1c1e22;
   border-bottom-color: transparent;
 }
-ui-tabs>ui-tabbar>ui-button[hover] {
+ui-tabs>ui-tabbar>ui-button[hover],
+ui-tabs>ui-tabbar>ui-tabcountbutton[hover] {
   background-image: linear-gradient(rgba(128,128,128,1), rgba(128,128,128,1) 60%, rgba(128,128,128,1));
   background-repeat: no-repeat;
   border-color: #1c1e22 #1c1e22 transparent #1c1e22;
 }
-ui-tabs>ui-tabbar>ui-button[disabled] {
+ui-tabs>ui-tabbar>ui-button[disabled],
+ui-tabs>ui-tabbar>ui-tabcountbutton[disabled] {
   color: #777;
 }
 ui-tabs>ui-tab[selected] {
   display: flex;
   flex: 1 1;
   flex-direction: column;
+}
+ui-tabcountbutton>ui-indicator::before {
+  content: '(';
+}
+ui-tabcountbutton>ui-indicator::after {
+  content: ')';
 }
 /* <ui-panel> */
 ui-panel,
@@ -635,6 +646,7 @@ ui-slider-handle {
 ui-button,
 ui-togglebutton,
 ui-dropdownbutton,
+ui-tabcountbutton,
 ui-notificationbutton {
   display: inline-block;
   border: none;
@@ -653,18 +665,21 @@ ui-notificationbutton {
 ui-button[hover],
 ui-togglebutton[hover],
 ui-dropdownbutton[hover],
+ui-tabcountbutton[hover],
 ui-notificationbutton[hover] {
   background-image: linear-gradient(#323232, #404142 40%, #393b3d);
 }
 ui-button:active,
 ui-togglebutton:active,
 ui-dropdownbutton:active,
+ui-tabcountbutton:active,
 ui-notificationbutton:active {
   background-image: linear-gradient(#020202, #101112 40%, #191b1d);
 }
 ui-button[disabled],
 ui-togglebutton:disabled,
 ui-dropdownbutton:disabled,
+ui-tabcountbutton:disabled,
 ui-notificationbutton:disabled {
   color: #999;
   background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
