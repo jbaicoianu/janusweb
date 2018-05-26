@@ -268,6 +268,7 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
   init() {
     super.init();
     this.updateTitle = this.updateTitle.bind(this);
+    this.addToRecents = this.addToRecents.bind(this);
     this.updateRoom = this.updateRoom.bind(this);
   }
   create() {
@@ -309,9 +310,12 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     }
   }
   updateRoom() {
+    // Remove listeners from previous room
     elation.events.remove(this.room, 'room_load_processed', this.updateTitle);
+    elation.events.remove(this.room, 'room_load_complete', this.addToRecents);
     this.room = this.janusweb.currentroom;
     elation.events.add(this.room, 'room_load_processed', this.updateTitle);
+    elation.events.add(this.room, 'room_load_complete', this.addToRecents);
     this.updateTitle();
   }
   updateTitle() {
@@ -319,6 +323,24 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     if (room) {
       this.titlelabel.innerHTML = room.title;
       this.input.value = room.url;
+    }
+  }
+  addToRecents(room) {
+    var room = this.janusweb.currentroom;
+    if (room) {
+      var roomdata = {
+        title: room.title,
+        url: room.url,
+        time: new Date().getTime() / 1000,
+        // TODO - we should take a snapshot of this room and store it along with this data
+        //thumbnail: ''
+      };
+      setTimeout(() => {
+        janus.engine.client.screenshot({width: 60, height: 60}).then((d) => {
+          roomdata.thumbnail = d;
+          this.suggestions.recents.add(roomdata);
+        });
+      }, 100);
     }
   }
   handleInput(ev) {
@@ -353,7 +375,17 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
 });
 elation.elements.define('janus.ui.urlbar.suggestions', class extends elation.elements.ui.panel {
   create() {
-    this.suggestions = elation.elements.create('collection.jsonapi', {
+    // Store a list of recently-visited URLs in localStorage
+    this.recents = elation.elements.create('collection.localindexed', {
+      append: this,
+      storagekey: 'janusweb.ui.urlbar.recents',
+      index: 'url'
+    });
+    this.recents.load();
+    // Create a filtered collection which we can use to search within the dataset.  We'll set the filter function later.
+    this.suggestions_recent = this.recents.filter((d) => false); 
+    this.suggestions_recent.id = 'suggested_recents';
+    this.suggestions_popular = elation.elements.create('collection.jsonapi', {
       id: 'suggested_popular',
       append: this,
       host: "https://api.janusvr.com",
@@ -363,6 +395,21 @@ elation.elements.define('janus.ui.urlbar.suggestions', class extends elation.ele
         desc: "true",
         limit: 10,
         urlContains: ''
+      },
+      datatransform: {
+        items: (response) => {
+          let transformed = [];
+          for (var i = 0; i < response.data.length; i++) {
+            let room = response.data[i];
+            transformed.push({
+              title: room.roomName,
+              url: room.roomUrl,
+              thumbnail: room.thumbnail,
+              time: room.lastEntered / 1000
+            });
+          }
+          return transformed;
+        }
       }
     });
     this.panel = elation.elements.create('div', {
@@ -377,11 +424,23 @@ elation.elements.define('janus.ui.urlbar.suggestions', class extends elation.ele
 */
   }
   update(search) {
-    this.suggestions.apiargs.urlContains = search;
-    this.suggestions.load();
+    this.suggestions_popular.apiargs.urlContains = search;
+    this.suggestions_popular.load();
+
+    this.suggestions_recent.filterfunc = (d) => this.applySearchFilter(search, d);
+    this.suggestions_recent.update();
+
     var tplvars = {
-      popular: this.suggestions.items
+      popular: this.suggestions_popular.items,
+      recents: this.suggestions_recent.items
     };
     this.panel.innerHTML = elation.template.get('janus.ui.navigation.suggestions', tplvars);
+  }
+  applySearchFilter(term, node) {
+    return (
+            // TODO - this is the loosest definition of the term "search" - we could do much better here
+            (node.url.indexOf(term) > -1) ||
+            (node.title.indexOf(term) > -1)
+           );
   }
 })
