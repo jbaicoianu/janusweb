@@ -1,7 +1,19 @@
 elation.elements.define('janus-comms-panel', class extends elation.elements.base {
   create() {
     this.player = player;
+    this.room = room;
+    this.client = this.getClient();
+    this.janusweb = this.client.janusweb;
     this.elements = elation.elements.fromTemplate('janus.comms.panel', this);
+  }
+  getClient() {
+    var node = this;
+    while (node) {
+      if (node.tagName == 'JANUS-UI-MAIN') {
+        return node.client;
+      }
+      node = node.parentNode
+    }
   }
 });
 elation.elements.define('janus-comms-status', class extends elation.elements.base {
@@ -115,7 +127,7 @@ console.log('go back');
 
     window.addEventListener('keydown', (ev) => {
       // FIXME - this should set up a bindable context in the engine's control system
-      if (ev.keyCode == 84 && document.activeElement !== this.elements.chatinput.inputelement) {
+      if (ev.keyCode == 84 && player.enabled) {
         this.elements.chatinput.focus();
         // FIXME - we should only return focus to the player if the player was active when we focused the chat
         this.shouldreturnfocus = true;
