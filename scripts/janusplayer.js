@@ -441,6 +441,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         dir:           ['property', 'vectors.zdir'],
         up_dir:        ['property', 'vectors.ydir'],
         userid:        ['property', 'janus.userId'],
+        enabled:       ['property', 'enabled'],
         flying:        ['property', 'flying'],
         walking:       ['property', 'walking'],
         running:       ['property', 'running'],
