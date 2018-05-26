@@ -456,6 +456,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
       }
     }
     this.handleUserChat = function(msg) {
+      elation.events.fire({element: this, type: 'janusweb_user_chat', data: msg.data.data});
       if (this.janusweb.chat) {
         this.janusweb.chat.addmessage(msg.data.data);
       }
