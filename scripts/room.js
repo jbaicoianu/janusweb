@@ -93,15 +93,17 @@ elation.require([
       this.handleDragOver = elation.bind(this, this.handleDragOver);
       this.handleDrop = elation.bind(this, this.handleDrop);
       this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
+      this.editObjectMousewheel = elation.bind(this, this.editObjectMousewheel);
       this.editObjectClick = elation.bind(this, this.editObjectClick);
       this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
       this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       this.roomedit = {
-        snap: .1,
+        snap: .01,
         modes: ['pos', 'rotation', 'scale', 'col'],
         modeid: 0,
-        object: false
+        object: false,
+        distancescale: 1
       };
       this.engine.systems.controls.addContext('roomedit', {
         'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
@@ -189,6 +191,12 @@ elation.require([
         this.skybox = this.spawn('skybox', this.id + '_sky', {
           position: [0,0,0],
           collidable: false
+        });
+        this.skyboxcollider = this.createObject('object', {
+          js_id: 'room_skybox',
+          collision_id: 'sphere',
+          collision_scale: V(1000),
+          collision_trigger: true
         });
       }
       if (this.skyboxtexture) {
@@ -1941,6 +1949,7 @@ elation.require([
       object.collision_radius = null;
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
+      elation.events.add(this, 'wheel', this.editObjectMousewheel);
       elation.events.add(this, 'click', this.editObjectClick);
       elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
@@ -2023,6 +2032,7 @@ elation.require([
       this.editObjectRemoveWireframe();
 
       elation.events.remove(this, 'mousemove', this.editObjectMousemove);
+      elation.events.remove(this, 'wheel', this.editObjectMousewheel);
       elation.events.remove(this, 'click', this.editObjectClick);
 
       // deactivate context
@@ -2042,16 +2052,32 @@ elation.require([
         var obj = this.roomedit.object;
         if (this.roomedit.moving && ev.element.getProxyObject() !== obj) {
           var bbox = obj.getBoundingBox(true);
-          var newpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
-          obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
-          var dir = V(player.pos).sub(obj.pos).normalize();
+          var headpos = player.head.localToWorld(V(0,0,0));
+          var cursorpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
+          cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
+          var dir = V(cursorpos).sub(headpos);
+          var distance = dir.length();
+          dir.multiplyScalar(1/distance);
+          distance = Math.min(distance, 20);
+          var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
           // 
-          obj.ydir = V(ev.data.face.normal);
-          obj.xdir = V(dir).cross(obj.ydir);
-          obj.zdir = V(obj.xdir).cross(obj.ydir);
+          obj.pos = newpos;
+          if (ev.data.thing.js_id == 'room_skybox') {
+            obj.ydir = V(0, 1, 0);
+            obj.zdir = dir;
+            obj.xdir = dir.clone().cross(obj.ydir);
+          } else {
+            obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
+            obj.xdir = V(dir).cross(obj.ydir);
+            obj.zdir = V(obj.xdir).cross(obj.ydir);
+          }
           obj.sync = true;
         }
       }
+    }
+    this.editObjectMousewheel = function(ev) {
+      this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+      this.editObjectMousemove(ev);
     }
     this.editObjectClick = function(ev) {
       if (this.roomedit.object) {
