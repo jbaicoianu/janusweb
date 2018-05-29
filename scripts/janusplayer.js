@@ -426,8 +426,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       }
     }
+    this.start = function() {
+    }
+    this.stop = function() {
+    }
     this.getProxyObject = function() {
       var proxy = new elation.proxy(this, {
+        parent:        ['accessor', 'parent.getProxyObject'],
         pos:           ['property', 'position'],
         vel:           ['property', 'velocity'],
         accel:         ['property', 'acceleration'],
