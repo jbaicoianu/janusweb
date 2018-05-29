@@ -104,7 +104,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (!this.videoasset || this.videoasset.name != this.video_id) {
         if (this.video_id && this.video_id != '') {
           this.loadVideo(this.video_id);
-          if (this.modelasset) {
+          if (this.modelasset && texture) {
             this.assignTextureParameters(texture, this.modelasset);
           }
         } else {
@@ -244,7 +244,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (textureasset.ou3d) {
             texture.repeat.y = 0.5;
           }
-          this.assignTextureParameters(texture, modelasset, textureasset);
+          if (texture) {
+            this.assignTextureParameters(texture, modelasset, textureasset);
+          }
         }
       }
       if (lightmap_image_id) {
@@ -254,13 +256,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           elation.events.add(textureLightmap, 'asset_load', elation.bind(this, this.setTextureDirty));
           elation.events.add(textureLightmap, 'update', elation.bind(this, this.refresh));
 
-          this.assignTextureParameters(textureLightmap, modelasset, lightmaptextureasset);
+          if (textureLightmap) {
+            this.assignTextureParameters(textureLightmap, modelasset, lightmaptextureasset);
+          }
         }
       }
       if (this.video_id && this.video_id != '') {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
-        this.assignTextureParameters(texture, modelasset);
+        if (texture) {
+          this.assignTextureParameters(texture, modelasset);
+        }
       }
       if (this.websurface_id) {
         this.replaceWebsurfaceMaterial();
