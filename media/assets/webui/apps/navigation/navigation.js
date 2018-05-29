@@ -357,8 +357,12 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     }
   }
   handleAccept(ev) {
-    if (this.input.value.length > 0) {
-      janus.setActiveRoom(this.input.value);
+    var url = this.input.value;
+    if (url.length > 0) {
+      if (url.indexOf(':') == -1) {
+        url = 'http://' + url;
+      }
+      janus.setActiveRoom(url);
     }
   }
   handleFocus(ev) {
