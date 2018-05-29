@@ -652,6 +652,10 @@ elation.require([
         if (room.pos) {
           this.spawnpoint.position.fromArray(room.pos);
         }
+        if (room.xdir || room.ydir || room.zdir) {
+          room.orientation = this.janus.parser.getOrientation(room.xdir, room.ydir, room.zdir);
+        }
+
         if (room.orientation) {
           this.spawnpoint.quaternion.copy(room.orientation);
           this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0))); // Janus Native starts the player backwards
