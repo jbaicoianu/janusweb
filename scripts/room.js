@@ -178,6 +178,7 @@ elation.require([
         orientation = this.spawnpoint.quaternion;
       }
       var player = this.engine.client.player;
+      this.appendChild(player);
       player.reset_position();
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
@@ -481,6 +482,7 @@ elation.require([
                         this.loadRoomAssets(objs);
                         this.createRoomObjects(objs);
                         this.enable();
+                        this.setActive();
                       }));
             
           }),
@@ -1056,7 +1058,7 @@ elation.require([
         proxyobj = this.jsobjects[obj];
       }
       if (proxyobj) {
-        if (proxyobj.parent) {
+        if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
           proxyobj.parent.removeChild(proxyobj);
         }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
@@ -1064,7 +1066,9 @@ elation.require([
         if (realobj) {
           realobj.room = this;
           this.add(realobj);
-          obj.start();
+          if (typeof obj.start == 'function') {
+            obj.start();
+          }
         }
       }
     }
@@ -1076,7 +1080,9 @@ elation.require([
       if (proxy) {
         var obj = this.getObjectFromProxy(proxy);
         if (obj && obj.parent) {
-          obj.stop();
+          if (typeof obj.stop == 'function') {
+            obj.stop();
+          }
           obj.parent.remove(obj);
           obj.room = false;
           if (obj.js_id && this.jsobjects[obj.js_id]) {
