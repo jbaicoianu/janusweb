@@ -405,8 +405,10 @@ ui-tooltip {
 
 /* <ui-input> */
 ui-input {
+  display: flex;
 }
 ui-input>input {
+  flex: 1 1;
 }
 ui-input>input[hover] {
 }
@@ -770,17 +772,17 @@ ui-dropdownbutton:disabled {
 ui-buttonbar {
   display: flex;
 }
-ui-buttonbar>ui-button {
+ui-buttonbar>* {
   border-radius: 0;
   border-right: 1px solid #333;
   border-left: 0;
   display: inline-block;
 }
-ui-buttonbar>ui-button:first-of-type {
+ui-buttonbar>*:first-child {
   border-radius: .5em 0 0 .5em;
   border-left: 1px solid transparent;
 }
-ui-buttonbar>ui-button:last-of-type {
+ui-buttonbar>*:last-child {
   border-radius: 0 .5em .5em 0;
   border-right: 1px solid transparent;
 }
