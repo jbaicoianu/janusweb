@@ -1,0 +1,14 @@
+{
+  "templates": {
+    "janus.ui.chat": "./chat.html"
+  },
+  "css": [
+    "./chat.css"
+  ],
+  "scripts": [
+    "./chat.js"
+  ],
+  "components": [
+    "janus-ui-chat"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "templates": {
+    "janus.ui.popular": "./popular.html",
+    "janus.ui.popular.room": "./room.html"
+  },
+  "css": [
+    "./popular.css"
+  ],
+  "scripts": [
+    "./popular.js"
+  ]
+}
+

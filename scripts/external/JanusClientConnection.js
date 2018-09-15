@@ -3,6 +3,7 @@
 /*
  * http://www.myersdaily.org/joseph/javascript/md5-text.html
  */
+var self = (typeof window != 'undefined' ? window : (typeof globals != 'undefined' ? globals : {}));
 (function (global) {
 
   var md5cycle = function (x, k) {
@@ -397,7 +398,12 @@ JanusClientConnection.prototype.onMessage = function(msg) {
       this.loggedin = true;
       this.dispatchEvent({type: 'login'});
       if (this._roomUrl) {
-        this.enter_room(this._roomUrl);
+        if (this.rooms[this._roomUrl]) {
+          // FIXME - this used to be needed when launching directly into a room, but causes problems with partymode
+          //this.enter_room(this._roomUrl, true);
+        } else {
+          console.log('WARNING - received message for a room we don\'t know about', this._roomUrl);
+        }
       }
     } else if (data.method == 'error') {
       console.log('[JanusClientConnection] error logging in', data);
@@ -445,11 +451,17 @@ JanusClientConnection.prototype.unsubscribe = function(url) {
   }
 };
 
-JanusClientConnection.prototype.enter_room = function(url) {
+JanusClientConnection.prototype.enter_room = function(url, partymode) {
+  if (typeof partymode == 'undefined') {
+    partymode = false;
+  }
   this.send({
     'method': 'enter_room',
     'data': {
-      'roomId': md5(url)
+      'roomId': md5(url),
+      'roomUrl': room.url,
+      'roomName': room.title,
+      'partyMode': partymode
     }
   });
 };

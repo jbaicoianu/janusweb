@@ -28,8 +28,8 @@ elation.require([], function() {
           },
           room: {
             pos: [0,0,0],
-            xdir: "-1 0 0",
-            zdir: "0 0 -1",
+            xdir: "1 0 0",
+            zdir: "0 0 1",
           },
           object: [
             {id: 'stand', js_id: 0, pos: "0 -0.1 0", xdir: "-1 0 0", zdir: "0 0 -1", col: error.color1, lighting: "false"},

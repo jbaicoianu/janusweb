@@ -1,0 +1,15 @@
+{
+  "templates": {
+    "janus.ui.navigation": "./navigation.html",
+    "janus.ui.navigation.suggestions": "./suggestions.html",
+    "janus.ui.navigation.suggestion.room": "./suggestion-room.html"
+  },
+  "scripts":  ["./navigation.js"],
+  "css":      ["./navigation.css"],
+  "components": [
+    "janus-ui-navigation",
+    "janus-ui-statusindicator",
+    "janus-ui-urlbar"
+  ]
+}
+

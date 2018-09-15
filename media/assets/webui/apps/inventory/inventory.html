@@ -1,0 +1,47 @@
+    <collection-jsonapi id="models"
+      host="https://poly.googleapis.com"
+      endpoint="/v1/assets"
+      itempath="assets"
+      apiargs.keywords=""
+      apiargs.format="OBJ"
+      apiargs.key="AIzaSyC9ngd4hqQ9YmaBpUAQP4R9KJEY3dIZ4hM">
+    </collection-jsonapi>
+
+    <ui-tabs>
+      <ui-tab label="Primitives"> 
+        <ui-grid class="models">
+          <ui-item><a href="janus-object:cube" draggable>cube</a></ui-item>
+          <ui-item><a href="janus-object:sphere" draggable>sphere</a></ui-item>
+          <ui-item><a href="janus-object:cone" draggable>cone</a></ui-item>
+          <ui-item><a href="janus-object:cylinder" draggable>cylinder</a></ui-item>
+          <ui-item><a href="janus-object:pyramid" draggable>pyramid</a></ui-item>
+          <ui-item><a href="janus-object:torus" draggable>torus</a></ui-item>
+          <ui-item><a href="janus-object:capsule" draggable>capsule</a></ui-item>
+          <ui-item><a href="janus-object:pipe" draggable>pipe</a></ui-item>
+          <ui-item><a href="janus-object:plane" draggable>plane</a></ui-item>
+
+          <ui-item><a href="janus-light:point" draggable>point light</a></ui-item>
+        </ui-grid>
+      </ui-tab>
+      <ui-tab label="Google Poly"> 
+        <ui-flexpanel id="poly" vertical>
+          <ui-input placeholder="Search for Google Poly models" onaccept="let models = document.getElementById('models'); models.apiargs.keywords = this.value; delete models.apiargs.pageToken; document.getElementById('itemlist').clear(); models.load(); pagination.disabled = false;"></ui-input>
+          <ui-grid scrollable-y flex="1" class="models" id="itemlist" itemtemplate="janus.ui.inventory.item.poly" collection="models"></ui-grid>
+          <ui-button noflex id="pagination" onclick="let models = document.getElementById('models'); if (models.rawdata.nextPageToken) { models.apiargs.pageToken = models.rawdata.nextPageToken; models.append(); } else { this.disabled = true; }">Load More</ui-button>
+        </ui-flexpanel>
+      </ui-tab>
+
+      <ui-tab label="Vesta">
+        <ui-flexpanel id="vesta" vertical>
+          <h3>Vesta integration coming soon!</h3>
+          When it's ready, you'll be able to access assets you've stored on your Vesta account, and bring them with you anywhere you go.
+          <a href="https://vesta.janusvr.com/">Sign up for a vesta account today</a>
+        </ui-flexpanel>
+      </ui-tab>
+      <ui-tab label="Import">
+        <h3>Did you know?</h3>
+        <p>You can drag 3d models, images, videos, and sounds into Janus rooms from other websites, or even your local hard drive!</p>
+        <p>Just select the files, drag them over, and drop them into the world.  Then use our in-world editing tools to place it where you want it to be.</p>
+      </ui-tab>
+    </ui-tabs>
+

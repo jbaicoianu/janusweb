@@ -1,0 +1,95 @@
+<ui-tabs>
+  <ui-tab label="UI">
+    <janus-ui-settings-ui></janus-ui-settings-ui>
+  </ui-tab>
+  <ui-tab label="Avatar">
+    <ui-formgroup>
+      <ui-input label="Username"></ui-input>
+      <ui-textarea label="Avatar"></ui-textarea>
+    </ui-formgroup>
+    <!-- janus-viewer-avatar src="https://kool.website/avatars/chibii/1/1.txt" width="500" height="200"></janus-viewer-avatar -->
+  </ui-tab>
+  <ui-tab label="Controls">
+    <ui-tabs>
+      <ui-tab label="Mouse">
+        <ui-formgroup>
+          <ui-slider label="Sensitivity" min="0" max="500"></ui-slider>
+          <ui-toggle label="Invert Y"></ui-toggle>
+        </ui-formgroup>
+      </ui-tab>
+      <ui-tab label="Gamepad">
+        No gamepads detected
+      </ui-tab>
+      <!-- ui-tab label="Keyboard">
+      </ui-tab -->
+      <ui-tab label="VR">
+        <ui-formgroup>
+          <ui-toggle label="Smooth Turning"></ui-toggle>
+          <ui-toggle label="Smooth Locomotion"></ui-toggle>
+        </ui-formgroup>
+      </ui-tab>
+      <ui-tab label="Onscreen">
+        <ui-formgroup>
+          <ui-toggle label="Enabled"></ui-toggle>
+        </ui-formgroup>
+      </ui-tab>
+      <ui-tab label="Leap Motion">
+        <ui-formgroup>
+          <ui-toggle label="Enabled"></ui-toggle>
+          <ui-select label="Mount">
+            <ui-option>VR</ui-option>
+            <ui-option>Desktop</ui-option>
+          </ui-select>
+        </ui-formgroup>
+      </ui-tab>
+      <ui-tab label="3d Rudder">
+        <p>Support for the <a href="https://www.3drudder.com/" target="_blank">3dRudder</a> Motion Controller is coming soon!</p>
+        <ui-toggle label="Enabled" disabled></ui-toggle>
+      </ui-tab>
+    </ui-tabs>
+      <ui-formgroup label="Bindings">
+        <janus-ui-input-bindings></janus-ui-input-bindings>
+      </ui-formgroup>
+  </ui-tab>
+  <ui-tab label="Video">
+    <ui-formgroup label="Graphics">
+      <ui-select label="Max Texture Size">
+        <ui-option>None</ui-option>
+        <ui-option>Low (512)</ui-option>
+        <ui-option>Medium (1024)</ui-option>
+        <ui-option>High (2048)</ui-option>
+        <ui-option>Very High (4096)</ui-option>
+      </ui-select>
+      <ui-select label="Anisotropic Filter">
+        <ui-option>16x</ui-option>
+        <ui-option>8x</ui-option>
+        <ui-option>4x</ui-option>
+        <ui-option>2x</ui-option>
+        <ui-option>1x</ui-option>
+        <ui-option>Off</ui-option>
+      </ui-select>
+      <ui-select label="Shadow Quality">
+        <ui-option>Off</ui-option>
+        <ui-option>Low</ui-option>
+        <ui-option>Medium</ui-option>
+        <ui-option>High</ui-option>
+        <ui-option>Very High</ui-option>
+      </ui-select>
+      <ui-select label="Antialiasing">
+        <ui-option>None</ui-option>
+        <ui-option>FXAA</ui-option>
+        <ui-option>MSAA</ui-option>
+      </ui-select>
+      <ui-slider label="View Scaling" min="1" max="200"></ui-slider>
+      <ui-slider label="Bloom" min="0" max="2"></ui-slider>
+    </ui-formgroup>
+  </ui-tab>
+  <ui-tab label="Media">
+    <ui-formgroup label="Sound">
+      <ui-slider label="Volume" min="0" value="100" max="120"></ui-slider>
+      <ui-toggle label="Mute"></ui-toggle>
+      <ui-toggle label="Positional HRTF"></ui-toggle>
+      <ui-toggle label="Allow Autoplay"></ui-toggle>
+    </ui-formgroup>
+  </ui-tab>
+</ui-tabs>

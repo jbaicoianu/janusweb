@@ -1,0 +1,84 @@
+ui-grid.models {
+  height: 30em;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-rows: repeat(auto-fill, minmax(80px, 1fr));
+}
+ui-grid.models>ui-item {
+  height: auto;
+  padding: 0;
+  position: relative;
+  transition: transform ease-out 100ms;
+  border-radius: 10px;
+  box-shadow: 0 0 5px rgba(0,0,0,.5);
+  margin: 0;
+  display: flex;
+}
+ui-grid.models>ui-item h2 {
+  font-size: .8em;
+  font-weight: bold;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: white;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,.5);
+  padding: .2em .4em;
+  border-radius: 0 0 10px 10px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+ui-grid.models>ui-item h3 {
+  font-size: .8em;
+  margin: 0;
+  display: none;
+}
+ui-grid.models>ui-item img {
+  width: 100%;
+  border-radius: .5em;
+  margin: 0 auto;
+  display: block;
+}
+ui-grid.models>ui-item a {
+  margin: 0;
+  padding: 0;
+  flex: 1 1;
+}
+ui-grid.models>ui-item p {
+  display: none;
+  font-size: .8em;
+}
+ui-grid.models>ui-item:hover p {
+  position: absolute;
+  display: none;
+  width: 100%;
+  background: rgba(0,0,0,.5);
+  border: 1px solid black;
+}
+ui-grid.models>ui-item:hover {
+  transform: scale(1.1);
+  position: relative;
+  z-index: 1;
+}
+/*
+#pagination {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+}
+ui-input {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: .5em;
+}
+*/
+

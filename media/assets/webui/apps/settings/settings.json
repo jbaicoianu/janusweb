@@ -1,0 +1,18 @@
+{
+  "templates": {
+    "janus.ui.settings": "./settings.html",
+    "janus.ui.settings.ui": "./settings-ui.html",
+    "janus.ui.settings.ui.app": "./settings-ui-app.html",
+    "janus.ui.settings.ui.component": "./settings-ui-component.html",
+    "janus.ui.settings.panels": "./panels.html"
+  },
+  "css": [
+    "./settings.css"
+  ],
+  "scripts": [
+    "./settings.js"
+  ],
+  "components": [
+    "janus-ui-settings-button"
+  ]
+}

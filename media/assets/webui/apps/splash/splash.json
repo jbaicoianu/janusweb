@@ -1,0 +1,12 @@
+{
+  "templates": {
+    "janus.ui.splash": "./splash.html"
+  },
+  "css": [
+    "./splash.css"
+  ],
+  "scripts": [
+    "./splash.js"
+  ]
+}
+

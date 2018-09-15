@@ -1,0 +1,10 @@
+    <collection-jsonapi id="popularrooms"
+      host="https://api.janusvr.com"
+      endpoint="/getPopularRooms"
+      itempath="data"
+      apiargs.desc="true"
+      apiargs.limit="96">
+    </collection-jsonapi>
+
+    <ui-grid scrollable-y flex="1" class="popularrooms" id="popularlist" itemtemplate="janus.ui.popular.room" collection="popularrooms"></ui-grid>
+

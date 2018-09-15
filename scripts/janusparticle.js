@@ -23,6 +23,7 @@ elation.require(['janusweb.janusbase'], function() {
         rand_col: { type: 'vector3', default: [0, 0, 0]},
         rand_scale: { type: 'vector3', default: [0, 0, 0]},
         loop: { type: 'bool', default: false },
+        refreshrate: { type: 'int', default: 30 },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
       });
@@ -36,7 +37,9 @@ elation.require(['janusweb.janusbase'], function() {
       this.started = false;
       this.pickable = false;
       this.collidable = false;
-      this.lastboundingsphereupdate = 0;
+      this.boundingRadiusSq = 0;
+      this.boundingSphereWorld = new THREE.Sphere();
+      this.lastrefresh = 0;
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
     this.createObject3D = function() {
@@ -151,7 +154,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.currentpoint = 0;
       this.lasttime = performance.now();
 
-      this.updateBoundingSphere();
+      //this.updateBoundingSphere();
     }
     this.resetParticles = function() {
       var geo = this.geometry;
@@ -183,6 +186,9 @@ elation.require(['janusweb.janusbase'], function() {
           count = this.count,
           loop = this.loop;
 
+      // If we have no particles to render, there's nothing to do!
+      if (count <= 0) return;
+
       if (count != this.particles.length) {
         this.createParticles();
       }
@@ -206,19 +212,30 @@ elation.require(['janusweb.janusbase'], function() {
         } 
       }
       this.lasttime = now;
+      // Notify the renderer of our changes, but only if we're visible to the player
+      // We also rate limit here, so if nothing else in the scene is changing, we
+      // render at a lower fps
+      this.localToWorld(this.boundingSphereWorld.center.set(0,0,0));
+      this.boundingSphereWorld.radius = this.objects['3d'].geometry.boundingSphere.radius;
+      if (player.viewfrustum.intersectsSphere(this.boundingSphereWorld) && now - this.lastrefresh > (1000 / this.refreshrate)) {
+        this.refresh();
+        this.lastrefresh = now;
+      }
 
       this.geometry.attributes.position.needsUpdate = true;
       this.geometry.attributes.color.needsUpdate = true;
-
-      if (now - this.lastboundingsphereupdate > this.duration * 1000) {
-        this.updateBoundingSphere();
-        this.lastboundingsphereupdate = now;
-      }
-      this.refresh();
     }
-    this.updateBoundingSphere = function() {
-      if (this.objects['3d'] && this.objects['3d'].geometry) {
-        this.objects['3d'].geometry.computeBoundingSphere();
+    this.updateBoundingSphere = function(vec) {
+      if (this.objects['3d']) {
+        var lengthSq = vec.lengthSq();
+        if (lengthSq > this.boundingRadiusSq) {
+          this.boundingRadiusSq = lengthSq;
+          var geo = this.objects['3d'].geometry;
+          if (!geo.boundingSphere) {
+            geo.boundingSphere = new THREE.Sphere();
+          }
+          geo.boundingSphere.radius = Math.sqrt(lengthSq);
+        }
       }
     }
     this.createPoint = function() {
@@ -308,6 +325,8 @@ elation.require(['janusweb.janusbase'], function() {
         color[idx*3] = point.color.r;
         color[idx*3+1] = point.color.g;
         color[idx*3+2] = point.color.b;
+
+        this.updateBoundingSphere(point.pos);
       }
     }
     this.extractEmitPoints = function(mesh) {
@@ -374,6 +393,49 @@ elation.require(['janusweb.janusbase'], function() {
         };
       }
       return this._proxyobject;
+    }
+    this.setPoint = function(pointnum, newpos, newvel, newaccel, newcol) {
+      var offset = pointnum * 3;
+
+      var point = this.particles[pointnum];
+      if (!point) {
+        point = this.createPoint();
+        this.particles[pointnum] = point;
+      }
+
+      point.active = 1;
+
+      var pos = this.geometry.attributes.position.array,
+          color = this.geometry.attributes.color.array;
+
+      if (newpos) {
+        point.pos.copy(newpos);
+
+        pos[offset    ] = newpos.x;
+        pos[offset + 1] = newpos.y;
+        pos[offset + 2] = newpos.z;
+
+        this.geometry.attributes.position.needsUpdate = true;
+        this.updateBoundingSphere(newpos);
+      }
+
+      if (newvel) {
+        point.vel.copy(newvel);
+      }
+
+      if (newaccel) {
+        point.accel.copy(newaccel);
+      }
+
+      if (newcol) {
+        point.col.copy(newcol);
+
+        col[offset    ] = newcol.x;
+        col[offset + 1] = newcol.y;
+        col[offset + 2] = newcol.z;
+
+        this.geometry.attributes.color.needsUpdate = true;
+      }
     }
   }, elation.engine.things.janusbase);
 });

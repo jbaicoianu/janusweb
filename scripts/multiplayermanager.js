@@ -91,6 +91,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
       return protocol + '://' + host + ':' + port;
     }
     this.getServerURLForRoom = function(room, force) {
+      if (room.private) return false;
       if (force || !this.roomservers[room.roomid]) {
         var roomserver = this.defaultserver;
         if (room.server) {
@@ -102,7 +103,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
     }
     this.getServerForRoom = function(room) {
       var serverurl = this.getServerURLForRoom(room, true);
-      if (!this.servers[serverurl]) {
+      if (serverurl && !this.servers[serverurl]) {
         var server = new JanusClientConnection({
           host: serverurl,
           userId: this.janusweb.userId,
@@ -158,8 +159,11 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       // Tell the server we're now in the new room
       this.activeroom = room;
-      var server = this.getServerForRoom(room);
-      server.enter_room(room.url);
+      if (!room.private) {
+        var server = this.getServerForRoom(room);
+        var partymode = this.player.party_mode && room.party_mode;
+        server.enter_room(room.url, partymode);
+      }
     }
     this.getJanusOrientation = (function() { 
       var tmpMat = new THREE.Matrix4(),
@@ -193,12 +197,9 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         return ret;
       }
     })();
-    this.sendUpdate = function(opts) {
+    this.sendUpdate = function() {
       if (!this.enabled) return;
 
-      if (!opts) opts = {};
-      // opts.first is a bool, if true then we are sending our avatar along with the move update
-      // else, we send the avatar on every 15th update
       var player = this.player,
           room = this.activeroom;
 
@@ -206,7 +207,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       var server = this.getServerForRoom(room);
 
-      if (!server.loggedin) return;
+      if (!server || !server.loggedin) return;
 
       var dirs = this.getJanusOrientation(player, player.head)
       if (!this.movedata) {
@@ -276,28 +277,37 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       var server = this.getServerForRoom(room);
 console.log('[MultiplayerManager] subscribe', room.url);
-      server.subscribe(room.url);
+      if (server) {
+        server.subscribe(room.url);
+      }
     }
     this.unsubscribe = function(room) {
       if (!this.enabled) return;
 
 console.log('[MultiplayerManager] unsubscribe', room.url);
       var server = this.getServerForRoom(room);
-      server.unsubscribe(room.url);
+      if (server) {
+        server.unsubscribe(room.url);
+      }
     }
     this.join = function(room) {
       if (!this.enabled) return;
 
 console.log('[MultiplayerManager] join', room.url);
       var server = this.getServerForRoom(room);
-      server.enter_room(room.url);
+      var partymode = this.player.party_mode && room.party_mode;
+      if (server) {
+        server.enter_room(room.url, partymode);
+      }
     }
     this.part = function(room) {
       if (!this.enabled) return;
 
 console.log('[MultiplayerManager] part', room.url);
       var server = this.getServerForRoom(room);
-      server.leave_room(room.url);
+      if (server) {
+        server.leave_room(room.url);
+      }
     }
     this.spawnRemotePlayer = function(data) {
       var userId = data.userId;
@@ -365,7 +375,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
       if (!this.remoteplayers[userId]) {
         var remoteplayer = this.spawnRemotePlayer(msg.data.data);
-        elation.events.fire({element: this, type: 'user_joined', data: remoteplayer});
+        elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
       } else {
         var remote = this.remoteplayers[userId];
         var room = this.rooms[msg.data.data.roomId] || this.activeroom;
@@ -382,7 +392,6 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
       var remoteplayer = this.remoteplayers[msg.data.data.userId];
       console.log('[MultiplayerManager] player disconnected', msg, remoteplayer);
       if (remoteplayer) {
-        elation.events.fire({element: this, type: 'janusweb_user_disconnected', data: remoteplayer});
         if (this.janusweb.chat) {
           this.janusweb.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' disconnected' });
         }
@@ -392,6 +401,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
         delete this.remoteplayers[msg.data.data.userId];
         this.remotePlayerCount = Object.keys(this.remoteplayers).length;
         this.playerCount = this.remotePlayerCount + 1;
+        elation.events.fire({element: this, type: 'janusweb_user_disconnected', data: remoteplayer});
       }
     }
     this.handleUserEnter = function(msg) {
@@ -405,26 +415,26 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
       if (remoteplayer.room !== room) {
         remoteplayer.setRoom(room);
       }
+      this.remotePlayerCount = Object.keys(this.remoteplayers).length;
+      this.playerCount = this.remotePlayerCount + 1;
       elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
       if (this.janusweb.chat) {
         this.janusweb.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' joined room' });
       }
-      this.remotePlayerCount = Object.keys(this.remoteplayers).length;
-      this.playerCount = this.remotePlayerCount + 1;
     }
     this.handleUserLeave = function(msg) {
       var remoteplayer = this.remoteplayers[msg.data.data.userId];
       console.log('[MultiplayerManager] player left', msg, remoteplayer);
       if (remoteplayer) {
-        elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
-        if (this.janusweb.chat) {
-          this.janusweb.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
-        }
         if (remoteplayer) {
           remoteplayer.setRoom(null);
         }
         this.remotePlayerCount = Object.keys(this.remoteplayers).length;
         this.playerCount = this.remotePlayerCount + 1;
+        elation.events.fire({element: this, type: 'janusweb_user_left', data: remoteplayer});
+        if (this.janusweb.chat) {
+          this.janusweb.chat.addmessage({userId: ' ! ', message: msg.data.data.userId + ' left room' });
+        }
       }
     }
     this.handlePortal = function(msg) {
@@ -446,6 +456,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
       }
     }
     this.handleUserChat = function(msg) {
+      elation.events.fire({element: this, type: 'janusweb_user_chat', data: msg.data.data});
       if (this.janusweb.chat) {
         this.janusweb.chat.addmessage(msg.data.data);
       }

@@ -22,7 +22,16 @@ elation.require(['janusweb.janusbase'], function() {
         elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
         elation.events.add(this.video, 'loadeddata', elation.bind(this, this.videoloaded));
         elation.events.add(this.video, 'playing', elation.bind(this, this.videoStartedPlaying));
-        return new THREE.Mesh(geo, mat);
+
+        var mesh = new THREE.Mesh(geo, mat);
+        if (this.asset.sbs3d || this.asset.ou3d) {
+          mesh.onBeforeRender = (renderer, scene, camera) => {
+            if (camera.name) {
+              texture.setEye(camera.name);
+            }
+          }
+        }
+        return mesh;
       } else {
         console.log('ERROR - could not find video ' + this.properties.video_id);
       }
@@ -46,7 +55,8 @@ elation.require(['janusweb.janusbase'], function() {
           });
         }
         texture.minFilter = THREE.LinearFilter;
-        elation.events.add(texture, 'videoframe', elation.bind(this, this.refresh));
+        // Refresh this object whenever the video has a new frame for us to display
+        this.texture.onUpdate = (e) => this.refresh();
       }
 
       this.texture.minFilter = THREE.LinearFilter;
@@ -70,6 +80,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (!this.audionodes) {
         this.initSound();
       }
+      this.adjustAspectRatio();
     }
     this.initSound = function() {
       var listener = this.engine.systems.sound.getRealListener(),
@@ -79,16 +90,20 @@ elation.require(['janusweb.janusbase'], function() {
         ctx: ctx
       };
 
-      var gainnode = ctx.createGain();
       var source = this.getSoundSource();
 
-      gainnode.gain.value = this.gain;
-      source.connect(gainnode);
+      this.soundobj = new THREE.PositionalAudio(listener);
+      this.objects['3d'].add(this.soundobj);
+      //this.panner = this.context.createPanner();
 
-      gainnode.connect(ctx.destination);
+      //this.panner.connect(ctx.destination);
+      //gainnode.connect(this.panner);
+      source.connect(this.soundobj.panner);
 
       this.audionodes.source = source;
-      this.audionodes.gain = gainnode;
+      this.audionodes.gain = this.soundobj.gain;
+      this.audionodes.panner = this.soundobj.panner;
+      this.autionodes.gain.value = this.gain;
     }
     this.getSoundSource = function() {
       if (!this.video._audiosource) {

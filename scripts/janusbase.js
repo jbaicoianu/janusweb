@@ -1,6 +1,6 @@
-elation.require(['engine.things.generic', 'utils.template'], function() {
+elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], function() {
   elation.template.add('janusweb.edit.object', 
-      '<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
+      '<Object id=^{id}^ js_id=^{js_id}^ alphatest=^{alphatest}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
 
   elation.component.add('engine.things.janusbase', function() {
     this.defaultcolor = new THREE.Color(0xffffff);
@@ -10,6 +10,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.frameupdates = {};
       this.jschildren = [];
       this.assets = {};
+
+      this.jsparts = new elation.janusweb.parts(this);
+
       this.defineProperties({
         room:     { type: 'object' },
         janus:    { type: 'object' },
@@ -17,6 +20,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         js_id:    { type: 'string' },
         color:    { type: 'color', default: this.defaultcolor, set: this.updateColor },
         opacity:  { type: 'float', default: 1.0, set: this.updateOpacity },
+        alphatest:  { type: 'float', default: 0.05, set: this.updateAlphaTest },
         fwd:      { type: 'vector3', default: new THREE.Vector3(0,0,1), set: this.pushFrameUpdate },
         xdir:     { type: 'vector3', default: new THREE.Vector3(1,0,0), set: this.pushFrameUpdate },
         ydir:     { type: 'vector3', default: new THREE.Vector3(0,1,0), set: this.pushFrameUpdate },
@@ -28,6 +32,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         locked:   { type: 'boolean', default: false },
         rotate_axis: { type: 'string', default: '0 1 0', set: this.updateRotationSpeed },
         rotate_deg_per_sec: { type: 'float', default: 0, set: this.updateRotationSpeed },
+        object: { type: 'object' },
         onclick: { type: 'object' },
         anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
@@ -51,6 +56,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         xdir: new THREE.Vector3(1,0,0),
         ydir: new THREE.Vector3(0,1,0),
         zdir: new THREE.Vector3(0,0,1),
+        fwd: new THREE.Vector3(0,0,1),
         rotation: new THREE.Euler()
       };
 
@@ -59,16 +65,22 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.colorIsDefault = true;
 
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
-      this.handleFrameStart = elation.bind(this, this.handleFrameStart);
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
-//      elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
-//      elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
-
+      this.created = false;
+    }
+    this.createObject3D = function() {
+      if (this.object && this.object instanceof THREE.Object3D) {
+        this.properties.position.copy(this.object.position);
+        this.properties.orientation.copy(this.object.quaternion);
+        return this.object;
+      }
+      return new THREE.Object3D();
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
         this.create();
       }
+      this.created = true;
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
@@ -81,6 +93,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.updateOpacity = function() {
       this.setOpacity(this.opacity);
+    },
+    this.updateAlphaTest = function() {
+      this.setAlphaTest(this.alphatest);
     }
     this.updateCollider = function() {
       this.removeCollider();
@@ -103,10 +118,12 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         } else if (collision_id == 'cube') {
           var halfsize = collision_scale.clone().multiplyScalar(.5);
           this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
+/*
         } else if (collision_id == 'plane') {
           var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
+*/
         } else if (collision_id == 'cylinder') {
           this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
         } else {
@@ -125,10 +142,11 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
                   n.userData.thing = this;
                 }));
                 this.colliders.add(collider);
-              //this.setCollider('threejs', {mesh: collider.children[0], scale: this.properties.scale});
 
+                //this.setCollider('mesh', {mesh: collider.children[0], scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
+console.log('got collider', collider, collision_id);
             this.collidermesh = collider;
             if (collider.userData.loaded) {
               //this.colliders.add(collider);
@@ -222,6 +240,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         this._proxyobject = new elation.proxy(this, {
           parent:   ['accessor', 'parent.getProxyObject'],
           children: ['accessor', 'getChildProxies'],
+          parts:    ['property', 'jsparts'],
           js_id:    ['property', 'properties.js_id'],
           pos:      ['property', 'position'],
           vel:      ['property', 'velocity'],
@@ -230,6 +249,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           scale:    ['property', 'scale'],
           col:      ['property', 'color'],
           opacity:  ['property', 'opacity'],
+          alphatest:  ['property', 'alphatest'],
           fwd:      ['property', 'zdir'],
           xdir:     ['property', 'xdir'],
           ydir:     ['property', 'ydir'],
@@ -237,7 +257,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           rotation: ['property', 'rotation'],
           rotation_order: ['property', 'rotation_order'],
           sync:     ['property', 'sync'],
-          locked:   ['property', 'sync'],
+          locked:   ['property', 'locked'],
           visible:  ['property', 'visible'],
           tagName:  ['property', 'tag'],
           className:  ['property', 'className'],
@@ -294,6 +314,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           removeClass:         ['function', 'removeClass'],
           hasClass:            ['function', 'hasClass'],
           raycast:             ['function', 'raycast'],
+          getElementsByTagName:['function', 'getElementsByTagName'],
         });
 
         if (classdef) {
@@ -388,7 +409,6 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     }
     this.start = function() {
       if (!this.started) {
-        elation.events.add(this.room, 'janusweb_script_frame', this.handleFrameStart);
         elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
         this.started = true;
       }
@@ -405,21 +425,12 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         }
       }
       if (this.started) {
-        elation.events.remove(this.room, 'janusweb_script_frame', this.handleFrameStart);
         elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
         this.started = false;
       }
     }    
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
-    }
-    this.handleFrameStart = function() {
-      this.resetFrameUpdates();
-      if (!this.lastframerotation) {
-        this.lastframerotation = this.properties.rotation.clone();
-      } else {
-        this.lastframerotation.copy(this.properties.rotation);
-      }
     }
     this.handleFrameUpdates = function(ev) {
       if (this.hasScriptChangedDirvecs()) {
@@ -435,7 +446,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       this.resetFrameUpdates();
       this.dispatchEvent({type: 'update', data: ev.data});
       var proxy = this.getProxyObject();
-      if (typeof proxy.update == 'function') {
+      if (typeof proxy.update == 'function' && this.created) {
         proxy.update(ev.data);
       }
     }
@@ -443,18 +454,25 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       var tmpmat = new THREE.Matrix4(),
           xdir = new THREE.Vector3(),
           ydir = new THREE.Vector3(),
-          zdir = new THREE.Vector3();
+          zdir = new THREE.Vector3(),
+          fwd = new THREE.Vector3();
       return function() {
 
         // Determine ydir and xdir given the specified zdir.  Based on the following code from the native client:
         //    SetYDir((dy - dz * QVector3D::dotProduct(dy, dz)).normalized());
         //    SetXDir(QVector3D::crossProduct(dy, dz));
 
-        ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(this.properties.zdir).multiplyScalar(this.properties.ydir.dot(this.properties.zdir))).normalize();
-        xdir.crossVectors(ydir, this.properties.zdir).normalize();
+        if (!this.lastframevalues.fwd.equals(this.properties.fwd)) {
+          this.properties.zdir.copy(this.properties.fwd);
+          fwd.copy(this.properties.fwd);
+        } else {
+          fwd.copy(this.properties.zdir);
+        }
+        ydir.copy(this.properties.ydir).normalize().sub(zdir.copy(fwd).multiplyScalar(this.properties.ydir.dot(fwd))).normalize();
+        xdir.crossVectors(ydir, fwd).normalize();
 
 
-        tmpmat.makeBasis(xdir, ydir, this.properties.zdir);
+        tmpmat.makeBasis(xdir, ydir, fwd);
         this.properties.orientation.setFromRotationMatrix(tmpmat);
 
         // Copy back the orthonormalized values
@@ -463,9 +481,15 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         //this.properties.zdir.copy(zdir);
       }
     })();
-    this.updateOrientationFromEuler = function() {
-      this.properties.orientation.setFromEuler(this.properties.rotation);
-    }
+    this.updateOrientationFromEuler = (function() {
+      var tmpeuler = new THREE.Euler();
+      return function() {
+        var rot = this.properties.rotation,
+            scale = Math.PI/180;
+        tmpeuler.set(rot.x * scale, rot.y * scale, rot.z * scale);
+        this.properties.orientation.setFromEuler(tmpeuler);
+      };
+    })();
     this.updateEulerFromOrientation = function() {
       this.properties.rotation.setFromQuaternion(this.properties.orientation);
     }
@@ -478,10 +502,10 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
     })();
     this.hasScriptChangedDirvecs = function() {
       var changes = this.frameupdates;
-      return (changes['xdir'] || changes['ydir'] || changes['zdir'] ||
-              !this.lastframevalues.xdir.equals(this.properties.xdir) ||
+      return (!this.lastframevalues.xdir.equals(this.properties.xdir) ||
               !this.lastframevalues.ydir.equals(this.properties.ydir) ||
-              !this.lastframevalues.zdir.equals(this.properties.zdir));
+              !this.lastframevalues.zdir.equals(this.properties.zdir) ||
+              !this.lastframevalues.fwd.equals(this.properties.fwd));
     }
     this.hasScriptChangedEuler = function() {
       var changes = this.frameupdates;
@@ -502,8 +526,8 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
       }
     }
 
-    this.createObject = function(type, args) {
-      return room.createObject(type, args, this);
+    this.createObject = function(type, args, skipstart) {
+      return room.createObject(type, args, this, !this.started);
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
@@ -511,7 +535,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
-        if (proxyobj.parent) {
+        if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
           proxyobj.parent.removeChild(proxyobj);
         }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
@@ -519,7 +543,9 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
         if (realobj) {
           this.add(realobj);
           this.updateScriptChildren();
-          realobj.start();
+          if (typeof realobj.start == 'function') {
+            realobj.start();
+          }
         }
       }
     }
@@ -557,7 +583,7 @@ elation.require(['engine.things.generic', 'utils.template'], function() {
           //console.log('I collided', proxy, this);
           elation.events.fire({type: 'collision', element: this, data: proxy});
 
-          if (proxy.collision_trigger) {
+          if (this.collision_trigger || proxy.collision_trigger) {
             ev.preventDefault();
             ev.stopPropagation();
           }
@@ -567,6 +593,7 @@ console.error('dunno what this is', other);
       }
     }
     this.setOpacity = function(opacity) {
+
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
         this.objects['3d'].traverse(function(n) {
@@ -576,7 +603,22 @@ console.error('dunno what this is', other);
               m[i].opacity = opacity;
               m[i].transparent = (opacity < 1);
               if (m[i].transparent) {
-                m[i].alphaTest = 0.02;
+                m[i].alphaTest = this.alphatest;
+              }
+            }
+          }
+        });
+      }
+    }
+    this.setAlphaTest = function(alphatest) {
+      if (this.objects['3d'] && this.currentalphatest != alphatest) {
+        this.currentalphatest = alphatest;
+        this.objects['3d'].traverse(function(n) {
+          if (n.material) {
+            var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+            for (var i = 0; i < m.length; i++) {
+              if (m[i].transparent) {
+                m[i].alphaTest =alphatest;
               }
             }
           }
@@ -608,7 +650,7 @@ console.error('dunno what this is', other);
       if (!event.element) event.element = this;
       var handlerfn = 'on' + event.type;
       if (this[handlerfn]) {
-        //this.executeCallback(this[handlerfn], event);
+        this.executeCallback(this[handlerfn], event);
       }
       return elation.events.fire(event);
     }
@@ -644,7 +686,11 @@ console.error('dunno what this is', other);
       if (callback instanceof Function) {
         callback(args);
       } else if (elation.utils.isString(callback)) {
-        eval(callback);
+        (function(fn) {
+          var event = args;
+          return eval(callback);
+        }).call(this.getProxyObject(), callback);
+
       }
     }
     this.isEqual = function(obj) {
@@ -680,6 +726,7 @@ console.error('dunno what this is', other);
       var _pos = new THREE.Vector3(),
           _dir = new THREE.Vector3(0,0,-1);
       return function(dir, offset, classname) {
+        if (!this.room) return [];
         if (dir) {
           _dir.copy(dir);
         } else {
@@ -694,5 +741,18 @@ console.error('dunno what this is', other);
         return this.room.raycast(_dir, _pos, classname);
       };
     })();
+    this.getElementsByTagName = function(tagname, elements) {
+      var tag = tagname.toUpperCase();
+      if (!elements) elements = [];
+      var children = this.getChildProxies();
+      for (var i = 0; i < children.length; i++) {
+        var el = children[i];
+        if (el.tag == tag) {
+          elements.push(el);
+        }
+        el.getElementsByTagName(tagname, elements);
+      };
+      return elements;
+    }
   }, elation.engine.things.generic);
 });

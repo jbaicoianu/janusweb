@@ -1,0 +1,11 @@
+{
+  "templates": {
+    "janus.ui.buttons": "./buttons.html"
+  },
+  "css": [
+  ],
+  "scripts": [
+    "./buttons.js"
+  ]
+}
+

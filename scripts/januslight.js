@@ -5,9 +5,10 @@ elation.require(['janusweb.janusbase'], function() {
       this.defineProperties({
         light_directional: { type: 'bool', default: false, set: this.updateLight },
         light_range: { type: 'float', default: 10, set: this.updateLight },
-        light_intensity: { type: 'float', default: 100, set: this.updateLight },
+        light_intensity: { type: 'float', default: 10, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
         light_cone_exponent: { type: 'float', default: 1, set: this.updateLight },
+        light_target: { type: 'object', set: this.updateLightTarget },
         light_shadow: { type: 'boolean', default: false, set: this.updateLight },
         light_shadow_near: { type: 'float', default: .1, set: this.updateLight },
         light_shadow_far: { type: 'float', set: this.updateLight },
@@ -17,26 +18,17 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createObject3D = function() {
       var obj = new THREE.Object3D();
-      if (this.light_directional) {
-        this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
-        obj.add(this.light);
-      } else if (this.light_cone_angle == 0) {
-        this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
-        this.light.position.set(0,0,0);
-        obj.add(this.light);
-      } else if (this.light_cone_angle > 0) {
-        var angle = Math.acos(this.light_cone_angle);
-        this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
-        //this.light.position.set(0,0,0);
-        obj.add(this.light);
-      } 
-      this.updateLight();
       return obj;
     }
     this.updateColor = function() {
       this.updateLight();
     }
     this.createChildren = function() {
+      elation.engine.things.januslight.extendclass.createChildren.call(this);
+
+      this.createLight();
+      this.updateLight();
+      this.created = true;
       // TODO - should be an easy way of toggling helpers
       /*
       var scene = this.objects['3d'];
@@ -53,12 +45,36 @@ elation.require(['janusweb.janusbase'], function() {
       }
       */
     }
-    this.physics_update = function() {
-      this.localToWorld(this.light.target.position.set(0,0,-1));
-      this.light.target.updateMatrixWorld();
+    this.update = function() {
+      if (!this.light) {
+        this.createLight();
+        this.updateLight();
+      }
+      if (this.light && !this.light.parent) {
+        this.objects['3d'].add(this.light);
+      }
+    }
+    this.createLight = function() {
+      if (!this.light) {
+        if (this.light_directional || this.light_cone_angle == 1) {
+          this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
+        } else if (this.light_cone_angle == 0) {
+          this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
+          this.light.position.set(0,0,0);
+        } else if (this.light_cone_angle > 0) {
+          var angle = Math.acos(this.light_cone_angle);
+          this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
+          this.light.position.set(0,0,0);
+
+          this.updateLightTarget();
+        }
+      }
     }
     this.updateLight = function() {
       if (this.light) {
+        if (this.light.parent !== this.objects['3d']) {
+          this.objects['3d'].add(this.light);
+        }
         //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
         this.light.intensity = this.light_intensity / 100;
@@ -66,6 +82,30 @@ elation.require(['janusweb.janusbase'], function() {
         this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
         this.light.distance = this.light_range * avgscale;
         this.updateShadowmap();
+      }
+    }
+    this.updateLightTarget = function() {
+      if (!this.light) return;
+
+      if (this.light_target) {
+        if (elation.utils.isString(this.light_target)) {
+          if (room.objects[this.light_target]) {
+            this.light.target = room.objects[this.light_target].objects['3d'];
+          } else if (this.light_target == 'player') {
+            this.light.target = player.objects['3d'];
+          }
+        } else if (this.light_target.objects && this.light_target.objects['3d']) {
+          this.light.target = this.light_target.objects['3d'];
+        } else if (this.light_target instanceof THREE.Object3D) {
+          this.light.target = this.light_target;
+        }
+      }
+
+      // If no target was specified, we're using the default, so make sure it's set up right
+      var target = this.light.target;
+      if (!target.parent) {
+        this.objects['3d'].add(target);
+        target.position.set(0,0,1);
       }
     }
     this.updateShadowmap = function() {
@@ -88,6 +128,7 @@ elation.require(['janusweb.janusbase'], function() {
           light_intensity:     [ 'property', 'light_intensity'],
           light_cone_angle:    [ 'property', 'light_cone_angle'],
           light_cone_exponent: [ 'property', 'light_cone_exponent'],
+          light_target:        [ 'property', 'light_target'],
           light_shadow:        [ 'property', 'light_shadow'],
           light_shadow_near:   [ 'property', 'light_shadow_near'],
           light_shadow_far:    [ 'property', 'light_shadow_far'],

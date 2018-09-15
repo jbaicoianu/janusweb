@@ -55,6 +55,10 @@ body.dark .ui_window:after {
   width: 1000px;
   height: 1000px;
 }
+.engine_view {
+  background: url(https://cdn.discordapp.com/attachments/296481684495532043/405547351009263626/unknown.png);
+  background-size: cover;
+}
 .engine_view .engine_systems_render_css3d {
   position: absolute;
   top: 0;
@@ -67,7 +71,7 @@ body.dark .ui_window:after {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 500;
+  z-index: 4;
   margin: .4em;
   white-space: nowrap;
 }

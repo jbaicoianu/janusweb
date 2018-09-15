@@ -60,17 +60,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     this.createChildren = function() {
       elation.engine.things.janusghost.extendclass.createChildren.call(this);
 
-      this.head = this.spawn('janusbase', null, {
-        'position': new THREE.Vector3(),
-        'parent': this,
-        'janus': this.janus,
-        'room': this.room
+      this.head = this.createObject('object', {
       });
-      this.shoulders = this.spawn('janusbase', this.properties.player_id + '_shoulders', {
-        'position': [0,1.0,0],
-        'parent': this,
-        'janus': this.janus,
-        'room': this.room
+      this.shoulders = this.createObject('object', {
+        'js_id': this.properties.player_id + '_shoulders',
+        'pos': V(0, 1.0, 0),
       });
       this.setHead(this.head_id, this.properties.head_pos);
       this.setBody(this.body_id);
@@ -155,12 +149,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             this.head.properties.position.copy(headpos);
           }
 
-          this.face = this.head.spawn('janusobject', null, {
-            janus: this.janus,
-            room: this.room,
-            parent: this,
-            janusid: headid,
-            position: headpos.clone().negate(),
+          this.face = this.head.createObject('object', {
+            id: headid,
+            pos: headpos.clone().negate(),
             orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
             lighting: this.lighting,
             cull_face: 'none'
@@ -180,11 +171,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.body = false;
       }
       if (bodyid) {
-        this.body = this.spawn('janusobject', null, {
-          janus: this.janus,
-          room: this.room,
-          parent: this,
-          janusid: bodyid,
+        this.body = this.createObject('object', {
+          id: bodyid,
           orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
           lighting: this.lighting,
           cull_face: 'none'
@@ -258,12 +246,14 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
 
     this.start = function() {
+      elation.engine.things.janusghost.extendclass.start.call(this);
       this.framenum = -1;
       if (this.frames.length > 0) {
         this.showNextFrame();
       }
     }
     this.stop = function() {
+      elation.engine.things.janusghost.extendclass.stop.call(this);
       if (this.frametimer) {
         clearTimeout(this.frametimer);
       }

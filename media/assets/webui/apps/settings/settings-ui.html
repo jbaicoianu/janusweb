@@ -1,0 +1,18 @@
+    <div>
+      <ui-select label="Choose Layout">
+        <option>default</option>
+        <option>Create New...</option>
+      </ui-select>
+    </div>
+    <div>
+      <h3>Installed Apps</h3>
+      <ui-list>
+        {#apps}
+          <ui-item>
+            <janus-ui-settings-ui-app name="{name}" app="{app}"></janus-ui-settings-ui-app>
+          </ui-item>
+        {/apps}
+      </ui-list>
+
+      <ui-button onclick="janus.ui.installApp(prompt('name'), prompt('url')).then(() => { let dd = document.getElementsByTagName('janus-ui-settings')[0]; dd.reload(); })">Add App</ui-button>
+    </div>

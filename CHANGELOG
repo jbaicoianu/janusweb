@@ -1,3 +1,60 @@
+JanusWeb 1.2
+==============
+- Engine improvements
+  - Improved 3d positional audio HRTF panning mode
+  - Fixed SBS3D video and images
+  - Fixed skybox direction (thanks Spyduck!)
+  - FIxed edit sync (thanks Spyduck!)
+  - Fixed sound.play_once (thanks Spyduck!)
+  - Fixed screenshots with (window) resolution
+- Scripting and markup improvements
+  - Create room objects from Three.js objects
+  - Fixed spot lights, added "light_target" parameter
+  - Fixed light creation bugs
+  - object.parts lets you access the individual parts which make up a 3d model
+  - Added object.getBoundingSphere() / object.getBoundingBox()
+  - Added room.private support
+- UI improvements
+  - Configurable panels
+  - Installable UI apps (https://github.com/jbaicoianu/janusweb/wiki/Creating-a-UI-App)
+  - Improved settings UI
+  - Improved inventory with primitives + Google Poly
+  - Drag-drop editing improvements
+  - Support drag-drop from local files
+
+JanusWeb 1.2.5
+==============
+
+
+
+JanusWeb 1.1.16
+===============
+- JanusWeb HTML one-liners (<janus-viewer></janus-viewer>, <janus-viewer-video360 src="..."></janus-viewer-video360>, etc)
+- Rotation fixes: xdir/ydir/zdir orthonormalization is now consistent with native, plus support for rotation and rotation_order
+- Gaze events: ongazeenter / ongazemove / ongazeleave / ongazeactivate events (see https://docs.google.com/document/d/10AuBi7IhdPv6koolGJdT2_8AK9JeOgsU_yRVtW-IN5g for proposal, https://vesta.janusvr.com/bai/gaze-events-demo/ for example)
+- room.raycast() and object.raycast() (see https://docs.google.com/document/d/1Nm0CBd70fiuLwGGdC3UpOLg35FimyWa6ARO3uq41P8A for proposal)
+- Improved Leap Motion support (desktop + HMD mount) options now available via config panel
+- object.class parameter
+- object.addClass() / removeClass() / hasClass()
+- room.class parameter
+- room.addClass() / removeClass() / hasClass() / getObjectsByClassName() / getObjectsByTagName()
+- Emissive map support
+- tex/tex0 fixes
+- Added experimental teleporter (click-and-hold, move to aim, release to jump)
+- player.addForce() / removeForce()
+- Sound fixes (non-positional/ambient sounds, don't autoplay every sound, etc)
+- Custom element improvements/bugfixes
+- Improved ghost asset handling
+- Support for creating dynamic AssetImages from <canvas> elements
+- Dynamic room.fog_col support
+- Support for setting object alpha via object.col = V(r,g,b,a)
+- Improved per-room asset tracking (no more asset naming conflicts between rooms)
+- Asset loading bugs (spaces, multiple references, etc)
+- Optimize asset loading worker thread management (use number of cores to determine number of workers, load minimal code into worker)
+- Experimental collision detection enhancements - see https://github.com/jbaicoianu/janusweb/wiki/Collision-Meshes for info
+
+// TODO - this info is available in the wiki, but should be made available here too
+
 ??? ?? 2016 - 0.4b
 ------------------
 AssetScript support

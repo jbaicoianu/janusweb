@@ -1,0 +1,76 @@
+janus-controls-analog {
+  display: block;
+  position: relative;
+  border: 1px solid black;
+  width: 100px;
+  height: 100px;
+  border-radius: 50px;
+  margin-left: 10px;
+  margin-bottom: 10px;
+  cursor: -webkit-grab;
+  cursor: grab;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+}
+janus-controls-analog[top][left] {
+  transform: translate(0,0);
+}
+janus-controls-analog[top][right] {
+  transform: translate(-100%,0);
+}
+janus-controls-analog[bottom][left] {
+  transform: translate(0,-100%);
+}
+janus-controls-analog[bottom][right] {
+  transform: translate(-100%,-100%);
+}
+janus-controls-analogstick {
+  position: absolute;
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid red;
+}
+janus-controls-button {
+  display: block;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid black;
+  width: 80px;
+  height: 80px;
+  line-height: 80px;
+  border-radius: 40px;
+  background: #900;
+  transition: transform linear 40ms;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+janus-controls-button[top][left] {
+  transform: translate(0,0);
+}
+janus-controls-button[top][right] {
+  transform: translate(-100%,0);
+}
+janus-controls-button[bottom][left] {
+  transform: translate(0,-100%);
+}
+janus-controls-button[bottom][right] {
+  transform: translate(-100%,-100%);
+}
+janus-controls-button[pressed] {
+  background: #f00;
+  transform: translate(-50%, -50%) scale(.9);
+}
+janus-controls-button[top][left][pressed] {
+  transform: translate(0,0) scale(.9);
+}
+janus-controls-button[top][right][pressed] {
+  transform: translate(-100%,0) scale(.9);
+}
+janus-controls-button[bottom][left][pressed] {
+  transform: translate(0,-100%) scale(.9);
+}
+janus-controls-button[bottom][right][pressed] {
+  transform: translate(-100%,-100%) scale(.9);
+}

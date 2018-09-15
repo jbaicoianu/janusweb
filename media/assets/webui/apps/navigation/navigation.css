@@ -1,0 +1,170 @@
+janus-ui-navigation {
+  top: .5em;
+  left: .5em;
+  position: relative;
+  display: flex;
+}
+janus-ui-statusindicator {
+  font-size: .7em;
+  width: 5em;
+  height: 5em;
+  border-radius: 50%;
+  border: 1px solid #999;
+  position: relative;
+  top: -1px;
+  left: -1px;
+  background: white;
+  box-shadow: 0 0 5px rgba(0,0,0,.8);
+}
+janus-ui-statusindicator .inner {
+  width: 4em;
+  height: 4em;
+  border: 1px solid #999;
+  margin: .4em;
+  border-radius: 50%;
+  background: #768692;
+  position: relative;
+}
+janus-ui-statusindicator .inner:after {
+  display: block;
+  content: ' ';
+  background: url(https://janusvr.com/images/logos/logoonly.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+janus-ui-urlbar h1 {
+  font-size: 1.2em;
+  text-shadow: 0 0 5px rgba(0,0,0,.5);
+}
+janus-ui-urlbar>ui-input>input {
+  margin-top: .1em;
+  border: 1px solid #999;
+  padding: 0 .2em;
+  outline: none;
+  box-shadow: 0 0 2px rgba(0,0,0,.8);
+  font-size: .9em;
+  width: 100%;
+  background: rgba(128,128,128,.5);
+  color: white;
+  text-shadow: 0 0 1px black;
+}
+janus-ui-urlbar>ui-input>input:hover {
+  background: rgba(128,128,128,.8);
+}
+janus-ui-urlbar>ui-input>input:focus {
+  background: rgba(255,255,255,1);
+  color: black;
+  padding: .2em;
+  text-shadow: none;
+}
+janus-ui-navigation janus-ui-urlbar {
+  margin-left: 6px;
+}
+janus-ui-navigation janus-ui-urlbar h1 {
+}
+janus-ui-navigation janus-ui-urlbar>ui-input>input {
+}
+@keyframes indicator-pulsate {
+  0% {
+    transform: scale(1,1);
+  }
+  50% {
+    transform: scale(1.2,1.2);
+  }
+  100% {
+    transform: scale(1,1);
+  }
+}
+janus-ui-statusindicator.queued .inner {
+  background-color: blue;
+}
+janus-ui-statusindicator.downloading .inner {
+  background-color: green;
+}
+janus-ui-statusindicator.processing .inner {
+  background-color: yellow;
+}
+janus-ui-statusindicator.error .inner {
+  background-color: red;
+}
+janus-ui-statusindicator.queued .inner:after,
+janus-ui-statusindicator.downloading .inner:after,
+janus-ui-statusindicator.processing .inner:after {
+  animation: indicator-pulsate 2s linear infinite;
+}
+/*
+janus-ui-statusindicator.processed .inner,
+janus-ui-statusindicator.complete .inner {
+  background: 
+    linear-gradient(36deg, #272b66 42.34%, transparent 42.34%) 0 0,
+    linear-gradient(72deg, #2d559f 75.48%, transparent 75.48%) 0 0,
+    linear-gradient(-36deg, #9ac147 42.34%, transparent 42.34%) 100% 0,
+    linear-gradient(-72deg, #639b47 75.48%, transparent 75.48%) 100% 0, 
+    linear-gradient(36deg, transparent 57.66%, #e1e23b 57.66%) 100% 100%,
+    linear-gradient(72deg, transparent 24.52%, #f7941e 24.52%) 100% 100%,
+    linear-gradient(-36deg, transparent 57.66%, #662a6c 57.66%) 0 100%,
+    linear-gradient(-72deg, transparent 24.52%, #9a1d34 24.52%) 0 100%, 
+    #43a1cd linear-gradient(#ba3e2e, #ba3e2e) 50% 100%;
+  background-repeat: no-repeat;
+  background-size: 50% 50%;
+}
+*/
+/*
+janus-ui-statusindicator.complete .inner {
+  background-color: #768692;
+}
+*/
+janus-ui-statusindicator.complete .inner:after {
+  animation: none;
+}
+/*
+janus-ui-statusindicator.processed .inner,
+janus-ui-statusindicator.complete .inner {
+  background: 
+    linear-gradient(0, yellow 100%, transparent 100%) 0 0,
+    linear-gradient(45deg, purple 75%, transparent 75%) 0 0,
+    linear-gradient(-36deg, #000000 42.34%, transparent 42.34%) 100% 0,
+    linear-gradient(-72deg, #000000 75.48%, transparent 75.48%) 100% 0, 
+    linear-gradient(36deg, transparent 57.66%, #000000 57.66%) 100% 100%,
+    linear-gradient(72deg, transparent 24.52%, #000000 24.52%) 100% 100%,
+    linear-gradient(-36deg, transparent 57.66%, #000000 57.66%) 0 100%,
+    linear-gradient(-72deg, transparent 24.52%, #000000 24.52%) 0 100%, 
+    #000000 linear-gradient(#000000, #000000) 50% 100%;
+  background-repeat: no-repeat;
+  background-size: 50% 50%;
+}
+*/
+janus-ui-statusindicator>ui-tooltip ul {
+  font-size: .8em;
+  margin-left: 1em;
+}
+janus-ui-urlbar-suggestions {
+  display: block;
+  background: #333;
+  border: 1px solid black;
+  width: 50em;
+  max-width: 100%;
+}
+janus-ui-urlbar-suggestions h2 {
+  padding: 0 .2em;
+  font-size: 1em;
+}
+janus-ui-urlbar-suggestions ui-list{
+  max-height: 20em;
+  overflow-x: hidden;
+}
+janus-ui-urlbar-suggestions ui-item a {
+  display: flex;
+}
+janus-ui-urlbar-suggestions ui-item img.suggestedroom_thumb {
+  flex: 0;
+  order: -1;
+  width: 60px;
+  height: 60px;
+}

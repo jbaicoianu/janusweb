@@ -1,0 +1,11 @@
+{
+  "templates": {
+    "janus.ui.inventory": "./inventory.html",
+    "janus.ui.inventory.item.poly": "./inventory-item-poly.html"
+  },
+  "scripts":  ["./inventory.js"],
+  "css":      ["./inventory.css"],
+  "components": [
+    "janus-ui-inventory"
+  ]
+}

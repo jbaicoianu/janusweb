@@ -24,6 +24,7 @@ elation.require(['janusweb.janusbase'], function() {
       return new THREE.Object3D();
     }
     this.createChildren = function() {
+      elation.engine.things.janussound.extendclass.createChildren.call(this);
       if (!this.audio) {
         this.createAudio();
       }
@@ -57,6 +58,7 @@ elation.require(['janusweb.janusbase'], function() {
           } else {
             //this.audio.panner.distanceModel = 'linear';
           }
+          this.audio.panner.panningModel = 'HRTF';
         }
         this.audio.autoplay = this.auto_play || this.playStarted;
         this.audio.setLoop(this.loop);
@@ -135,8 +137,12 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.setPlaybackRate(this.pitch);
       }
       if (this.rect) {
-        var parts = this.rect.split(' ');
-        this.bounds = new THREE.Box3(new THREE.Vector3(parts[0], -Infinity, parts[1]), new THREE.Vector3(parts[2], Infinity, parts[3]));
+        var parts = this.rect.split(' '),
+            minx = Math.min(parts[0], parts[2]),
+            maxx = Math.max(parts[0], parts[2]),
+            minz = Math.min(parts[1], parts[3]),
+            maxz = Math.max(parts[1], parts[3]);
+        this.bounds = new THREE.Box3(new THREE.Vector3(minx, -Infinity, minz), new THREE.Vector3(maxx, Infinity, maxz));
       } else {
         this.bounds = false;
       }
@@ -144,7 +150,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.checkBounds = (function() {
       var worldpos = new THREE.Vector3();
       return function() {
-        if (this.bounds && this.audio && !this.playing) {
+        if (this.bounds && this.audio && !this.playing && !(this.play_once && this.playStarted)) {
           var listener = this.engine.systems.sound.getRealListener();
           if (listener) {
             worldpos.set(0,0,0).applyMatrix4(listener.matrixWorld);

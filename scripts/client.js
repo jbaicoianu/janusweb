@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.ui', 'janusweb.configuration', 'janusweb.external.document-register-element'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.configuration', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -48,10 +48,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     elation.config.set('dependencies.path', fullpath);
 
     var usetracking = elation.utils.any(args.tracking, elation.config.get('janusweb.tracking.enabled'), false);
-    if (usetracking) {
+    if (usetracking && usetracking != 'false') {
       var tracking = elation.janusweb.tracking({});
     }
-
     var link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = fullpath + 'janusweb.css';
@@ -62,6 +61,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       append: container, 
       homepage: homepage, 
       shownavigation: args.shownavigation,
+      uiconfig: args.uiconfig,
       showchat: elation.utils.any(args.showchat, true),
       usevoip: elation.utils.any(args.usevoip, false),
       resolution: args.resolution, 
@@ -73,6 +73,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       urltemplate: args.urltemplate,
       useWebVRPolyfill: args.useWebVRPolyfill,
       server: args.server,
+      tracking: usetracking,
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -99,11 +100,6 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.crosshair = false;
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
-
-      this.buttons = elation.ui.buttonbar({append: this.container, classname: 'janusweb_ui_buttons'})
-      setTimeout(elation.bind(this, function() {
-        this.initButtons();
-      }), 0);
     }
     this.initButtons = function() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
@@ -149,9 +145,16 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       });
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + '/assets/webui/default.json');
       if (this.shownavigation) {
-        this.ui = elation.janusweb.ui({append: document.body, client: this});
+        this.ui = elation.elements.create('janus.ui.main', {
+          append: this,
+          client: this,
+          config: this.uiconfig
+        });
       }
+      this.view.pickingactive = true;
     }
     this.initLoader = function() {
       var loader = document.getElementsByClassName('engine_loading')[0];
@@ -201,7 +204,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     this.toggleFullscreen = function(ev, updateOnly) {
       var view = this.view;
-      if (!updateOnly && view && (ev.value == 1 || typeof ev.value == 'undefined')) {
+      if (!updateOnly && view && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
         view.toggleFullscreen();
       }
       if (view.isFullscreen()) {
@@ -235,41 +238,50 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
   }, elation.engine.client);
 
   if (typeof customElements != 'undefined') {
-    elation.extend('janusweb.viewer.base', Object.create( HTMLElement, {
-      get fullscreen() {
-        return this.getAttribute('fullscreen');
-      },
-      set fullscreen(fullscreen) {
-        return this.setAttribute('fullscreen', fullscreen);
-      },
-      get autostart() {
-        return this.getAttribute('autostart');
-      },
-      set autostart(autostart) {
-        return this.setAttribute('autostart', autostart);
-      },
-      get src() {
-        return this.getAttribute('src');
-      },
-      set src(src) {
-        return this.setAttribute('src', src);
-      },
-      get width() {
-        return this.getAttribute('width') || 640;
-      },
-      set width(width) {
-        return this.setAttribute('width', width);
-      },
-      get height() {
-        return this.getAttribute('height') || 480;
-      },
-      set height(height) {
-        return this.setAttribute('height', width);
-      },
-      connectedCallback : function() {
-        this.init();
-      },
-      init : function() {
+    elation.elements.define('janus.viewer', class extends elation.elements.base {
+      init() {
+        super.init();
+        this.defineAttributes({
+          fullscreen: { type: 'boolean', default: true },
+          autostart: { type: 'boolean', default: true },
+          src: { type: 'string' },
+          homepage: { type: 'string' },
+          width: { type: 'integer', default: 640 },
+          height: { type: 'integer', default: 480 },
+          tracking: { type: 'boolean', default: true },
+          networking: { type: 'boolean', default: true },
+        });
+      }
+      create() {
+        elation.janusweb.init(this.getClientArgs());
+      }
+      getClientArgs() {
+        var fullscreen = this.fullscreen,
+            width = (this.fullscreen ? window.innerWidth : this.width),
+            height = (this.fullscreen ? window.innerHeight : this.height);
+        var args = {
+          url: this.getRoomURL(),
+          homepage: this.homepage,
+          tracking: this.tracking,
+          networking: this.networking,
+          //resolution: width + 'x' + height,
+          //shownavigation: false,
+        };
+        return args;
+      }
+      getRoomURL() {
+        return this.src || document.location.href;
+      }
+    });
+
+
+    elation.elements.define('janus.viewer.frame', class extends elation.elements.janus.viewer {
+      init() {
+        super.init();
+        console.log('init frame', this);
+      }
+      create() {
+        if (this.iframe) return;
         var iframe = document.createElement('iframe');
         var fullscreen = this.fullscreen;
         iframe.width = (this.fullscreen ? window.innerWidth : this.width);
@@ -292,56 +304,74 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         }
         content.document.write('</body></html>');
         content.document.close();
-      },
-      getClientArgs : function() {
-        var fullscreen = this.fullscreen,
-            width = (this.fullscreen ? window.innerWidth : this.width),
-            height = (this.fullscreen ? window.innerHeight : this.height);
-        var args = {
-          url: this.getRoomURL(),
-          //resolution: width + 'x' + height,
-          shownavigation: false,
-        };
-        return args;
-      },
-      getRoomURL : function() {
-        return this.src || document.location.href;
-      }
-    }));
-    customElements.define('janus-viewer', elation.janusweb.viewer.base);
 
-    elation.extend('janusweb.viewer.image360', Object.create( elation.janusweb.viewer.base, {
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetimage id="image360" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" image_id="image360" lighting="false" /></room></fireboxroom>');
+        this.iframe = iframe;
       }
-    }));
-    customElements.define('janus-viewer-image360', elation.janusweb.viewer.image360);
+    });
+    //document.registerElement('janus-viewer-frame', elation.janusweb.viewer.frame);
+    elation.elements.define('janus.viewer.generatedframe', class extends elation.elements.janus.viewer.frame {
+      getRoomURL() {
+        return 'data:text/html,' + encodeURIComponent(this.getRoomSource());
+      }
+      getTemplate() {
+        return '';
+      }
+      getRoomSource() {
+        if (!this.tplname) {
+          this.tplname = this.type + '.src';
+          elation.template.add(this.tplname, this.getTemplate());
+        }
+        return elation.template.get(this.tplname, this);
+      }
+    });
 
-    elation.extend('janusweb.viewer.video', Object.create( elation.janusweb.viewer.base, {
-      get loop() {
-        return this.getAttribute('loop');
-      },
-      set loop(loop) {
-        return this.setAttribute('loop', loop);
-      },
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room use_local_asset="room1" skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><Video video_id="video" pos="0 2.5 -5" scale="4 2.5 .1" lighting="false" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.image360', class extends elation.elements.janus.viewer.generatedframe {
+      getTemplate() {
+        return '<title>360° Image | {src}</title><fireboxroom><assets><assetimage id="image360" src="{src}"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" image_id="image360" lighting="false" /></room></fireboxroom>';
       }
-    }));
-    customElements.define('janus-viewer-video', elation.janusweb.viewer.video);
+    });
 
-    elation.extend('janusweb.viewer.video360', Object.create( elation.janusweb.viewer.video, {
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetvideo id="video360" src="' + this.src + '" auto_play="true" loop="' + (this.loop ? 'true' : 'false') + '" /></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="sphere" scale="-500 500 500" video_id="video360" lighting="false" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.video', class extends elation.elements.janus.viewer.generatedframe {
+      init() {
+        super.init();
+        this.defineAttributes({
+          loop: { type: 'boolean', default: false },
+          vidtitle: { type: 'string' }
+        });
       }
-    }));
-    customElements.define('janus-viewer-video360', elation.janusweb.viewer.video360);
+      getTemplate() {
+        return '<title>Video | {?vidtitle}{vidtitle} | {/vidtitle} {src}</title><fireboxroom><assets><assetvideo id="video" src="{src}" auto_play="true" loop="{?loop}true{else}false{/loop}" /></assets><room use_local_asset="room1" skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1" ><Video video_id="video" pos="0 2.5 -5" scale="4 2.5 .1" lighting="false" /></room></fireboxroom>';
+      }
+    });
 
-    elation.extend('janusweb.viewer.model', Object.create( elation.janusweb.viewer.base, {
-      getRoomURL : function() {
-        return 'data:text/html,' + encodeURIComponent('<fireboxroom><assets><assetobject id="model" src="' + this.src + '"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black"><object id="model" lighting="true" pos="0 0 -5" rotate_deg_per_sec="10" /></room></fireboxroom>');
+    elation.elements.define('janus.viewer.video360', class extends elation.elements.janus.viewer.video {
+      getTemplate() {
+        return '<title>360° Video | {?vidtitle}{vidtitle} | {/vidtitle} {src}</title><fireboxroom><assets><assetvideo id="video360" src="{src}" auto_play="true" loop="{?loop}true{else}false{/loop}" /></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1"><object id="sphere" scale="-500 500 500" video_id="video360" lighting="false" rotation="0 90 0" /></room></fireboxroom>';
       }
-    }));
-    customElements.define('janus-viewer-model', elation.janusweb.viewer.model);
+    });
+
+    elation.elements.define('janus.viewer.model', class extends elation.elements.janus.viewer.generatedframe {
+      init() {
+        super.init();
+        this.defineAttributes({
+          modelname: { type: 'string' }
+        });
+      }
+      getTemplate() {
+        return '<title>Model | {?modelname}{modelname} | {/modelname} {src}</title><fireboxroom><assets><assetobject id="model" src="{src}"/></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" zdir="0 0 -1"><object id="model" lighting="true" pos="0 0 -5" rotate_deg_per_sec="10" /></room></fireboxroom>';
+      }
+    });
+
+    elation.elements.define('janus.viewer.avatar', class extends elation.elements.janus.viewer.frame {
+      init() {
+        super.init();
+        this.defineAttributes({
+          userid: { type: 'string' }
+        });
+      }
+      getTemplate() {
+        return '<fireboxroom><assets></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" use_local_asset="room_plane zdir="0 0 -1""><ghost id="{userid}" avatar_src="{src}" lighting="true" pos="0 0 1" rotate_deg_per_sec="20" /></room></fireboxroom>';
+      }
+    });
   }
 });

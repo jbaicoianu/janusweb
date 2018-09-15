@@ -1,0 +1,41 @@
+.popularrooms>ui-item {
+  width: 200px;
+  height: 120px;
+  position: relative;
+  background-image: url(nopreview.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  overflow: hidden;
+  padding: 0;
+  transition: transform 100ms ease-out;
+  z-index: 1;
+}
+.popularrooms>ui-item:hover {
+  transform: scale(1.1);
+  z-index: 2;
+}
+.popularroom_thumb {
+  height: 130px;
+  width: 100%;
+  object-fit: cover;
+}
+.popularroom {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.popularroom h4 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,.5);
+  color: white;
+  text-shadow: 0 0 2px black;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding: 0 .2em;
+  margin: 0;
+}

@@ -14,7 +14,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
-        collision_radius: {type: 'float', default: .25, set: this.updateCollider}
+        collision_radius: {type: 'float', default: .25, set: this.updateCollider},
+        party_mode: { type: 'boolean', set: this.updatePartyMode }
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -30,8 +31,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
-        'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
-        'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
+        //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
+        //'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
       });
       this.vectors = {
         xdir: new THREE.Vector3(1, 0, 0),
@@ -102,7 +103,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         positions: []
       };
 
-      this.updateVRButton();
+      //this.updateVRButton();
+      this.party_mode = this.getSetting('partymode.enabled', false);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -157,7 +159,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.updateHMD = function(vrdevice) {
       if (vrdevice && !this.vrbutton) {
-        this.updateVRButton();
+        //this.updateVRButton();
       }
       elation.engine.things.janusplayer.extendclass.updateHMD.call(this, vrdevice);
     }
@@ -390,7 +392,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.gazecaster.room = room;
       }
       if (!this.teleporter) {
-        this.teleporter = this.room.createObject('teleporter');
+        this.teleporter = this.room.createObject('user_teleporter');
       } else {
         this.teleporter.setRoom(room.getProxyObject());
       }
@@ -424,8 +426,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       }
     }
+    this.start = function() {
+    }
+    this.stop = function() {
+    }
     this.getProxyObject = function() {
       var proxy = new elation.proxy(this, {
+        parent:        ['accessor', 'parent.getProxyObject'],
         pos:           ['property', 'position'],
         vel:           ['property', 'velocity'],
         accel:         ['property', 'acceleration'],
@@ -439,6 +446,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         dir:           ['property', 'vectors.zdir'],
         up_dir:        ['property', 'vectors.ydir'],
         userid:        ['property', 'janus.userId'],
+        enabled:       ['property', 'enabled'],
         flying:        ['property', 'flying'],
         walking:       ['property', 'walking'],
         running:       ['property', 'running'],
@@ -605,7 +613,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var obj = ev.target || ev.element;
       var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
 
-      if (ev.type == 'mouseover' && (
+
+      if (obj && proxyobj && (ev.type == 'mouseover' || ev.type == 'mousemove') && (
             obj.onclick ||
             elation.events.hasEventListener(obj, 'click') ||
             elation.events.hasEventListener(proxyobj, 'click') ||
@@ -699,6 +708,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var obj = ev.data.object;
       if (obj && obj.dispatchEvent) {
         obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
+        this.cursor_object = obj;
 
         if (this.gaze) {
           this.cancelGaze();
@@ -713,6 +723,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.handleGazeLeave = function(ev) {
       var obj = ev.data.object;
       if (obj && obj.dispatchEvent) {
+        this.cursor_object = '';
         obj.dispatchEvent({type: 'gazeleave', data: ev.data.intersection});
       }
     }
@@ -736,11 +747,20 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         var distanceX = touch.clientX - this.touchcache.positions[0][0],
             distanceY = touch.clientY - this.touchcache.positions[0][1];
 
+        var flip = this.getSetting('controls.touch.flip'),
+            flipx = 0,
+            flipy = 0;
+
+        if (flip) {
+          flipx = flip.x;
+          flipy = flip.y;
+        }
+
         //this.controlstate.turn_right = distanceX / 20;
         //this.controlstate.look_down = distanceY / 20;
         this.updateMouseControls({
           data: {
-            mouse_look: [-distanceX / 5, -distanceY / 5]
+            mouse_look: [(flipx ? -1 : 1) * distanceX / 5, (flipy ? -1 : 1 ) * distanceY / 5]
           }
         }, true);
 
@@ -751,6 +771,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.handleTouchEnd = function(ev) {
       this.controlstate.turn_right = 0;
       this.controlstate.look_down = 0;
+    }
+    this.updatePartyMode = function(key, value) {
+      if (typeof value != 'undefined') {
+        this.setSetting('partymode.enabled', value);
+      }
     }
   }, elation.engine.things.player);
 });

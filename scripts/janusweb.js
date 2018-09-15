@@ -5,7 +5,7 @@ elation.require([
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
     this.rooms = {};
-    this.version = 'janusweb-1.0rc3';
+    this.version = 'janusweb-1.2';
     this.settings = {
       multiplayer: true,
       sessiontracking: true,
@@ -83,7 +83,7 @@ elation.require([
       this.scriptingInitialized = false;
 
       this.engine.systems.controls.addContext('janus', {
-        'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
+        //'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
         'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
         'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ],
@@ -95,11 +95,13 @@ elation.require([
         this.mute();
       }
 
-      this.network = elation.janusweb.multiplayermanager({
-        janusweb: this,
-        server: this.server,
-        player: this.engine.client.player
-      });
+      if (this.networking) {
+        this.network = elation.janusweb.multiplayermanager({
+          janusweb: this,
+          server: this.server,
+          player: this.engine.client.player
+        });
+      }
 
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
       if (this.urltemplate) {
@@ -145,6 +147,7 @@ elation.require([
         settings:          ['property', 'settings'],
         userid:            ['property', 'userId'],
         avatarlighting:    ['property', 'settings.avatarlighting'],
+        ui:                ['property', 'engine.client.ui'],
 
         currenturl:        ['function', 'getCurrentURL'],
         tricount:          ['function', 'getTriangleCount'],
@@ -232,10 +235,10 @@ elation.require([
       window.scale = function(v1, s) {
         return v1.multiplyScalar(s);
       }
-      window.print = function() {
-        console.log.apply(console, arguments);
-        janus._target.chat.addmessage({userId: 'room', message: arguments[0]});
-      }
+      window.print = function(...args) {
+        console.log.apply(console, args);
+        elation.events.fire({type: 'clientprint', element: this, data: args});
+      }.bind(this);
       window.debug = function() {
         console.log.apply(console, arguments);
       }
@@ -262,12 +265,10 @@ elation.require([
         this.network.enable(player);
       }
 
-      if (this.autoload) {
+      if (this.autoload || starturl != this.properties.homepage) {
         this.load(starturl, true);
-      }
-
-      if (this.showchat) {
-        this.chat = elation.janusweb.chat({append: document.body, client: this.engine.client, network: this.network});
+      } else {
+        player.disable();
       }
     }
     this.clear = function() {
@@ -289,12 +290,21 @@ elation.require([
         url: url,
         janus: this,
         baseurl: baseurl,
-        corsproxy: this.corsproxy
+        corsproxy: this.corsproxy,
+        deferload: true
       });
+
+      if (this.currentroom) {
+        room.referrer = this.currentroom.url;
+      }
+      elation.events.fire({element: this, type: 'room_load_start', data: room});
+      room.load();
       // FIXME - should be able to spawn without adding to the heirarchy yet
       this.remove(room);
 
-      this.network.registerRoom(room, true);
+      if (this.networking) {
+        this.network.registerRoom(room, true);
+      }
 
       this.rooms[room.roomid] = room;
       //console.log('made new room', url, room);
@@ -310,7 +320,7 @@ elation.require([
       return this.load(dataurl, makeactive, baseurl)
     }
     this.setActiveRoom = function(url, pos, skipURLUpdate) {
-      this.clear();
+      var oldroom = this.currentroom;
 
       var room = false;
       this.loading = true;
@@ -333,7 +343,13 @@ elation.require([
         } else {
           this.properties.url = url;
         }
-        if (this.currentroom !== room) {
+        if (oldroom !== room) {
+          // Set referrer so we know where this link came from
+          if (oldroom) {
+            room.referrer = oldroom.url;
+          }
+
+          this.clear();
           this.currentroom = room;
 
           window.room = this.currentroom.getProxyObject();
@@ -345,10 +361,10 @@ elation.require([
           this.loading = false;
           elation.events.fire({element: this, type: 'room_change', data: url});
         }
-        if (!pos) pos = this.currentroom.playerstartposition;
+        if (!pos) pos = this.currentroom.spawnpoint.position;
         if (pos) {
           player.properties.position.fromArray(pos);
-          player.properties.orientation.copy(this.currentroom.playerstartorientation);
+          player.properties.orientation.copy(this.currentroom.spawnpoint.quaternion);
         }
         if (changed && !skipURLUpdate) {
           this.updateClientURL(url);
@@ -595,6 +611,11 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       if (this.assetpack) {
         asset = this.assetpack.get(type, name, assetargs);
       }
+
+      if (!asset) {
+        asset = elation.engine.assets.find(type, name, true);
+      }
+
       return asset;
     }
   }, elation.engine.things.generic);

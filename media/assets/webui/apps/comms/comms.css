@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css?family=Inconsolata|Montserrat');
+
+janus-comms-panel {
+  display: flex;
+  background: rgba(0,0,0,.8);
+  flex-direction: column;
+  width: 30em;
+}
+janus-comms-chat ui-list[name="chatlist"] {
+  height: 10em;
+  overflow-y: scroll;
+  font-family: Inconsolata, monospace;
+}
+janus-comms-chat ui-list[name="chatlist"]>ui-item {
+  padding: 0;
+  text-shadow: 0 0 4px #000;
+  border: 0;
+}
+janus-comms-chat ui-input {
+  width: 100%;
+  display: flex;
+}
+janus-comms-chat ui-input>input {
+  flex: 1 1;
+  background: rgba(64,64,64,.6);
+  color: white;
+  padding: .25em;
+  border: 0;
+  border-top: 1px solid #666;
+}
+janus-comms-chat ui-input>input:hover {
+  background: rgba(64,64,64,.8);
+}
+janus-comms-chat .message {
+  display: block;
+  text-indent: -1em;
+  padding-left: 1em;
+}
+janus-comms-chat .join,
+janus-comms-chat .part,
+janus-comms-chat .disconnect {
+  color: #999;
+  font-weight: normal;
+  font-style: italic;
+  font-size: .7em;
+}
+janus-comms-chat .join .userid::before,
+janus-comms-chat .part .userid::before,
+janus-comms-chat .disconnect .userid::before {
+  content: "-!- ";
+  color: #999;
+}
+janus-comms-chat .join .userid {
+  color: #9ff;
+}
+janus-comms-chat .disconnect .userid,
+janus-comms-chat .part .userid {
+  color: #099;
+}
+janus-comms-chat .chat,
+janus-comms-chat .selfchat {
+  color: #aaa;
+  font-weight: normal;
+}
+janus-comms-chat .userid {
+  color: #4cb96f;
+  font-weight: 900;
+}
+janus-comms-chat .selfchat .userid {
+  color: #fff;
+  font-weight: bold;
+}
+janus-comms-chat .chat .userid::before,
+janus-comms-chat .selfchat .userid::before {
+  content: '<';
+  color: #666;
+}
+janus-comms-chat .chat .userid::after,
+janus-comms-chat .selfchat .userid::after {
+  content: '>';
+  color: #666;
+}
+janus-comms-chat .print .userid {
+  display: none;
+}
+janus-comms-chat .print {
+  color: white;
+}
+janus-comms-status {
+  display: flex;
+  flex-direction: row;
+}
+janus-comms-status {
+  font-size: .8em;
+}
+janus-comms-status .indicator {
+  border: 1px solid black;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: .5em;
+  box-shadow: 0 0 5px black;
+  background: #090;
+  margin: .2em .4em .2em .2em;
+}
+ui-list[name="userlist_room"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10em, 1fr));
+  font-size: .75em;
+}

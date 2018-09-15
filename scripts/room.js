@@ -11,6 +11,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'referrer': { type: 'string' },
         'deferload': { type: 'boolean', default: false },
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
@@ -34,6 +35,7 @@ elation.require([
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
+        'party_mode': { type: 'bool', default: true },
         'walk_speed': { type: 'float', default: 1.0 },
         'run_speed': { type: 'float', default: 2.0 },
         'jump_velocity': { type: 'float', default: 5.0 },
@@ -42,6 +44,7 @@ elation.require([
         'cursor_visible': { type: 'bool', default: true },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
         'col': { type: 'color', set: this.updateLocalAsset },
+        'private': { type: 'bool', default: false },
         'server': { type: 'string' },
         'port': { type: 'int' },
         'rate': { type: 'int', default: 200 },
@@ -56,8 +59,6 @@ elation.require([
         '^error$': elation.janusweb.translators.error({janus: this.janus}),
         '^default$': elation.janusweb.translators.default({janus: this.janus})
       };
-      this.playerstartposition = [0,0,0];
-      this.playerstartorientation = new THREE.Quaternion();
       this.spawnpoint = new THREE.Object3D();
       this.roomsrc = '';
       this.changes = {};
@@ -74,6 +75,7 @@ elation.require([
       this.sounds = {};
       this.videos = {};
       this.loaded = false;
+      this.parseerror = false;
 
       this.roomscripts = [];
       this.customElements = {};
@@ -91,15 +93,17 @@ elation.require([
       this.handleDragOver = elation.bind(this, this.handleDragOver);
       this.handleDrop = elation.bind(this, this.handleDrop);
       this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
+      this.editObjectMousewheel = elation.bind(this, this.editObjectMousewheel);
       this.editObjectClick = elation.bind(this, this.editObjectClick);
       this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
       this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       this.roomedit = {
-        snap: .1,
+        snap: .01,
         modes: ['pos', 'rotation', 'scale', 'col'],
         modeid: 0,
-        object: false
+        object: false,
+        distancescale: 1
       };
       this.engine.systems.controls.addContext('roomedit', {
         'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
@@ -111,7 +115,7 @@ elation.require([
         'manipulate_down':  [ 'keyboard_nomod_s,keyboard_s',   this.editObjectManipulateDown ],
         'manipulate_in':    [ 'keyboard_nomod_q,mouse_wheel_down',   this.editObjectManipulateIn ],
         'manipulate_out':   [ 'keyboard_nomod_e,mouse_wheel_up',   this.editObjectManipulateOut ],
-        'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
+        //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
         'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
         'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
         'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
@@ -170,10 +174,11 @@ elation.require([
     }
     this.setPlayerPosition = function(pos, orientation) {
       if (!pos) {
-        pos = this.playerstartposition;
-        orientation = this.playerstartorientation;
+        pos = this.spawnpoint.position;
+        orientation = this.spawnpoint.quaternion;
       }
       var player = this.engine.client.player;
+      this.appendChild(player);
       player.reset_position();
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
@@ -187,6 +192,12 @@ elation.require([
         this.skybox = this.spawn('skybox', this.id + '_sky', {
           position: [0,0,0],
           collidable: false
+        });
+        this.skyboxcollider = this.createObject('object', {
+          js_id: 'room_skybox',
+          collision_id: 'sphere',
+          collision_scale: V(1000),
+          collision_trigger: true
         });
       }
       if (this.skyboxtexture) {
@@ -249,7 +260,7 @@ elation.require([
         var images = [];
         assets.forEach(function(asset) { 
           var t = asset.getInstance();
-          images.push(t.image); 
+          images.push(t.image);
         });
       
         // Handle skyboxes with missing textures.  We need to figure out 
@@ -268,9 +279,22 @@ elation.require([
               images[i].width = width;
               images[i].height = height;
             }
+            // flip skybox 180 degrees
+            if (images[i] instanceof HTMLCanvasElement) {
+              var ctx = images[i].getContext('2d');
+              if (i == 2 || i == 3) { // Y+ or Y-
+                // Y+
+                ctx.translate(images[i].width/2, images[i].height/2);
+                ctx.rotate(Math.PI);
+                ctx.translate(-images[i].width/2, -images[i].height/2);
+              }
+              ctx.drawImage(images[i],0,0,images[i].width,images[i].height);
+            }
           }
         }
         if (images[0] && images[1] && images[2] && images[3] && images[4] && images[5]) {
+          // flip skybox 180 degrees
+          images = [images[1],images[0],images[2],images[3],images[5],images[4]];
           var texture = new THREE.CubeTexture( images );
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
@@ -350,12 +374,16 @@ elation.require([
         this.properties.url = url;
       }
       var baseurl = baseurloverride;
-      if (!baseurl && url) {
-        baseurl = url.split('/'); 
-        if (baseurl.length > 3) baseurl.pop(); 
-        baseurl = baseurl.join('/') + '/'; 
+      if (!baseurl) {
+        if (url && !this.baseurl) {
+          baseurl = url.split('/');
+          if (baseurl.length > 3) baseurl.pop();
+          baseurl = baseurl.join('/') + '/';
+          this.baseurl = baseurl;
+        }
+      } else {
+        this.baseurl = baseurl;
       }
-      this.baseurl = baseurl;
 
       this.jsobjects = {};
       this.cookies = {};
@@ -371,7 +399,7 @@ elation.require([
       if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
       if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
         fullurl = self.location.origin + fullurl;
-      } else {
+      } else if (!fullurl.match(/^https?:\/\/(localhost|127\.0\.0\.1)/)) {
         fullurl = proxyurl + fullurl;
       }
 
@@ -400,6 +428,9 @@ elation.require([
           // TODO - use the new official translators here!
           translator.exec({url: url, janus: this.properties.janus, room: this})
                     .then(elation.bind(this, function(objs) {
+                      if (objs.room.title) {
+                        this.setTitle(objs.room.title);
+                      }
                       this.roomsrc = objs.source;
                       this.loadRoomAssets(objs);
                       this.createRoomObjects(objs);
@@ -431,9 +462,9 @@ elation.require([
             if (responseURL != this.properties.url) {
               var url = responseURL;
               if (!baseurloverride) {
-                baseurl = url.split('/'); 
-                baseurl.pop(); 
-                baseurl = baseurl.join('/') + '/'; 
+                baseurl = url.split('/');
+                baseurl.pop();
+                baseurl = baseurl.join('/') + '/';
                 this.baseurl = baseurl;
               }
               this.properties.url = url;
@@ -451,6 +482,7 @@ elation.require([
                         this.loadRoomAssets(objs);
                         this.createRoomObjects(objs);
                         this.enable();
+                        this.setActive();
                       }));
             
           }),
@@ -474,8 +506,12 @@ elation.require([
         var source = this.parseSource(sourcecode);
 
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-        var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
-        resolve(true);
+        try {
+          var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
+          resolve(true);
+        } catch (e) {
+          reject();
+        }
       }));
     }
     this.loadFromSource = function(sourcecode, baseurl) {
@@ -486,15 +522,22 @@ elation.require([
       if (source && source.source) {
         this.roomsrc = source.source;
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-        var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
-        this.loadRoomAssets(roomdata);
-        this.createRoomObjects(roomdata);
-        this.loaded = true;
-        if (this.active) {
-          this.setActive();
+        try {
+          var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
+          this.loadRoomAssets(roomdata);
+          this.createRoomObjects(roomdata);
+          this.loaded = true;
+          if (this.active) {
+            this.setActive();
+          }
+          //this.parseerror = false;
+          elation.events.fire({element: this, type: 'room_load_processed'});
+          elation.events.fire({type: 'janus_room_load', element: this});
+        } catch (e) {
+          console.error('Janus room parse error:', e.message);
+          this.parseerror = e.message;
+          elation.events.fire({type: 'room_load_error', element: this, data: e.message});
         }
-        elation.events.fire({element: this, type: 'room_load_processed'});
-        elation.events.fire({type: 'janus_room_load', element: this});
       } else {
         var translator = this.getTranslator('default');
         setTimeout(elation.bind(this, function() {
@@ -514,9 +557,9 @@ elation.require([
     }
     this.parseSource = function(data) { 
       this.fullsource = data;
-      var titlere = /<title>([\s\S]*?)<\/title>/mi; 
-      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi; 
-      var mtitle = data.match(titlere); 
+      var titlere = /<title>([\s\S]*?)<\/title>/mi;
+      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi;
+      var mtitle = data.match(titlere);
       var parsed = {
         title: 'Untitled Room',
         source: false 
@@ -527,7 +570,7 @@ elation.require([
       } else {
         this.setTitle(null);
       }
-      var m = data.match(re); 
+      var m = data.match(re);
       if (m) { 
         parsed.source = m[0];
       }
@@ -588,9 +631,16 @@ elation.require([
       if (room && !parent) {
         if (room.use_local_asset && room.visible !== false) {
 //setTimeout(elation.bind(this, function() {
+        var collisionid = room.use_local_asset + '_collision',
+            collisionscale = V(1,1,1);
+        if (room.use_local_asset == 'room_plane') {
+          collisionid = 'cube';
+          collisionscale.set(1000,.1,1000);
+        }
         this.localasset = this.createObject('object', {
           id: room.use_local_asset,
-          collision_id: room.use_local_asset + '_collision',
+          collision_id: collisionid,
+          collision_scale: collisionscale,
           col: room.col,
           fwd: room.fwd,
           xdir: room.xdir,
@@ -600,17 +650,29 @@ elation.require([
         });
 //}), Math.random() * 500);
         }
-        // set player position based on room info
-        this.playerstartposition = room.pos;
-        this.playerstartorientation = room.orientation;
-
+        // set player spawnpoint based on room info
         if (room.pos) {
           this.spawnpoint.position.fromArray(room.pos);
         }
+        if (room.xdir || room.ydir || room.zdir) {
+          room.orientation = this.janus.parser.getOrientation(room.xdir, room.ydir, room.zdir);
+        }
+
         if (room.orientation) {
           this.spawnpoint.quaternion.copy(room.orientation);
-          this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)));
+          this.spawnpoint.quaternion.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0))); // Janus Native starts the player backwards
           this.spawnpoint.updateMatrixWorld();
+        }
+
+        // If we have a referrer, check to see if a reciprocal link exists.  If it does, use this as our spawn point.
+        if (roomdata.link && this.referrer) {
+          roomdata.link.forEach(link => {
+            if (link.url == this.referrer) {
+              this.spawnpoint.quaternion.copy(link.orientation.inverse());
+              this.spawnpoint.position.fromArray(link.pos);
+              this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
+            }
+          });
         }
 
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
@@ -635,6 +697,7 @@ elation.require([
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
         this.properties.fog = room.fog;
+        this.properties.private = room.private;
         this.properties.fog_mode = room.fog_mode || 'exp';
         this.properties.fog_density = room.fog_density;
         this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
@@ -642,6 +705,7 @@ elation.require([
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.shadows = elation.utils.any(room.shadows, false);
+        this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
         this.gravity = elation.utils.any(room.gravity, 0);
         //if (room.col) this.properties.col = room.col;
@@ -712,6 +776,7 @@ elation.require([
         elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
         elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
         elation.events.add(this, 'click', this.onObjectClick);
+        elation.events.add(this, 'dragenter', this.handleDragOver);
         elation.events.add(this, 'dragover', this.handleDragOver);
         elation.events.add(this, 'drop', this.handleDrop);
         elation.events.add(this, 'thing_think', this.onScriptTick);
@@ -744,6 +809,7 @@ elation.require([
         elation.events.remove(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
         elation.events.remove(this, 'click', this.onObjectClick);
         elation.events.remove(this, 'dragover', this.handleDragOver);
+        elation.events.remove(this, 'dragenter', this.handleDragOver);
         elation.events.remove(this, 'drop', this.handleDrop);
       }
     }
@@ -802,6 +868,7 @@ elation.require([
               var attrname = k.toLowerCase();
               existing[attrname] = newobj._content;
             }
+            existing.sync = false;
           } else {
             hasNew = true;
             var k = k.toLowerCase();
@@ -819,11 +886,12 @@ elation.require([
           }
         }
         if (hasNew) {
-          //elation.engine.assets.loadJSON(diff.assets.objects, this.baseurl); 
+          //elation.engine.assets.loadJSON(diff.assets.objects, this.baseurl);
           this.createRoomObjects(diff);
         }
       }));
       // Clear the list of edits which have been applied this frame
+      this.applyingEdits = false;
       this.appliedchanges = {};
 
     }
@@ -838,7 +906,7 @@ elation.require([
         }
       }));
     }
-    this.createObject = function(type, args, parent) {
+    this.createObject = function(type, args, parent, skipstart) {
       var customElement = false;
       type = type.toLowerCase();
       var customElement = this.getCustomElement(type);
@@ -859,6 +927,7 @@ elation.require([
       var objectargs = {
         'room': this,
         'janus': this.properties.janus,
+        'js_id': args.js_id,
         'position': args.pos,
         'velocity': args.vel,
         'color': args.col,
@@ -885,7 +954,7 @@ elation.require([
         case 'janusobject':
           elation.utils.merge({ 
             'janusid': args.id, 
-          }, objectargs); 
+          }, objectargs);
           break;
         case 'janustext':
           elation.utils.merge({
@@ -948,6 +1017,7 @@ elation.require([
 
       if (realtype == 'janussound') {
         this.sounds[objectargs.sound_id] = object;
+        this.sounds[objectargs.js_id] = object;
       }
       if (realtype == 'janusvideo') {
         this.videos[objectargs.video_id] = object;
@@ -976,7 +1046,7 @@ elation.require([
         this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
       }
 
-      if (this.enabled) {
+      if (this.enabled && !skipstart) {
         object.start();
       }
 
@@ -988,12 +1058,17 @@ elation.require([
         proxyobj = this.jsobjects[obj];
       }
       if (proxyobj) {
+        if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
+          proxyobj.parent.removeChild(proxyobj);
+        }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
           realobj.room = this;
           this.add(realobj);
-          obj.start();
+          if (typeof obj.start == 'function') {
+            obj.start();
+          }
         }
       }
     }
@@ -1005,7 +1080,9 @@ elation.require([
       if (proxy) {
         var obj = this.getObjectFromProxy(proxy);
         if (obj && obj.parent) {
-          obj.stop();
+          if (typeof obj.stop == 'function') {
+            obj.stop();
+          }
           obj.parent.remove(obj);
           obj.room = false;
           if (obj.js_id && this.jsobjects[obj.js_id]) {
@@ -1058,15 +1135,27 @@ elation.require([
           src: src,
           baseurl: this.baseurl
         });
-      } else if (type == 'object') {
+      } else if (type == 'object' || type == 'model') {
+        var src, mtlsrc, srcparts = [];
         if (args.src) {
-          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-          var mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
+          src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
           if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = this.baseurl + mtlsrc;
-          var srcparts = src.split(' ');
+          srcparts = src.split(' ');
           src = srcparts[0];
-          assetlist.push({assettype: 'model', name: args.id, src: src, mtl: mtlsrc, tex_linear: args.tex_linear, tex0: args.tex || args.tex0 || srcparts[1], tex1: args.tex1 || srcparts[2], tex2: args.tex2 || srcparts[3], tex3: args.tex3 || srcparts[4]});
         }
+        assetlist.push({
+          assettype: 'model',
+          name: args.id,
+          src: src,
+          mtl: mtlsrc,
+          object: args.object,
+          tex_linear: args.tex_linear,
+          tex0: args.tex || args.tex0 || srcparts[1],
+          tex1: args.tex1 || srcparts[2],
+          tex2: args.tex2 || srcparts[3],
+          tex3: args.tex3 || srcparts[4]
+        });
       } else if (type == 'ghost') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({
@@ -1110,6 +1199,11 @@ elation.require([
         this.sounds[name].play();
       }
     }
+    this.pauseSound = function(name) {
+      if (this.sounds[name]) {
+        this.sounds[name].pause();
+      }
+    }
     this.stopSound = function(name) {
       if (this.sounds[name]) {
         this.sounds[name].stop();
@@ -1135,6 +1229,11 @@ elation.require([
         this.videos[name].play();
       }
     }
+    this.pauseVideo = function(name) {
+      if (this.videos[name]) {
+        this.videos[name].pause();
+      }
+    }
     this.stopVideo = function(name) {
       if (this.videos[name]) {
         this.videos[name].pause();
@@ -1156,17 +1255,17 @@ elation.require([
       }
       var asset;
       if (this.assetpack) {
-        asset = this.assetpack.get(type, id, assetargs); ////this.roomassets[type][id];
+        asset = this.assetpack.get(realtype, id, assetargs); ////this.roomassets[type][id];
       }
       if (!asset) {
-        asset = this.janus.getAsset(type, id, assetargs);
+        asset = this.janus.getAsset(realtype, id, assetargs);
       }
       if (asset) {
         if (!this.roomassets[type][id]) {
           this.roomassets[type][id] = asset;
-        //if (asset) {
+
           elation.events.fire({element: this, type: 'room_add_asset', data: asset});
-          if (!asset.loaded) {
+          if (!asset.loaded && asset.assettype != 'sound') { // FIXME - skip load tracking for sounds, the engine should be handling this
             this.pendingassets.push(asset);
             elation.events.add(asset, 'asset_load_complete,asset_error', elation.bind(this, this.assetLoaded, asset));
             elation.events.add(asset, 'asset_load_dependency', elation.bind(this, this.assetLoadDependency, asset));
@@ -1253,6 +1352,7 @@ elation.require([
           if (!this.appliedchanges[thing.js_id]) {
             this.changes[thing.js_id] = proxy;
           }
+          proxy.sync = false;
         }
       }
     }
@@ -1406,7 +1506,7 @@ elation.require([
       return urls;
     }
     this.getServer = function() {
-      if (!this._server) {
+      if (!this._server && !this.private) {
         var hashargs = elation.url();
         var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
             port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
@@ -1424,6 +1524,7 @@ elation.require([
       if (!this._proxyobject) {
         var proxy = new elation.proxy(this, {
           url:           ['property', 'url', { readonly: true}],
+          referrer:      ['property', 'referrer'],
           objects:       ['property', 'jsobjects'],
           cookies:       ['property', 'cookies'],
           walk_speed:    ['property', 'walk_speed'],
@@ -1442,6 +1543,7 @@ elation.require([
           shadows:       ['property', 'shadows'],
           col:           ['property', 'col'],
           locked:        ['property', 'locked'],
+          private:       ['property', 'private'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -1454,15 +1556,19 @@ elation.require([
           playSound:     ['function', 'playSound'],
           stopSound:     ['function', 'stopSound'],
           seekSound:     ['function', 'seekSound'],
+          pauseSound:    ['function', 'pauseSound'],
           playVideo:     ['function', 'playVideo'],
           stopVideo:     ['function', 'stopVideo'],
           seekVideo:     ['function', 'seekVideo'],
+          pauseVideo:    ['function', 'pauseVideo'],
           openLink:      ['function', 'openLink'],
           raycast:       ['function', 'raycast'],
 
           getObjectById:         ['function', 'getObjectById'],
           getObjectsByClassName: ['function', 'getObjectsByClassName'],
-          getObjectsByTagName:  ['function', 'getObjectsByTagName'],
+          getObjectsByTagName:   ['function', 'getObjectsByTagName'],
+          getBoundingSphere:     ['function', 'getBoundingSphere'],
+          getBoundingBox:        ['function', 'getBoundingBox'],
 
           registerElement:     ['function', 'registerElement'],
           extendElement:       ['function', 'extendElement'],
@@ -1736,59 +1842,124 @@ elation.require([
     /* Room editing functionality */
 
     this.handleDragOver = function(ev) {
-      ev.dataTransfer.dropEffect = "link"
+      //ev.dataTransfer.dropEffect = "link"
       ev.preventDefault();
     }
     this.handleDrop = function(ev) {
-      console.log('drop!', ev);
+      ev.preventDefault();
       var files = ev.dataTransfer.files,
           items = ev.dataTransfer.items;
       if (files.length > 0) {
-        console.log('dropped files!', files);
+        var objects = [];
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          objects[i] = this.loadObjectFromFile(file);
+        }
+        this.editObject(objects[0], true);
       } else if (items.length > 0) {
         var types = {};
         var numitems = items.length;
         for (var i = 0; i < numitems; i++) {
           var type = items[i].type;
-          if (type == 'text/uri-list') {
-            items[i].getAsString(elation.bind(this, this.loadObjectFromURIList));
-          }
+          types[type] = items[i];
+        }
+        if (types['text/x-jml']) {
+          types['text/x-jml'].getAsString(elation.bind(this, this.loadObjectFromJML));
+        } else if (types['text/uri-list']) {
+          types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
         }
       }
-      ev.preventDefault();
       this.engine.systems.controls.requestPointerLock();
     }
     this.loadObjectFromURIList = function(list) {
       var urls = list.split('\n');
 
-      var player = this.engine.client.player;
       var objects = [];
       for (var i = 0; i < urls.length; i++) {
         var hashidx = urls[i].indexOf('#');
-        var url = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
-        if (url.length > 0) {
-          if (url.indexOf('.obj') != -1) {
-            this.loadNewAsset(url, { id: url, src: url, mtl: url.replace('.obj', '.mtl') });
+        let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
+        let type = 'Object';
+        if (id.length > 0) {
+          var schemeidx = id.indexOf(':');
+          if (schemeidx != -1) {
+            // Handle special schemes which are used for internal primitives
+            var scheme = id.substr(0, schemeidx);
+            if (scheme == 'janus-object') {
+              id = id.substr(schemeidx+1);
+            } else if (scheme == 'janus-light') {
+              type = 'light';
+              if (id == 'point') {
+                // set up the point light
+              }
+            }
           }
-          var newobject = this.createObject('Object', {
-            id: url,
+          var newobject = this.createObject(type, {
+            id: id,
+            js_id: player.userid + '-' + id + '-' + window.uniqueId(),
             sync: true,
             pos: player.vectors.cursor_pos.clone()
           });
           objects.push(newobject);
         }
       }
-      this.editObject(objects[0], true);
+      if (objects[0]) {
+        this.editObject(objects[0], true);
+      }
+    }
+    this.loadObjectFromJML = function(jml) {
+      this.applyEditXML(jml);
+    }
+    this.loadObjectFromFile = function(file) {
+      var name = file.name,
+          url = URL.createObjectURL(file);
+
+      var type = 'object',
+          args = {
+            id: name,
+            pos: player.vectors.cursor_pos.clone(),
+            sync: true
+          },
+          assetargs = {
+            id: name,
+            src: url
+          };
+
+      var mimeparts = file.type.split('/');
+      if (mimeparts[0] == 'image') {
+        type = 'image';
+      } else if (mimeparts[0] == 'video') {
+        type = 'video';
+        args.video_id = name;
+        assetargs.auto_play = true;
+      } else if (mimeparts[0] == 'audio') {
+        type = 'sound';
+        args.sound_id = name;
+        args.auto_play = true;
+        assetargs.auto_play = true;
+      } else {
+        type = 'object';
+        args.collision_id = name;
+      }
+      this.loadNewAsset(type, assetargs);
+      return this.createObject(type, args);
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
       this.roomedit.modeid = 0;
       this.roomedit.objectIsNew = isnew;
-      this.roomedit.moving = false;
+      this.roomedit.moving = true;
 
-      object.collision_id = '';
+      object.sync = true;
+      if (!object.js_id) {
+        object.js_id = player.userid + '-' + window.uniqueId();
+      }
+
+      this.roomedit.collision_id = object.collision_id;
+      object.collision_id = false;
+      object.collision_radius = null;
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
+      elation.events.add(this, 'wheel', this.editObjectMousewheel);
       elation.events.add(this, 'click', this.editObjectClick);
       elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
@@ -1808,7 +1979,7 @@ elation.require([
       }
 
       // activate context
-      this.engine.systems.controls.activateContext('roomedit', this);
+      //this.engine.systems.controls.activateContext('roomedit', this);
       this.engine.systems.controls.activateContext('roomedit_togglemove', this);
 
       this.editObjectShowWireframe();
@@ -1820,14 +1991,30 @@ elation.require([
       }
       var object = this.roomedit.object;
       var obj3d = object._target.objects['3d'];
-      var objchild = obj3d.children[obj3d.children.length-1];
-      var root = objchild.clone();
-      this.roomedit.wireframe = root;
-      root.traverse(function(n) {
-        if (n instanceof THREE.Mesh) {
-          n.material = new THREE.MeshPhongMaterial({wireframe: true, color: 0xff0000, emissive: 0x990000, wireframeLinewidth: 3, depthTest: false, transparent: true, opacity: .2});
-        }
+
+      var material = new THREE.MeshPhongMaterial({
+        wireframe: true,
+        color: 0xff0000,
+        emissive: 0x990000,
+        wireframeLinewidth: 3,
+        depthTest: false,
+        transparent: true,
+        opacity: .2
       });
+      var root = false;
+      if (obj3d instanceof THREE.Mesh) {
+        root = new THREE.Mesh(obj3d.geometry, material);
+        root.scale.copy(obj3d.scale);
+      } else {
+        var objchild = obj3d.children[obj3d.children.length-1] || obj3d;
+        root = objchild.clone();
+        root.traverse(function(n) {
+          if (n instanceof THREE.Mesh) {
+            n.material = material;
+          }
+        });
+      }
+      this.roomedit.wireframe = root;
       this.roomedit.object._target.objects['3d'].add(root);
     }
     this.editObjectRemoveWireframe = function() {
@@ -1840,13 +2027,22 @@ elation.require([
         if (destroy) {
           this.roomedit.object.die();
         } else {
-          this.roomedit.object.collision_id = this.roomedit.object.id;
+          this.roomedit.object.sync = true;
+          if (this.roomedit.collision_id) {
+            // restore collider
+            //this.roomedit.object.collision_id = this.roomedit.collision_id;
+            //this.roomedit.collision_id = false;
+          }
+          var bsphere = this.roomedit.object.getBoundingSphere(true);
+          this.roomedit.object.collision_id = 'sphere';
+          this.roomedit.object.collision_radius = bsphere.radius;
         }
       }
       this.roomedit.object = false;
       this.editObjectRemoveWireframe();
 
       elation.events.remove(this, 'mousemove', this.editObjectMousemove);
+      elation.events.remove(this, 'wheel', this.editObjectMousewheel);
       elation.events.remove(this, 'click', this.editObjectClick);
 
       // deactivate context
@@ -1863,10 +2059,35 @@ elation.require([
     }
     this.editObjectMousemove = function(ev) {
       if (this.roomedit.object) {
-        if (this.roomedit.moving && ev.element.getProxyObject() !== this.roomedit.object) {
-          this.roomedit.object.pos = this.editObjectSnapVector(this.roomedit.object.parent.worldToLocal(ev.data.point, true), this.roomedit.snap);
+        var obj = this.roomedit.object;
+        if (this.roomedit.moving && ev.element.getProxyObject() !== obj) {
+          var bbox = obj.getBoundingBox(true);
+          var headpos = player.head.localToWorld(V(0,0,0));
+          var cursorpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
+          cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
+          var dir = V(cursorpos).sub(headpos);
+          var distance = dir.length();
+          dir.multiplyScalar(1/distance);
+          distance = Math.min(distance, 20);
+          var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
+          // 
+          obj.pos = newpos;
+          if (ev.data.thing.js_id == 'room_skybox') {
+            obj.ydir = V(0, 1, 0);
+            obj.zdir = dir;
+            obj.xdir = dir.clone().cross(obj.ydir);
+          } else {
+            obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
+            obj.xdir = V(dir).cross(obj.ydir);
+            obj.zdir = V(obj.xdir).cross(obj.ydir);
+          }
+          obj.sync = true;
         }
       }
+    }
+    this.editObjectMousewheel = function(ev) {
+      this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+      this.editObjectMousemove(ev);
     }
     this.editObjectClick = function(ev) {
       if (this.roomedit.object) {
@@ -1937,6 +2158,7 @@ elation.require([
         case 'col':
           break;
       }
+      obj.sync = true;
     }
     this.editObjectSnapVector = function(vector, snap) {
       vector.x = Math.round(vector.x / snap) * snap;
@@ -2003,10 +2225,10 @@ elation.require([
       var roomedit = ev.target.roomedit;
       if (ev.value == 1) {
         roomedit.moving = true;
-        this.engine.systems.controls.deactivateContext('roomedit', this);
-      } else if (ev.value == 0) {
-        roomedit.moving = false;
         this.engine.systems.controls.activateContext('roomedit', this);
+      } else if (ev.value == 0) {
+        roomedit.moving = true;
+        this.engine.systems.controls.deactivateContext('roomedit', this);
       }
     }
     this.editObjectHandlePointerlock = function(ev) {
@@ -2064,7 +2286,7 @@ elation.require([
           hits = [];
           for (var i = 0; i < intersections.length; i++) {
             var obj = intersections[i].object,
-                thing = obj.userData.thing;
+                thing = this.getThingForObject(obj);
             if (thing.hasClass(classname)) {
               intersections[i].mesh = obj;
               intersections[i].object = thing.getProxyObject();
@@ -2074,7 +2296,7 @@ elation.require([
         } else {
           for (var i = 0; i < hits.length; i++) {
             var obj = hits[i].object,
-                  thing = obj.userData.thing;
+                  thing = this.getThingForObject(obj);
             hits[i].mesh = hits[i].object;
             hits[i].object = thing.getProxyObject();
           }
@@ -2082,6 +2304,15 @@ elation.require([
         return hits;
       }
     })();
+    this.getThingForObject = function(obj) {
+      while (obj) {
+        if (obj.userData && obj.userData.thing) {
+          return obj.userData.thing;
+        }
+        obj = obj.parent;
+      }
+      return null;
+    }
   }, elation.engine.things.generic);
 });
 

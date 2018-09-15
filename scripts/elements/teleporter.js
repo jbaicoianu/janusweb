@@ -1,13 +1,14 @@
-elation.component.add('janusweb.elements.teleporter', {
+elation.require(['janusweb.janusbase'], function() {
+  elation.component.add('janusweb.elements.user_teleporter', {
     active: false,
-    longpresstime: 250,
+    longpresstime: 350,
     deadzone: 5,
 
-    createChildren() {
+    create() {
       this.marker = this.createObject('Object', {
-        id: 'pipe',
-        col: '#009',
-        scale: V(.5,.05,.5)
+        id: 'cylinder',
+        col: V(0,0,155,.5),
+        scale: V(.5,1.6,.5)
       });
       this.light = this.createObject('Light', {
         col: '#009',
@@ -39,7 +40,7 @@ elation.component.add('janusweb.elements.teleporter', {
       this.setRoom(this.room);
       this.disableCursor();
       window.addEventListener('mousemove', this.handleMouseMove);
-      window.addEventListener('touchmove', this.handleTouchMove);
+      window.addEventListener('touchmove', this.handleTouchMove, true);
     },
     setRoom(room) {
       if (!room.addEventListener) room = room.getProxyObject();
@@ -52,8 +53,11 @@ elation.component.add('janusweb.elements.teleporter', {
       this.disableCursor();
     },
     handleMouseDown(ev) {
-      this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
-      this.mousediff = [0,0];
+      if (ev.button == 0 && player.enabled) {
+        this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
+        this.mousediff = [0,0];
+        this.active = false;
+      }
     },
     handleMouseMove(ev) {
       if (this.longpresstimer) {
@@ -81,9 +85,13 @@ elation.component.add('janusweb.elements.teleporter', {
         if (distance > this.deadzone) {
           clearTimeout(this.longpresstimer);
         }
+        if (this.active) {
+          ev.stopPropagation();
+          ev.preventDefault();
+        }
       }
     },
-    handleMouseUp() {
+    handleMouseUp(ev) {
       if (this.longpresstimer) {
         clearTimeout(this.longpresstimer);
       }
@@ -98,10 +106,12 @@ elation.component.add('janusweb.elements.teleporter', {
       this.pos = player.cursor_pos;
       this.visible = true;
       this.active = true;
+      this.particles.start();
     },
     disableCursor() {
       this.visible = false;
       this.active = false;
+      this.particles.stop();
     },
     update() {
       if (this.active) {
@@ -109,3 +119,4 @@ elation.component.add('janusweb.elements.teleporter', {
       }
     }
   });
+});

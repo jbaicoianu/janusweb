@@ -1,7 +1,7 @@
 elation.require(['ui.all', 'janusweb.urlbar'], function() {
-  elation.component.add('janusweb.ui', function() {
+  elation.component.add('janusweb.ui.old', function() {
     this.init = function() {
-      elation.janusweb.ui.extendclass.init.call(this);
+      elation.janusweb.ui.navigation.extendclass.init.call(this);
 
       this.client = this.args.client;
       this.player = this.client.player;
@@ -37,11 +37,11 @@ elation.require(['ui.all', 'janusweb.urlbar'], function() {
       this.homebutton3d    = elation.ui.button3d({append3d: this.navigation3d, label: '🏠', events: { click: elation.bind(this.janusweb, this.janusweb.navigateHome) } });
     }
     this.enable = function() {
-      elation.janusweb.ui.extendclass.enable.call(this);
+      elation.janusweb.ui.navigation.extendclass.enable.call(this);
       this.navigation.enable();
     }
     this.disable = function() {
-      elation.janusweb.ui.extendclass.disable.call(this);
+      elation.janusweb.ui.navigation.extendclass.disable.call(this);
       this.navigation.disable();
     }
   }, elation.ui.base);
