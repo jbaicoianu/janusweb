@@ -1101,7 +1101,20 @@ elation.require([
       if (type == 'image') {
         if (args.src) {
           var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-          assetlist.push({ assettype:'image', name:args.id, src: src, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+          let assetargs = {
+            assettype:'image',
+            name:args.id,
+            src: src,
+            tex_linear: args.tex_linear,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            reverse3d: args.reverse3d,
+            hasalpha: args.hasalpha,
+            maxsize: args.maxsize,
+            preload: args.preload,
+            baseurl: this.baseurl
+          };
+          assetlist.push(assetargs);
         } else if (args.canvas) {
           assetlist.push({ assettype:'image', name:args.id, canvas: args.canvas, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
         }
