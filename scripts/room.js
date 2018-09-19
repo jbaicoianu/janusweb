@@ -32,6 +32,8 @@ elation.require([
         'fog_end': { type: 'float', default: 100.0, set: this.setFog },
         'fog_col': { type: 'color', default: 0x000000, set: this.setFog },
         'ambient': { type: 'color', default: 0x666666, set: this.updateLights },
+        'near_dist': { type: 'float', default: 0.01, set: this.setNearFar },
+        'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
