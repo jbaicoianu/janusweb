@@ -592,7 +592,6 @@ console.error('dunno what this is', other);
       }
     }
     this.setOpacity = function(opacity) {
-
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
         this.objects['3d'].traverse(function(n) {
