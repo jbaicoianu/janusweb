@@ -1898,7 +1898,9 @@ elation.require([
           types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
         }
       }
-      this.engine.systems.controls.requestPointerLock();
+      if (this.engine.systems.admin.hidden) {
+        this.engine.systems.controls.requestPointerLock();
+      }
     }
     this.loadObjectFromURIList = function(list) {
       var urls = list.split('\n');
@@ -1989,7 +1991,7 @@ elation.require([
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
       elation.events.add(this, 'wheel', this.editObjectMousewheel);
-      elation.events.add(this, 'click', this.editObjectClick);
+      elation.events.add(this, 'mousedown', this.editObjectClick);
       elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
       // Back up properties so we can revert if necessary
@@ -2064,7 +2066,8 @@ elation.require([
           }
           var bsphere = this.roomedit.object.getBoundingSphere(true);
           this.roomedit.object.collision_id = 'sphere';
-          this.roomedit.object.collision_radius = bsphere.radius;
+          this.roomedit.object.collision_trigger = true;
+          this.roomedit.object.collision_scale = V(bsphere.radius);
         }
       }
       this.roomedit.object = false;
@@ -2106,9 +2109,9 @@ elation.require([
             obj.zdir = dir;
             obj.xdir = dir.clone().cross(obj.ydir);
           } else {
-            obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
-            obj.xdir = V(dir).cross(obj.ydir);
-            obj.zdir = V(obj.xdir).cross(obj.ydir);
+            //obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
+            //obj.xdir = V(dir).cross(obj.ydir);
+            //obj.zdir = V(obj.xdir).cross(obj.ydir);
           }
           obj.sync = true;
         }
