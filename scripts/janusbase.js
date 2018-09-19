@@ -753,5 +753,25 @@ console.error('dunno what this is', other);
       };
       return elements;
     }
+    this.getParentByTagName = function(tagname) {
+      let obj = this.parent;
+      while (obj) {
+        if (obj.tag == tagname) {
+          return obj;
+        }
+        obj = obj.parent;
+      }
+      return false;
+    }
+    this.getParentByClassName = function(classname) {
+      let obj = this.parent;
+      while (obj) {
+        if (obj.hasClass && obj.hasClass(classname)) {
+          return obj;
+        }
+        obj = obj.parent;
+      }
+      return false;
+    }
   }, elation.engine.things.generic);
 });
