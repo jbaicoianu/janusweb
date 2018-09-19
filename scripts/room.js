@@ -1723,6 +1723,19 @@ elation.require([
         var customelement = this.getCustomElement(extendclass);
         if (customelement) {
           fullextendclass = customelement.classname;
+        } else {
+          // If we're extending an existing class but the class hasn't yet been defined, we listen for
+          // the registerelement event so we know when the parent class has been defined, then we try again
+          var func = (ev) => {
+            if (ev.data == extendclass) {
+              elation.events.remove(this, 'registerelement', func);
+              this.registerElement(tagname, classobj, extendclass);
+            }
+          };
+          elation.events.add(this, 'registerelement', func);
+
+          // Bail out - we'll try again after the parent class has been defined
+          return;
         }
       }
 
@@ -1736,6 +1749,7 @@ elation.require([
       // console.log('Register new ROOM tag type:', tagname, classname, classobj, fullextendclass);
       elation.component.add('engine.things.' + classname, classobj, elation.engine.things[fullextendclass]);
 
+      elation.events.fire({type: 'registerelement', element: this, data: tagname});
       if (this.unknownElements[tagname]) {
         var unknownElements = this.unknownElements[tagname];
         // console.log('Now we know about ' + tagname + ', so make some!', unknownElements);
