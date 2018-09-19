@@ -90,11 +90,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 */
     }
     this.handleLoad = function() {
-      this.setTextureDirty();
-      setTimeout(elation.bind(this, function() {
-        elation.events.fire({type: 'load', element: this});
-      }), 0);
-      this.jsparts.updateParts();
+      if (!this.assetloaded) {
+        this.setTextureDirty();
+        setTimeout(elation.bind(this, function() {
+          elation.events.fire({type: 'load', element: this});
+        }), 0);
+        this.jsparts.updateParts();
+        this.assetloaded = true;
+      }
     }
     this.updateMaterial = function() {
       this.setTextureDirty();
