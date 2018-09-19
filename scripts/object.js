@@ -641,7 +641,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.isPlaying = function() {
       var video = this.video;
-      return (video.currentTime > 0 && !video.paused && !video.ended);
+      return (video && video.currentTime > 0 && !video.paused && !video.ended);
     }
     this.seek = function(time) {
       if (this.video) this.video.currentTime = time;
