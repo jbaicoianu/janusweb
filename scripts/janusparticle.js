@@ -14,7 +14,7 @@ elation.require(['janusweb.janusbase'], function() {
         fade_in: { type: 'float', default: 1.0 },
         fade_out: { type: 'float', default: 1.0 },
         duration: { type: 'float', default: 1.0 },
-        particle_scale: { type: 'vector3', default: [1, 1, 1]},
+        particle_scale: { type: 'vector3', default: [1, 1, 1], set: this.updateMaterial},
         particle_vel: { type: 'vector3', default: [0, 0, 0]},
         particle_accel: { type: 'vector3', default: [0, 0, 0]},
         rand_pos: { type: 'vector3', default: [0, 0, 0]},
@@ -111,6 +111,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.material) {
         this.material.opacity = this.opacity;
         this.material.color = this.color;
+        this.material.size = this.particle_scale.x + this.rand_scale.x; 
       }
     }
     this.createForces = function() {
