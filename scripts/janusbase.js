@@ -267,7 +267,7 @@ console.log('got collider', collider, collision_id);
           pickable:  [ 'property', 'pickable'],
           collision_id:  [ 'property', 'collision_id'],
           collision_pos: [ 'property', 'collision_pos' ],
-          collision_scale:  [ 'property', 'collider_scale'],
+          collision_scale:  [ 'property', 'collision_scale'],
           collision_static:  [ 'property', 'collision_static'],
           collision_trigger:  [ 'property', 'collision_trigger'],
           collision_radius:  [ 'property', 'collision_radius'],
