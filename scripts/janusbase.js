@@ -501,7 +501,6 @@ console.log('got collider', collider, collision_id);
       }
     })();
     this.hasScriptChangedDirvecs = function() {
-      var changes = this.frameupdates;
       return (!this.lastframevalues.xdir.equals(this.properties.xdir) ||
               !this.lastframevalues.ydir.equals(this.properties.ydir) ||
               !this.lastframevalues.zdir.equals(this.properties.zdir) ||
