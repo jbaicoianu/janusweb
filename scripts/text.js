@@ -56,7 +56,8 @@ elation.require(['engine.things.label'], function() {
       } else {
         this.material = this.createTextMaterial(text);
         mesh = new THREE.Mesh(geometry, this.material);
-
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
       }
       
       return mesh;
