@@ -1910,6 +1910,12 @@ elation.require([
         var hashidx = urls[i].indexOf('#');
         let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
         let type = 'Object';
+        let objargs = {
+          id: id,
+          js_id: player.userid + '-' + id + '-' + window.uniqueId(),
+          sync: true,
+          pos: player.vectors.cursor_pos.clone()
+        }
         if (id.length > 0) {
           var schemeidx = id.indexOf(':');
           if (schemeidx != -1) {
@@ -1921,16 +1927,20 @@ elation.require([
               type = 'light';
               if (id == 'point') {
                 // set up the point light
+                objargs.light_shadow = 'true';
               }
             }
           }
-          var newobject = this.createObject(type, {
-            id: id,
-            js_id: player.userid + '-' + id + '-' + window.uniqueId(),
-            sync: true,
-            pos: player.vectors.cursor_pos.clone()
-          });
-          objects.push(newobject);
+          if (typeof EventBridge != 'undefined') {
+            // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
+            EventBridge.emitWebEvent(JSON.stringify({
+              type: 'spawn',
+              data: id
+            }));
+          } else {
+            var newobject = this.createObject(type, objargs);
+            objects.push(newobject);
+          }
         }
       }
       if (objects[0]) {
