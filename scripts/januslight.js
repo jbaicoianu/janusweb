@@ -14,6 +14,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow_far: { type: 'float', set: this.updateLight },
         light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
+        light_helper: { type: 'boolean', default: false, set: this.updateLightHelper },
       });
     }
     this.createObject3D = function() {
@@ -30,20 +31,23 @@ elation.require(['janusweb.janusbase'], function() {
       this.updateLight();
       this.created = true;
       // TODO - should be an easy way of toggling helpers
-      /*
+
       var scene = this.objects['3d'];
       while (scene.parent) {
         scene = scene.parent;
       }
       
       if (this.light_cone_angle == 0) {
-        var helper = new THREE.PointLightHelper(this.light);
-        scene.add(helper);
+        this.helper = new THREE.PointLightHelper(this.light);
+      } else if (this.light_cone_angle == 1) {
+        this.helper = new THREE.DirectionalLightHelper(this.light);
       } else {
-        var helper = new THREE.SpotLightHelper(this.light);
-        scene.add(helper);
+        this.helper = new THREE.SpotLightHelper(this.light);
       }
-      */
+      if (this.helper) {
+        this.helper.layers.set(1);
+        scene.add(this.helper);
+      }
     }
     this.update = function() {
       if (!this.light) {
@@ -53,11 +57,15 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.light && !this.light.parent) {
         this.objects['3d'].add(this.light);
       }
+      if (this.helper) {
+        this.helper.update();
+      }
     }
     this.createLight = function() {
       if (!this.light) {
         if (this.light_directional || this.light_cone_angle == 1) {
           this.light = new THREE.DirectionalLight(this.properties.color, this.light_intensity);
+          this.updateLightTarget();
         } else if (this.light_cone_angle == 0) {
           this.light = new THREE.PointLight(this.properties.color, 1, this.light_range);
           this.light.position.set(0,0,0);
