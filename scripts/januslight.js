@@ -45,7 +45,9 @@ elation.require(['janusweb.janusbase'], function() {
         this.helper = new THREE.SpotLightHelper(this.light);
       }
       if (this.helper) {
-        this.helper.layers.set(1);
+        this.helper.traverse((n) => {
+          n.layers.set(1);
+        });
         scene.add(this.helper);
       }
     }
