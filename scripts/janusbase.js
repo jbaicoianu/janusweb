@@ -338,6 +338,14 @@ console.log('got collider', collider, collision_id);
               if (typeof v == 'function') {
                 proxytype = 'function';
                 this._proxyobject[k] = elation.bind(this._proxyobject, v);
+              //} else if (v === true || v === false) {
+              //  propertydefs[k] = {type: 'boolean', default: v };
+              } else if (v instanceof THREE.Vector3) {
+                propertydefs[k] = {type: 'vector3', default: v };
+              } else if (v instanceof THREE.Color) {
+                propertydefs[k] = {type: 'color', default: v };
+              } else if (v instanceof THREE.Euler) {
+                propertydefs[k] = {type: 'euler', default: v };
               } else {
                 propertydefs[k] = {type: 'object', default: v };
               }
