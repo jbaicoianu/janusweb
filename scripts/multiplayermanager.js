@@ -66,7 +66,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
         roomrate = room.rate;
       }
 
-      var rate = elation.utils.any(roomrate, this.args.rate, elation.config.get('janusweb.network.rate'), 100);
+      var rate = elation.utils.any(roomrate, this.args.rate, elation.config.get('janusweb.network.rate'), 20);
       return rate;
     }
     this.resetUpdateInterval = function() {
