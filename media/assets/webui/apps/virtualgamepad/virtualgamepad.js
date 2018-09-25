@@ -13,19 +13,20 @@ elation.elements.define('janus.controls.gamepad', class extends elation.elements
         {
           axes: [0, 1],
           style: 'analog',
-          position: [ 0, 1 ],
+          position: [ 0, .95 ],
           bottom: 1,
           left: 1
         },
         {
           axes: [2, 3],
           style: 'analog',
-          position: [ 1, 1 ],
+          position: [ .95, .95 ],
           bottom: 1,
           right: 1
         }
       ],
       buttons: [
+/*
         {
           label: 'A',
           position: [ .95, .99 ],
@@ -40,6 +41,7 @@ elation.elements.define('janus.controls.gamepad', class extends elation.elements
           right: 1,
           bottom: 1
         }
+*/
       ]
     };
 
@@ -49,6 +51,14 @@ elation.elements.define('janus.controls.gamepad', class extends elation.elements
     this.axes = [];
     this.sticks = [];
     this.buttons = [];
+
+/*
+this.debug = elation.elements.create('div', { append: document.body });
+this.debug.style.position = 'fixed';
+this.debug.style.top = '10px';
+this.debug.style.left = '10px';
+this.debug.style.zIndex = '1000';
+*/
 
     for (var i = 0; i < this.cfg.sticks.length; i++) {
       let stickcfg = this.cfg.sticks[i];
@@ -62,7 +72,7 @@ elation.elements.define('janus.controls.gamepad', class extends elation.elements
         bottom: (stickcfg.bottom || false),
         right: (stickcfg.right || false),
       });
-      elation.events.add(stick, 'axis_change', (ev) => { this.axes[ev.data.axis] = ev.data.value; });
+      elation.events.add(stick, 'axis_change', (ev) => { this.axes[ev.data.axis] = ev.data.value; /*this.debug.innerHTML = JSON.stringify(this.axes); */});
       this.sticks[i] = stick;
       setTimeout(() => { stick.resetStickPosition(); }, 10);
     }
@@ -88,6 +98,13 @@ elation.elements.define('janus.controls.gamepad', class extends elation.elements
 
     let janus = elation.component.fetch(this.queryParentSelector('[data-elation-component="janusweb.client"]'))
     janus.engine.systems.controls.addVirtualGamepad(this);
+    this.hide();
+    janus.engine.systems.render.renderer.domElement.addEventListener('touchstart', (ev) => { this.show(); this.reset(); });
+  }
+  reset() {
+    for (let i = 0; i < this.axes.length; i++) {
+      this.sticks[i].resetStickPosition();
+    }
   }
 });
 elation.elements.define('janus.controls.button', class extends elation.elements.base {
@@ -163,6 +180,11 @@ elation.elements.define('janus.controls.analog', class extends elation.elements.
     this.stick = elation.elements.create('janus.controls.analogstick', {
       append: this
     });
+/*
+    this.debug = elation.elements.create('div', {
+      append: this
+    });
+*/
     this.handleTouchStart = elation.bind(this, this.handleTouchStart);
     this.handleTouchMove = elation.bind(this, this.handleTouchMove);
     this.handleTouchEnd = elation.bind(this, this.handleTouchEnd);
@@ -200,8 +222,8 @@ elation.elements.define('janus.controls.analog', class extends elation.elements.
     this.currenttouch = ev.changedTouches[0].identifier;
     elation.events.add(window, 'touchmove', this.handleTouchMove);
     elation.events.add(window, 'touchend', this.handleTouchEnd);
-    console.log('boop', ev);
     ev.preventDefault();
+    ev.stopPropagation();
   }
   handleTouchMove(ev) {
     for (var i = 0; i < ev.changedTouches.length; i++) {
@@ -211,6 +233,8 @@ elation.elements.define('janus.controls.analog', class extends elation.elements.
         this.setStickPosition(x, y);
       }
     }
+    ev.preventDefault();
+    ev.stopPropagation();
   }
   handleTouchEnd(ev) {
     for (var i = 0; i < ev.changedTouches.length; i++) {
@@ -238,13 +262,14 @@ elation.elements.define('janus.controls.analog', class extends elation.elements.
 
     var angle = Math.atan2(dy, dx);
     var len = Math.min(1, Math.sqrt(dx * dx + dy * dy));
-console.log(angle, len);
+//console.log(angle, len);
 
     var lastx = this.x,
         lasty = this.y;
     this.x = Math.max(-1, Math.min(1, (x - (rect.x + halfwidth)) / halfwidth));
     this.y = Math.max(-1, Math.min(1, (y - (rect.y + halfheight)) / halfheight));
     
+//this.debug.innerHTML = '(' + this.axes[0] + ', ' + this.axes[1] + ')';
     if (lastx != this.x) {
       this.dispatchEvent({type: 'axis_change', data: { axis: this.axes[0], value: this.x } });
     }
