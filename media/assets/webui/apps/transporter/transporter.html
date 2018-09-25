@@ -1,0 +1,38 @@
+<collection-jsonapi 
+  id="highfidelityplaces"
+  host="https://p.janusvr.com"
+  endpoint="/https://highfidelity.com/api/v1/user_stories"
+  itempath="user_stories"
+  apiargs.include_actions="concurrency"
+  apiargs.per_page="40"
+  apiargs.require_online="true"
+  >
+</collection-jsonapi>
+<collection-jsonapi 
+  id="sansarplaces"
+  host="https://p.janusvr.com"
+  endpoint="/https://atlas.sansar.com/proxies/web/atlas-api/v3/experiences?perPage=40"
+  itempath="data">
+</collection-jsonapi>
+<collection-jsonapi 
+  id="vrchatplaces" 
+  host="https://p.janusvr.com" 
+  endpoint="/https://api.vrchat.cloud/api/1/worlds/active?apiKey=JlE5Jldo5Jibnk5O5hTx6XVqsJu4WJ26&n=39" >
+</collection-jsonapi>
+
+<ui-tabs>
+  <ui-tab label="JanusVR">
+  </ui-tab>
+  <ui-tab label="High Fidelity">
+    <ui-button onclick="document.getElementById('highfidelityplaces').load()" label="Refresh"></ui-button>
+    <ui-grid scrollable-y flex="1" class="buh" itemtemplate="janus.ui.transporter.highfidelity" collection="highfidelityplaces"></ui-grid>
+  </ui-tab>
+  <ui-tab label="Sansar">
+    <ui-button onclick="document.getElementById('sansarplaces').load()" label="Refresh"></ui-button>
+    <ui-grid scrollable-y flex="1" class="buh" itemtemplate="janus.ui.transporter.sansar" collection="sansarplaces"></ui-grid>
+  </ui-tab>
+  <ui-tab label="VRChat">
+    <ui-button onclick="document.getElementById('vrchatplaces').load()" label="Refresh"></ui-button>
+    <ui-grid scrollable-y flex="1" class="buh" itemtemplate="janus.ui.transporter.vrchat" collection="vrchatplaces"></ui-grid>
+  </ui-tab>
+</ui-tabs>

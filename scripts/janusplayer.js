@@ -219,12 +219,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
                 this.hands.left.zdir.normalize();
               }
 
-              if (hands.left.fingerTips) {
-                this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
-                this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
-                this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
-                this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
-                this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+              if (hands.left.fingers) {
+                this.hands.left.p0.copy(hands.left.fingers[0].fingertip.getWorldPosition());
+                this.hands.left.p1.copy(hands.left.fingers[1].fingertip.getWorldPosition());
+                this.hands.left.p2.copy(hands.left.fingers[2].fingertip.getWorldPosition());
+                this.hands.left.p3.copy(hands.left.fingers[3].fingertip.getWorldPosition());
+                this.hands.left.p4.copy(hands.left.fingers[4].fingertip.getWorldPosition());
               }
             }
             if (hands.right && hands.right.position) {
@@ -246,12 +246,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
                 this.hands.right.zdir.normalize();
               }
 
-              if (hands.right.fingerTips) {
-                this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
-                this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
-                this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
-                this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
-                this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
+              if (hands.right.fingers) {
+                this.hands.right.p0.copy(hands.right.fingers[0].fingertip.getWorldPosition());
+                this.hands.right.p1.copy(hands.right.fingers[1].fingertip.getWorldPosition());
+                this.hands.right.p2.copy(hands.right.fingers[2].fingertip.getWorldPosition());
+                this.hands.right.p3.copy(hands.right.fingers[3].fingertip.getWorldPosition());
+                this.hands.right.p4.copy(hands.right.fingers[4].fingertip.getWorldPosition());
               }
             }
           }

@@ -1,0 +1,14 @@
+{
+  "templates": {
+    "janus.ui.transporter": "./transporter.html",
+    "janus.ui.transporter.highfidelity": "./transporter_highfidelity.html",
+    "janus.ui.transporter.sansar": "./transporter_sansar.html",
+    "janus.ui.transporter.vrchat": "./transporter_vrchat.html"
+  },
+  "scripts":  ["./transporter.js"],
+  "css":      ["./transporter.css"],
+  "components": [
+    "janus-ui-transporter"
+  ]
+}
+
