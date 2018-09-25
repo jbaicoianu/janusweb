@@ -99,6 +99,7 @@ elation.elements.define('janus.ui.settings.panels', class extends elation.elemen
         'right': ['janus-ui-inventory'],
         'left': ['janus-comms-panel'],
         'bottomright': ['janus-ui-buttons'],
+        'bottomleft': ['janus-controls-gamepad'],
       }
     };
     let customlayouts = player.getSetting('ui.layouts');
