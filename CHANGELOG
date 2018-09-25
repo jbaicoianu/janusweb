@@ -1,3 +1,28 @@
+JanusWeb 1.3
+============
+- Engine improvements
+  - Improved mobile browser performance and usability
+  - Edit mode improvements (F1 to access)
+  - Suport for glTF with embedded textures
+  - Asset load optimizations
+  - Text objects cast shadows
+  - Inventory improvements
+  - Send network updates every 20ms instead of 100ms
+  - Fix head rotation with gamepads
+- Scripting and markup improvements
+  - Fixed custom element initialization race condition
+  - Fixed collision_scale
+  - Added object.getParentByTagName() / object.getParentByClassName()
+  - Update particles if particle_scale is changed
+  - Allow dynamic room.near / room.far
+  - <Image> attributes: sbs3d, ou3d, reverse3d, maxsize, preload
+  - Leap motion hand improvements
+  - Added onloadstart / onloadprogress / onload events to <Image> and <Object>
+- UI improvements
+  - New virtual onscreen gamepad system
+  - Chat render fixes in Chrome
+  - New landing page
+
 JanusWeb 1.2
 ==============
 - Engine improvements
