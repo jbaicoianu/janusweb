@@ -22,6 +22,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
         envmap_id: { type: 'string', set: this.updateMaterial },
+        onloadstart: { type: 'callback' },
+        onloadprogress: { type: 'callback' },
+        onload: { type: 'callback' },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -37,11 +40,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var object = null, geometry = null, material = null;
       if (this.janusid) {
         var asset = this.getAsset('model', this.janusid, true);
+        this.dispatchEvent({type: 'loadstart'});
         if (asset) {
           if (asset.loaded) {
             setTimeout(elation.bind(this, this.handleLoad), 0);
           } else {
             elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.handleLoad));
+
+            elation.events.add(asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           }
           object = asset.getInstance();
         }
@@ -93,7 +99,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (!this.assetloaded) {
         this.setTextureDirty();
         setTimeout(elation.bind(this, function() {
-          elation.events.fire({type: 'load', element: this});
+          this.dispatchEvent({type: 'load'});
         }), 0);
         this.jsparts.updateParts();
         this.assetloaded = true;

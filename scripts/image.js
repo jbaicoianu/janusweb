@@ -7,6 +7,9 @@ elation.require(['janusweb.janusbase'], function() {
         sbs3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
         ou3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
         reverse3d: { type: 'boolean', default: false, set: this.setMaterialDirty },
+        onloadstart: { type: 'callback' },
+        onloadprogress: { type: 'callback' },
+        onload: { type: 'callback' },
       });
     }
     this.createObject3D = function() {
@@ -58,6 +61,8 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.asset) {
         this.texture = this.asset.getInstance();
         if (this.texture) {
+          this.dispatchEvent({type: 'loadstart'});
+          elation.events.add(this.asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
           elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
 
@@ -159,6 +164,7 @@ elation.require(['janusweb.janusbase'], function() {
         //this.objects['3d'].onBeforeRender = () => { texture.swap(); }
       }
 
+      this.dispatchEvent({type: 'load'});
       this.refresh();
     }
     this.getProxyObject = function(classdef) {
