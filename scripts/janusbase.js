@@ -522,7 +522,7 @@ console.log('got collider', collider, collision_id);
       // Scratch variable
       var euler = new THREE.Euler();
       return function() {
-        euler..setFromQuaternion(this.properties.orientation);
+        euler.setFromQuaternion(this.properties.orientation);
         return !euler.equals(this.properties.rotation);
       }
     })();
