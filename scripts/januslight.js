@@ -46,7 +46,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       if (this.helper) {
         this.helper.traverse((n) => {
-          n.layers.set(1);
+          n.layers.set(10);
         });
         scene.add(this.helper);
       }
