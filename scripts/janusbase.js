@@ -518,9 +518,14 @@ console.log('got collider', collider, collision_id);
       var changes = this.frameupdates;
       return (changes['rotation'] || changes['rotation_dir'] || !this.lastframevalues.rotation.equals(this.properties.rotation));
     }
-    this.hasPhysicsChangedOrientation = function() {
-      return false; // TODO
-    }
+    this.hasPhysicsChangedOrientation = (function() {
+      // Scratch variable
+      var euler = new THREE.Euler();
+      return function() {
+        euler..setFromQuaternion(this.properties.orientation);
+        return !euler.equals(this.properties.rotation);
+      }
+    })();
     this.resetFrameUpdates = function() {
       this.frameupdates['xdir'] = false;
       this.frameupdates['ydir'] = false;
