@@ -1916,6 +1916,7 @@ elation.require([
         let objargs = {
           id: id,
           js_id: player.userid + '-' + id + '-' + window.uniqueId(),
+          //cull_face: 'none',
           sync: true,
           pos: player.vectors.cursor_pos.clone()
         }
@@ -1989,6 +1990,7 @@ elation.require([
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
+      this.roomedit.objectBoundingBox = false;
       this.roomedit.modeid = 0;
       this.roomedit.objectIsNew = isnew;
       this.roomedit.moving = true;
@@ -1997,6 +1999,13 @@ elation.require([
       if (!object.js_id) {
         object.js_id = player.userid + '-' + window.uniqueId();
       }
+
+      this.roomedit.objectBoundingBox = object.getBoundingBox(true);
+      object.addEventListener('load', (ev) => {
+        this.roomedit.objectBoundingBox = object.getBoundingBox(true);
+        this.editObjectUpdate();
+        console.log('update bbox', this.roomedit.objectBoundingBox);
+      });
 
       this.roomedit.collision_id = object.collision_id;
       object.collision_id = false;
@@ -2077,10 +2086,10 @@ elation.require([
             //this.roomedit.object.collision_id = this.roomedit.collision_id;
             //this.roomedit.collision_id = false;
           }
-          var bsphere = this.roomedit.object.getBoundingSphere(true);
-          this.roomedit.object.collision_id = 'sphere';
+          this.roomedit.object.collision_id = 'cube';
           this.roomedit.object.collision_trigger = true;
-          this.roomedit.object.collision_scale = V(bsphere.radius);
+          this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
+          this.roomedit.object.collision_pos = this.roomedit.objectBoundingBox.max.clone().add(this.roomedit.objectBoundingBox.min).multiplyScalar(.5);
         }
       }
       this.roomedit.object = false;
@@ -2088,7 +2097,8 @@ elation.require([
 
       elation.events.remove(this, 'mousemove', this.editObjectMousemove);
       elation.events.remove(this, 'wheel', this.editObjectMousewheel);
-      elation.events.remove(this, 'click', this.editObjectClick);
+      elation.events.remove(this, 'mousedown', this.editObjectClick);
+      elation.events.remove(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
       // deactivate context
       this.engine.systems.controls.deactivateContext('roomedit', this);
@@ -2106,32 +2116,37 @@ elation.require([
       if (this.roomedit.object) {
         var obj = this.roomedit.object;
         if (this.roomedit.moving && ev.element.getProxyObject() !== obj) {
-          var bbox = obj.getBoundingBox(true);
-          var headpos = player.head.localToWorld(V(0,0,0));
-          var cursorpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
-          cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
-          var dir = V(cursorpos).sub(headpos);
-          var distance = dir.length();
-          dir.multiplyScalar(1/distance);
-          distance = Math.min(distance, 20);
-          var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
-          // 
-          obj.pos = newpos;
-          if (ev.data.thing.js_id == 'room_skybox') {
-            obj.ydir = V(0, 1, 0);
-            obj.zdir = dir;
-            obj.xdir = dir.clone().cross(obj.ydir);
-          } else {
-            //obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
-            //obj.xdir = V(dir).cross(obj.ydir);
-            //obj.zdir = V(obj.xdir).cross(obj.ydir);
-          }
-          obj.sync = true;
+          this.roomedit.objectPosition = ev.data.point;
+          this.editObjectUpdate();
         }
       }
     }
+    this.editObjectUpdate = function() {
+      var obj = this.roomedit.object;
+      var bbox = this.roomedit.objectBoundingBox;
+
+      var point = this.roomedit.objectPosition || this.roomedit.object.position;
+
+      if (!bbox) {
+        bbox = this.roomedit.objectBoundingBox = obj.getBoundingBox(true);
+      }
+      var headpos = player.head.localToWorld(V(0,0,0));
+      var cursorpos = obj.parent.worldToLocal(translate(point, V(0, -bbox.min.y, 0)), true);
+      cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
+      var dir = V(cursorpos).sub(headpos);
+      var distance = dir.length();
+      dir.multiplyScalar(1/distance);
+      distance = Math.min(distance, 20);
+      var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
+
+      obj.pos = newpos;
+      obj.sync = true;
+    }
     this.editObjectMousewheel = function(ev) {
-      this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+      //this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+      let obj = this.roomedit.object;
+      let r = obj.rotation;
+      obj.rotation = V(r.x, r.y += (ev.deltaY > 0 ? 5 : -5), r.z);
       this.editObjectMousemove(ev);
     }
     this.editObjectClick = function(ev) {
