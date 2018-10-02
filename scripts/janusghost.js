@@ -288,6 +288,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (movedata.avatar) {
           this.setAvatar(movedata.avatar.replace(/\^/g, '"'));
         }
+        if (movedata.scale) {
+          this.scale.fromArray(parser.getVectorValue(movedata.scale));
+        }
         if (movedata.view_dir && movedata.up_dir) {
           if (this.head) {
             ydir.fromArray(parser.getVectorValue(movedata.up_dir, [0,1,0]));
