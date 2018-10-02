@@ -1637,8 +1637,11 @@ elation.require([
               var k = attrs[i];
               var val = change[k];
               if (val instanceof THREE.Vector2 ||
+                  val instanceof THREE.Quaternion ||
                   val instanceof THREE.Vector3) {
                 val = val.toArray().map(function(n) { return +n.toFixed(4); }).join(' ');
+              } else if (val instanceof THREE.Euler) {
+                val = [val.x.toFixed(4), val.y.toFixed(4), val.z.toFixed(4)].join(' ');
               } else if (val instanceof THREE.Color) {
                 if (k == 'col' && real.colorIsDefault) {
                   val = null;
