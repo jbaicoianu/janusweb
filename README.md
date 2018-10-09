@@ -8,6 +8,8 @@
   <a href="https://vesta.janusvr.com">Vesta</a>
   &mdash;
   <a href="https://github.com/janusvr/janusvr-examples">Examples</a>
+  &mdash;
+  <a href="https://web.janusvr.com">Demo</a>
 </div>
 
 
