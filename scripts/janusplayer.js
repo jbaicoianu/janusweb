@@ -124,6 +124,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
 
+      let avatar = this.getAvatarData();
+      if (avatar) {
+        this.ghost = this.createObject('ghost', {
+          ghost_id: this.getUsername(),
+          avatar_src: 'data:text/plain,' + avatar
+        });
+      }
+
       this.updateCollider();
     }
     this.enable = function() {
@@ -255,6 +263,17 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               }
             }
           }
+        }
+      }
+
+      if (this.ghost) {
+        if (this.ghost.head) {
+          this.ghost.head.position.copy(this.head.position);
+          this.ghost.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
+        }
+        if (this.ghost.body) {
+          this.ghost.body.position.copy(this.body.position);
+          this.ghost.body.orientation.copy(this.body.orientation);
         }
       }
     })();
@@ -500,7 +519,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setAvatar = function(avatar) {
       this.avatarNeedsUpdate = true;
-      return this.setSetting('avatar', avatar);
+      let setting = this.setSetting('avatar', avatar);
+
+      if (this.ghost) {
+        this.ghost.die();
+      }
+      this.ghost = this.createObject('ghost', {
+        ghost_src: avatar
+      });
+
+      return setting;
     }
     this.hasVoipData = function() {
       return this.voipqueue && this.voipqueue.length > 0;
