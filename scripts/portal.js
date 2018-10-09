@@ -9,12 +9,17 @@ elation.require(['janusweb.janusbase'], function() {
         'size': { type: 'vector3', default: new THREE.Vector3(1,1,1), set: this.updateGeometry },
         'url': { type: 'string', set: this.updateTitle },
         'open': { type: 'boolean', default: false },
+        'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
+        'collision_scale': { type: 'vector3', set: this.updateCollider },
         'title': { type: 'string', set: this.updateTitle },
         'seamless': { type: 'boolean', default: false },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
         'auto_load': { type: 'boolean', default: false },
-        'thumb_id': { type: 'string', set: this.updateMaterial }
+        'thumb_id': { type: 'string', set: this.updateMaterial },
+        'mirror': { type: 'boolean', default: false, set: this.updateGeometry },
+        'mirror_recursion': { type: 'integer', default: 2, set: this.updateGeometry },
+        'mirror_texturesize': { type: 'integer', default: 1024, set: this.updateGeometry },
       });
       this.addTag('usable');
       elation.engine.things.janusportal.extendclass.postinit.call(this);
@@ -22,74 +27,13 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
     }
     this.createObject3D = function() {
-      var thickness = 0.05;
-      var offset = ((thickness / 2) / this.properties.scale.z) * 2;
-      var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
-
-      var mat = this.createMaterial();
-
-      this.portalgeometry = box;
-      //var group = new THREE.Object3D();
-      var group = new THREE.Mesh(box, mat);
-
-      if (this.draw_glow) {
-        var framewidth = .05, 
-            frameheight = .05, 
-            framedepth = .01 / this.properties.size.z;
-        var framegeo = new THREE.BufferGeometry();
-        var framepart = new THREE.BoxBufferGeometry(this.size.x,frameheight,framedepth);
-        var framemat4 = new THREE.Matrix4();
-
-
-        framemat4.makeTranslation(0,this.size.y - frameheight/2,framedepth + offset);
-        framegeo.merge(framepart, framemat4);
-        framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
-        framegeo.merge(framepart, framemat4);
-        
-        framepart = new THREE.BoxBufferGeometry(framewidth,this.size.y,framedepth);
-
-        framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth + offset);
-        framegeo.merge(framepart, framemat4);
-        framemat4.makeTranslation(-this.size.x / 2 + framewidth/2,this.size.y / 2,framedepth + offset);
-        framegeo.merge(framepart, framemat4);
-
-        var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
-        var frame = new THREE.Mesh(framegeo, framemat);
-        this.frame = frame;
-        group.add(frame);
-      }
-      this.material = mat;
-
-      this.objects['3d'] = group;
-
-      this.updateTitle();
-
-      var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
-      var frame = new THREE.Mesh(framegeo, framemat);
-      this.frame = frame;
-      group.add(frame);
-
-      this.material = mat;
-      this.geometry = box;
-
-      this.mesh = group;
-      this.clipmesh = group.clone();
-
-      //group.add(mesh);
-      this.group = group;
-
-      /*
-      var light = new THREE.RectAreaLight(0xffffff, 70, this.size.x, this.size.y);
-      var lighthelper = new THREE.RectAreaLightHelper( light );
-      light.add(lighthelper);
-      group.add(light);
-      */
-
-      return group;
+      this.objects['3d'] = new THREE.Object3D();
+      this.updateGeometry();
+      return this.objects['3d'];
     }
     this.createChildren = function() {
       elation.engine.things.janusportal.extendclass.createChildren.call(this);
+
       /*
       if (this.auto_load) {
         this.openPortal();
@@ -121,8 +65,8 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.createChildren = function() {
-      this.updateColliderFromGeometry();
         //elation.events.add(this.label, 'mouseover,mousemove,mouseout,click', this);
+      this.updateCollider();
       elation.events.add(this, 'click', elation.bind(this, this.activate));
     }
     this.createMaterial = function() {
@@ -191,10 +135,12 @@ elation.require(['janusweb.janusbase'], function() {
         this.frame.material.emissive.setHex(0x222266);
         this.frame.material.color.setHex(0x0000ff);
       }
-      if (this.material.emissive) {
-        this.material.emissive.setHex(0x111111);
-      } else {
-        this.material.color.setHex(0xffffff);
+      if (this.material) {
+        if (this.material.emissive) {
+          this.material.emissive.setHex(0x111111);
+        } else {
+          this.material.color.setHex(0xffffff);
+        }
       }
       var gamepads = this.engine.systems.controls.gamepads;
       if (!this.hoverstate && gamepads && gamepads[0] && gamepads[0].hapticActuators) {
@@ -221,10 +167,12 @@ elation.require(['janusweb.janusbase'], function() {
         this.frame.material.emissive.setHex(0x222222);
         this.frame.material.color.setHex(0x0000cc);
       }
-      if (this.material.emissive) {
-        this.material.emissive.setHex(0x000000);
-      } else {
-        this.material.color.setHex(0xdddddd);
+      if (this.material) {
+        if (this.material.emissive) {
+          this.material.emissive.setHex(0x000000);
+        } else {
+          this.material.color.setHex(0xdddddd);
+        }
       }
       var gamepads = this.engine.systems.controls.gamepads;
       if (this.room == this.janus.currentroom && this.hoverstate && gamepads && gamepads[0] && gamepads[0].hapticActuators) {
@@ -259,8 +207,8 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
           this.closePortal();
         }
-      } else {
-        this.properties.janus.setActiveRoom(this.properties.url, [0,0,0]);
+      } else if (this.url) {
+        this.properties.janus.setActiveRoom(this.url, [0,0,0]);
       }
       var gamepads = this.engine.systems.controls.gamepads;
       if (gamepads && gamepads[0] && gamepads[0].hapticActuators) {
@@ -280,6 +228,9 @@ elation.require(['janusweb.janusbase'], function() {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
         this._proxyobject._proxydefs = {
+          collision_id:  [ 'property', 'collision_id'],
+          collision_pos: [ 'property', 'collision_pos' ],
+          collision_scale:  [ 'property', 'collision_scale'],
           url: ['property', 'url'],
           title: ['property', 'title'],
           thumb_id: ['property', 'thumb_id'],
@@ -288,6 +239,7 @@ elation.require(['janusweb.janusbase'], function() {
       return this._proxyobject;
     }
     this.openPortal = function() {
+      if (!this.url) return;
       if (!this.portalroom) {
         this.portalroom = this.janus.load(this.properties.url, false);
         console.log('load that room', this.portalroom);
@@ -448,6 +400,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.closePortal = function() {
+      if (!this.url) return;
       this.portalstate = 'closed';
       this.open = false;
       console.log('CLOSE');
@@ -456,6 +409,95 @@ elation.require(['janusweb.janusbase'], function() {
       this.portalroom.disable();
       elation.events.fire({element: this, type: 'janusweb_portal_close'});
       this.janus.network.unsubscribe(this.portalroom);
+    }
+    this.updateGeometry = function() {
+      var thickness = 0.05;
+      var offset = ((thickness / 2) / this.properties.scale.z) * 2;
+      var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
+      box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
+
+      this.collision_scale = V(this.size.x, this.size.y, thickness);
+      this.collision_pos = V(0, this.size.y / 2, 0);
+      this.updateCollider();
+
+      if (this.group && this.group.parent) {
+        this.group.parent.remove(this.group);
+      }
+
+      if (this.mirror) {
+        var group = new THREE.Reflector(box, {
+          recursion: this.mirror_recursion,
+          textureWidth: this.mirror_texturesize,
+          textureHeight: this.mirror_texturesize,
+        });
+        this.group = group;
+        if (this.objects['3d']) {
+          this.objects['3d'].add(group);
+        }
+        return group;
+      } else {
+        var mat = this.createMaterial();
+
+        this.portalgeometry = box;
+        //var group = new THREE.Object3D();
+        var group = new THREE.Mesh(box, mat);
+
+        if (this.draw_glow) {
+          var framewidth = .05,
+              frameheight = .05,
+              framedepth = .01 / this.properties.size.z;
+          var framegeo = new THREE.BufferGeometry();
+          var framepart = new THREE.BoxBufferGeometry(this.size.x,frameheight,framedepth);
+          var framemat4 = new THREE.Matrix4();
+
+
+          framemat4.makeTranslation(0,this.size.y - frameheight/2,framedepth + offset);
+          framegeo.merge(framepart, framemat4);
+          framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
+          framegeo.merge(framepart, framemat4);
+
+          framepart = new THREE.BoxBufferGeometry(framewidth,this.size.y,framedepth);
+
+          framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth + offset);
+          framegeo.merge(framepart, framemat4);
+          framemat4.makeTranslation(-this.size.x / 2 + framewidth/2,this.size.y / 2,framedepth + offset);
+          framegeo.merge(framepart, framemat4);
+
+          var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
+          var frame = new THREE.Mesh(framegeo, framemat);
+          this.frame = frame;
+          group.add(frame);
+        }
+        this.material = mat;
+
+        this.updateTitle();
+
+        var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
+        var frame = new THREE.Mesh(framegeo, framemat);
+        this.frame = frame;
+        group.add(frame);
+
+        this.material = mat;
+        this.geometry = box;
+
+        this.mesh = group;
+        this.clipmesh = group.clone();
+
+        //group.add(mesh);
+        this.group = group;
+
+        /*
+        var light = new THREE.RectAreaLight(0xffffff, 70, this.size.x, this.size.y);
+        var lighthelper = new THREE.RectAreaLightHelper( light );
+        light.add(lighthelper);
+        group.add(light);
+        */
+
+        if (this.objects['3d']) {
+          this.objects['3d'].add(group);
+        }
+        return group;
+      }
     }
   }, elation.engine.things.janusbase);
 });
