@@ -104,7 +104,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.updateMaterial = function() {
-      this.asset = this.getAsset('image', this.image_id);
+      this.asset = this.getAsset('image', this.image_id, true);
       this.materialNeedsUpdate = false;
       var newtexture = false;
       if (this.asset) {
@@ -137,7 +137,9 @@ elation.require(['janusweb.janusbase'], function() {
       var img = this.texture.image;
       var geo = this.createGeometry();
       geo.computeBoundingBox();
-      this.colliders.children[0].geometry = geo;
+      if (this.colliders.children[0]) {
+        this.colliders.children[0].geometry = geo;
+      }
       this.objects['3d'].geometry = geo;
     }
     this.imageloaded = function(ev) {
@@ -146,6 +148,9 @@ elation.require(['janusweb.janusbase'], function() {
       this.frontmaterial.map = this.texture;
       this.frontmaterial.needsUpdate = true;
       this.adjustAspectRatio();
+      setTimeout(() => {
+        this.adjustAspectRatio();
+      }, 0);
       this.sidetex.image = this.texture.image;
       this.sidetex.needsUpdate = true;
 
