@@ -45,8 +45,20 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (asset.loaded) {
             setTimeout(elation.bind(this, this.handleLoad), 0);
           } else {
+            this.loadingindicator = this.createObject('particle', {
+              col: 'green',
+              scale: V(.025),
+              vel: V(-1, 0, -1),
+              accel: V(0, -5, 0),
+              rand_vel: V(2, 2, 2),
+              count: 250,
+              rate: 500,
+              duration: .5,
+              collidable: false,
+              collision_trigger: true,
+              loop: true,
+            });
             elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.handleLoad));
-
             elation.events.add(asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           }
           object = asset.getInstance();
@@ -103,6 +115,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }), 0);
         this.jsparts.updateParts();
         this.assetloaded = true;
+        if (this.loadingindicator) {
+          this.loadingindicator.die();
+        }
       }
     }
     this.updateMaterial = function() {
