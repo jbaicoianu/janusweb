@@ -101,7 +101,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.removeCollider();
       if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
-      var collision_scale = this.properties.collision_scale || this.properties.scale;
+      var collision_scale = this.collision_scale || this.scale;
       if (this.collision_radius !== null) {
         collision_id = 'sphere';
         collision_scale = new THREE.Vector3(this.collision_radius, this.collision_radius, this.collision_radius);
@@ -387,7 +387,7 @@ console.log('got collider', collider, collision_id);
       if (this.assetpack) {
         asset = this.assetpack.get(type, id);
       }
-      if (!asset && typeof parent.getAsset == 'function') {
+      if (!asset && parent && typeof parent.getAsset == 'function') {
         asset = parent.getAsset(type, id);
       }
       if (!asset && autocreate) {
@@ -397,10 +397,12 @@ console.log('got collider', collider, collision_id);
       }
 
       // Store a reference so we know which assets are in use by which objects
-      if (!this.assets[type]) {
-        this.assets[type] = {};
+      if (this.assets) {
+        if (!this.assets[type]) {
+          this.assets[type] = {};
+        }
+        this.assets[type][id] = asset;
       }
-      this.assets[type][id] = asset;
 
       return asset;
     }
