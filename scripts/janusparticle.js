@@ -217,6 +217,9 @@ elation.require(['janusweb.janusbase'], function() {
       // We also rate limit here, so if nothing else in the scene is changing, we
       // render at a lower fps
       this.localToWorld(this.boundingSphereWorld.center.set(0,0,0));
+      if (!this.objects['3d'].geometry.boundingSphere) {
+        this.objects['3d'].geometry.computeBoundingSphere();
+      }
       this.boundingSphereWorld.radius = this.objects['3d'].geometry.boundingSphere.radius;
       if (player.viewfrustum.intersectsSphere(this.boundingSphereWorld) && now - this.lastrefresh > (1000 / this.refreshrate)) {
         this.refresh();
