@@ -34,7 +34,7 @@ elation.elements.define('janus-buttons-display', class extends elation.elements.
   }
 });
 
-elation.elements.define('janus-buttons-fullscreen', class extends elation.elements.ui.togglebutton {
+elation.elements.define('janus-button-fullscreen', class extends elation.elements.ui.togglebutton {
   create() {
     super.create();
     elation.events.add(document, 'fullscreenchange', (ev) => {
@@ -52,7 +52,34 @@ elation.elements.define('janus-buttons-fullscreen', class extends elation.elemen
     this.client.fullscreen(false);
   }
 });
-elation.elements.define('janus-buttons-webvr', class extends elation.elements.ui.togglebutton {
+elation.elements.define('janus-button-webvr', class extends elation.elements.ui.togglebutton {
+  create() {
+    this.label = 'Enter WebVR';
+    super.create();
+    this.view = janus.engine.client.view;
+
+    window.addEventListener( 'vrdisplayconnect', (ev) => {
+
+      this.show();
+
+    }, false );
+
+    window.addEventListener( 'vrdisplaydisconnect', (ev) => {
+
+      this.hide();
+
+    }, false );
+
+
+  }
+  onactivate(ev) {
+    this.label = 'Exit WebVR';
+    this.view.toggleVR(true);
+  }
+  ondeactivate(ev) {
+    this.label = 'Enter WebVR';
+    this.view.toggleVR(false);
+  }
 });
 elation.elements.define('janus-buttons-chromecast', class extends elation.elements.ui.togglebutton {
 });
