@@ -228,11 +228,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               }
 
               if (hands.left.fingers) {
-                this.hands.left.p0.copy(hands.left.fingers[0].fingertip.getWorldPosition());
-                this.hands.left.p1.copy(hands.left.fingers[1].fingertip.getWorldPosition());
-                this.hands.left.p2.copy(hands.left.fingers[2].fingertip.getWorldPosition());
-                this.hands.left.p3.copy(hands.left.fingers[3].fingertip.getWorldPosition());
-                this.hands.left.p4.copy(hands.left.fingers[4].fingertip.getWorldPosition());
+                hands.left.fingers[0].fingertip.getWorldPosition(this.hands.left.p0);
+                hands.left.fingers[1].fingertip.getWorldPosition(this.hands.left.p1);
+                hands.left.fingers[2].fingertip.getWorldPosition(this.hands.left.p2);
+                hands.left.fingers[3].fingertip.getWorldPosition(this.hands.left.p3);
+                hands.left.fingers[4].fingertip.getWorldPosition(this.hands.left.p4);
               }
             }
             if (hands.right && hands.right.position) {
@@ -255,11 +255,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               }
 
               if (hands.right.fingers) {
-                this.hands.right.p0.copy(hands.right.fingers[0].fingertip.getWorldPosition());
-                this.hands.right.p1.copy(hands.right.fingers[1].fingertip.getWorldPosition());
-                this.hands.right.p2.copy(hands.right.fingers[2].fingertip.getWorldPosition());
-                this.hands.right.p3.copy(hands.right.fingers[3].fingertip.getWorldPosition());
-                this.hands.right.p4.copy(hands.right.fingers[4].fingertip.getWorldPosition());
+                hands.right.fingers[0].fingertip.getWorldPosition(this.hands.right.p0);
+                hands.right.fingers[1].fingertip.getWorldPosition(this.hands.right.p1);
+                hands.right.fingers[2].fingertip.getWorldPosition(this.hands.right.p2);
+                hands.right.fingers[3].fingertip.getWorldPosition(this.hands.right.p3);
+                hands.right.fingers[4].fingertip.getWorldPosition(this.hands.right.p4);
               }
             }
           }
@@ -330,6 +330,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
           }
         }
+        this.objects['3d'].updateMatrix();
+        this.objects['3d'].updateMatrixWorld();
         this.camera.objects['3d'].updateMatrix();
         this.camera.objects['3d'].updateMatrixWorld();
       }
@@ -337,6 +339,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
+        this.objects['3d'].updateMatrix();
+        this.objects['3d'].updateMatrixWorld();
         this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
       }
       if (this.head) {
