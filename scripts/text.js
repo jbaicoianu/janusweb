@@ -66,7 +66,7 @@ elation.require(['engine.things.label'], function() {
       var matargs = {
         color: this.properties.color || new THREE.Color(0xffffff), 
         emissive: this.properties.emissive, 
-        shading: THREE.SmoothShading, 
+        flatShading: false,
         depthTest: this.properties.depthTest,
         reflectivity: .5
       };
