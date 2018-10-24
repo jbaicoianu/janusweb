@@ -528,8 +528,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.ghost) {
         this.ghost.die();
       }
+      let avatardata = this.getAvatarData();
       this.ghost = this.createObject('ghost', {
-        ghost_src: avatar
+        ghost_id: this.getUsername(),
+        avatar_src: 'data:text/plain,' + avatardata
       });
 
       return setting;
