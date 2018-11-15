@@ -1162,12 +1162,24 @@ elation.require([
           srcparts = src.split(' ');
           src = srcparts[0];
         }
+        let object = args.object;
+        if (args.mesh_verts) {
+          let geo = new THREE.BufferGeometry();
+          geo.addAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
+          if (args.mesh_faces) {
+            geo.setIndex(args.mesh_faces);
+          }
+          if (args.mesh_normals) {
+            geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
+          }
+          object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
+        }
         assetlist.push({
           assettype: 'model',
           name: args.id,
           src: src,
           mtl: mtlsrc,
-          object: args.object,
+          object: object,
           tex_linear: args.tex_linear,
           tex0: args.tex || args.tex0 || srcparts[1],
           tex1: args.tex1 || srcparts[2],
