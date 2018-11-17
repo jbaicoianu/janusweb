@@ -45,6 +45,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         classList: { type: 'object', default: [] },
         className: { type: 'string', default: '', set: this.setClassName },
         tag: { type: 'string', default: '' },
+        billboard: { type: 'string', default: '' },
         hasposition: { type: 'boolean', default: true },
         gazetime: { type: 'float' },
         ongazeenter: { type: 'callback' },
@@ -260,6 +261,7 @@ console.log('got collider', collider, collision_id);
           locked:   ['property', 'locked'],
           visible:  ['property', 'visible'],
           tagName:  ['property', 'tag'],
+          billboard: ['property', 'billboard'],
           className:  ['property', 'className'],
           classList:  ['property', 'classList'],
           gazetime:  ['property', 'gazetime'],
@@ -442,24 +444,55 @@ console.log('got collider', collider, collision_id);
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
     }
-    this.handleFrameUpdates = function(ev) {
-      if (this.hasScriptChangedDirvecs()) {
-        this.updateOrientationFromDirvecs();
-        this.updateEulerFromOrientation();
-      } else if (this.hasScriptChangedEuler()) {
-        this.updateOrientationFromEuler();
-        this.updateDirvecsFromOrientation();
-      } else if (this.hasPhysicsChangedOrientation()) {
-        this.updateEulerFromOrientation();
-        this.updateDirvecsFromOrientation();
+    this.handleFrameUpdates = (function() {
+      let playerpos = new THREE.Vector3(),
+          objpos = new THREE.Vector3(),
+          dir = new THREE.Vector3(),
+          up = new THREE.Vector3();
+      return function(ev) {
+        if (this.billboard) {
+          player.camera.localToWorld(playerpos.set(0,0,0));
+          this.localToWorld(objpos.set(0,0,0));
+          dir.subVectors(playerpos, objpos);
+
+          let billboard = this.billboard;
+
+          if (billboard == 'x') {
+            up.set(1,0,0);
+            dir.x = 0;
+          } else if (billboard == 'y') {
+            up.set(0,1,0);
+            dir.y = 0;
+          } else if (billboard == 'z') {
+            up.set(0,0,1);
+            dir.z = 0;
+          } else if (billboard == 'xyz') {
+            player.camera.localToWorld(up.set(0,1,0)).sub(playerpos).normalize();
+          }
+          dir.normalize();
+          this.zdir = dir;
+          this.ydir = up;
+        }
+
+        if (this.hasScriptChangedDirvecs()) {
+          this.updateOrientationFromDirvecs();
+          this.updateEulerFromOrientation();
+        } else if (this.hasScriptChangedEuler()) {
+          this.updateOrientationFromEuler();
+          this.updateDirvecsFromOrientation();
+        } else if (this.hasPhysicsChangedOrientation()) {
+          this.updateEulerFromOrientation();
+          this.updateDirvecsFromOrientation();
+        }
+
+        this.resetFrameUpdates();
+        this.dispatchEvent({type: 'update', data: ev.data});
+        var proxy = this.getProxyObject();
+        if (typeof proxy.update == 'function' && this.created) {
+          proxy.update(ev.data);
+        }
       }
-      this.resetFrameUpdates();
-      this.dispatchEvent({type: 'update', data: ev.data});
-      var proxy = this.getProxyObject();
-      if (typeof proxy.update == 'function' && this.created) {
-        proxy.update(ev.data);
-      }
-    }
+    })();
     this.updateOrientationFromDirvecs = (function() {
       var tmpmat = new THREE.Matrix4(),
           xdir = new THREE.Vector3(),
