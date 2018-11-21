@@ -9,7 +9,7 @@ elation.require(['engine.things.label'], function() {
         'font':            { type: 'string', default: 'helvetiker', refreshGeometry: true },
         'font_size':       { type: 'float', default: 1.0, refreshGeometry: true },
         'font_scale':      { type: 'bool', default: true, refreshGeometry: true },
-        'align':           { type: 'string', default: 'left', refreshGeometry: true },
+        'align':           { type: 'string', default: 'center', refreshGeometry: true },
         'verticalalign':   { type: 'string', default: 'bottom', refreshGeometry: true },
         'zalign':          { type: 'string', default: 'back', refreshGeometry: true },
         'emissive':        { type: 'color', default: 0x000000 },
@@ -21,8 +21,6 @@ elation.require(['engine.things.label'], function() {
         'bevel.thickness': { type: 'float', default: 0, refreshGeometry: true },
         'bevel.size':      { type: 'float', default: 0, refreshGeometry: true },
       });
-      this.properties.thickness = .11;
-      this.properties.align = 'center';
       this.emptygeometry = new THREE.Geometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
     }
@@ -191,6 +189,16 @@ elation.require(['engine.things.label'], function() {
     }
     this.getCacheName = function(text) {
       return text + '_' + this.font + '_' + this.font_size + (this.font_scale ? '_scaled' : '');
+    }
+    this.updateColor = function() {
+      if (this.properties.color === this.defaultcolor) {
+        if (this.color.r != 1 || this.color.g != 1 || this.color.b != 1) {
+          this.properties.color = this.properties.color.clone();
+          this.defaultcolor.setRGB(1,1,1);
+          this.colorIsDefault = false;
+        }
+      }
+      this.updateMaterial();
     }
   }, elation.engine.things.janusbase);
 });
