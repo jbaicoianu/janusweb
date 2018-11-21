@@ -1172,6 +1172,9 @@ elation.require([
           if (args.mesh_normals) {
             geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
           }
+          if (args.mesh_uvs) {
+            geo.addAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
+          }
           object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
         }
         assetlist.push({
