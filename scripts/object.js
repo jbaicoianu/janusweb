@@ -24,6 +24,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         depth_write: { type: 'boolean', default: null },
         depth_test: { type: 'boolean', default: null },
         envmap_id: { type: 'string', set: this.updateMaterial },
+        texture_offset: { type: 'vector2', default: [0, 0], set: this.updateTextureOffsets },
+        texture_repeat: { type: 'vector2', default: [1, 1], set: this.updateTextureOffsets },
+        texture_rotation: { type: 'float', default: 0, set: this.updateMaterial },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
@@ -261,8 +264,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         textureasset = this.getAsset('image', image_id, true);
         if (textureasset) {
           texture = textureasset.getInstance();
-          elation.events.add(texture, 'asset_load', elation.bind(this, this.setTextureDirty));
+          elation.events.add(texture, 'asset_load', elation.bind(this, this.refresh));
           elation.events.add(texture, 'update', elation.bind(this, this.refresh));
+
+          texture.offset.copy(this.texture_offset);
+          texture.repeat.copy(this.texture_repeat);
+          texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
 
           if (textureasset.sbs3d) {
             texture.repeat.x = 0.5;
@@ -581,6 +588,27 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
+    }
+    this.updateTextureOffsets = function() {
+      // FIXME - should cache textures instead of iterating each time
+      if (this.objects['3d']) {
+        this.objects['3d'].traverse(n => {
+          if (n.material) {
+            let m = n.material;
+            if (m.map) {
+              m.map.offset.copy(this.texture_offset);
+              m.map.repeat.copy(this.texture_repeat);
+              m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+            }
+            if (m.normalMap) {
+              m.normalMap.offset.copy(this.texture_offset);
+              m.normalMap.repeat.copy(this.texture_repeat);
+              m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+            }
+            // TODO - all maps which use uv layer 0 should be changed here
+          }
+        });
+      }
     }
     this.start = function() {
       elation.engine.things.janusobject.extendclass.start.call(this);
