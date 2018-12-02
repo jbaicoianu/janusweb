@@ -421,7 +421,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (color) {
               m.color = color;
             }
-            if (texture && texture.image) {
+            if (texture) {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
               elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
