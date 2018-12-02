@@ -72,7 +72,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
 
       var mat = new THREE.PointsMaterial({
-        color: this.color, 
+        //color: this.color, 
         map: texture, 
         size: this.particle_scale.x + this.rand_scale.x, 
         transparent: true, 
@@ -177,7 +177,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.updateParticles = function(ev) {
-      if (!this.loaded || !this.started) return;
+      if (!this.loaded || !this.started || !this.parent) return;
       var now = performance.now(),
           elapsed = now - this.lasttime,
           endtime = now + this.duration * 1000,
@@ -283,12 +283,13 @@ elation.require(['janusweb.janusbase'], function() {
         //return (Math.random() - .5) * range;
         return Math.random() * range;
       }
-      point.pos.set(randomInRange(rand_pos.x), randomInRange(rand_pos.y), randomInRange(rand_pos.z));
+      let pointpos = point.pos;
+      pointpos.set(randomInRange(rand_pos.x), randomInRange(rand_pos.y), randomInRange(rand_pos.z));
       if (this.emitpoints) {
         var rand_id = Math.floor(Math.random() * this.emitpoints.length);
-        point.pos.add(this.emitpoints[rand_id]);
+        pointpos.add(this.emitpoints[rand_id]);
       }
-      point.pos.add(this.emitter_pos);
+      pointpos.add(this.emitter_pos);
 
       var vel = point.vel,
           accel = point.accel,
@@ -322,15 +323,15 @@ elation.require(['janusweb.janusbase'], function() {
         var pos = this.geometry.attributes.position.array,
             color = this.geometry.attributes.color.array;
 
-        pos[idx*3] = point.pos.x;
-        pos[idx*3+1] = point.pos.y;
-        pos[idx*3+2] = point.pos.z;
+        pos[idx*3] = pointpos.x;
+        pos[idx*3+1] = pointpos.y;
+        pos[idx*3+2] = pointpos.z;
 
         color[idx*3] = point.color.r;
         color[idx*3+1] = point.color.g;
         color[idx*3+2] = point.color.b;
 
-        this.updateBoundingSphere(point.pos);
+        this.updateBoundingSphere(pointpos);
       }
     }
     this.extractEmitPoints = function(mesh) {
@@ -432,13 +433,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
 
       if (newcol) {
-        point.col.copy(newcol);
-
-        col[offset    ] = newcol.x;
-        col[offset + 1] = newcol.y;
-        col[offset + 2] = newcol.z;
-
-        this.geometry.attributes.color.needsUpdate = true;
+        point.color.setRGB(newcol.x, newcol.y, newcol.z);
       }
     }
   }, elation.engine.things.janusbase);
