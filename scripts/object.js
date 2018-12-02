@@ -21,6 +21,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
+        depth_write: { type: 'boolean', default: null },
+        depth_test: { type: 'boolean', default: null },
         envmap_id: { type: 'string', set: this.updateMaterial },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
@@ -462,6 +464,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else {
               m.blending = THREE.NormalBlending;
             }
+            if (this.depth_write !== null) {
+              m.depthWrite = this.depth_write;
+            }
+            if (this.depth_test !== null) {
+              m.depthTest = this.depth_test;
+            }
+
             //m.needsUpdate = true;
             m.skinning = useSkinning;
           }
