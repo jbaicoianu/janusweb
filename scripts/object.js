@@ -530,7 +530,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (this.depth_test !== null) {
               m.depthTest = this.depth_test;
             }
-
+            // If our diffuse texture has an alpha channel, set up a customDepthMaterial / customDistanceMaterial to allow shadows to work
+            if (true) { //this.shadow && m.transparent && m.map) {
+              if (!n.customDepthMaterial) {
+                n.customDepthMaterial = new THREE.MeshDepthMaterial({
+                  depthPacking: THREE.RGBADepthPacking,
+                  map: m.map,
+                  alphaTest: 0.5
+                });
+              }
+              if (!n.customDistanceMaterial) {
+                n.customDistanceMaterial = new THREE.MeshDistanceMaterial({
+                  //depthPacking: THREE.RGBADepthPacking,
+                  map: m.map,
+                  alphaTest: 0.5
+                });
+              }
+            }
             //m.needsUpdate = true;
             m.skinning = useSkinning;
           }
