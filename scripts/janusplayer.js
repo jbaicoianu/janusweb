@@ -128,7 +128,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (avatar) {
         this.ghost = this.createObject('ghost', {
           ghost_id: this.getUsername(),
-          avatar_src: 'data:text/plain,' + avatar
+          avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+          showlabel: false
         });
       }
 
@@ -264,16 +265,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
           }
         }
-      }
-
-      if (this.ghost) {
-        if (this.ghost.head) {
-          this.ghost.head.position.copy(this.head.position);
-          this.ghost.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
-        }
-        if (this.ghost.body) {
-          this.ghost.body.position.copy(this.body.position);
-          this.ghost.body.orientation.copy(this.body.orientation);
+        if (this.ghost) {
+          if (this.ghost._target.head) {
+            //this.ghost._target.face.position.copy(this.head.position);
+            //this.ghost._target.face.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
+          }
+          if (this.ghost._target.body) {
+            //this.ghost._target.body.position.copy(this.body.position);
+            //this.ghost._target.body.orientation.copy(this.body.orientation);
+          }
         }
       }
     })();
@@ -531,7 +531,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       let avatardata = this.getAvatarData();
       this.ghost = this.createObject('ghost', {
         ghost_id: this.getUsername(),
-        avatar_src: 'data:text/plain,' + avatardata
+        avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
+        showlabel: false
       });
 
       return setting;
