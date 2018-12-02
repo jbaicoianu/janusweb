@@ -310,6 +310,7 @@ console.log('got collider', collider, collision_id);
           addForce:            ['function', 'addForce'],
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
+          refresh:             [ 'function', 'refresh'],
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
           addClass:            ['function', 'addClass'],
