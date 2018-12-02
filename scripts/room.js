@@ -1108,6 +1108,7 @@ elation.require([
             assettype:'image',
             name:args.id,
             src: src,
+            texture: args.texture,
             tex_linear: args.tex_linear,
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
@@ -1120,6 +1121,15 @@ elation.require([
           assetlist.push(assetargs);
         } else if (args.canvas) {
           assetlist.push({ assettype:'image', name:args.id, canvas: args.canvas, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+        } else if (args.texture) {
+          assetlist.push({
+            assettype:'image',
+            name:args.id,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
         }
       } else if (type == 'video') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
