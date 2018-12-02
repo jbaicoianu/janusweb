@@ -46,6 +46,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.properties.exists === false) return;
 
       var object = null, geometry = null, material = null;
+      if (this.object && this.object instanceof THREE.Object3D) {
+        this.properties.position.copy(this.object.position);
+        this.properties.orientation.copy(this.object.quaternion);
+        return this.object;
+      }
       if (this.janusid) {
         var asset = this.getAsset('model', this.janusid, true);
         this.dispatchEvent({type: 'loadstart'});
