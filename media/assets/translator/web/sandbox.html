@@ -1,0 +1,22 @@
+<html>
+<head>
+<title>Sandbox</title>
+</head>
+<body>
+<FireBoxRoom>
+<Assets>
+<AssetImage id="sky_front" src="negz.jpg" tex_clamp="true" tex_colorspace="sRGB" />
+<AssetImage id="sky_side" src="sky_side.png" tex_clamp="true" tex_colorspace="sRGB" />
+<AssetImage id="sky_up" src="sky.png" tex_clamp="true" tex_colorspace="sRGB" />
+<AssetObject id="grid" mtl="grid.mtl" src="grid.obj" />
+<AssetWebSurface id="web1" src="https://duckduckgo.com" width="1280" height="720" />
+</Assets>
+<Room use_local_asset="room_plane" visible="false" pos="0 0.3 0" col="#000000" skybox_right_id="sky_side" skybox_left_id="sky_side" skybox_up_id="sky_up" skybox_front_id="sky_side" skybox_back_id="sky_side" cubemap_radiance_id="__CUBEMAP_RADIANCE" cubemap_irradiance_id="__CUBEMAP_IRRADIANCE" near_dist="0.0025" fog="true" fog_mode="linear" fog_density="0.1" fog_start="2" fog_end="70" fog_col="black" >
+<Object id="cube" js_id="a01" pos="0 -0.5 3.5" xdir="-1 0 0.000002" zdir="-0.000002 0 -1" scale="100000 0.1 100000" visible="false" collision_id="cube" />
+<Object id="grid" js_id="a02" pos="0 0 0" xdir="-1 -0.000002 0" ydir="0.000002 -1 0.000001" zdir="0 0.000001 1" lighting="false" cull_face="none" collision_id="grid" />
+<Light pos="0 4 6" light_intensity="15" light_cone_angle="0" light_cone_exponent="1" light_range="10" />
+<Object id="plane" js_id="172d" pos="0 2 3" xdir="-1 0 0" zdir="0 0 -1" lighting="false" cull_face="none" scale="3 2 1" websurface_id="web1" />
+</Room>
+</FireBoxRoom>
+</body>
+</html>
