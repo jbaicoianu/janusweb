@@ -66,7 +66,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
         roomrate = room.rate;
       }
 
-      var rate = elation.utils.any(roomrate, this.args.rate, elation.config.get('janusweb.network.rate'), 100);
+      var rate = elation.utils.any(roomrate, this.args.rate, elation.config.get('janusweb.network.rate'), 20);
       return rate;
     }
     this.resetUpdateInterval = function() {
@@ -216,6 +216,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       var moveData = this.movedata;
       moveData.pos = player.properties.position.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
       moveData.vel = player.properties.velocity.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
+      moveData.scale = player.properties.scale.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
       moveData.rotvel = player.properties.angular.toArray().map(function(n) { return parseFloat(n.toFixed(4)); }).join(" ");
       moveData.dir = dirs.dir;
       moveData.up_dir = dirs.up_dir;

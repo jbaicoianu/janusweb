@@ -124,6 +124,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
 
+      let avatar = this.getAvatarData();
+      if (avatar) {
+        this.ghost = this.createObject('ghost', {
+          ghost_id: this.getUsername(),
+          avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+          showlabel: false
+        });
+      }
+
       this.updateCollider();
     }
     this.enable = function() {
@@ -219,12 +228,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
                 this.hands.left.zdir.normalize();
               }
 
-              if (hands.left.fingerTips) {
-                this.localToWorld(this.hands.left.p0.copy(hands.left.fingerTips[0]));
-                this.localToWorld(this.hands.left.p1.copy(hands.left.fingerTips[1]));
-                this.localToWorld(this.hands.left.p2.copy(hands.left.fingerTips[2]));
-                this.localToWorld(this.hands.left.p3.copy(hands.left.fingerTips[3]));
-                this.localToWorld(this.hands.left.p4.copy(hands.left.fingerTips[4]));
+              if (hands.left.fingers) {
+                hands.left.fingers[0].fingertip.getWorldPosition(this.hands.left.p0);
+                hands.left.fingers[1].fingertip.getWorldPosition(this.hands.left.p1);
+                hands.left.fingers[2].fingertip.getWorldPosition(this.hands.left.p2);
+                hands.left.fingers[3].fingertip.getWorldPosition(this.hands.left.p3);
+                hands.left.fingers[4].fingertip.getWorldPosition(this.hands.left.p4);
               }
             }
             if (hands.right && hands.right.position) {
@@ -246,14 +255,24 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
                 this.hands.right.zdir.normalize();
               }
 
-              if (hands.right.fingerTips) {
-                this.localToWorld(this.hands.right.p0.copy(hands.right.fingerTips[0]));
-                this.localToWorld(this.hands.right.p1.copy(hands.right.fingerTips[1]));
-                this.localToWorld(this.hands.right.p2.copy(hands.right.fingerTips[2]));
-                this.localToWorld(this.hands.right.p3.copy(hands.right.fingerTips[3]));
-                this.localToWorld(this.hands.right.p4.copy(hands.right.fingerTips[4]));
+              if (hands.right.fingers) {
+                hands.right.fingers[0].fingertip.getWorldPosition(this.hands.right.p0);
+                hands.right.fingers[1].fingertip.getWorldPosition(this.hands.right.p1);
+                hands.right.fingers[2].fingertip.getWorldPosition(this.hands.right.p2);
+                hands.right.fingers[3].fingertip.getWorldPosition(this.hands.right.p3);
+                hands.right.fingers[4].fingertip.getWorldPosition(this.hands.right.p4);
               }
             }
+          }
+        }
+        if (this.ghost) {
+          if (this.ghost._target.head) {
+            //this.ghost._target.face.position.copy(this.head.position);
+            //this.ghost._target.face.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
+          }
+          if (this.ghost._target.body) {
+            //this.ghost._target.body.position.copy(this.body.position);
+            //this.ghost._target.body.orientation.copy(this.body.orientation);
           }
         }
       }
@@ -311,6 +330,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
           }
         }
+        this.objects['3d'].updateMatrix();
+        this.objects['3d'].updateMatrixWorld();
         this.camera.objects['3d'].updateMatrix();
         this.camera.objects['3d'].updateMatrixWorld();
       }
@@ -318,6 +339,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
+        this.objects['3d'].updateMatrix();
+        this.objects['3d'].updateMatrixWorld();
         this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
       }
       if (this.head) {
@@ -500,7 +523,19 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setAvatar = function(avatar) {
       this.avatarNeedsUpdate = true;
-      return this.setSetting('avatar', avatar);
+      let setting = this.setSetting('avatar', avatar);
+
+      if (this.ghost) {
+        this.ghost.die();
+      }
+      let avatardata = this.getAvatarData();
+      this.ghost = this.createObject('ghost', {
+        ghost_id: this.getUsername(),
+        avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
+        showlabel: false
+      });
+
+      return setting;
     }
     this.hasVoipData = function() {
       return this.voipqueue && this.voipqueue.length > 0;
@@ -777,5 +812,25 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.setSetting('partymode.enabled', value);
       }
     }
+    this.scaleTo = (function() {
+      let tmpvec = new THREE.Vector3(),
+          startscale = new THREE.Vector3(),
+          camscale = new THREE.Vector3();
+      return function(newscale, scaletime, scalecurve) {
+        if (newscale != this.scale) {
+          startscale.copy(this.properties.scale);
+          let start = performance.now();
+          let timer = setInterval(() => {
+            let n = (performance.now() - start) / scaletime;
+
+            this.scale = tmpvec.set(newscale, newscale, newscale).sub(startscale).multiplyScalar(n).add(startscale);
+            this.camera.scale = camscale.set(1 / this.scale.x, 1 / this.scale.y, 1 / this.scale.z);
+            if (n >= 1) {
+              clearInterval(timer);
+            }
+          }, 16);
+        }
+      };
+    })();
   }, elation.engine.things.player);
 });

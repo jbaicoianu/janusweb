@@ -1,0 +1,27 @@
+janus-button-webvr {
+  border: none;
+  border-radius: .5em;
+  padding: .25em .5em;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  background-color: transparent;
+  display: inline-block;
+}
+janus-button-webvr[hover] {
+  background-image: linear-gradient(#323232, #404142 40%, #393b3d);
+}
+janus-button-webvr:active {
+  background-image: linear-gradient(#020202, #101112 40%, #191b1d);
+}
+janus-button-webvr[disabled] {
+  color: #999;
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  cursor: not-allowed;
+}
+

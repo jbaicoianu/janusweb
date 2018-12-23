@@ -21,7 +21,18 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
+        depth_write: { type: 'boolean', default: null },
+        depth_test: { type: 'boolean', default: null },
         envmap_id: { type: 'string', set: this.updateMaterial },
+        normalmap_id: { type: 'string', set: this.updateMaterial },
+        displacementmap_id: { type: 'string', set: this.updateMaterial },
+        displacementmap_scale: { type: 'float', default: 1, set: this.updateMaterial },
+        texture_offset: { type: 'vector2', default: [0, 0], set: this.updateTextureOffsets },
+        texture_repeat: { type: 'vector2', default: [1, 1], set: this.updateTextureOffsets },
+        texture_rotation: { type: 'float', default: 0, set: this.updateMaterial },
+        onloadstart: { type: 'callback' },
+        onloadprogress: { type: 'callback' },
+        onload: { type: 'callback' },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -35,13 +46,33 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.properties.exists === false) return;
 
       var object = null, geometry = null, material = null;
+      if (this.object && this.object instanceof THREE.Object3D) {
+        this.properties.position.copy(this.object.position);
+        this.properties.orientation.copy(this.object.quaternion);
+        return this.object;
+      }
       if (this.janusid) {
         var asset = this.getAsset('model', this.janusid, true);
+        this.dispatchEvent({type: 'loadstart'});
         if (asset) {
           if (asset.loaded) {
             setTimeout(elation.bind(this, this.handleLoad), 0);
           } else {
+            this.loadingindicator = this.createObject('particle', {
+              col: 'green',
+              scale: V(.025),
+              vel: V(-1, 0, -1),
+              accel: V(0, -5, 0),
+              rand_vel: V(2, 2, 2),
+              count: 250,
+              rate: 500,
+              duration: .5,
+              collidable: false,
+              collision_trigger: true,
+              loop: true,
+            });
             elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.handleLoad));
+            elation.events.add(asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           }
           object = asset.getInstance();
         }
@@ -90,11 +121,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 */
     }
     this.handleLoad = function() {
-      this.setTextureDirty();
-      setTimeout(elation.bind(this, function() {
-        elation.events.fire({type: 'load', element: this});
-      }), 0);
-      this.jsparts.updateParts();
+      if (!this.assetloaded) {
+        this.setTextureDirty();
+        setTimeout(elation.bind(this, function() {
+          this.dispatchEvent({type: 'load'});
+        }), 0);
+        this.jsparts.updateParts();
+        this.assetloaded = true;
+        if (this.loadingindicator) {
+          this.loadingindicator.die();
+        }
+      }
     }
     this.updateMaterial = function() {
       this.setTextureDirty();
@@ -208,6 +245,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var modelasset = this.modelasset,
           texture = false,
           textureLightmap = false,
+          textureNormal = false,
+          textureDisplacement = false,
           color = false,
           blend_src = false,
           blend_dest = false,
@@ -217,7 +256,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.textureNeedsUpdate = false;
 
       var image_id = this.image_id,
-          normal_image_id = false,
+          normal_image_id = this.normalmap_id,
+          displacement_image_id = this.displacementmap_id,
           lightmap_image_id = this.lmap_id;
       if (this.janusid) {
         if (!modelasset || modelasset.name != this.janusid) {
@@ -235,8 +275,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         textureasset = this.getAsset('image', image_id, true);
         if (textureasset) {
           texture = textureasset.getInstance();
-          elation.events.add(texture, 'asset_load', elation.bind(this, this.setTextureDirty));
+          elation.events.add(texture, 'asset_load', elation.bind(this, this.refresh));
           elation.events.add(texture, 'update', elation.bind(this, this.refresh));
+
+          texture.offset.copy(this.texture_offset);
+          texture.repeat.copy(this.texture_repeat);
+          texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
 
           if (textureasset.sbs3d) {
             texture.repeat.x = 0.5;
@@ -246,6 +290,42 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
+          }
+        }
+      }
+      if (normal_image_id) {
+        let normaltextureasset = this.getAsset('image', normal_image_id, true);
+        if (normaltextureasset) {
+          textureNormal = normaltextureasset.getInstance();
+          elation.events.add(textureNormal, 'asset_load', elation.bind(this, this.refresh));
+          elation.events.add(textureNormal, 'update', elation.bind(this, this.refresh));
+
+          if (normaltextureasset.sbs3d) {
+            textureNormal.repeat.x = 0.5;
+          }
+          if (normaltextureasset.ou3d) {
+            textureNormal.repeat.y = 0.5;
+          }
+          if (textureNormal) {
+            //this.assignTextureParameters(textureNormal, modelasset, textureasset);
+          }
+        }
+      }
+      if (displacement_image_id) {
+        let displacementtextureasset = this.getAsset('image', displacement_image_id, true);
+        if (displacementtextureasset) {
+          textureDisplacement = displacementtextureasset.getInstance();
+          elation.events.add(textureDisplacement, 'asset_load', elation.bind(this, this.refresh));
+          elation.events.add(textureDisplacement, 'update', elation.bind(this, this.refresh));
+
+          if (displacementtextureasset.sbs3d) {
+            textureDisplacement.repeat.x = 0.5;
+          }
+          if (displacementtextureasset.ou3d) {
+            textureDisplacement.repeat.y = 0.5;
+          }
+          if (textureDisplacement) {
+            this.assignTextureParameters(textureDisplacement, modelasset, textureasset);
           }
         }
       }
@@ -346,7 +426,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (color) {
               m.color = color;
             }
-            if (texture && texture.image) {
+            if (texture) {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
               elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
@@ -392,7 +472,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 elation.events.add(m.bumpMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
               }
             }
-            if (m.normalMap) {
+            if (textureNormal) {
+              m.normalMap = textureNormal;
+            } else if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
@@ -417,6 +499,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
               }
             }
+            if (textureDisplacement) {
+              m.displacementMap = textureDisplacement;
+              m.displacementScale = this.displacementmap_scale;
+            }
 
             if (this.isUsingPBR()) {
               m.envMap = this.getEnvmap();
@@ -437,6 +523,29 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               }
             } else {
               m.blending = THREE.NormalBlending;
+            }
+            if (this.depth_write !== null) {
+              m.depthWrite = this.depth_write;
+            }
+            if (this.depth_test !== null) {
+              m.depthTest = this.depth_test;
+            }
+            // If our diffuse texture has an alpha channel, set up a customDepthMaterial / customDistanceMaterial to allow shadows to work
+            if (true) { //this.shadow && m.transparent && m.map) {
+              if (!n.customDepthMaterial) {
+                n.customDepthMaterial = new THREE.MeshDepthMaterial({
+                  depthPacking: THREE.RGBADepthPacking,
+                  map: m.map,
+                  alphaTest: 0.5
+                });
+              }
+              if (!n.customDistanceMaterial) {
+                n.customDistanceMaterial = new THREE.MeshDistanceMaterial({
+                  //depthPacking: THREE.RGBADepthPacking,
+                  map: m.map,
+                  alphaTest: 0.5
+                });
+              }
             }
             //m.needsUpdate = true;
             m.skinning = useSkinning;
@@ -465,7 +574,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
-        m.opacity = parseFloat(oldmat.opacity); //(typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
+        m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
         m.alphaTest = this.alphatest;
         m.aoMap = oldmat.aoMap;
         m.normalMap = oldmat.normalMap;
@@ -548,6 +657,27 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
+    }
+    this.updateTextureOffsets = function() {
+      // FIXME - should cache textures instead of iterating each time
+      if (this.objects['3d']) {
+        this.objects['3d'].traverse(n => {
+          if (n.material) {
+            let m = n.material;
+            if (m.map) {
+              m.map.offset.copy(this.texture_offset);
+              m.map.repeat.copy(this.texture_repeat);
+              m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+            }
+            if (m.normalMap) {
+              m.normalMap.offset.copy(this.texture_offset);
+              m.normalMap.repeat.copy(this.texture_repeat);
+              m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+            }
+            // TODO - all maps which use uv layer 0 should be changed here
+          }
+        });
+      }
     }
     this.start = function() {
       elation.engine.things.janusobject.extendclass.start.call(this);
@@ -638,7 +768,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.isPlaying = function() {
       var video = this.video;
-      return (video.currentTime > 0 && !video.paused && !video.ended);
+      return (video && video.currentTime > 0 && !video.paused && !video.ended);
     }
     this.seek = function(time) {
       if (this.video) this.video.currentTime = time;

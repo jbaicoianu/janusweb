@@ -32,6 +32,8 @@ elation.require([
         'fog_end': { type: 'float', default: 100.0, set: this.setFog },
         'fog_col': { type: 'color', default: 0x000000, set: this.setFog },
         'ambient': { type: 'color', default: 0x666666, set: this.updateLights },
+        'near_dist': { type: 'float', default: 0.01, set: this.setNearFar },
+        'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
@@ -101,20 +103,23 @@ elation.require([
       this.roomedit = {
         snap: .01,
         modes: ['pos', 'rotation', 'scale', 'col'],
+        movespeed: new THREE.Vector3(),
         modeid: 0,
         object: false,
         distancescale: 1
       };
       this.engine.systems.controls.addContext('roomedit', {
+        'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
         'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
         'delete':           [ 'keyboard_delete,keyboard_backspace', this.editObjectDelete ],
         'mode':             [ 'keyboard_tab', this.editObjectToggleMode ],
-        'manipulate_left':  [ 'keyboard_nomod_a,keyboard_a',   this.editObjectManipulateLeft ],
-        'manipulate_right': [ 'keyboard_nomod_d,keyboard_d',   this.editObjectManipulateRight ],
-        'manipulate_up':    [ 'keyboard_nomod_w,keyboard_w',   this.editObjectManipulateUp ],
-        'manipulate_down':  [ 'keyboard_nomod_s,keyboard_s',   this.editObjectManipulateDown ],
-        'manipulate_in':    [ 'keyboard_nomod_q,mouse_wheel_down',   this.editObjectManipulateIn ],
-        'manipulate_out':   [ 'keyboard_nomod_e,mouse_wheel_up',   this.editObjectManipulateOut ],
+        'toggle_raycast':   [ 'keyboard_shift',   this.editObjectToggleRaycast ],
+        'manipulate_left':  [ 'keyboard_j',   this.editObjectManipulateLeft ],
+        'manipulate_right': [ 'keyboard_l',   this.editObjectManipulateRight ],
+        'manipulate_up':    [ 'keyboard_i',   this.editObjectManipulateUp ],
+        'manipulate_down':  [ 'keyboard_k',   this.editObjectManipulateDown ],
+        'manipulate_in':    [ 'keyboard_u',   this.editObjectManipulateIn ],
+        'manipulate_out':   [ 'keyboard_o',   this.editObjectManipulateOut ],
         //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
         'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
         'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
@@ -1099,9 +1104,32 @@ elation.require([
       if (type == 'image') {
         if (args.src) {
           var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-          assetlist.push({ assettype:'image', name:args.id, src: src, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+          let assetargs = {
+            assettype:'image',
+            name:args.id,
+            src: src,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            reverse3d: args.reverse3d,
+            hasalpha: args.hasalpha,
+            maxsize: args.maxsize,
+            preload: args.preload,
+            baseurl: this.baseurl
+          };
+          assetlist.push(assetargs);
         } else if (args.canvas) {
           assetlist.push({ assettype:'image', name:args.id, canvas: args.canvas, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+        } else if (args.texture) {
+          assetlist.push({
+            assettype:'image',
+            name:args.id,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
         }
       } else if (type == 'video') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
@@ -1144,12 +1172,27 @@ elation.require([
           srcparts = src.split(' ');
           src = srcparts[0];
         }
+        let object = args.object;
+        if (args.mesh_verts) {
+          let geo = new THREE.BufferGeometry();
+          geo.addAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
+          if (args.mesh_faces) {
+            geo.setIndex(args.mesh_faces);
+          }
+          if (args.mesh_normals) {
+            geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
+          }
+          if (args.mesh_uvs) {
+            geo.addAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
+          }
+          object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
+        }
         assetlist.push({
           assettype: 'model',
           name: args.id,
           src: src,
           mtl: mtlsrc,
-          object: args.object,
+          object: object,
           tex_linear: args.tex_linear,
           tex0: args.tex || args.tex0 || srcparts[1],
           tex1: args.tex1 || srcparts[2],
@@ -1430,6 +1473,12 @@ elation.require([
         link.activate();
       }
     }
+    this.closeLink = function(js_id) {
+      var link = this.jsobjects[js_id];
+      if (link) {
+        link.closePortal();
+      }
+    }
     this.getObjectFromProxy = function(proxy, children) {
       return proxy._target;
     }
@@ -1622,8 +1671,11 @@ elation.require([
               var k = attrs[i];
               var val = change[k];
               if (val instanceof THREE.Vector2 ||
+                  val instanceof THREE.Quaternion ||
                   val instanceof THREE.Vector3) {
                 val = val.toArray().map(function(n) { return +n.toFixed(4); }).join(' ');
+              } else if (val instanceof THREE.Euler) {
+                val = [val.x.toFixed(4), val.y.toFixed(4), val.z.toFixed(4)].join(' ');
               } else if (val instanceof THREE.Color) {
                 if (k == 'col' && real.colorIsDefault) {
                   val = null;
@@ -1708,6 +1760,19 @@ elation.require([
         var customelement = this.getCustomElement(extendclass);
         if (customelement) {
           fullextendclass = customelement.classname;
+        } else {
+          // If we're extending an existing class but the class hasn't yet been defined, we listen for
+          // the registerelement event so we know when the parent class has been defined, then we try again
+          var func = (ev) => {
+            if (ev.data == extendclass) {
+              elation.events.remove(this, 'registerelement', func);
+              this.registerElement(tagname, classobj, extendclass);
+            }
+          };
+          elation.events.add(this, 'registerelement', func);
+
+          // Bail out - we'll try again after the parent class has been defined
+          return;
         }
       }
 
@@ -1721,6 +1786,7 @@ elation.require([
       // console.log('Register new ROOM tag type:', tagname, classname, classobj, fullextendclass);
       elation.component.add('engine.things.' + classname, classobj, elation.engine.things[fullextendclass]);
 
+      elation.events.fire({type: 'registerelement', element: this, data: tagname});
       if (this.unknownElements[tagname]) {
         var unknownElements = this.unknownElements[tagname];
         // console.log('Now we know about ' + tagname + ', so make some!', unknownElements);
@@ -1849,6 +1915,7 @@ elation.require([
       ev.preventDefault();
       var files = ev.dataTransfer.files,
           items = ev.dataTransfer.items;
+      this.roomedit.raycast = true;
       if (files.length > 0) {
         var objects = [];
         for (var i = 0; i < files.length; i++) {
@@ -1869,7 +1936,9 @@ elation.require([
           types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
         }
       }
-      this.engine.systems.controls.requestPointerLock();
+      if (this.engine.systems.admin.hidden) {
+        this.engine.systems.controls.requestPointerLock();
+      }
     }
     this.loadObjectFromURIList = function(list) {
       var urls = list.split('\n');
@@ -1879,27 +1948,41 @@ elation.require([
         var hashidx = urls[i].indexOf('#');
         let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
         let type = 'Object';
+        let objargs = {
+          id: id,
+          js_id: player.userid + '-' + id + '-' + window.uniqueId(),
+          //cull_face: 'none',
+          sync: true,
+          pos: player.vectors.cursor_pos.clone()
+        }
         if (id.length > 0) {
           var schemeidx = id.indexOf(':');
           if (schemeidx != -1) {
             // Handle special schemes which are used for internal primitives
             var scheme = id.substr(0, schemeidx);
             if (scheme == 'janus-object') {
-              id = id.substr(schemeidx+1);
+              objargs.id = id.substr(schemeidx+1);
             } else if (scheme == 'janus-light') {
               type = 'light';
               if (id == 'point') {
                 // set up the point light
+                objargs.light_shadow = 'true';
               }
             }
           }
-          var newobject = this.createObject(type, {
-            id: id,
-            js_id: player.userid + '-' + id + '-' + window.uniqueId(),
-            sync: true,
-            pos: player.vectors.cursor_pos.clone()
-          });
-          objects.push(newobject);
+          if (id.match(/\.(png|gif|jpg|jpeg)/i)) {
+            type = 'image';
+          }
+          if (typeof EventBridge != 'undefined') {
+            // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
+            EventBridge.emitWebEvent(JSON.stringify({
+              type: 'spawn',
+              data: objargs.id
+            }));
+          } else {
+            var newobject = this.createObject(type, objargs);
+            objects.push(newobject);
+          }
         }
       }
       if (objects[0]) {
@@ -1911,7 +1994,8 @@ elation.require([
     }
     this.loadObjectFromFile = function(file) {
       var name = file.name,
-          url = URL.createObjectURL(file);
+          url = URL.createObjectURL(file),
+          object;
 
       var type = 'object',
           args = {
@@ -1927,6 +2011,33 @@ elation.require([
       var mimeparts = file.type.split('/');
       if (mimeparts[0] == 'image') {
         type = 'image';
+        // We're going to send the local file's image data over the network, but we want to cap at a max size to avoid bogging down the network
+        let maxsize = 512;
+        args.onload = (ev) => {
+          if (!args.loaded) {
+            args.loaded = true;
+            let fullcanvas = ev.element.asset.canvas;
+            let rawimage = ev.element.asset.rawimage;
+            let aspect = rawimage.width / rawimage.height;
+
+            let canvas = document.createElement('canvas');
+            let realsize = [rawimage.width, rawimage.height];
+            if (realsize[0] <= maxsize && realsize[1] < maxsize) {
+              object.id = object.image_id = rawimage.toDataURL(file.type);
+            } else {
+              if (realsize[0] > realsize[1]) {
+                canvas.width = maxsize;
+                canvas.height = maxsize / aspect;
+              } else {
+                canvas.height = maxsize;
+                canvas.width = maxsize * aspect;
+              }
+              let ctx = canvas.getContext('2d');
+              ctx.drawImage(rawimage, 0, 0, rawimage.width, rawimage.height, 0, 0, canvas.width, canvas.height);
+              object.id = object.image_id = canvas.toDataURL(file.type);
+            }
+          }
+        };
       } else if (mimeparts[0] == 'video') {
         type = 'video';
         args.video_id = name;
@@ -1941,18 +2052,29 @@ elation.require([
         args.collision_id = name;
       }
       this.loadNewAsset(type, assetargs);
-      return this.createObject(type, args);
+      object = this.createObject(type, args);
+      return object;
     }
     this.editObject = function(object, isnew) {
       this.roomedit.object = object;
+      this.roomedit.objectBoundingBox = false;
       this.roomedit.modeid = 0;
       this.roomedit.objectIsNew = isnew;
       this.roomedit.moving = true;
+      this.roomedit.movespeed.set(0, 0, 0);
 
       object.sync = true;
       if (!object.js_id) {
         object.js_id = player.userid + '-' + window.uniqueId();
       }
+
+      this.roomedit.objectBoundingBox = object.getBoundingBox(true);
+      object.addEventListener('load', (ev) => {
+        this.roomedit.objectBoundingBox = object.getBoundingBox(true);
+        this.editObjectUpdate();
+        this.editObjectShowWireframe();
+        console.log('update bbox', this.roomedit.objectBoundingBox);
+      });
 
       this.roomedit.collision_id = object.collision_id;
       object.collision_id = false;
@@ -1960,7 +2082,7 @@ elation.require([
 
       elation.events.add(this, 'mousemove', this.editObjectMousemove);
       elation.events.add(this, 'wheel', this.editObjectMousewheel);
-      elation.events.add(this, 'click', this.editObjectClick);
+      elation.events.add(this, 'mousedown', this.editObjectClick);
       elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
       // Back up properties so we can revert if necessary
@@ -1979,8 +2101,8 @@ elation.require([
       }
 
       // activate context
-      //this.engine.systems.controls.activateContext('roomedit', this);
-      this.engine.systems.controls.activateContext('roomedit_togglemove', this);
+      this.engine.systems.controls.activateContext('roomedit', this);
+      //this.engine.systems.controls.activateContext('roomedit_togglemove', this);
 
       this.editObjectShowWireframe();
     }
@@ -2033,9 +2155,10 @@ elation.require([
             //this.roomedit.object.collision_id = this.roomedit.collision_id;
             //this.roomedit.collision_id = false;
           }
-          var bsphere = this.roomedit.object.getBoundingSphere(true);
-          this.roomedit.object.collision_id = 'sphere';
-          this.roomedit.object.collision_radius = bsphere.radius;
+          this.roomedit.object.collision_id = 'cube';
+          this.roomedit.object.collision_trigger = true;
+          this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
+          this.roomedit.object.collision_pos = this.roomedit.objectBoundingBox.max.clone().add(this.roomedit.objectBoundingBox.min).multiplyScalar(.5);
         }
       }
       this.roomedit.object = false;
@@ -2043,11 +2166,12 @@ elation.require([
 
       elation.events.remove(this, 'mousemove', this.editObjectMousemove);
       elation.events.remove(this, 'wheel', this.editObjectMousewheel);
-      elation.events.remove(this, 'click', this.editObjectClick);
+      elation.events.remove(this, 'mousedown', this.editObjectClick);
+      elation.events.remove(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
       // deactivate context
       this.engine.systems.controls.deactivateContext('roomedit', this);
-      this.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
+      //this.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
     }
     this.editObjectRevert = function() {
       var object = this.roomedit.object;
@@ -2060,35 +2184,49 @@ elation.require([
     this.editObjectMousemove = function(ev) {
       if (this.roomedit.object) {
         var obj = this.roomedit.object;
-        if (this.roomedit.moving && ev.element.getProxyObject() !== obj) {
-          var bbox = obj.getBoundingBox(true);
-          var headpos = player.head.localToWorld(V(0,0,0));
-          var cursorpos = obj.parent.worldToLocal(translate(ev.data.point, V(0, -bbox.min.y, 0)), true);
-          cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
-          var dir = V(cursorpos).sub(headpos);
-          var distance = dir.length();
-          dir.multiplyScalar(1/distance);
-          distance = Math.min(distance, 20);
-          var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
-          // 
-          obj.pos = newpos;
-          if (ev.data.thing.js_id == 'room_skybox') {
-            obj.ydir = V(0, 1, 0);
-            obj.zdir = dir;
-            obj.xdir = dir.clone().cross(obj.ydir);
-          } else {
-            obj.ydir = ev.data.object.localToWorld(V(ev.data.face.normal)).sub(ev.data.object.localToWorld(V(0,0,0))).normalize();
-            obj.xdir = V(dir).cross(obj.ydir);
-            obj.zdir = V(obj.xdir).cross(obj.ydir);
-          }
-          obj.sync = true;
+        if (this.roomedit.moving && this.roomedit.raycast && ev.element.getProxyObject() !== obj) {
+          this.roomedit.objectPosition = ev.data.point;
+          this.editObjectUpdate();
         }
       }
     }
-    this.editObjectMousewheel = function(ev) {
-      this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
-      this.editObjectMousemove(ev);
+    this.editObjectUpdate = function() {
+      var obj = this.roomedit.object;
+      var bbox = this.roomedit.objectBoundingBox;
+
+      var point = this.roomedit.objectPosition || this.roomedit.object.position;
+
+      if (!bbox) {
+        bbox = this.roomedit.objectBoundingBox = obj.getBoundingBox(true);
+      }
+      var headpos = player.head.localToWorld(V(0,0,0));
+      var cursorpos = obj.parent.worldToLocal(translate(point, V(0, -bbox.min.y, 0)), true);
+      cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
+      var dir = V(cursorpos).sub(headpos);
+      var distance = dir.length();
+      dir.multiplyScalar(1/distance);
+      distance = Math.min(distance, 20);
+      var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
+
+      obj.pos = newpos;
+      obj.sync = true;
     }
+    this.editObjectMousewheel = (function() {
+      var rot = new THREE.Euler();
+      return function(ev) {
+        //this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+        let obj = this.roomedit.object;
+        //let rot = obj.rotation;
+        rot.setFromQuaternion(obj.properties.orientation);
+        //obj.rotation = V(rot.x, rot.y += (ev.deltaY > 0 ? 5 : -5), rot.z);
+        let amount = Math.PI/32;
+        let newrot = V(rot.x * THREE.Math.RAD2DEG, (rot.y + (ev.deltaY > 0 ? amount : -amount)) * THREE.Math.RAD2DEG, rot.z * THREE.Math.RAD2DEG);
+        obj.rotation = newrot;
+  //obj.updateOrientationFromEuler();
+  //obj.updateDirvecsFromOrientation();
+        //this.editObjectMousemove(ev);
+      }
+    })();
     this.editObjectClick = function(ev) {
       if (this.roomedit.object) {
         if (ev.button == 0) {
@@ -2114,7 +2252,7 @@ elation.require([
     this.editObjectManipulate = function(vec) {
       var mode = this.editObjectGetMode();
       var obj = this.roomedit.object;
-      var space = 'player'; // 'world', 'local', 'player'
+      var space = 'world'; // 'world', 'local', 'player'
       var player = this.engine.client.player;
 
       if (!obj) return;
@@ -2135,12 +2273,20 @@ elation.require([
         case 'rotation':
           var amount = Math.PI/2 * this.roomedit.snap;
           var euler = new THREE.Euler().setFromQuaternion(obj._target.orientation);
-          vec.multiplyScalar(amount);
+          //vec.multiplyScalar(amount);
           euler.x += vec.x;
           euler.y += vec.y;
           euler.z += vec.z;
-          var quat = new THREE.Quaternion().setFromEuler(euler);
-          obj._target.properties.orientation.multiply(quat);
+          //var quat = new THREE.Quaternion().setFromEuler(euler);
+          //obj._target.properties.orientation.copy(quat);
+          let rot = obj.rotation;
+          var amount = 90;
+          if (this.roomedit.snap == .1) amount = 45;
+          else if (this.roomedit.snap == .01) amount = 15;
+          else if (this.roomedit.snap == .001) amount = 5;
+          obj.properties.rotation.set(rot.x * 180 / Math.PI + vec.x * amount, rot.y * 180 / Math.PI + vec.y * amount, rot.z * 180 / Math.PI + vec.z * amount);
+obj.updateOrientationFromEuler();
+obj.updateDirvecsFromOrientation();
           //this.roomedit.object.pos = vec;
           break;
         case 'scale':
@@ -2173,25 +2319,88 @@ elation.require([
 
     // FIXME - the following functions aren't bound to "this", because the control system isn't properly managing context
     this.editObjectManipulateLeft = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(-1, 0, 0));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(-1, 0, 0));
+        ev.target.roomedit.movespeed.x = -1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.x == -1) {
+        ev.target.roomedit.movespeed.x = 0;
+      }
+      ev.target.editObjectManipulateTimer();
     }
     this.editObjectManipulateRight = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(1,0,0));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(1,0,0));
+        ev.target.roomedit.movespeed.x = 1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.x == 1) {
+        ev.target.roomedit.movespeed.x = 0;
+      }
+      ev.target.editObjectManipulateTimer();
     }
     this.editObjectManipulateUp = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(0,1,0));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(0,1,0));
+        ev.target.roomedit.movespeed.y = 1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.y == 1) {
+        ev.target.roomedit.movespeed.y = 0;
+      }
+      ev.target.editObjectManipulateTimer();
     }
     this.editObjectManipulateDown = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(0,-1,0));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(0,-1,0));
+        ev.target.roomedit.movespeed.y = -1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.y == -1) {
+        ev.target.roomedit.movespeed.y = 0;
+      }
+      ev.target.editObjectManipulateTimer();
     }
     this.editObjectManipulateIn = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(0,0,1));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(0,0,1));
+        ev.target.roomedit.movespeed.z = 1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.z == 1) {
+        ev.target.roomedit.movespeed.z = 0;
+      }
+      ev.target.editObjectManipulateTimer();
     }
     this.editObjectManipulateOut = function(ev) {
-      if (ev.value) ev.target.editObjectManipulate(V(0,0,-1));
+      if (ev.value) {
+        //ev.target.editObjectManipulate(V(0,0,-1));
+        ev.target.roomedit.movespeed.z = -1;
+        ev.target.roomedit.raycast = false;
+        ev.target.roomedit.keyrepeatdelay = 300;
+      } else if (ev.target.roomedit.movespeed.z == -1) {
+        ev.target.roomedit.movespeed.z = 0;
+      }
+      ev.target.editObjectManipulateTimer();
+    }
+    this.editObjectManipulateTimer = function() {
+      if (this.roomedit.movespeed.x || this.roomedit.movespeed.y || this.roomedit.movespeed.z) {
+        this.editObjectManipulate(V(this.roomedit.movespeed));
+        if (!this.roomedit.movetimer) {
+          this.roomedit.movetimer = setTimeout(() => {
+            this.roomedit.movetimer = false;
+            this.roomedit.keyrepeatdelay = 75;
+            this.editObjectManipulateTimer();
+          }, this.roomedit.keyrepeatdelay);
+        }
+      }
     }
     this.editObjectManipulateMouse = function(ev) {
       ev.target.editObjectManipulate(V(ev.value[0], -ev.value[1], 0));
+    }
+    this.editObjectToggleRaycast = function(ev) {
+      ev.target.roomedit.raycast = ev.value;
     }
     this.editObjectSnapOnes = function(ev) {
       if (ev.value) ev.target.editObjectSetSnap(1);
@@ -2225,7 +2434,7 @@ elation.require([
       var roomedit = ev.target.roomedit;
       if (ev.value == 1) {
         roomedit.moving = true;
-        this.engine.systems.controls.activateContext('roomedit', this);
+        this.engine.systems.conyytrols.activateContext('roomedit', this);
       } else if (ev.value == 0) {
         roomedit.moving = true;
         this.engine.systems.controls.deactivateContext('roomedit', this);

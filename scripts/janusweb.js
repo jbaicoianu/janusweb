@@ -44,8 +44,8 @@ elation.require([
       'link': 'janusportal',
       'text': 'janustext',
       'paragraph': 'janusparagraph',
+      ///'image3d': 'janusimage',
       'image': 'janusimage',
-      'image3d': 'janusimage',
       'video': 'janusvideo',
       'sound': 'janussound',
       'light': 'januslight',
@@ -586,6 +586,15 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
         class: classobj,
         extendclass: extendclass
       };
+
+      if (this.currentroom && this.currentroom.unknownElements[tagname]) {
+        var unknownElements = this.currentroom.unknownElements[tagname];
+        // console.log('Now we know about ' + tagname + ', so make some!', unknownElements);
+        for (var i = 0; i < unknownElements.length; i++) {
+          this.currentroom.createObject(tagname, unknownElements[i].args, unknownElements[i].parent);
+        }
+        delete this.currentroom.unknownElements[tagname];
+      }
     }
     this.extendElement = function(extendclass, tagname, classobj) {
       this.registerElement(tagname, classobj, extendclass);

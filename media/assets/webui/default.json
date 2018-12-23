@@ -3,12 +3,13 @@
     "navigation": "./apps/navigation/navigation.json",
     "comms": "./apps/comms/comms.json",
     "settings": "./apps/settings/settings.json",
-    "inventory": "./apps/inventory/inventory.json"
+    "inventory": "./apps/inventory/inventory.json",
+    "transporter": "./apps/transporter/transporter.json",
+    "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json"
   },
   "includes": [
     "./apps/partymode/partymode.json",
     "./apps/bookmarks/bookmarks.json",
-    "./apps/virtualgamepad/virtualgamepad.json",
     "./apps/buttons/buttons.json",
     "./apps/avatar/avatar.json",
     "./apps/notifications/notifications.json"

@@ -103,7 +103,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.audionodes.source = source;
       this.audionodes.gain = this.soundobj.gain;
       this.audionodes.panner = this.soundobj.panner;
-      this.autionodes.gain.value = this.gain;
+      this.audionodes.gain.value = this.gain;
     }
     this.getSoundSource = function() {
       if (!this.video._audiosource) {

@@ -1,0 +1,46 @@
+janus-ui-transporter {
+  display: flex;
+  width: 50em;
+  height: 30em;
+  overflow-y: auto;
+}
+.transporter_highfidelity {
+}
+janus-ui-transporter a.transporter_highfidelity {
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.transporter_highfidelity img {
+  width: 100%;
+  display: block;
+  margin: 0 auto;
+  flex: 0;
+}
+.transporter_highfidelity p {
+  font-size: .8em;
+  flex: 1;
+  height: 3em;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.transporter_highfidelity .online {
+  display: block;
+  flex: 0;
+  font-size: .8em;
+}
+.transporter_highfidelity .online::before {
+  display: inline-block;
+  content: '';
+  background: url(https://www.futuresoft.co.za/wp-content/uploads/2014/10/users-icon-white.png);
+  background-size: cover;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+  margin-right: .6em;
+}
+.transporter_highfidelity .online::after {
+  content: ' users online';
+}
+

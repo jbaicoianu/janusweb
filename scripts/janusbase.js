@@ -45,6 +45,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         classList: { type: 'object', default: [] },
         className: { type: 'string', default: '', set: this.setClassName },
         tag: { type: 'string', default: '' },
+        billboard: { type: 'string', default: '' },
         hasposition: { type: 'boolean', default: true },
         gazetime: { type: 'float' },
         ongazeenter: { type: 'callback' },
@@ -101,7 +102,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.removeCollider();
       if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
-      var collision_scale = this.properties.collision_scale || this.properties.scale;
+      var collision_scale = this.collision_scale || this.scale;
       if (this.collision_radius !== null) {
         collision_id = 'sphere';
         collision_scale = new THREE.Vector3(this.collision_radius, this.collision_radius, this.collision_radius);
@@ -260,6 +261,7 @@ console.log('got collider', collider, collision_id);
           locked:   ['property', 'locked'],
           visible:  ['property', 'visible'],
           tagName:  ['property', 'tag'],
+          billboard: ['property', 'billboard'],
           className:  ['property', 'className'],
           classList:  ['property', 'classList'],
           gazetime:  ['property', 'gazetime'],
@@ -267,7 +269,7 @@ console.log('got collider', collider, collision_id);
           pickable:  [ 'property', 'pickable'],
           collision_id:  [ 'property', 'collision_id'],
           collision_pos: [ 'property', 'collision_pos' ],
-          collision_scale:  [ 'property', 'collider_scale'],
+          collision_scale:  [ 'property', 'collision_scale'],
           collision_static:  [ 'property', 'collision_static'],
           collision_trigger:  [ 'property', 'collision_trigger'],
           collision_radius:  [ 'property', 'collision_radius'],
@@ -308,6 +310,7 @@ console.log('got collider', collider, collision_id);
           addForce:            ['function', 'addForce'],
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
+          refresh:             [ 'function', 'refresh'],
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
           addClass:            ['function', 'addClass'],
@@ -338,6 +341,14 @@ console.log('got collider', collider, collision_id);
               if (typeof v == 'function') {
                 proxytype = 'function';
                 this._proxyobject[k] = elation.bind(this._proxyobject, v);
+              //} else if (v === true || v === false) {
+              //  propertydefs[k] = {type: 'boolean', default: v };
+              } else if (v instanceof THREE.Vector3) {
+                propertydefs[k] = {type: 'vector3', default: v };
+              } else if (v instanceof THREE.Color) {
+                propertydefs[k] = {type: 'color', default: v };
+              } else if (v instanceof THREE.Euler) {
+                propertydefs[k] = {type: 'euler', default: v };
               } else {
                 propertydefs[k] = {type: 'object', default: v };
               }
@@ -379,7 +390,7 @@ console.log('got collider', collider, collision_id);
       if (this.assetpack) {
         asset = this.assetpack.get(type, id);
       }
-      if (!asset && typeof parent.getAsset == 'function') {
+      if (!asset && parent && typeof parent.getAsset == 'function') {
         asset = parent.getAsset(type, id);
       }
       if (!asset && autocreate) {
@@ -389,10 +400,12 @@ console.log('got collider', collider, collision_id);
       }
 
       // Store a reference so we know which assets are in use by which objects
-      if (!this.assets[type]) {
-        this.assets[type] = {};
+      if (this.assets) {
+        if (!this.assets[type]) {
+          this.assets[type] = {};
+        }
+        this.assets[type][id] = asset;
       }
-      this.assets[type][id] = asset;
 
       return asset;
     }
@@ -432,24 +445,55 @@ console.log('got collider', collider, collision_id);
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
     }
-    this.handleFrameUpdates = function(ev) {
-      if (this.hasScriptChangedDirvecs()) {
-        this.updateOrientationFromDirvecs();
-        this.updateEulerFromOrientation();
-      } else if (this.hasScriptChangedEuler()) {
-        this.updateOrientationFromEuler();
-        this.updateDirvecsFromOrientation();
-      } else if (this.hasPhysicsChangedOrientation()) {
-        this.updateEulerFromOrientation();
-        this.updateDirvecsFromOrientation();
+    this.handleFrameUpdates = (function() {
+      let playerpos = new THREE.Vector3(),
+          objpos = new THREE.Vector3(),
+          dir = new THREE.Vector3(),
+          up = new THREE.Vector3();
+      return function(ev) {
+        if (this.billboard) {
+          player.camera.localToWorld(playerpos.set(0,0,0));
+          this.localToWorld(objpos.set(0,0,0));
+          dir.subVectors(playerpos, objpos);
+
+          let billboard = this.billboard;
+
+          if (billboard == 'x') {
+            up.set(1,0,0);
+            dir.x = 0;
+          } else if (billboard == 'y') {
+            up.set(0,1,0);
+            dir.y = 0;
+          } else if (billboard == 'z') {
+            up.set(0,0,1);
+            dir.z = 0;
+          } else if (billboard == 'xyz') {
+            player.camera.localToWorld(up.set(0,1,0)).sub(playerpos).normalize();
+          }
+          dir.normalize();
+          this.zdir = dir;
+          this.ydir = up;
+        }
+
+        if (this.hasScriptChangedDirvecs()) {
+          this.updateOrientationFromDirvecs();
+          this.updateEulerFromOrientation();
+        } else if (this.hasScriptChangedEuler()) {
+          this.updateOrientationFromEuler();
+          this.updateDirvecsFromOrientation();
+        } else if (this.hasPhysicsChangedOrientation()) {
+          this.updateEulerFromOrientation();
+          this.updateDirvecsFromOrientation();
+        }
+
+        this.resetFrameUpdates();
+        this.dispatchEvent({type: 'update', data: ev.data});
+        var proxy = this.getProxyObject();
+        if (typeof proxy.update == 'function' && this.created) {
+          proxy.update(ev.data);
+        }
       }
-      this.resetFrameUpdates();
-      this.dispatchEvent({type: 'update', data: ev.data});
-      var proxy = this.getProxyObject();
-      if (typeof proxy.update == 'function' && this.created) {
-        proxy.update(ev.data);
-      }
-    }
+    })();
     this.updateOrientationFromDirvecs = (function() {
       var tmpmat = new THREE.Matrix4(),
           xdir = new THREE.Vector3(),
@@ -501,7 +545,6 @@ console.log('got collider', collider, collision_id);
       }
     })();
     this.hasScriptChangedDirvecs = function() {
-      var changes = this.frameupdates;
       return (!this.lastframevalues.xdir.equals(this.properties.xdir) ||
               !this.lastframevalues.ydir.equals(this.properties.ydir) ||
               !this.lastframevalues.zdir.equals(this.properties.zdir) ||
@@ -511,9 +554,14 @@ console.log('got collider', collider, collision_id);
       var changes = this.frameupdates;
       return (changes['rotation'] || changes['rotation_dir'] || !this.lastframevalues.rotation.equals(this.properties.rotation));
     }
-    this.hasPhysicsChangedOrientation = function() {
-      return false; // TODO
-    }
+    this.hasPhysicsChangedOrientation = (function() {
+      // Scratch variable
+      var euler = new THREE.Euler();
+      return function() {
+        euler.setFromQuaternion(this.properties.orientation);
+        return !euler.equals(this.properties.rotation);
+      }
+    })();
     this.resetFrameUpdates = function() {
       this.frameupdates['xdir'] = false;
       this.frameupdates['ydir'] = false;
@@ -593,7 +641,6 @@ console.error('dunno what this is', other);
       }
     }
     this.setOpacity = function(opacity) {
-
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
         this.objects['3d'].traverse(function(n) {
@@ -753,6 +800,26 @@ console.error('dunno what this is', other);
         el.getElementsByTagName(tagname, elements);
       };
       return elements;
+    }
+    this.getParentByTagName = function(tagname) {
+      let obj = this.parent;
+      while (obj) {
+        if (obj.tag == tagname) {
+          return obj;
+        }
+        obj = obj.parent;
+      }
+      return false;
+    }
+    this.getParentByClassName = function(classname) {
+      let obj = this.parent;
+      while (obj) {
+        if (obj.hasClass && obj.hasClass(classname)) {
+          return obj;
+        }
+        obj = obj.parent;
+      }
+      return false;
     }
   }, elation.engine.things.generic);
 });
