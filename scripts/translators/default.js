@@ -7,8 +7,8 @@ elation.require(['elation.collection'], function() {
     this.loadTranslator = function() {
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var assetpath = datapath + 'assets/translator/web/';
-      var fullfile = assetpath + 'Parallelogram.html';
-      this.roomsource = '<fireboxroom><room use_local_asset="room2"></room></fireboxroom>';
+      var fullfile = assetpath + 'sandbox.html';
+      this.roomsource = '<fireboxroom><room use_local_asset="room_plane"></room></fireboxroom>';
       elation.net.get(fullfile, null, { callback: elation.bind(this, this.handleLoad) });
     }
     this.handleLoad = function(source) {
