@@ -429,7 +429,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (texture) {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
-              elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
+              elation.events.add(texture, 'asset_update', (ev) => {
+                m.map = ev.data;
+                m.map.offset.copy(this.texture_offset);
+                m.map.repeat.copy(this.texture_repeat);
+                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                this.refresh();
+              });
 
               // Set up per-eye render hooks if we're using a 3D texture
               if (texture instanceof THREE.SBSTexture) {
@@ -449,7 +455,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = this.alphatest;
                 }
                 m.map = asset.getInstance();
-                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
+                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
+                  m.map = ev.data;
+                  m.map.offset.copy(this.texture_offset);
+                  m.map.repeat.copy(this.texture_repeat);
+                  m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                }));
                 elation.events.add(m.map, 'asset_load', elation.bind(this, function(m, asset, ev) {
                   if (asset.hasalpha && !m.transparent) {
                     m.transparent = true;
@@ -468,7 +479,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                m.normalMap = asset.getInstance();
+                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
+                  m.normalMap = ev.data; this.refresh();
+                  m.normalMap.offset.copy(this.texture_offset);
+                  m.normalMap.repeat.copy(this.texture_repeat);
+                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                }));
                 elation.events.add(m.bumpMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
               }
             }
@@ -663,19 +680,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.objects['3d']) {
         this.objects['3d'].traverse(n => {
           if (n.material) {
-            let m = n.material;
-            if (m.map) {
-              m.map.offset.copy(this.texture_offset);
-              m.map.repeat.copy(this.texture_repeat);
-              m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-            }
-            if (m.normalMap) {
-              m.normalMap.offset.copy(this.texture_offset);
-              m.normalMap.repeat.copy(this.texture_repeat);
-              m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-            }
-            // TODO - all maps which use uv layer 0 should be changed here
-          }
+            let materials = (n.material instanceof THREE.Material ? [n.material] : n.material);
+            materials.forEach(m => {
+              if (m.map) {
+                m.map.offset.copy(this.texture_offset);
+                m.map.repeat.copy(this.texture_repeat);
+                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+              }
+              if (m.normalMap) {
+                m.normalMap.offset.copy(this.texture_offset);
+                m.normalMap.repeat.copy(this.texture_repeat);
+                m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+              }
+              // TODO - all maps which use uv layer 0 should be changed here
+            });
+          };
         });
       }
     }
