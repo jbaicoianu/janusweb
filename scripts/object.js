@@ -598,8 +598,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.bumpMap = oldmat.bumpMap;
 
         if (!(m instanceof THREE.MeshBasicMaterial)) {
-          if (oldmat.emissiveMap) m.emissiveMap = oldmat.emissiveMap;
-          if (oldmat.emissive) m.emissive = oldmat.emissive;
+          if (oldmat.emissiveMap) {
+            m.emissiveMap = oldmat.emissiveMap;
+            m.emissive.setRGB(1,1,1);
+          } else if (oldmat.emissive) {
+            m.emissive = oldmat.emissive;
+          }
+          if (this.emissive) {
+            m.emissive.copy(this.emissive);
+          }
         }
 
         m.lightMap = oldmat.lightMap;
