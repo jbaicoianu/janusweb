@@ -1,0 +1,14 @@
+{
+    "name": "JanusWeb-Electron",
+    "version": "0.1.0",
+    "main": "app.js",
+    "dependencies": {
+      "electron-localshortcut": "^1.1.1"
+    },
+    "devDependencies": {
+        "electron": "^4.0.4"
+    },    
+    "scripts": {
+      "start": "electron ."
+    }
+  }

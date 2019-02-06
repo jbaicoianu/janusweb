@@ -7,17 +7,26 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "./utils/init.sh",
+    "clean": "rm -rf ./build",
     "build": "./utils/build.sh",
+    "build:web": "./utils/build.sh",
+    "build:win": "npm build; utils/electron/win.sh",
+    "build:osx": "npm build; utils/electron/osx.sh",
+    "build:linux": "npm build; utils/electron/linux.sh",
     "postversion": "git push origin v`npm view janusweb version`",
     "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
   "devDependencies": {
-    "karma": "~0.13",
+    "electron-build": "0.0.3",
+    "electron-builder": "^20.38.4",
+    "electron-packager": "^7.0.1",
+    "electron-prebuilt": "^1.4.13",
     "jasmine": ">=2.0",
     "jasmine-core": "*",
+    "karma": "~0.13",
+    "karma-chrome-launcher": "*",
     "karma-jasmine": "*",
-    "karma-jasmine-imagediff": "*",
-    "karma-chrome-launcher": "*"
+    "karma-jasmine-imagediff": "*"
   },
   "repository": {
     "type": "git",
