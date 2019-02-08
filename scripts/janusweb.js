@@ -112,7 +112,10 @@ elation.require([
       }
       this.initScripting();
       // TODO - this should be config-driven
-      this.registerAdditionalElements(['raycaster', 'teleporter']);
+
+      this.assetpack.executeWhenLoaded(() => {
+        this.registerAdditionalElements(['raycaster', 'teleporter']);
+      });
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
