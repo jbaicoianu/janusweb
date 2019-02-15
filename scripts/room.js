@@ -8,6 +8,14 @@ elation.require([
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
       elation.engine.things.janusroom.extendclass.postinit.call(this);
+      this.toneMappingTypes = {
+        'none': THREE.NoToneMapping,
+        'linear': THREE.LinearToneMapping,
+        'reinhard': THREE.ReinhardToneMapping,
+        'uncharted2': THREE.Uncharted2ToneMapping,
+        'cineon': THREE.CineonToneMapping,
+        'acesfilmic': THREE.ACESFilmicToneMapping,
+      };
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
@@ -36,6 +44,10 @@ elation.require([
         'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
+        'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
+        'tonemapping_exposure': { type: 'float', default: 1.0, set: this.updateToneMapping },
+        'tonemapping_whitepoint': { type: 'float', default: 1.0, set: this.updateToneMapping },
+        'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'party_mode': { type: 'bool', default: true },
         'walk_speed': { type: 'float', default: 1.0 },
@@ -164,14 +176,32 @@ elation.require([
       };
     }
     this.updateLights = function() {
-      if (this.roomlights) {
-        this.roomlights.ambient.lightobj.color = this.ambient;
+      if (!this.roomlights) {
+        this.createLights();
+      }
+      if (!this.objects['3d']) return;
+      this.roomlights.ambient.lightobj.color = this.ambient;
+      if (this.defaultlights) {
+        if (this.roomlights.directional.parent != this) {
+          this.add(this.roomlights.directional);
+        }
+        if (this.roomlights.point.parent != this) {
+          this.add(this.roomlights.point);
+        }
+      } else {
+        if (this.roomlights.directional.parent) {
+          this.roomlights.directional.parent.remove(this.roomlights.directional);
+        }
+        if (this.roomlights.point.parent) {
+          this.roomlights.point.parent.remove(this.roomlights.point);
+        }
       }
     }
     this.setActive = function() {
       this.setSkybox();
       this.setFog();
       this.updateBloom();
+      this.updateToneMapping();
       this.setNearFar();
       this.setPlayerPosition();
       this.active = true;
@@ -339,6 +369,12 @@ elation.require([
       if (bloomfilter) {
         bloomfilter.copyUniforms.opacity.value = this.bloom;
       }
+    }
+    this.updateToneMapping = function() {
+      this.engine.systems.render.renderer.toneMapping = this.toneMappingTypes[this.tonemapping_type] || 0;
+      this.engine.systems.render.renderer.toneMappingExposure = this.tonemapping_exposure;
+      this.engine.systems.render.renderer.toneMappingWhitePoint = this.tonemapping_whitepoint;
+      this.refresh();
     }
     this.setNearFar = function() {
       this.engine.client.player.camera.camera.near = this.properties.near_dist;
@@ -698,6 +734,7 @@ elation.require([
         if (room.gazetime) this.properties.gazetime = room.gazetime;
         if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
+        if (typeof room.defaultlights != 'undefined') this.defaultlights = room.defaultlights;
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
@@ -709,6 +746,9 @@ elation.require([
         this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
+        this.properties.tonemapping_type = room.tonemapping_type || 'linear';
+        this.properties.tonemapping_exposure = room.tonemapping_exposure || 1.0;
+        this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || 1.0;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
@@ -1587,7 +1627,11 @@ elation.require([
           fog_end:       ['property', 'fog_end'],
           fog_col:       ['property', 'fog_col'],
           ambient:       ['property', 'ambient'],
+          defaultlights: ['property', 'defaultlights'],
           bloom:         ['property', 'bloom'],
+          tonemapping_type:       ['property', 'tonemapping_type'],
+          tonemapping_exposure:   ['property', 'tonemapping_exposure'],
+          tonemapping_whitepoint: ['property', 'tonemapping_whitepoint'],
           pbr:           ['property', 'pbr'],
           shadows:       ['property', 'shadows'],
           col:           ['property', 'col'],
