@@ -411,7 +411,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.janus.network.unsubscribe(this.portalroom);
     }
     this.updateGeometry = function() {
-      var thickness = 0.05;
+      var thickness = 0.05 * this.size.z;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
       box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
