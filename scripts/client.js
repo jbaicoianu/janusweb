@@ -253,7 +253,16 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         });
       }
       create() {
-        elation.janusweb.init(this.getClientArgs());
+        if (this.autostart && this.autostart != 'false') {
+          elation.janusweb.init(this.getClientArgs());
+        } else {
+          // FIXME add play button
+          let start = () => {
+            elation.janusweb.init(this.getClientArgs());
+            document.body.removeEventListener('click', start);
+          }
+          document.body.addEventListener('click', start);
+        }
       }
       getClientArgs() {
         var fullscreen = this.fullscreen,
@@ -296,7 +305,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         content.document.write('<html><body style="overflow: hidden">');
         content.document.write('<script src="' + clientScript.src + '"></script>');
         content.document.write('<script>function startWidget() { elation.janusweb.init(' + JSON.stringify(this.getClientArgs()) + '); }</script>');
-        if (this.autostart) {
+        if (this.autostart && this.autostart != 'false') {
           content.document.write('<script>startWidget()</script>');
         } else {
           content.document.write('<img id="play" src="https://janusvr.com/widget/JanusWidget/images/play.svg" style="top: calc(50% - 65px); cursor: pointer; ">');
