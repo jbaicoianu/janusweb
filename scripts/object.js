@@ -282,14 +282,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.repeat.copy(this.texture_repeat);
           texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
 
-          if (textureasset.sbs3d) {
-            texture.repeat.x = 0.5;
-          }
-          if (textureasset.ou3d) {
-            texture.repeat.y = 0.5;
-          }
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
+            if (textureasset.sbs3d) {
+              texture.repeat.x *= 0.5;
+            }
+            if (textureasset.ou3d) {
+              texture.repeat.y *= 0.5;
+            }
           }
         }
       }
@@ -346,6 +346,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         texture = this.videotexture;
         if (texture) {
           this.assignTextureParameters(texture, modelasset);
+          if (this.videoasset.sbs3d) {
+            texture.repeat.x *= 0.5;
+          }
+          if (this.videoasset.ou3d) {
+            texture.repeat.y *= 0.5;
+          }
         }
       }
       if (this.websurface_id) {
@@ -438,10 +444,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               });
 
               // Set up per-eye render hooks if we're using a 3D texture
-              if (texture instanceof THREE.SBSTexture) {
+              if (texture instanceof THREE.SBSTexture || texture instanceof THREE.SBSVideoTexture) {
+                let vrlayer = new THREE.Layers();
+                vrlayer.set(2);
                 n.onBeforeRender = (renderer, scene, camera) => {
-                  if (camera.name) {
-                    texture.setEye(camera.name);
+                  if (camera.layers.test(vrlayer)) {
+                    texture.setEye('right');
+                  } else {
+                    texture.setEye('left');
                   }
                 }
               }
@@ -681,6 +691,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
+      texture.offset.copy(this.texture_offset);
+      texture.repeat.copy(this.texture_repeat);
+      texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+      if (texture.repeat.x > 1 || texture.repeat.y > 1) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      }
     }
     this.updateTextureOffsets = function() {
       // FIXME - should cache textures instead of iterating each time
