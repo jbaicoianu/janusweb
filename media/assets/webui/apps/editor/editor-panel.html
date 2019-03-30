@@ -1,0 +1,32 @@
+<ui-flexpanel>
+  <ui-radiobuttonbar label="Transform Type" name="transformtype">
+    <ui-togglebutton value="translate">Translate</ui-togglebutton>
+    <ui-togglebutton value="rotate">Rotate</ui-togglebutton>
+    <ui-togglebutton value="scale">Scale</ui-togglebutton>
+  </ui-radiobuttonbar>
+  <ui-radiobuttonbar label="Transform Space" name="transformspace">
+    <ui-togglebutton value="world">World</ui-togglebutton>
+    <ui-togglebutton value="local">Local</ui-togglebutton>
+  </ui-radiobuttonbar>
+  <ui-select name="translatesnap" label="Translate Snap">
+    <option>Off</option>
+    <option>0.001</option>
+    <option>0.01</option>
+    <option>0.1</option>
+    <option>1</option>
+    <option>10</option>
+    <option>100</option>
+  </ui-select>
+  <ui-select name="rotatesnap" label="Rotate Snap">
+    <option>Off</option>
+    <option>1</option>
+    <option>5</option>
+    <option>10</option>
+    <option>15</option>
+    <option>30</option>
+    <option>45</option>
+    <option>90</option>
+    <option>180</option>
+  </ui-select>
+  <ui-togglebutton name="physicsdebug">Physics Debug</ui-togglebutton>
+</ui-flexpanel>
