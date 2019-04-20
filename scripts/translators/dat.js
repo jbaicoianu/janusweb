@@ -2,17 +2,17 @@ elation.require([], function() {
   elation.component.add('janusweb.translators.dat', function() {
     this.exec = function(args) {
       return new Promise(function(resolve, reject) {
-console.error('GET DAT ROOM!', args);
         let room = args.room;
 
         elation.engine.assetdownloader.fetchURL(args.url).then((ev) => {
-console.log('got dat url', ev);
-let decoder = new TextDecoder('utf-8');
-let src = decoder.decode(ev.target.data);
-room.loadFromSource(src);
+          let decoder = new TextDecoder('utf-8');
+          let src = decoder.decode(ev.target.data);
+          room.loadFromSource(src);
         }).catch((err) => {
-          console.error('oh no!', err);
+          console.error('Failed to load room from DAT:', args.url, err);
 
+          // Create a default room to let the user know it didn't work
+          // TODO - fall back on dat-js here
           room.createObject('object', {
             id: 'cube',
             col: 'red',
