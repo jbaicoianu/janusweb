@@ -16,7 +16,6 @@
     "jasmine": ">=2.0",
     "jasmine-core": "*",
     "karma-jasmine": "*",
-    "karma-jasmine-imagediff": "*",
     "karma-chrome-launcher": "*"
   },
   "repository": {
