@@ -12,7 +12,8 @@
     "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run"
   },
   "devDependencies": {
-    "karma": "~0.13",
+    "karma": "~4.1",
+    "karma-cli": "*",
     "jasmine": ">=2.0",
     "jasmine-core": "*",
     "karma-jasmine": "*",
