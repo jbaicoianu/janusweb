@@ -19,7 +19,7 @@ ZIPNAME=janusweb-${VERSION}
 
 echo $BUILDROOT
 echo $BUILDDIR
-echo -n 'nodejs: $NODEJS '
+echo -n "nodejs: $NODEJS "
 $NODEJS --version
 
 if [ ! -e "$BUILDDIR" ]; then
