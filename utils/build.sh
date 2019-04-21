@@ -1,8 +1,8 @@
 #!/bin/bash
 
-NODEJS=`which nodejs`
+NODEJS=`which node`
 if [ -z "$NODEJS" ]; then
-  NODEJS=`which node`
+  NODEJS=`which nodejs`
 fi
 if [ -z "$NODEJS" ]; then
   echo "ERROR - Can't find 'nodejs' or 'node' binary in path, exiting"
