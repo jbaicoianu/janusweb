@@ -19,6 +19,9 @@ ZIPNAME=janusweb-${VERSION}
 
 echo $BUILDROOT
 echo $BUILDDIR
+echo -n 'nodejs '
+nodejs --version
+
 if [ ! -e "$BUILDDIR" ]; then
   mkdir -p "$BUILDDIR"
 fi
