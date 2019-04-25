@@ -52,6 +52,17 @@ describe("Elation Engine Assets", function() {
         var group = asset.getInstance();
         mesh = group.children[0].children[0].children[0];
         expect(mesh).toBeDefined();
+      // is a BufferGeometry
+      expect(mesh.geometry.type).toBe('BufferGeometry');
+      // has 36 vertices
+      expect(mesh.geometry.attributes.position.count).toBe(36);
+      expect(mesh.geometry.attributes.normal.count).toBe(36);
+      expect(mesh.geometry.attributes.uv.count).toBe(36);
+      // fired all expected events
+      expect(eventlog.asset_load_queued.length).toBe(1);
+      expect(eventlog.asset_load_processing.length).toBe(1);
+      expect(eventlog.asset_load_processed.length).toBe(1);
+      expect(eventlog.asset_load_complete.length).toBe(1);
         done();
       }, function(asset) {
         expect(asset.loaded).toBe(true);
@@ -59,20 +70,12 @@ describe("Elation Engine Assets", function() {
       });
     });
     it('is a buffergeometry', function(done) {
-      expect(mesh.geometry.type).toBe('BufferGeometry');
       done();
     });
     it('has 36 vertices', function(done) {
-      expect(mesh.geometry.attributes.position.count).toBe(36);
-      expect(mesh.geometry.attributes.normal.count).toBe(36);
-      expect(mesh.geometry.attributes.uv.count).toBe(36);
       done();
     });
     it('fired all expected events', function(done) {
-      expect(eventlog.asset_load_queued.length).toBe(1);
-      expect(eventlog.asset_load_processing.length).toBe(1);
-      expect(eventlog.asset_load_processed.length).toBe(1);
-      expect(eventlog.asset_load_complete.length).toBe(1);
       done();
     });
   });
@@ -89,36 +92,43 @@ describe("Elation Engine Assets", function() {
         expect(asset.loaded).toBe(true);
         var group = asset.getInstance();
         mesh = group.children[0].children[0].children[0];
+        // mesh is defined
         expect(mesh).toBeDefined();
+        // is a BufferGeometry
+        expect(mesh.geometry.type).toBe('BufferGeometry');
+        // has 132 vertices
+        expect(mesh.geometry.attributes.position.count).toBe(132);
+        expect(mesh.geometry.attributes.normal.count).toBe(132);
+        expect(mesh.geometry.attributes.uv.count).toBe(132);
+        // has a phong material
+        expect(mesh.material.type).toBe('MeshPhongMaterial');
+        // fired all expected events
+        expect(eventlog.asset_load_queued.length).toBe(1);
+        expect(eventlog.asset_load_start.length).toBe(1);
+        expect(eventlog.asset_load_progress.length).toBeGreaterThan(0);
+        expect(eventlog.asset_load_processing.length).toBe(1);
+        expect(eventlog.asset_load_processed.length).toBe(1);
+        expect(eventlog.asset_load_complete.length).toBe(1);
         done();
       }, function(asset) {
         expect(asset.loaded).toBe(true);
         done();
       });
     });
+/*
     it('is a buffergeometry', function(done) {
-      expect(mesh.geometry.type).toBe('BufferGeometry');
       done();
     });
     it('has 132 vertices', function(done) {
-      expect(mesh.geometry.attributes.position.count).toBe(132);
-      expect(mesh.geometry.attributes.normal.count).toBe(132);
-      expect(mesh.geometry.attributes.uv.count).toBe(132);
       done();
     });
     it('has the right materials', function(done) {
-      expect(mesh.material.type).toBe('MeshPhongMaterial');
       done();
     });
     it('fired all expected events', function(done) {
-      expect(eventlog.asset_load_queued.length).toBe(1);
-      expect(eventlog.asset_load_start.length).toBe(1);
-      expect(eventlog.asset_load_progress.length).toBeGreaterThan(0);
-      expect(eventlog.asset_load_processing.length).toBe(1);
-      expect(eventlog.asset_load_processed.length).toBe(1);
-      expect(eventlog.asset_load_complete.length).toBe(1);
       done();
     });
+*/
   });
 
   describe('OBJ+MTL - textures', function() {
@@ -134,29 +144,41 @@ describe("Elation Engine Assets", function() {
         var group = asset.getInstance();
         mesh = group.children[0].children[0].children[0];
         expect(mesh).toBeDefined();
+        // is a BufferGeometry
+        expect(mesh.geometry.type).toBe('BufferGeometry');
+        // has 2904 vertices
+        expect(mesh.geometry.attributes.position.count).toBe(2904);
+        expect(mesh.geometry.attributes.normal.count).toBe(2904);
+        expect(mesh.geometry.attributes.uv.count).toBe(2904);
+        // has a phong material with a bumpMap
+        expect(mesh.material.type).toBe('MeshPhongMaterial');
+        expect(mesh.material.map).toBeDefined();
+        expect(mesh.material.map.image).toBeDefined();
+        expect(mesh.material.bumpMap).toBeDefined();
+        expect(mesh.material.bumpMap.image).toBeDefined();
+        // fired all expected events
+        expect(eventlog.asset_load_queued).toBeDefined();
+        expect(eventlog.asset_load_queued.length).toBe(1);
+        expect(eventlog.asset_load_processing).toBeDefined();
+        expect(eventlog.asset_load_processing.length).toBe(1);
+        expect(eventlog.asset_load_processed).toBeDefined();
+        expect(eventlog.asset_load_processed.length).toBe(1);
+        expect(eventlog.asset_load_complete).toBeDefined();
+        expect(eventlog.asset_load_complete.length).toBe(1);
         done();
       }, function(asset) {
         expect(asset.loaded).toBe(true);
         done();
       });
     });
+/*
     it('is a buffergeometry', function(done) {
-      expect(mesh.geometry.type).toBe('BufferGeometry');
       done();
     });
     it('has 2904 vertices', function(done) {
-      expect(mesh.geometry.attributes.position.count).toBe(2904);
-      expect(mesh.geometry.attributes.normal.count).toBe(2904);
-      expect(mesh.geometry.attributes.uv.count).toBe(2904);
       done();
     });
     it('has the right materials', function(done) {
-      expect(mesh.material.type).toBe('MeshPhongMaterial');
-
-      expect(mesh.material.map).toBeDefined();
-      expect(mesh.material.map.image).toBeDefined();
-      expect(mesh.material.bumpMap).toBeDefined();
-      expect(mesh.material.bumpMap.image).toBeDefined();
       done();
     });
     it('fired all expected events', function(done) {
@@ -164,16 +186,9 @@ var furp = {};
 Object.keys(eventlog).forEach(function(k) { furp[k] = eventlog[k].length; });
 console.log(JSON.stringify(furp));
 console.log(eventlog);
-      expect(eventlog.asset_load_queued).toBeDefined();
-      expect(eventlog.asset_load_queued.length).toBe(1);
-      expect(eventlog.asset_load_processing).toBeDefined();
-      expect(eventlog.asset_load_processing.length).toBe(1);
-      expect(eventlog.asset_load_processed).toBeDefined();
-      expect(eventlog.asset_load_processed.length).toBe(1);
-      expect(eventlog.asset_load_complete).toBeDefined();
-      expect(eventlog.asset_load_complete.length).toBe(1);
       done();
     });
+*/
   });
 
   describe('DAE (gzipped)', function() {
@@ -189,6 +204,11 @@ console.log(eventlog);
         var group = asset.getInstance();
         mesh = group;
         expect(mesh).toBeDefined();
+        // fired all expected events
+        expect(eventlog.asset_load_queued.length).toBe(1);
+        expect(eventlog.asset_load_processing.length).toBe(1);
+        expect(eventlog.asset_load_processed.length).toBe(1);
+        expect(eventlog.asset_load_complete.length).toBe(1);
         done();
       }, function(asset) {
         expect(asset.loaded).toBe(true);
@@ -213,14 +233,10 @@ console.log(eventlog);
       expect(mesh.material.materials[1].type).toBe('MeshPhongMaterial');
       done();
     });
-*/
     it('fired all expected events', function(done) {
-      expect(eventlog.asset_load_queued.length).toBe(1);
-      expect(eventlog.asset_load_processing.length).toBe(1);
-      expect(eventlog.asset_load_processed.length).toBe(1);
-      expect(eventlog.asset_load_complete.length).toBe(1);
       done();
     });
+*/
   });
 /*
   it("should load an OBJ with material+color", function(done) {
