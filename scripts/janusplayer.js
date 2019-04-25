@@ -673,7 +673,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
     }
     this.createObject = function(type, args) {
-      return this.room.createObject(type, args, this);
+      if (this.room) {
+        return this.room.createObject(type, args, this);
+      }
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
