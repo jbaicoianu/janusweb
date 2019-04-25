@@ -111,15 +111,19 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       setTimeout(elation.bind(this, function() {
         this.cursors = {
-          'default': elation.engine.assets.find('image', 'cursor_arrow'),
+          'default': elation.engine.assets.find('image', 'cursor_crosshair'),
           'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
           'pointer': elation.engine.assets.find('image', 'cursor_hand'),
+          'dot_inactive': elation.engine.assets.find('image', 'cursor_dot_inactive'),
+          'dot_active': elation.engine.assets.find('image', 'cursor_dot_active'),
         };
         this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
         this.engine.systems.world.scene['world-3d'].add(this.cursor);
       }), 1000);
 
+      //this.gazecaster = this.createObject('raycaster', {});
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
+
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
