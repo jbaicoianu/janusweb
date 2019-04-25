@@ -146,7 +146,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + '/assets/webui/default.json');
+      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + (datapath[datapath.length-1] != '/' ? '/' : '') + 'assets/webui/default.json');
       if (this.shownavigation) {
         this.ui = elation.elements.create('janus.ui.main', {
           append: this,
