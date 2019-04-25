@@ -67,7 +67,7 @@ describe("JanusWeb Init", function() {
         eventlog[ev.type].push(ev);
       });
       elation.events.add(room, 'room_load_complete', function() {
-        console.log('room load complete');
+        console.log('room load complete', eventlog);
         //expect(eventlog.room_load_queued.length).toBe(1);
         expect(eventlog.room_load_start.length).toBe(1);
         expect(eventlog.room_load_progress.length).toBeGreaterThan(0);
