@@ -105,7 +105,7 @@
   { "assettype":"image", "name":"avatar_tex0", "src":"assets/avatar.png", "preload": false },
   { "assettype":"image", "name":"avatar_head_tex0", "src":"assets/avatar_head.png", "preload": false },
 
-  { "assettype":"model", "name":"avatar_janusweb", "src":"assets/hoverscreen.obj", "mtl": "assets/hoverscreen.mtl" },
+  { "assettype":"model", "name":"avatar_janusweb", "src":"assets/hoverscreen.obj" },
 
   { "assettype":"model", "name":"loading", "src":"assets/loading.obj" },
 
