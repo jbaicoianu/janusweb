@@ -109,9 +109,11 @@
 
   { "assettype":"model", "name":"loading", "src":"assets/loading.obj" },
 
-  { "assettype":"image", "name":"cursor_arrow", "src":"assets/cursor/cursor-dot-white.png", "hasalpha": true },
-  { "assettype":"image", "name":"cursor_crosshair", "src":"assets/cursor/cursor-dot-white.png", "hasalpha": true },
-  { "assettype":"image", "name":"cursor_hand", "src":"assets/cursor/cursor-dot-green.png", "hasalpha": true },
+  { "assettype":"image", "name":"cursor_arrow", "src":"assets/cursor/arrow.png", "hasalpha": true },
+  { "assettype":"image", "name":"cursor_crosshair", "src":"assets/cursor/crosshair.png", "hasalpha": true },
+  { "assettype":"image", "name":"cursor_hand", "src":"assets/cursor/hand.png", "hasalpha": true },
+  { "assettype":"image", "name":"cursor_dot_inactive", "src":"assets/cursor/cursor-dot-white.png", "hasalpha": true },
+  { "assettype":"image", "name":"cursor_dot_active", "src":"assets/cursor/cursor-dot-green.png", "hasalpha": true },
 
 
   { "assettype":"model", "name":"controller_daydream", "src":"assets/controllers/daydream/vr_controller_daydream.obj", "mtl":"vr_controller_daydream.mtl" },
