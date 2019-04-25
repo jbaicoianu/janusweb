@@ -9,7 +9,7 @@ describe("JanusWeb Init", function() {
     if (!client) {
       try {
         elation.janusweb.init({
-          homepage: 'http://www.janusvr.com/index.html', 
+          homepage: 'about:blank', 
           resolution: resolution,
           autoload: false,
           showchat: false,
@@ -32,6 +32,7 @@ describe("JanusWeb Init", function() {
     }
   });
 
+/*
   it("should initialize client", function(done) {
     expect(client).toBeDefined();
     expect(janusweb).toBeDefined();
@@ -43,6 +44,7 @@ describe("JanusWeb Init", function() {
     canvas = canvases[0];
     done();
   });
+*/
 
   // Load a room.  It should fire events in tis order:
   // - room_load_queued
@@ -53,6 +55,7 @@ describe("JanusWeb Init", function() {
   // - room_load_complete
   it("should load a room", function(done) {
     try {
+console.log('load landing page');
       var room = janusweb.load('http://assets.metacade.com/gearvr-landing', true);
       var eventlog = {
         room_load_start: [],
@@ -80,6 +83,7 @@ describe("JanusWeb Init", function() {
       console.log('exception happened!', e.stack);
     }
   });
+/*
   it("should stop when done", function(done) {
     elation.events.add(client.engine, 'engine_stop', function() {
       expect(client.engine.running).toBe(false);
@@ -87,4 +91,5 @@ describe("JanusWeb Init", function() {
     });
     client.engine.stop();
   });
+*/
 });
