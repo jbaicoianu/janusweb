@@ -343,6 +343,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
+        let playerpos = this.properties.position;
+        if (typeof playerpos.x == 'undefined' || isNaN(playerpos.x)) playerpos.x = 0;
+        if (typeof playerpos.y == 'undefined' || isNaN(playerpos.y)) playerpos.y = 0;
+        if (typeof playerpos.z == 'undefined' || isNaN(playerpos.z)) playerpos.z = 0;
         this.objects['3d'].updateMatrix();
         this.objects['3d'].updateMatrixWorld();
         this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
