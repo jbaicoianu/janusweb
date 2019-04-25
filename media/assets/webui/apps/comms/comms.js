@@ -1,10 +1,12 @@
 elation.elements.define('janus-comms-panel', class extends elation.elements.base {
   create() {
     this.player = player;
-    this.room = room;
     this.client = this.getClient();
     this.janusweb = this.client.janusweb;
     this.elements = elation.elements.fromTemplate('janus.comms.panel', this);
+    if (typeof room != 'undefined') {
+      this.room = room;
+    }
   }
   getClient() {
     var node = this;
@@ -26,7 +28,9 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
   create() {
     this.player = player;
     this.room = room;
-    this.server = janus.network.getServerForRoom(room);
+    if (janus.nework) {
+      this.server = janus.network.getServerForRoom(room);
+    }
     this.elements = elation.elements.fromTemplate('janus.comms.status', this);
   }
 });
@@ -68,6 +72,7 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.updateUsers();
   }
   updateUsers() {
+    if (!janus.network) return;
     var remoteplayers = janus.network.remoteplayers;
     var users = Object.keys(remoteplayers);
     users.unshift(player.userid);
