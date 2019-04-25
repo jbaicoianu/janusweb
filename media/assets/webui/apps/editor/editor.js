@@ -55,6 +55,12 @@ console.log('my elements!', elements);
     });
     janus.engine.systems.controls.activateContext('roomedit_paste');
 
+    if (typeof room != 'undefined') {
+      this.initRoomEvents(room);
+    }
+    document.addEventListener('paste', (ev) => this.handlePaste(ev));
+  }
+  initRoomEvents(room) {
     room.addEventListener('click', (ev) => this.handleRoomClick(ev));
     //room.addEventListener('mouseover', (ev) => console.log('mouseover', ev.data));
     //room.addEventListener('mouseout', (ev) => console.log('mouseout', ev.data));
@@ -63,10 +69,10 @@ console.log('my elements!', elements);
     room.addEventListener('dragenter', (ev) => this.handleDragOver(ev));
     room.addEventListener('dragover', (ev) => this.handleDragOver(ev));
     room.addEventListener('drop', (ev) => this.handleDrop(ev));
-
-    document.addEventListener('paste', (ev) => this.handlePaste(ev));
   }
+
   getManipulator() {
+    if (typeof room == 'undefined') return;
     if (!this.manipulator) {
       let view = janus.engine.client.view;
       this.manipulator = new THREE.TransformControls(view.actualcamera, view.container);
