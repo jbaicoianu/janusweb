@@ -751,7 +751,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.handleGazeEnter = function(ev) {
       var obj = ev.data.object;
-      if (obj && obj.dispatchEvent) {
+      if (obj && obj.dispatchEvent && ev.data.intersection) {
         obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
         this.cursor_object = obj;
 
@@ -777,7 +777,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (obj && obj.dispatchEvent) {
         this.cursor_object = obj.js_id || '';
 
-        this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        if (ev.data.intersection.point) {
+          this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        }
       }
     }
     this.handleTouchStart = function(ev) {
@@ -842,5 +844,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       };
     })();
+    this.dispatchEvent = function(event, target) {
+      let firedev = elation.events.fire(event);
+    }
   }, elation.engine.things.player);
 });
