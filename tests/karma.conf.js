@@ -67,7 +67,7 @@ module.exports = function(config) {
     customLaunchers: {
         Chrome_travis_ci: {
             base: 'Chrome',
-            flags: ['--no-sandbox', '--enable-webgl', '--ignore-gpu-blacklist']
+            flags: ['--no-sandbox', '--headless', '--enable-webgl', '--ignore-gpu-blacklist']
         }
     },
 
@@ -75,7 +75,7 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     //browsers: ['Chrome', 'Firefox'],
-    browsers: ['ChromeHeadless'],
+    browsers: ['Chrome_travis_ci'],
     browserNoActivityTimeout: 60000,
 
 
