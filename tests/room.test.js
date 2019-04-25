@@ -5,28 +5,37 @@ describe("JanusWeb Init", function() {
   var browser = 'chrome'; // FIXME - don't hardcode this
 
   beforeEach(function(done) {
-    jasmine.addMatchers(imagediff.jasmine);
-    done();
+    //jasmine.addMatchers(imagediff.jasmine);
+    if (!client) {
+      try {
+        elation.janusweb.init({
+          homepage: 'http://www.janusvr.com/index.html', 
+          resolution: resolution,
+          autoload: false,
+          showchat: false,
+          networking: false
+        }).then(function(newclient) { 
+          client = newclient;
+          janusweb = client.janusweb;
+          //expect(client).toBeDefined();
+          //expect(janusweb).toBeDefined();
+          done();
+        });
+      } catch (e) {
+        console.log('exception happened!', e.stack);
+      }
+    } else {
+      // FIXME - we're reusing the same client instance for multiple tests because it's more like real-world behavior
+      //         but we should really be testing with a fresh client for each test, and set up separate tests for
+      //         testing behavior across, eg, multiple room loads in one session
+      done();
+    }
   });
 
   it("should initialize client", function(done) {
-    try {
-      elation.janusweb.init({
-        homepage: 'http://www.janusvr.com/index.html', 
-        resolution: resolution,
-        autoload: false,
-        showchat: false,
-        networking: false
-      }).then(function(newclient) { 
-        client = newclient;
-        janusweb = client.janusweb;
-        expect(client).toBeDefined();
-        expect(janusweb).toBeDefined();
-        done();
-      });
-    } catch (e) {
-      console.log('exception happened!', e.stack);
-    }
+    expect(client).toBeDefined();
+    expect(janusweb).toBeDefined();
+    done();
   });
   it("added canvas to document", function(done) {
     var canvases = document.getElementsByTagName('canvas');
@@ -45,7 +54,13 @@ describe("JanusWeb Init", function() {
   it("should load a room", function(done) {
     try {
       var room = janusweb.load('http://assets.metacade.com/gearvr-landing', true);
-      var eventlog = {};
+      var eventlog = {
+        room_load_start: [],
+        room_load_progress: [],
+        room_load_processing: [],
+        room_load_processed: [],
+        room_load_complete: []
+      };
       elation.events.add(room, 'room_load_queued,room_load_start,room_load_progress,room_load_processing,room_load_processed,room_load_complete', function(ev) {
         console.log('got event:', ev.type);
         if (!eventlog[ev.type]) eventlog[ev.type] = [];
@@ -56,8 +71,8 @@ describe("JanusWeb Init", function() {
         //expect(eventlog.room_load_queued.length).toBe(1);
         expect(eventlog.room_load_start.length).toBe(1);
         expect(eventlog.room_load_progress.length).toBeGreaterThan(0);
-        expect(eventlog.room_load_processing.length).toBe(1);
-        expect(eventlog.room_load_processed.length).toBe(1);
+        //expect(eventlog.room_load_processing.length).toBe(1);
+        //expect(eventlog.room_load_processed.length).toBe(1);
         expect(eventlog.room_load_complete.length).toBe(1);
         done();
       });

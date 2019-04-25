@@ -19,10 +19,11 @@ module.exports = function(config) {
       //{pattern: 'tests/boot.js', watched: true, included: true, served: true},
       //{pattern: 'build/*', watched: true, included: true, served: true},
       {pattern: 'build/janusweb.js', watched: true, included: true, served: true},
+      {pattern: 'build/janusweb.assetworker.js', watched: true, included: false, served: true},
       {pattern: 'build/janusweb.css', watched: true, included: true, served: true},
       {pattern: 'build/media/*', watched: false, included: false, served: true},
       {pattern: 'build/media/**', watched: false, included: false, served: true},
-      'tests/imagediff.js',
+      //'tests/imagediff.js',
       //{pattern: 'tests/janusweb.test.js', watched: true, included: true, served: true},
       {pattern: 'tests/assets/*.test.js', watched: true, included: true, served: true},
       //{pattern: 'tests/render/*.test.js', watched: true, included: true, served: true},
@@ -73,7 +74,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox'],
+    //browsers: ['Chrome', 'Firefox'],
     browserNoActivityTimeout: 60000,
 
 

@@ -8,7 +8,7 @@ describe("Elation Engine Assets", function() {
     { "assettype": "model", "name": "model_obj_mtl",                "src": "media/assets/translator/web/screensingle.obj", "mtl": "screensingle.mtl" },
     { "assettype": "model", "name": "model_obj_textures",           "src": "media/tests/models/monkey-material-smooth.obj", "mtl": "monkey-material-smooth.mtl" },
     { "assettype": "model", "name": "model_obj_textures_normalmap", "src": "", "mtl": "" },
-    { "assettype": "model", "name": "model_dae_gz", "src": "https://janusweb.lnq.to:8089/www.janusvr.com/newlobby/room/V1/V1.dae.gz" },
+    { "assettype": "model", "name": "model_dae_gz", "src": "https://p.janusvr.com/http://www.janusvr.com/newlobby/room/V1/V1.dae.gz" },
   ], self.location.origin + "/base/build/");
 
   beforeEach(function(done) {

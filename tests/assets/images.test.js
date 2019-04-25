@@ -21,7 +21,7 @@ describe("Elation Engine Assets", function() {
     }
     return new Promise(function(succeed, fail) {
       if (!tex) fail(asset);
-      elation.events.add(asset, 'asset_load', function() {
+      asset.executeWhenLoaded(() => {
         console.log(type + ' loaded!', tex, name);
         succeed(asset);
       });
@@ -32,9 +32,7 @@ describe("Elation Engine Assets", function() {
     });
   }
   it("should load a JPG image", function(done) {
-console.log('load jpg');
     loadAsset('image', 'image_jpg').then(function(asset) {
-console.log('jpg loaded', asset);
       expect(asset).toBeDefined();
       expect(asset.loaded).toBe(true);
       expect(asset.imagetype).toBe('jpg');
