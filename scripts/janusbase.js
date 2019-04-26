@@ -120,12 +120,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         } else if (collision_id == 'cube') {
           var halfsize = collision_scale.clone().multiplyScalar(.5);
           this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
-/*
         } else if (collision_id == 'plane') {
           var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
-*/
         } else if (collision_id == 'cylinder') {
           this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
         } else {
