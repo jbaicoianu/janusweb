@@ -1646,6 +1646,7 @@ elation.require([
           extendElement:       ['function', 'extendElement'],
           addEventListener:    ['function', 'addEventListenerProxy'],
           removeEventListener: ['function', 'removeEventListenerProxy'],
+          dispatchEvent:       ['function', 'dispatchEvent'],
 
           onLoad:          ['callback', 'janus_room_scriptload'],
           update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
@@ -2082,6 +2083,23 @@ elation.require([
             });
         }
       });
+    }
+    this.dispatchEvent = function(event, target) {
+      let firedev = elation.events.fire(event);
+/*
+      if (!event.element) event.element = target || this;
+      var handlerfn = 'on' + event.type;
+      if (this[handlerfn]) {
+        this.executeCallback(this[handlerfn], event);
+      }
+      let firedev = elation.events.fire(event);
+      let returnValue = true;
+      firedev.forEach(e => returnValue &= e.returnValue);
+      if (returnValue && this.parent) {
+console.log('dispatch to parent', event, this, event.target);
+        this.parent.dispatchEvent(event, event.target);
+      }
+*/
     }
   }, elation.engine.things.generic);
 });
