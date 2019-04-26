@@ -105,6 +105,7 @@ elation.require([
       this.onObjectClick = elation.bind(this, this.onObjectClick);
       this.onMouseDown = elation.bind(this, this.onMouseDown);
       this.onMouseUp = elation.bind(this, this.onMouseUp);
+      this.onMouseMove = elation.bind(this, this.onMouseMove);
       this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       this.roomedit = {
@@ -815,10 +816,13 @@ elation.require([
         elation.events.add(window, 'keyup', this.onKeyUp);
         elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
         elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+        elation.events.add(this.engine.client.container, 'mousemove', this.onMouseMove);
         elation.events.add(this, 'click', this.onObjectClick);
+/*
         elation.events.add(this, 'dragenter', this.handleDragOver);
         elation.events.add(this, 'dragover', this.handleDragOver);
         elation.events.add(this, 'drop', this.handleDrop);
+*/
         elation.events.add(this, 'thing_think', this.onScriptTick);
 
         elation.events.fire({type: 'room_enable', data: this});
@@ -1394,26 +1398,27 @@ elation.require([
     }
 */
     this.onKeyDown = function(ev) { 
-      elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase() });
+      elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase(), event: ev});
     }
     this.onKeyUp = function(ev) { 
-      elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase() });
+      elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase(), event: ev });
     }
     this.onMouseDown = function(ev) { 
       elation.events.fire({type: 'janus_room_mousedown', element: this, event: ev});
+      if (ev.button == 0) {
+        this.buttonPressed = true;
+      }
     }
     this.onMouseUp = function(ev) { 
       elation.events.fire({type: 'janus_room_mouseup', element: this, event: ev});
+      if (ev.button == 0) {
+        this.buttonPressed = false;
+      }
     }
-    this.onObjectClick = function(ev) {
-      if (ev.button == 2 && ev.element !== this) {
-        if (this.roomedit.object) {
-          this.editObjectRevert();
-        } else if ((!this.localasset || !this.localasset.isEqual(ev.element)) && !ev.element.locked && !this.locked) {
-          this.editObject(ev.element.getProxyObject());
-        }
-        // TODO - if the user tries to edit a locked object, currently there's no feedback.
-        // We should show some subtle effect to let the user know why they're unable to edit
+    this.onMouseMove = function(ev) { 
+      elation.events.fire({type: 'janus_room_mousemove', element: this, event: ev});
+      if (this.buttonPressed) {
+        elation.events.fire({type: 'janus_room_mousedrag', element: this, event: ev});
       }
     }
     this.onClick = function(ev) {
@@ -1671,6 +1676,8 @@ elation.require([
           onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
           onMouseDown:     ['callback', 'janus_room_mousedown'],
           onMouseUp:       ['callback', 'janus_room_mouseup'],
+          onMouseMove:     ['callback', 'janus_room_mousemove'],
+          onMouseDrag:     ['callback', 'janus_room_mousedrag'],
           onKeyDown:       ['callback', 'janus_room_keydown'],
           onKeyUp:         ['callback', 'janus_room_keyup']
         });
