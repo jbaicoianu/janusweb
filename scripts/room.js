@@ -2006,6 +2006,83 @@ elation.require([
       }
       return null;
     }
+    this.require = function(deps) {
+      if (!elation.utils.isArray(deps)) {
+        deps = [deps];
+      }
+      let foundmap = {};
+      function countMissing() {
+        let missing = 0;
+        for (let k in foundmap) {
+          missing += (foundmap[k] ? 0 : 1);
+        }
+        return missing;
+      }
+      let finished = false;
+      deps.forEach(d => foundmap[d] = (d in this.customElements));
+      let promise = new Promise((accept, reject) => {
+        for (let k in foundmap) {
+          if (!foundmap[k]) {
+            // The requested element isn't registered yet, wait and see if it becomes available
+            this.addEventListener('registerelement', (ev) => {
+              if (ev.data in foundmap) {
+                // Element was registered, update its map entry
+                foundmap[ev.data] = true;
+
+                if (countMissing() == 0) {
+                  // If all our required elements have been loaded, we're done here
+                  finished = true;
+                  accept();
+                }
+              }
+            });
+            if (this.pendingScripts) {
+              // We're still waiting for the room to finish loading, so wait for the room_load_complete event before checking if we need to load anything else
+              this.addEventListener('room_load_complete', (ev) => {
+                // Room and all of its assets have finished loading. If our required component still isn't available, check the master package list and autoload if possible
+                if (!finished) {
+                  this.loadComponentList().then(components => {
+                    if (components[k]) {
+                      this.loadNewAsset('script', { src: components[k].url });
+                      this.loadScripts([{src: components[k].url}]);
+                    }
+                  });
+                }
+              });
+            } else {
+              // Room is already loaded and scripts are processed - we still don't know about this component, so load it up
+              this.loadComponentList().then(components => {
+                if (components[k]) {
+                  this.loadNewAsset('script', { src: components[k].url });
+                  this.loadScripts([{src: components[k].url}]);
+                }
+              });
+            }
+          }
+        }
+        if (countMissing() == 0) {
+          accept();
+        }
+      });
+      return promise;
+    }
+    this.loadComponentList = function() {
+      return new Promise((accept, reject) => {
+        if (this.componentrepository) {
+          // Already loaded
+          accept(this.componentrepository);
+        } else {
+          let url = 'https://baicoianu.com/~bai/janusweb/test/components.json'; // FIXME - obvious hack for prototype
+
+          fetch(url)
+            .then(d => d.json())
+            .then(components => {
+              this.componentrepository = components;
+              accept(components);
+            });
+        }
+      });
+    }
   }, elation.engine.things.generic);
 });
 
