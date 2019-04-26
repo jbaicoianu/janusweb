@@ -116,27 +116,6 @@ elation.require([
         object: false,
         distancescale: 1
       };
-      this.engine.systems.controls.addContext('roomedit', {
-        'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
-        'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
-        'delete':           [ 'keyboard_delete,keyboard_backspace', this.editObjectDelete ],
-        'mode':             [ 'keyboard_tab', this.editObjectToggleMode ],
-        'toggle_raycast':   [ 'keyboard_shift',   this.editObjectToggleRaycast ],
-        'manipulate_left':  [ 'keyboard_j',   this.editObjectManipulateLeft ],
-        'manipulate_right': [ 'keyboard_l',   this.editObjectManipulateRight ],
-        'manipulate_up':    [ 'keyboard_i',   this.editObjectManipulateUp ],
-        'manipulate_down':  [ 'keyboard_k',   this.editObjectManipulateDown ],
-        'manipulate_in':    [ 'keyboard_u',   this.editObjectManipulateIn ],
-        'manipulate_out':   [ 'keyboard_o',   this.editObjectManipulateOut ],
-        //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
-        'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
-        'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
-        'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
-        'snap_thousandths': [ 'keyboard_4',   this.editObjectSnapThousandths ],
-      });
-      this.engine.systems.controls.addContext('roomedit_togglemove', {
-        'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
-      });
 
       if (this.url) {
         this.roomid = md5(this.url);
