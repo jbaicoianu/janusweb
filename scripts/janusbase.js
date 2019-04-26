@@ -89,6 +89,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.properties.color = this.properties.color.clone();
           this.defaultcolor.setRGB(1,1,1);
           this.colorIsDefault = false;
+          delete this._proxies['color'];
         }
       }
     }
