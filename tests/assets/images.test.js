@@ -21,11 +21,12 @@ describe("Elation Engine Assets", function() {
     }
     return new Promise(function(succeed, fail) {
       if (!tex) fail(asset);
-      elation.events.add(asset, 'asset_load', function() {
-        //console.log(type + ' loaded!', tex);
+      asset.executeWhenLoaded(() => {
+        console.log(type + ' loaded!', tex, name);
         succeed(asset);
       });
       elation.events.add(asset, 'asset_error', function() {
+        console.log(type + ' failed!', tex, name);
         fail(asset);
       });
     });

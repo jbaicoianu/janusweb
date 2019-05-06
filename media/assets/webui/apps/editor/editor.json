@@ -1,0 +1,12 @@
+{
+  "templates": {
+    "janus.ui.editor.panel": "./editor-panel.html",
+    "janus.ui.editor.object.info": "./editor-object-info.html"
+  },
+  "scripts":  ["./editor.js", "./editor-properties.js"],
+  "css":      ["./editor.css"],
+  "components": [
+    "janus-ui-editor-panel"
+  ]
+}
+

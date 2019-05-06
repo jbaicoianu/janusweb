@@ -19,10 +19,11 @@ module.exports = function(config) {
       //{pattern: 'tests/boot.js', watched: true, included: true, served: true},
       //{pattern: 'build/*', watched: true, included: true, served: true},
       {pattern: 'build/janusweb.js', watched: true, included: true, served: true},
+      {pattern: 'build/janusweb.assetworker.js', watched: true, included: false, served: true},
       {pattern: 'build/janusweb.css', watched: true, included: true, served: true},
       {pattern: 'build/media/*', watched: false, included: false, served: true},
       {pattern: 'build/media/**', watched: false, included: false, served: true},
-      'tests/imagediff.js',
+      //'tests/imagediff.js',
       //{pattern: 'tests/janusweb.test.js', watched: true, included: true, served: true},
       {pattern: 'tests/assets/*.test.js', watched: true, included: true, served: true},
       //{pattern: 'tests/render/*.test.js', watched: true, included: true, served: true},
@@ -57,7 +58,7 @@ module.exports = function(config) {
 
     // level of logging
     // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_DEBUG,
 
 
     // enable / disable watching file and executing tests whenever any file changes
@@ -73,7 +74,9 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox'],
+    //browsers: ['Chrome', 'Firefox'],
+    //browsers: ['Chrome_travis_ci'],
+    browsers: ['ChromeHeadless'],
     browserNoActivityTimeout: 60000,
 
 
@@ -87,7 +90,7 @@ module.exports = function(config) {
   };
 
   if (process.env.TRAVIS) {
-    settings.browsers = ['Chrome_travis_ci'];
+    //settings.browsers = ['Chrome_travis_ci'];
   }
 
   config.set(settings);

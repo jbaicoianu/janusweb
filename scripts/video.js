@@ -6,6 +6,8 @@ elation.require(['janusweb.janusbase'], function() {
         //src: { type: 'string' },
         video_id: { type: 'string', set: this.updateVideo },
         loop: { type: 'boolean', default: false },
+        sbs3d: { type: 'boolean', default: false },
+        ou3d: { type: 'boolean', default: false },
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
         gain: { type: 'float', default: 1.0, set: this.updateSound },
@@ -24,7 +26,7 @@ elation.require(['janusweb.janusbase'], function() {
         elation.events.add(this.video, 'playing', elation.bind(this, this.videoStartedPlaying));
 
         var mesh = new THREE.Mesh(geo, mat);
-        if (this.asset.sbs3d || this.asset.ou3d) {
+        if (this.sbs3d || this.ou3d || this.asset.sbs3d || this.asset.ou3d) {
           mesh.onBeforeRender = (renderer, scene, camera) => {
             if (camera.name) {
               texture.setEye(camera.name);
@@ -40,10 +42,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.createMaterial = function() {
       if (this.asset) {
         var texture = this.texture = this.asset.getInstance();
-        if (this.asset.sbs3d) {
+        if (this.asset.sbs3d || this.sbs3d) {
           texture.repeat.x = 0.5;
         }
-        if (this.asset.ou3d) {
+        if (this.asset.ou3d || this.ou3d) {
           texture.repeat.y = 0.5;
         }
         if (this.properties.loop) {
@@ -203,6 +205,8 @@ elation.require(['janusweb.janusbase'], function() {
           gain:    [ 'property', 'gain'],
           current_time: [ 'accessor', 'getCurrentTime'],
           total_time: [ 'accessor', 'getTotalTime'],
+          sbs3d:    [ 'property', 'sbs3d'],
+          ou3d:    [ 'property', 'ou3d'],
 
           isPlaying: [ 'function', 'isPlaying'],
           play:    [ 'function', 'play'],

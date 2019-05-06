@@ -77,6 +77,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       proxy: n.proxy,
       sbs3d: n.sbs3d,
       ou3d: n.ou3d,
+      flipy: n.flipy,
       reverse3d: n.reverse3d,
     });
   });

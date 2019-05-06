@@ -4,6 +4,7 @@
     "comms": "./apps/comms/comms.json",
     "settings": "./apps/settings/settings.json",
     "inventory": "./apps/inventory/inventory.json",
+    "editor": "./apps/editor/editor.json",
     "transporter": "./apps/transporter/transporter.json",
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json"
   },

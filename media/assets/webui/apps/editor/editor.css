@@ -1,0 +1,46 @@
+janus-ui-editor-panel {
+  font-size: .8em;
+  white-space: nowrap;
+}
+janus-ui-editor-property-vector3,
+janus-ui-editor-property-euler {
+  display: inline-flex;
+  flex-direction: row;
+}
+.janus_editor ui-input {
+  font-size: .8em;
+}
+.janus_editor ui-input>ui-label {
+  padding: .2em;
+  vertical-align: middle;
+}
+.janus_editor ui-input>input {
+  width: 100%;
+  background: #999;
+  border: 0;
+  border-bottom: 1px solid black;
+  vertical-align: middle;
+  height: 1.2em;
+  padding: 0 .2em;
+}
+.janus_editor ui-text {
+  flex: none;
+  width: 4em;
+  padding-right: .5em;
+}
+.janus_editor ui-text::after {
+  content: ':';
+}
+.janus_editor {
+  list-style: none;
+}
+.janus-editor li {
+}
+.mode_pos [propertyname='pos'],
+.mode_rotation [propertyname='rotation'],
+.mode_scale [propertyname='scale'],
+.mode_col [propertyname='col'] {
+  font-weight: bold;
+  color: #0f0;
+  text-shadow: 0 0 2px #000;
+}

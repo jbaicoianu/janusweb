@@ -15,6 +15,8 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
         light_helper: { type: 'boolean', default: false, set: this.updateLightHelper },
+        collision_id: { type: 'string', default: 'sphere', set: this.updateCollider },
+        collision_trigger: { type: 'boolean', default: true, set: this.updateCollider },
       });
     }
     this.createObject3D = function() {
@@ -103,7 +105,8 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.light_target) {
         if (elation.utils.isString(this.light_target)) {
           if (room.objects[this.light_target]) {
-            this.light.target = room.objects[this.light_target].objects['3d'];
+            let obj = room.objects[this.light_target];
+            this.light.target = obj.objects['3d'];
           } else if (this.light_target == 'player') {
             this.light.target = player.objects['3d'];
           }

@@ -803,8 +803,9 @@ console.error('dunno what this is', other);
     }
     this.getParentByTagName = function(tagname) {
       let obj = this.parent;
+      let tag = tagname.toUpperCase();
       while (obj) {
-        if (obj.tag == tagname) {
+        if (obj.tag == tag) {
           return obj;
         }
         obj = obj.parent;

@@ -282,14 +282,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.repeat.copy(this.texture_repeat);
           texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
 
-          if (textureasset.sbs3d) {
-            texture.repeat.x = 0.5;
-          }
-          if (textureasset.ou3d) {
-            texture.repeat.y = 0.5;
-          }
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
+            if (textureasset.sbs3d) {
+              texture.repeat.x *= 0.5;
+            }
+            if (textureasset.ou3d) {
+              texture.repeat.y *= 0.5;
+            }
           }
         }
       }
@@ -346,6 +346,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         texture = this.videotexture;
         if (texture) {
           this.assignTextureParameters(texture, modelasset);
+          if (this.videoasset.sbs3d) {
+            texture.repeat.x *= 0.5;
+          }
+          if (this.videoasset.ou3d) {
+            texture.repeat.y *= 0.5;
+          }
         }
       }
       if (this.websurface_id) {
@@ -429,13 +435,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (texture) {
               if (!color) m.color.setHex(0xffffff);
               m.map = texture; 
-              elation.events.add(texture, 'asset_update', (ev) => { m.map = ev.data; this.refresh(); });
+              elation.events.add(texture, 'asset_update', (ev) => {
+                m.map = ev.data;
+                m.map.offset.copy(this.texture_offset);
+                m.map.repeat.copy(this.texture_repeat);
+                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                this.refresh();
+              });
 
               // Set up per-eye render hooks if we're using a 3D texture
-              if (texture instanceof THREE.SBSTexture) {
+              if (texture instanceof THREE.SBSTexture || texture instanceof THREE.SBSVideoTexture) {
+                let vrlayer = new THREE.Layers();
+                vrlayer.set(2);
                 n.onBeforeRender = (renderer, scene, camera) => {
-                  if (camera.name) {
-                    texture.setEye(camera.name);
+                  if (camera.layers.test(vrlayer)) {
+                    texture.setEye('right');
+                  } else {
+                    texture.setEye('left');
                   }
                 }
               }
@@ -449,7 +465,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = this.alphatest;
                 }
                 m.map = asset.getInstance();
-                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) { m.map = ev.data; }));
+                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
+                  m.map = ev.data;
+                  m.map.offset.copy(this.texture_offset);
+                  m.map.repeat.copy(this.texture_repeat);
+                  m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                }));
                 elation.events.add(m.map, 'asset_load', elation.bind(this, function(m, asset, ev) {
                   if (asset.hasalpha && !m.transparent) {
                     m.transparent = true;
@@ -468,7 +489,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                m.normalMap = asset.getInstance();
+                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
+                  m.normalMap = ev.data; this.refresh();
+                  m.normalMap.offset.copy(this.texture_offset);
+                  m.normalMap.repeat.copy(this.texture_repeat);
+                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                }));
                 elation.events.add(m.bumpMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
               }
             }
@@ -581,8 +608,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.bumpMap = oldmat.bumpMap;
 
         if (!(m instanceof THREE.MeshBasicMaterial)) {
-          if (oldmat.emissiveMap) m.emissiveMap = oldmat.emissiveMap;
-          if (oldmat.emissive) m.emissive = oldmat.emissive;
+          if (oldmat.emissiveMap) {
+            m.emissiveMap = oldmat.emissiveMap;
+            m.emissive.setRGB(1,1,1);
+          } else if (oldmat.emissive) {
+            m.emissive = oldmat.emissive;
+          }
+          if (this.emissive) {
+            m.emissive.copy(this.emissive);
+          }
         }
 
         m.lightMap = oldmat.lightMap;
@@ -657,25 +691,33 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
       texture.generateMipmaps = linear;
+      texture.offset.copy(this.texture_offset);
+      texture.repeat.copy(this.texture_repeat);
+      texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+      if (texture.repeat.x > 1 || texture.repeat.y > 1) {
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      }
     }
     this.updateTextureOffsets = function() {
       // FIXME - should cache textures instead of iterating each time
       if (this.objects['3d']) {
         this.objects['3d'].traverse(n => {
           if (n.material) {
-            let m = n.material;
-            if (m.map) {
-              m.map.offset.copy(this.texture_offset);
-              m.map.repeat.copy(this.texture_repeat);
-              m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-            }
-            if (m.normalMap) {
-              m.normalMap.offset.copy(this.texture_offset);
-              m.normalMap.repeat.copy(this.texture_repeat);
-              m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-            }
-            // TODO - all maps which use uv layer 0 should be changed here
-          }
+            let materials = (n.material instanceof THREE.Material ? [n.material] : n.material);
+            materials.forEach(m => {
+              if (m.map) {
+                m.map.offset.copy(this.texture_offset);
+                m.map.repeat.copy(this.texture_repeat);
+                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+              }
+              if (m.normalMap) {
+                m.normalMap.offset.copy(this.texture_offset);
+                m.normalMap.repeat.copy(this.texture_repeat);
+                m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+              }
+              // TODO - all maps which use uv layer 0 should be changed here
+            });
+          };
         });
       }
     }

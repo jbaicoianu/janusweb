@@ -111,15 +111,19 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       setTimeout(elation.bind(this, function() {
         this.cursors = {
-          'default': elation.engine.assets.find('image', 'cursor_arrow'),
+          'default': elation.engine.assets.find('image', 'cursor_crosshair'),
           'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
           'pointer': elation.engine.assets.find('image', 'cursor_hand'),
+          'dot_inactive': elation.engine.assets.find('image', 'cursor_dot_inactive'),
+          'dot_active': elation.engine.assets.find('image', 'cursor_dot_active'),
         };
         this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
         this.engine.systems.world.scene['world-3d'].add(this.cursor);
       }), 1000);
 
+      //this.gazecaster = this.createObject('raycaster', {});
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
+
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
@@ -339,6 +343,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
+        let playerpos = this.properties.position;
+        if (typeof playerpos.x == 'undefined' || isNaN(playerpos.x)) playerpos.x = 0;
+        if (typeof playerpos.y == 'undefined' || isNaN(playerpos.y)) playerpos.y = 0;
+        if (typeof playerpos.z == 'undefined' || isNaN(playerpos.z)) playerpos.z = 0;
         this.objects['3d'].updateMatrix();
         this.objects['3d'].updateMatrixWorld();
         this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
@@ -665,7 +673,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
     }
     this.createObject = function(type, args) {
-      return this.room.createObject(type, args, this);
+      if (this.room) {
+        return this.room.createObject(type, args, this);
+      }
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
@@ -741,7 +751,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.handleGazeEnter = function(ev) {
       var obj = ev.data.object;
-      if (obj && obj.dispatchEvent) {
+      if (obj && obj.dispatchEvent && ev.data.intersection) {
         obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
         this.cursor_object = obj;
 
@@ -767,7 +777,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (obj && obj.dispatchEvent) {
         this.cursor_object = obj.js_id || '';
 
-        this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        if (ev.data.intersection.point) {
+          this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        }
       }
     }
     this.handleTouchStart = function(ev) {
@@ -832,5 +844,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       };
     })();
+    this.dispatchEvent = function(event, target) {
+      let firedev = elation.events.fire(event);
+    }
   }, elation.engine.things.player);
 });

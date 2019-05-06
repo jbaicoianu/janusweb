@@ -15,25 +15,25 @@ elation.require(['janusweb.janusbase'], function() {
 
         if (hitobject != this.lasthitobject) {
           if (this.lasthitobject) {
-            this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: hit}});
+            this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: hit}, bubbles: false});
           }
-          this.dispatchEvent({type: 'raycastenter', data: {object: hit.object, intersection: hit}});
+          this.dispatchEvent({type: 'raycastenter', data: {object: hit.object, intersection: hit}, bubbles: false});
           this.lasthitobject = hitobject;
         }
 
         if (!hit.point.equals(this.lasthitpos)) {
-          this.dispatchEvent({type: 'raycastmove', data: {object: hit.object, intersection: hit}});
+          this.dispatchEvent({type: 'raycastmove', data: {object: hit.object, intersection: hit}, bubbles: false});
         }
         this.lasthitpos.copy(hit.point);
       } else {
         if (this.lasthitobject) {
-          this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: null}});
-          this.dispatchEvent({type: 'raycastenter', data: {object: this.lasthitobject.room, intersection: null}});
+          this.dispatchEvent({type: 'raycastleave', data: {object: this.lasthitobject, intersection: null}, bubbles: false});
+          this.dispatchEvent({type: 'raycastenter', data: {object: this.lasthitobject.room, intersection: null}, bubbles: false});
           this.lasthitobject = this.lasthitobject.room;
         }
         this.localToWorld(this.fwdvec.set(0,0,-1));
         if (!this.fwdvec.equals(this.lasthitpos)) {
-          this.dispatchEvent({type: 'raycastmove', data: {object: this.lasthitobject, intersection: this.fwdvec}});
+          this.dispatchEvent({type: 'raycastmove', data: {object: this.lasthitobject, intersection: this.fwdvec}, bubbles: false});
         }
         this.lasthitpos.copy(this.fwdvec);
       }
