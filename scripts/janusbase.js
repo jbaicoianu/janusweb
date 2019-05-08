@@ -699,13 +699,19 @@ console.error('dunno what this is', other);
         this.anim_id = anim_id;
       }
     }
-    this.dispatchEvent = function(event) {
-      if (!event.element) event.element = this;
+    this.dispatchEvent = function(event, target) {
+      if (!event.element) event.element = target || this;
       var handlerfn = 'on' + event.type;
       if (this[handlerfn]) {
         this.executeCallback(this[handlerfn], event);
       }
-      return elation.events.fire(event);
+      // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
+      let firedev = elation.events.fire(event);
+      let returnValue = true;
+      firedev.forEach(e => returnValue &= e.returnValue);
+      if (event.bubbles !== false && returnValue && this.parent && this.parent.dispatchEvent) {
+        this.parent.dispatchEvent(event, event.target);
+      }
     }
     this.addEventListenerProxy = function(name, handler, bubble) {
       var eventobj = {
