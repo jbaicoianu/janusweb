@@ -281,6 +281,7 @@ console.log('got collider', collider, collision_id);
           collision_radius:  [ 'property', 'collision_radius'],
 
           onupdate:     ['callback', 'update'],
+          onchange:     ['callback', 'change'],
           oncollision:  ['callback', 'collision'],
           onmouseover:  ['callback', 'mouseover'],
           onmouseout:   ['callback', 'mouseout'],
