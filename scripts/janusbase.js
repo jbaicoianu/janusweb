@@ -138,13 +138,18 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                 //collider.bindQuaternion(this.orientation);
                 //collider.bindScale(this.properties.scale);
 
+                let collidercolor = 0x009900;
+                if (this.mass === 0) {
+                  collidercolor = 0x990000;
+                }
+                if (this.collision_trigger) collidercolor = 0x990099;
                 collider.traverse(elation.bind(this, function(n) {
-                  if (n.material) n.material = new THREE.MeshLambertMaterial({color: 0x999900, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
+                  if (n.material) n.material = new THREE.MeshPhongMaterial({color: collidercolor, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                   n.userData.thing = this;
                 }));
                 this.colliders.add(collider);
 
-                //this.setCollider('mesh', {mesh: collider.children[0], scale: this.properties.scale});
+                this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
 console.log('got collider', collider, collision_id);
@@ -247,6 +252,7 @@ console.log('got collider', collider, collision_id);
           vel:      ['property', 'velocity'],
           accel:    ['property', 'acceleration'],
           mass:     ['property', 'mass'],
+          restitution:['property', 'restitution'],
           scale:    ['property', 'scale'],
           col:      ['property', 'color'],
           opacity:  ['property', 'opacity'],
