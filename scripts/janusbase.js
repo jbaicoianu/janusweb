@@ -494,7 +494,7 @@ console.log('got collider', collider, collision_id);
         }
 
         this.resetFrameUpdates();
-        this.dispatchEvent({type: 'update', data: ev.data});
+        this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
         var proxy = this.getProxyObject();
         if (typeof proxy.update == 'function' && this.created) {
           proxy.update(ev.data);
