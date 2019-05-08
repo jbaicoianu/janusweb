@@ -9,6 +9,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         head_id: { type: 'string' },
         head_pos: { type: 'vector3', default: [0,1,0] },
         body_id: { type: 'string' },
+        userid_pos: { type: 'vector3', default: [0,2,0] },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         showlabel: { type: 'boolean', default: true },
         ghost_scale: { type: 'vector3', default: [1,1,1] },
@@ -71,15 +72,20 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       this.setBody(this.body_id);
       var name = this.properties.ghost_id;
       if (this.showlabel) {
-        this.label = this.head.spawn('label', name + '_label', {
+        this.label = this.createObject('text', {
           size: .1,
+          thickness: .03,
           align: 'center',
           collidable: false,
           text: name,
-          position: [0,1.5,0],
-          orientation: [0,1,0,0],
+          pos: this.userid_pos,
           pickable: false,
-          collidable: false
+          collidable: false,
+          col: '#ffffff',
+          emissive: '#cccccc',
+          shadow_receive: false,
+          lighting: false,
+          billboard: 'y'
         });
       }
 
@@ -167,7 +173,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.face.scale.fromArray(scale);
           if (this.label) {
             this.label.scale.fromArray(scale);
-            this.label.properties.position.multiply(this.label.scale);
+            this.label.pos.multiply(this.label.scale);
           }
         }
       }
