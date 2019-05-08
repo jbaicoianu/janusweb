@@ -900,6 +900,30 @@ console.log('clone', props);
       });
 */
     }
+    this.addControlContext = function(name, defs) {
+      let legacydefs = {};
+      let threshold_activate = .95,
+          threshold_deactivate = .05;
+      // TODO - instead of this compatibility layer, we should just support this object-style syntax and new events in the engine control system directly
+      for (let k in defs) {
+        let def = defs[k];
+        legacydefs[k] = [def.defaultbindings, (ev) => {
+          let absvalue = Math.abs(ev.value);
+          if (absvalue > threshold_activate && def.onactivate) {
+            def.onactivate(ev);
+          } else if (absvalue < threshold_deactivate && def.ondeactivate) {
+            def.ondeactivate(ev);
+          }
+        }];
+      }
+      this.engine.systems.controls.addContext(name, legacydefs);
+    }
+    this.activateControlContext = function(name) {
+      this.engine.systems.controls.activateContext(name, this);
+    }
+    this.deactivateControlContext = function(name) {
+      this.engine.systems.controls.deactivateContext(name);
+    }
     this.traverseObjects = function(callback, root) {
       if (!root) root = this.objects['3d'];
       callback(root);
