@@ -660,6 +660,26 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
       return m;
     }
+    this.updateColor = function() {
+      elation.engine.things.janusobject.extendclass.updateColor.call(this);
+
+      if (this.objects['3d']) {
+        this.traverseObjects(n => {
+          if (n.material) {
+            n.material.color = this.properties.color;
+
+            var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+            for (var i = 0; i < m.length; i++) {
+              m[i].opacity = this.opacity;
+              m[i].transparent = (m[i].opacity < 1);
+              if (m[i].transparent) {
+                m[i].alphaTest = this.alphatest;
+              }
+            }
+          }
+        });
+      }
+    }
     this.isUsingPBR = function() {
       return this.lighting && elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
     }
