@@ -828,6 +828,78 @@ console.error('dunno what this is', other);
       }
       return false;
     }
+    this.clone = function() {
+      // Create a new copy of this object
+      function arrayEquals(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length != b.length) return false;
+        for (var i = 0; i < a.length; ++i) {
+          if (a[i] !== b[i]) return false;
+        }
+        return true;
+      }
+      let props = {},
+          skipprops = ['classList', 'color', 'fwd', 'janus', 'orientation', 'parent', 'room', 'tag', 'xdir', 'ydir', 'zdir'],
+          remap = {
+            janusid: 'id',
+            position: 'pos',
+          };
+      for (let k in this._thingdef.properties) {
+        if (skipprops.indexOf(k) != -1) continue;
+
+        let prop = this._thingdef.properties[k];
+        let realkey = (remap[k] ? remap[k] : k);
+        switch (prop.type) {
+          case 'vector2':
+          case 'vector3':
+          case 'vector4':
+          case 'euler':
+          case 'quaternion':
+            if (this[k]) {
+              let arr = this[k].toArray();
+              if (!arrayEquals(arr, prop.default)) {
+                props[realkey] = arr;
+              }
+            } else {
+console.log('its null', k, this[k], prop);
+            }
+            break;
+          default:
+            if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
+              props[realkey] = this[k];
+            }
+        }
+        // Special handling for 'rotation' and 'color'
+        if (realkey == 'rotation') {
+          props['rotation'][0] *= THREE.Math.RAD2DEG;
+          props['rotation'][1] *= THREE.Math.RAD2DEG;
+          props['rotation'][2] *= THREE.Math.RAD2DEG;
+        } else if (realkey == 'color') {
+          if (!this.colorIsDefault) {
+            props['col'] = this.col.toArray();
+          }
+        }
+        //if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
+      }
+console.log('clone', props);
+      let parent = this.parent || room;
+      if (parent) {
+        return parent.createObject(this.tag, props);
+      }
+/*
+      {
+        pos: this.pos.clone(),
+        rotation: this.rotation.clone(),
+        scale: this.scale.clone(),
+        color: this.color.clone(),
+        lighting: this.lighting,
+        id: this.id,
+        js_id: this.js_id + '_copy',
+        collision_id: this.collision_id,
+      });
+*/
+    }
     this.traverseObjects = function(callback, root) {
       if (!root) root = this.objects['3d'];
       callback(root);
