@@ -649,7 +649,7 @@ console.error('dunno what this is', other);
     this.setOpacity = function(opacity) {
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
-        this.objects['3d'].traverse(function(n) {
+        this.traverseObjects(function(n) {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
@@ -666,13 +666,13 @@ console.error('dunno what this is', other);
     this.setAlphaTest = function(alphatest) {
       if (this.objects['3d'] && this.currentalphatest != alphatest) {
         this.currentalphatest = alphatest;
-        this.objects['3d'].traverse(function(n) {
+        this.traverseObjects(function(n) {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
-              if (m[i].transparent) {
+              //if (m[i].transparent) {
                 m[i].alphaTest =alphatest;
-              }
+              //}
             }
           }
         });
@@ -827,6 +827,18 @@ console.error('dunno what this is', other);
         obj = obj.parent;
       }
       return false;
+    }
+    this.traverseObjects = function(callback, root) {
+      if (!root) root = this.objects['3d'];
+      callback(root);
+      if (root.children) {
+        for (let i = 0; i < root.children.length; i++) {
+          let child = root.children[i];
+          if (!child.userData.thing || child.userData.thing === this) {
+            this.traverseObjects(callback, child);
+          }
+        }
+      }
     }
   }, elation.engine.things.generic);
 });
