@@ -68,6 +68,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
       this.created = false;
+      elation.events.add(this, 'thing_change', (ev) => this.dispatchEvent({type: 'objectchange'}));
     }
     this.createObject3D = function() {
       if (this.object && this.object instanceof THREE.Object3D) {
