@@ -226,7 +226,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         blending: THREE.NoBlending,
         side: THREE.DoubleSide
       });
-      this.objects['3d'].traverse(function(n) {
+      this.traverseObjects(function(n) {
         if (n.material) n.material = blankmaterial;
       });
     }
@@ -399,7 +399,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var remove = [];
       var cloneMaterial = true;//(texture !== false);
 
-      this.objects['3d'].traverse(elation.bind(this, function(n) { 
+      this.traverseObjects(elation.bind(this, function(n) { 
         n.receiveShadow = this.shadow && this.shadow_receive;
         n.castShadow = this.shadow && this.shadow_cast;
 
@@ -721,7 +721,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateTextureOffsets = function() {
       // FIXME - should cache textures instead of iterating each time
       if (this.objects['3d']) {
-        this.objects['3d'].traverse(n => {
+        this.traverseObjects(n => {
           if (n.material) {
             let materials = (n.material instanceof THREE.Material ? [n.material] : n.material);
             materials.forEach(m => {
