@@ -54,6 +54,7 @@ elation.require([
         'walk_speed': { type: 'float', default: 1.0 },
         'run_speed': { type: 'float', default: 2.0 },
         'jump_velocity': { type: 'float', default: 5.0 },
+        'flying': { type: 'boolean', default: true, set: this.updateFlying },
         'gravity': { type: 'float', default: 0, set: this.updateGravity },
         'locked': { type: 'bool', default: false },
         'cursor_visible': { type: 'bool', default: true },
@@ -730,6 +731,7 @@ elation.require([
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
         this.gravity = elation.utils.any(room.gravity, 0);
+        this.flying = elation.utils.any(room.flying, true);
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
@@ -1547,6 +1549,10 @@ elation.require([
         this.localasset.col = this.col;
       }
     }
+    this.updateFlying = function() {
+      player.flying = this.flying;
+      console.log('Toggle player flying', this.flying);
+    }
     this.updateGravity = function() {
       if (this.loaded) {
         player.updateGravity(this.gravity);
@@ -1600,6 +1606,7 @@ elation.require([
           walk_speed:    ['property', 'walk_speed'],
           run_speed:     ['property', 'run_speed'],
           jump_velocity: ['property', 'jump_velocity'],
+          flying:        ['property', 'flying'],
           gravity:       ['property', 'gravity'],
           fog:           ['property', 'fog'],
           fog_mode:      ['property', 'fog_mode'],
