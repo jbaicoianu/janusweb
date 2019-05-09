@@ -404,6 +404,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         n.castShadow = this.shadow && this.shadow_cast;
 
         var useSkinning = n instanceof THREE.SkinnedMesh;
+        var useVertexColors = n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.color;
         if (n.material) {
           var materials = [];
           if (elation.utils.isArray(n.material)) {
@@ -590,6 +591,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             //m.needsUpdate = true;
             m.skinning = useSkinning;
+            if (useVertexColors) {
+              m.vertexColors = THREE.VertexColors;
+            }
           }
         } else if (n instanceof THREE.Light) {
           remove.push(n);
