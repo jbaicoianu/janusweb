@@ -43,6 +43,7 @@ elation.require([
         'near_dist': { type: 'float', default: 0.01, set: this.setNearFar },
         'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
+        'toon': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
         'tonemapping_exposure': { type: 'float', default: 1.0, set: this.updateToneMapping },
@@ -708,6 +709,7 @@ elation.require([
         if (room.rate) this.properties.rate = room.rate;
         if (room.gazetime) this.properties.gazetime = room.gazetime;
         if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
+        if (typeof room.toon != 'undefined') this.properties.toon = room.toon;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
         if (typeof room.defaultlights != 'undefined') this.defaultlights = room.defaultlights;
 
@@ -1612,6 +1614,7 @@ elation.require([
           tonemapping_exposure:   ['property', 'tonemapping_exposure'],
           tonemapping_whitepoint: ['property', 'tonemapping_whitepoint'],
           pbr:           ['property', 'pbr'],
+          toon:          ['property', 'toon'],
           shadows:       ['property', 'shadows'],
           col:           ['property', 'col'],
           locked:        ['property', 'locked'],
