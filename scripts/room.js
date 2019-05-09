@@ -740,28 +740,7 @@ elation.require([
 
         if (assets.scripts) {
           this.pendingScripts = 0;
-          assets.scripts.forEach(elation.bind(this, function(s) {
-            var script = elation.engine.assets.find('script', s.src);
-            this.pendingScripts++;
-
-            if (script._loaded) {
-              // If the script is already part of the document, remove it and readd it so it's reevaluated
-              if (script.parentNode) {
-                script.parentNode.removeChild(script);
-              }
-
-              var oldscript = script;
-              script = document.createElement('script');
-              script.src = oldscript.src;
-              document.head.appendChild(script);
-            }
-            this.roomscripts.push(script);
-            elation.events.add(script, 'asset_load', elation.bind(this, function() {
-              script._loaded = true;
-              document.head.appendChild(script);
-              script.onload = elation.bind(this, this.doScriptOnload);
-            }));
-          }));
+          this.loadScripts(assets.scripts);
         }
       }
       this.applyingEdits = false;
@@ -770,6 +749,30 @@ elation.require([
       //  this.setActive();
       //}
       //this.showDebug();
+    }
+    this.loadScripts = function(scripts) {
+      scripts.forEach(elation.bind(this, function(s) {
+        var script = elation.engine.assets.find('script', s.src);
+        this.pendingScripts++;
+
+        if (script._loaded) {
+          // If the script is already part of the document, remove it and readd it so it's reevaluated
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          var oldscript = script;
+          script = document.createElement('script');
+          script.src = oldscript.src;
+          document.head.appendChild(script);
+        }
+        this.roomscripts.push(script);
+        elation.events.add(script, 'asset_load', elation.bind(this, function() {
+          script._loaded = true;
+          document.head.appendChild(script);
+          script.onload = elation.bind(this, this.doScriptOnload);
+        }));
+      }));
     }
     this.getTranslator = function(url) {
       var keys = Object.keys(this.translators);
