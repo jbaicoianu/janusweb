@@ -484,7 +484,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 this.assignTextureParameters(m.map, modelasset, asset);
               }
             }
-            if (m.bumpMap) {
+            if (m.normalMap) {
+              var imagesrc = m.normalMap.sourceFile;
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+              if (asset) {
+                m.normalMap = asset.getInstance();
+                m.normalMap = asset.getInstance();
+                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) {
+                  m.normalMap = ev.data; this.refresh();
+                  m.normalMap.offset.copy(this.texture_offset);
+                  m.normalMap.repeat.copy(this.texture_repeat);
+                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                }));
+                elation.events.add(m.normalMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+              }
+            } else if (m.bumpMap) {
               var imagesrc = m.bumpMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
