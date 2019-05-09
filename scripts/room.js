@@ -92,6 +92,7 @@ elation.require([
       this.sounds = {};
       this.videos = {};
       this.loaded = false;
+      this.completed = false;
       this.parseerror = false;
 
       this.roomscripts = [];
@@ -1352,6 +1353,7 @@ elation.require([
           if (this.pendingassets.length == 0) {
             this.applyingEdits = false;
             setTimeout(elation.bind(this, function() {
+              this.completed = true;
               elation.events.fire({element: this, type: 'room_load_complete'});
             }), 0);
           }
