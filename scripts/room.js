@@ -208,7 +208,7 @@ elation.require([
         });
         this.skyboxcollider = this.createObject('object', {
           js_id: 'room_skybox',
-          collision_id: 'sphere',
+          collision_id: 'cube',
           collision_scale: V(1000),
           collision_trigger: true
         });
