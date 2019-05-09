@@ -697,11 +697,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.isUsingPBR = function() {
       return this.lighting && elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
     }
+    this.isUsingToonShader = function() {
+      return this.lighting && elation.utils.any(this.room.toon, elation.config.get('janusweb.materials.toon'));
+    }
     this.allocateMaterial = function() {
       if (!this.lighting) {
         return new THREE.MeshBasicMaterial();
       } else if (this.isUsingPBR()) {
         return new THREE.MeshPhysicalMaterial();
+      } else if (this.isUsingToonShader()) {
+        return new THREE.MeshToonMaterial();
       }
       return new THREE.MeshPhongMaterial();
     }
