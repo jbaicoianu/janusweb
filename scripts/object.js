@@ -18,6 +18,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         shadow: { type: 'boolean', default: false, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial },
+        lights: { type: 'boolean', default: false },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
@@ -595,7 +596,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.vertexColors = THREE.VertexColors;
             }
           }
-        } else if (n instanceof THREE.Light) {
+        } else if (n instanceof THREE.Light && !this.lights) {
           remove.push(n);
         }
       }));
