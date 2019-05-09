@@ -895,6 +895,7 @@ elation.require([
               var attrname = k.toLowerCase();
               existing[attrname] = newobj._content;
             }
+            existing.dispatchEvent({type: 'room_edit'});
             existing.sync = false;
           } else {
             hasNew = true;
