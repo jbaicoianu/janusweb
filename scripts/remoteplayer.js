@@ -58,15 +58,17 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false
     });
 */
-    this.label = this.head.spawn('label', this.player_name + '_label', {
+    this.label = this.createObject('text', {
       size: .1,
+      thickness: .002,
       align: 'center',
       collidable: false,
       text: this.player_name,
-      position: [0,.5,0],
+      position: [0,2,0],
       orientation: [0,1,0,0],
       pickable: false,
-      collidable: false
+      collidable: false,
+      billboard: 'y'
     });
     this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
       //loop: true
