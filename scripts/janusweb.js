@@ -115,6 +115,10 @@ elation.require([
 
       this.assetpack.executeWhenLoaded(() => {
         this.registerAdditionalElements(['raycaster', 'teleporter']);
+             var hashargs = elation.url();
+          var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
+
+                this.load(starturl, true);
       });
     }
     this.initScripting = function() {
@@ -269,7 +273,7 @@ elation.require([
       }
 
       if (this.autoload || starturl != this.properties.homepage) {
-        this.load(starturl, true);
+//        this.load(starturl, true);
       } else {
         player.disable();
       }
