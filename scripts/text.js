@@ -177,6 +177,7 @@ elation.require(['engine.things.label'], function() {
 
         this._proxyobject._proxydefs = {
           text:  [ 'property', 'text'],
+          col:   [ 'property', 'color'],
           emissive:  [ 'property', 'emissive'],
         };
       }
@@ -196,6 +197,7 @@ elation.require(['engine.things.label'], function() {
           this.properties.color = this.properties.color.clone();
           this.defaultcolor.setRGB(1,1,1);
           this.colorIsDefault = false;
+          delete this._proxies['color'];
         }
       }
       this.updateMaterial();
