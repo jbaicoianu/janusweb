@@ -61,6 +61,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var scriptassets = this.getAsArray(this.arrayget(assetxml, "_children.assetscript", [])); 
   var ghostassets = this.getAsArray(this.arrayget(assetxml, "_children.assetghost", [])); 
   var websurfaceassets = this.getAsArray(this.arrayget(assetxml, "_children.assetwebsurface", [])); 
+  var shaderassets = this.getAsArray(this.arrayget(assetxml, "_children.assetshader", []));
   var assetlist = [];
   if (!datapath) {
     datapath = 'http://web.janusvr.com/media';
@@ -115,6 +116,17 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       baseurl: baseurl
     }); 
   });
+  shaderassets.forEach(function(n) {
+    n.uniforms = (n._children && n._children.uniform ? n._children.uniform : false);
+    assetlist.push({
+      assettype: 'shader',
+      name: n.id,
+      fragment_src: n.src,
+      vertex_src: n.vertex_src,
+      uniforms: n.uniforms,
+      baseurl: baseurl,
+    });
+  });
 
   var objlist = []; 
   objectassets.forEach(function(n) { 
@@ -135,6 +147,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
     websurfaces: websurfaces,
     scripts: scriptassets,
     ghosts: ghostassets,
+    shaders: shaderassets,
     assetlist: assetlist
   };
   return assets;
