@@ -53,7 +53,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.disableCursor();
     },
     handleMouseDown(ev) {
-      if (ev.button == 0 && player.enabled) {
+      if (ev.button == 0 && player.enabled && room.teleport) {
         this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
         this.mousediff = [0,0];
         this.active = false;
