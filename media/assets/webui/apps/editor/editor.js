@@ -992,7 +992,7 @@ console.log('set mode', mode);
   }
   handleThingChange(ev) {
     let obj = ev.target;
-    console.log('thing changed!', ev, obj, this);
+    //console.log('thing changed!', ev, obj, this);
     this.updateProperties();
   }
 });

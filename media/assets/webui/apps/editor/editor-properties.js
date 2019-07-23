@@ -130,7 +130,6 @@ elation.elements.define('janus-ui-editor-property-color', class extends elation.
     }
   }
   updateValue(value) {
-console.log('MY VALUE!', value, value.getHexString());
     this.value = value;
     this.elements.color.value = '#' + value.getHexString();
   }
