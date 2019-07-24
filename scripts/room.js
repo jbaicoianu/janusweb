@@ -751,6 +751,10 @@ elation.require([
           this.pendingScripts = 0;
           this.loadScripts(assets.scripts);
         }
+        if (room.require) {
+          let roomproxy = this.getProxyObject();
+          roomproxy.require(room.require);
+        }
       }
       this.applyingEdits = false;
 
@@ -2068,10 +2072,14 @@ elation.require([
       return null;
     }
     this.require = function(deps) {
+      // Dynamically load components that are needed by this room from any registered repositories
       if (!elation.utils.isArray(deps)) {
-        deps = [deps];
+        deps = deps.split(' ');
       }
-      let foundmap = {};
+      if (!this.pendingCustomElementsMap) {
+        this.pendingCustomElementsMap = {};
+      }
+      let foundmap = this.pendingCustomElementsMap;
       function countMissing() {
         let missing = 0;
         for (let k in foundmap) {
@@ -2079,20 +2087,32 @@ elation.require([
         }
         return missing;
       }
-      let finished = false;
-      deps.forEach(d => foundmap[d] = (d in this.customElements));
+      let finished = false,
+          newdeps = [];
+
+      deps.forEach(d => { if (!(d in foundmap)) { newdeps.push(d); foundmap[d] = false; } }); 
+
+      this.pendingCustomElements = countMissing();
+
+      // FIXME - This is a naive implementation which doesn't do proper dependency graph resolution.
+      //         As a result, sometimes the components load out of order, or they try to load multiple times.
+      //         Elation has some built-in functions for resolving complex dependency graphs which we
+      //         should be using here
       let promise = new Promise((accept, reject) => {
-        for (let k in foundmap) {
+        for (let i = 0; i < newdeps.length; i++) {
+          let k = newdeps[i];
           if (!foundmap[k]) {
             // The requested element isn't registered yet, wait and see if it becomes available
             this.addEventListener('registerelement', (ev) => {
-              if (ev.data in foundmap) {
+              if (ev.data in foundmap && !foundmap[ev.data]) {
                 // Element was registered, update its map entry
                 foundmap[ev.data] = true;
 
-                if (countMissing() == 0) {
+                this.pendingCustomElements = countMissing();
+                if (this.pendingCustomElements == 0) {
                   // If all our required elements have been loaded, we're done here
                   finished = true;
+                  elation.events.fire({element: this, type: 'room_load_complete_customelements'});
                   accept();
                 }
               }
@@ -2133,7 +2153,7 @@ elation.require([
           // Already loaded
           accept(this.componentrepository);
         } else {
-          let url = 'https://baicoianu.com/~bai/janusweb/test/components.json'; // FIXME - obvious hack for prototype
+          let url = 'https://baicoianu.com/~bai/janusweb/test/components.json'; // FIXME - dumb hack for prototype
 
           fetch(url)
             .then(d => d.json())
