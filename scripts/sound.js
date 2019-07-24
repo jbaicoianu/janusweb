@@ -16,7 +16,7 @@ elation.require(['janusweb.janusbase'], function() {
         rect: { type: 'string', set: this.updateSound }
       });
       //this.playing = false;
-      Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
+      //Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
       this.playStarted = false;
       elation.events.add(this.room, 'janusweb_script_frame', elation.bind(this, this.checkBounds));
     }
