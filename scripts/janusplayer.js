@@ -422,10 +422,25 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.gazecaster) {
         this.gazecaster.room = room;
       }
+/*
       if (!this.teleporter) {
         this.teleporter = this.room.createObject('user_teleporter');
       } else {
         this.teleporter.setRoom(room.getProxyObject());
+      }
+*/
+      if (!this.room.selfavatar && this.ghost) {
+        this.ghost.die();
+        this.ghost = false;
+      } else if (!this.ghost && this.room.selfavatar) {
+        let avatar = this.getAvatarData();
+        if (avatar) {
+          this.ghost = this.createObject('ghost', {
+            ghost_id: this.getUsername(),
+            avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+            showlabel: false
+          });
+        }
       }
       //room.add(this);
       this.updateGravity();
@@ -538,11 +553,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.ghost.die();
       }
       let avatardata = this.getAvatarData();
-      this.ghost = this.createObject('ghost', {
-        ghost_id: this.getUsername(),
-        avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
-        showlabel: false
-      });
+      if (avatardata && this.room.selfavatar) {
+        this.ghost = this.createObject('ghost', {
+          ghost_id: this.getUsername(),
+          avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
+          showlabel: false
+        });
+      }
 
       return setting;
     }
