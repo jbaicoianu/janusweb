@@ -12,6 +12,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         image_id: { type: 'string', set: this.updateMaterial },
         lmap_id: { type: 'string', set: this.updateMaterial },
         video_id: { type: 'string', set: this.updateVideo },
+        shader_id: { type: 'string', set: this.updateMaterial },
         url: { type: 'string' },
         loop: { type: 'boolean' },
         websurface_id: { type: 'string', set: this.updateWebsurface },
@@ -239,11 +240,18 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.textureNeedsUpdate) {
         this.assignTextures();
       }
+      if (this.shader) {
+        if (this.shader.uniforms.time) {
+          this.shader.uniforms.time.value = performance.now() / 1000;
+          this.refresh();
+        }
+      }
     }
     this.assignTextures = function() {
       //console.log('assign textures', this.name, this.objects['3d']);
       if (!this.objects['3d']) return;
       var modelasset = this.modelasset,
+          shadermaterial = false,
           texture = false,
           textureLightmap = false,
           textureNormal = false,
@@ -399,6 +407,25 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var hasalpha = this.hasalpha;
       var remove = [];
       var cloneMaterial = true;//(texture !== false);
+
+      if (this.shader_id) {
+        let shader = this.getAsset('shader', this.shader_id);
+        shadermaterial = shader.getInstance();
+        shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+        this.traverseObjects((n) => {
+          if (n.material) {
+            if (Array.isArray(n.material)) {
+              for (let i = 0; i < n.material.length; i++) {
+                n.material[i] = shadermaterial;
+              }
+            } else {
+              n.material = shadermaterial;
+            }
+          }
+        });
+        this.shader = shadermaterial;
+        return;
+      } 
 
       this.traverseObjects(elation.bind(this, function(n) { 
         n.receiveShadow = this.shadow && this.shadow_receive;
@@ -706,7 +733,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       return this.lighting && elation.utils.any(this.room.toon, elation.config.get('janusweb.materials.toon'));
     }
     this.allocateMaterial = function() {
-      if (!this.lighting) {
+      if (this.shader_id) {
+      } else if (!this.lighting) {
         return new THREE.MeshBasicMaterial();
       } else if (this.isUsingPBR()) {
         return new THREE.MeshPhysicalMaterial();
@@ -879,6 +907,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           url:  [ 'property', 'url'],
           image_id:  [ 'property', 'image_id'],
           video_id:  [ 'property', 'video_id'],
+          shader_id:  [ 'property', 'shader_id'],
           lmap_id:  [ 'property', 'lmap_id'],
           envmap_id:  [ 'property', 'envmap_id'],
           websurface_id:  [ 'property', 'websurface_id'],
