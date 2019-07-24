@@ -523,6 +523,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         addForce:      ['function', 'addForce'],
         removeForce:   ['function', 'removeForce'],
         raycast:       ['function', 'raycast'],
+        getViewFrustum:['function', 'getViewFrustum'],
       });
       return proxy;
     }
