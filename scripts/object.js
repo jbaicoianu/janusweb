@@ -829,7 +829,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       elation.engine.things.janusobject.extendclass.stop.call(this);
       if (this.image_id) {
         var texture = elation.engine.assets.find('image', this.image_id);
-        console.log('stop the image!', texture);
+        //console.log('stop the image!', texture);
       }
       if (this.video_id) {
         //var texture = elation.engine.assets.find('video', this.video_id);
