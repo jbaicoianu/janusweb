@@ -56,6 +56,7 @@ elation.require([
         'jump_velocity': { type: 'float', default: 5.0 },
         'flying': { type: 'boolean', default: true, set: this.updateFlying },
         'gravity': { type: 'float', default: 0, set: this.updateGravity },
+        'teleport': { type: 'bool', default: true, set: this.updateTeleport },
         'locked': { type: 'bool', default: false },
         'cursor_visible': { type: 'bool', default: true },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
@@ -67,6 +68,8 @@ elation.require([
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
+        'selfavatar': { type: 'boolean', default: true },
+        'onload': { type: 'string' },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
@@ -722,6 +725,7 @@ elation.require([
         if (typeof room.toon != 'undefined') this.properties.toon = room.toon;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
         if (typeof room.defaultlights != 'undefined') this.defaultlights = room.defaultlights;
+        if (typeof room.selfavatar != 'undefined') this.properties.selfavatar = room.selfavatar;
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
@@ -741,11 +745,17 @@ elation.require([
         this.properties.locked = room.locked;
         this.gravity = elation.utils.any(room.gravity, 0);
         this.flying = elation.utils.any(room.flying, true);
+        this.teleport = elation.utils.any(room.teleport, true);
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
         this.properties.run_speed = room.run_speed || 5.4;
         this.properties.cursor_visible = room.cursor_visible;
+
+        if (room.onload) {
+          this.properties.onload = room.onload;
+          this.addEventListenerProxy('room_load_complete', (ev) => { let func = new Function(room.onload); func();});
+        }
 
         if (assets.scripts) {
           this.pendingScripts = 0;
@@ -1607,6 +1617,9 @@ elation.require([
       player.flying = this.flying;
       console.log('Toggle player flying', this.flying);
     }
+    this.updateTeleport = function() {
+      console.log('Toggle player teleport', this.teleport);
+    }
     this.updateGravity = function() {
       if (this.loaded) {
         player.updateGravity(this.gravity);
@@ -1680,6 +1693,7 @@ elation.require([
           col:           ['property', 'col'],
           locked:        ['property', 'locked'],
           private:       ['property', 'private'],
+          selfavatar:    ['property', 'selfavatar'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -1714,6 +1728,7 @@ elation.require([
 
           onLoad:          ['callback', 'janus_room_scriptload'],
           update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
+          postUpdate:      ['callback', 'janusweb_script_frame_end', null, this.janus.scriptframeargs],
           onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
           onColliderEnter: ['callback', 'janus_room_collider_enter'],
           onColliderExit:  ['callback', 'janus_room_collider_exit'],
