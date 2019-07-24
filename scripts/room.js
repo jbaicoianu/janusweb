@@ -616,6 +616,14 @@ elation.require([
           }
           //elation.utils.merge(roomdata.assets.ghosts, this.ghosts);
         }
+        if (roomdata.assets.shaders) {
+          let shaders = roomdata.assets.shaders;
+          for (var i = 0; i < shaders.length; i++) {
+            if (shaders[i].uniforms) {
+              //shaders[i].uniforms = this.parseShaderUniforms(shaders[i].uniforms);
+            }
+          }
+        }
         //this.assetpack = elation.engine.assets.loadJSON(assetlist, this.baseurl);
         if (!this.assetpack) {
           this.assetpack = new elation.engine.assets.pack({name: this.id + '_assets', baseurl: this.baseurl, json: assetlist});
@@ -1234,6 +1242,14 @@ elation.require([
           src: src,
           baseurl: this.baseurl
         });
+      } else if (type == 'shader') {
+        assetlist.push({
+          assettype: 'shader',
+          name: args.id,
+          fragment_src: args.src,
+          vertex_src: args.vertex_src,
+          uniforms: args.uniforms,
+        });
       }
 
       this.loadRoomAssets({
@@ -1241,6 +1257,34 @@ elation.require([
           assetlist: assetlist
         }
       });
+    }
+    this.parseShaderUniforms = function(uniformlist) {
+      let uniforms = {};
+      if (uniformlist) {
+        uniformlist.forEach(u => {
+          if (!u.name) {
+            console.warn('Shader uniform specified without name', u, this);
+            return;
+          }
+          if (!u.type) {
+            console.warn('Shader uniform specified without type', u, this);
+            return;
+          }
+          if (u.type == 'sampler2D') {
+            let imgasset = this.getAsset('image', u.value);
+            if (imgasset) {
+              let texture = imgasset.getInstance();
+              uniforms[u.name] = { value: texture };
+            }
+          } else if (u.type == 'vec2' || u.type == 'vec3' || u.type == 'vec4') {
+            let values = this.janus.parser.getVectorValue(u.value);
+            uniforms[u.name] = { value: V.apply(null, values) };
+          } else {
+            uniforms[u.name] = { value: u.value };
+          }
+        });
+      }
+      return uniforms;
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
