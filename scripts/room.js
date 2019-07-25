@@ -209,12 +209,14 @@ elation.require([
           position: [0,0,0],
           collidable: false
         });
+/*
         this.skyboxcollider = this.createObject('object', {
           js_id: 'room_skybox',
           collision_id: 'cube',
           collision_scale: V(1000),
           collision_trigger: true
         });
+*/
       }
       if (this.skyboxtexture) {
         this.skybox.setTexture(this.skyboxtexture);
