@@ -33,6 +33,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         rotate_axis: { type: 'string', default: '0 1 0', set: this.updateRotationSpeed },
         rotate_deg_per_sec: { type: 'float', default: 0, set: this.updateRotationSpeed },
         object: { type: 'object' },
+        layers: { type: 'string', set: this.setLayers },
+        renderorder: { type: 'integer', default: 0 },
         onclick: { type: 'object' },
         anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
@@ -79,11 +81,15 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.properties.orientation.copy(this.object.quaternion);
         return this.object;
       }
+      if (this.renderorder) this.object.renderOrder = this.renderorder;
       return new THREE.Object3D();
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
         this.create();
+      }
+      if (this.layers) {
+        this.setLayers(this.layers);
       }
       this.created = true;
     }
@@ -274,6 +280,8 @@ console.log('got collider', collider, collision_id);
           className:  ['property', 'className'],
           classList:  ['property', 'classList'],
           gazetime:  ['property', 'gazetime'],
+          layers:  ['property', 'layers'],
+          renderorder:  ['property', 'renderorder'],
 
           pickable:  [ 'property', 'pickable'],
           collision_id:  [ 'property', 'collision_id'],
@@ -840,6 +848,18 @@ console.error('dunno what this is', other);
         obj = obj.parent;
       }
       return false;
+    }
+    this.setLayers = function(layers) {
+      // TODO - this system is experimental, and probably isn't quite ready for use
+      //        It should be extended to have named layers, rather than expecting the
+      //        dev to manage numeric layer IDs and know which ones are reserved
+      if (!layers) layers = this.layers;
+      if (!this.objects['3d']) return;
+      let layernums = layers.split(' ');
+      this.objects['3d'].layers.mask = 0;
+      for (let i = 0; i < layernums.length; i++) {
+        this.objects['3d'].layers.enable(layernums[i]);
+      }
     }
     this.clone = function() {
       // Create a new copy of this object
