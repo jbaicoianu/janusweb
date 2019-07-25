@@ -54,6 +54,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         ongazeactivate: { type: 'callback' },
       });
       this.lastframevalues = {
+        position: new THREE.Vector3(0,0,0),
+        scale: new THREE.Vector3(1,1,1),
+        color: new THREE.Color(),
         xdir: new THREE.Vector3(1,0,0),
         ydir: new THREE.Vector3(0,1,0),
         zdir: new THREE.Vector3(0,0,1),
