@@ -573,6 +573,9 @@ console.log('got collider', collider, collision_id);
       }
     })();
     this.resetFrameUpdates = function() {
+      this.frameupdates['position'] = false;
+      this.frameupdates['scale'] = false;
+      this.frameupdates['color'] = false;
       this.frameupdates['xdir'] = false;
       this.frameupdates['ydir'] = false;
       this.frameupdates['zdir'] = false;
