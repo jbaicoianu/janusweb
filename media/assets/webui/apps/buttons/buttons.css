@@ -25,3 +25,19 @@ janus-button-webvr[disabled] {
   cursor: not-allowed;
 }
 
+janus-ui-buttons>ui-buttonbar>ui-button,
+janus-ui-buttons>ui-buttonbar>ui-button:first-of-type,
+janus-ui-buttons>ui-buttonbar>ui-button:last-of-type,
+janus-ui-buttons>ui-buttonbar>janus-button-webvr,
+janus-ui-buttons>ui-buttonbar>janus-ui-settings-button {
+    width: 60px;
+    height: 40px;
+    border-radius: 30px;
+    border: 1px solid white;
+    display: block;
+    margin: 0 .2em;
+    padding: 0;
+    line-height: 38px;
+    font-size: .8em;
+    font-weight: bold;
+}
