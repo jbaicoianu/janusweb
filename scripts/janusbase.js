@@ -541,7 +541,7 @@ console.log('got collider', collider, collision_id);
         // Copy back the orthonormalized values
         this.properties.xdir.copy(xdir);
         this.properties.ydir.copy(ydir);
-        //this.properties.zdir.copy(zdir);
+        this.properties.zdir.copy(zdir);
       }
     })();
     this.updateOrientationFromEuler = (function() {
