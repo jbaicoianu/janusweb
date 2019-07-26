@@ -92,6 +92,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.setLayers(this.layers);
       }
       this.created = true;
+      this.dispatchEvent({type: 'create', bubbles: true});
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
