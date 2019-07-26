@@ -1616,8 +1616,10 @@ elation.require([
       }
     }
     this.updateFlying = function() {
-      player.flying = this.flying;
-      console.log('Toggle player flying', this.flying);
+      if (typeof player != 'undefined') {
+        player.flying = this.flying;
+        console.log('Toggle player flying', this.flying);
+      }
     }
     this.updateTeleport = function() {
       console.log('Toggle player teleport', this.teleport);
