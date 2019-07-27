@@ -10,6 +10,8 @@
   <a href="https://github.com/janusvr/janusvr-examples">Examples</a>
   &mdash;
   <a href="https://web.janusvr.com">Demo</a>
+  &mdash;
+  <a href="https://github.com/madjin/janus-guide">Docs</a>
 </div>
 
 
@@ -38,14 +40,14 @@
 ## Features
 
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
-- Support for 2d, sbs3d/ou3d, and 360 degree video textures using HTML5 Video
-- 3D positional audio
-- Gamepad support via the HTML5 Gamepad API
 - Rendering functionality provided by Three.js / WebGL
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
-- Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
-- Import Collada, OBJ, glTF, and other popular 3d file formats
 - Realtime collaboration across all devices via built-in networking
+- Import Collada, OBJ, glTF, and other popular 3d file formats
+- 3D positional audio
+- Gamepad support via the HTML5 Gamepad API
+- Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
+- Support for 2d, sbs3d/ou3d, and 360 degree video textures using HTML5 Video
 - Scriptable client enables many customized uses
 
 ## Using

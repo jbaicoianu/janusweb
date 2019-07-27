@@ -15,6 +15,8 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
         light_helper: { type: 'boolean', default: false, set: this.updateLightHelper },
+        collision_id: { type: 'string', default: 'sphere', set: this.updateCollider },
+        collision_trigger: { type: 'boolean', default: true, set: this.updateCollider },
       });
     }
     this.createObject3D = function() {
@@ -30,7 +32,6 @@ elation.require(['janusweb.janusbase'], function() {
       this.createLight();
       this.updateLight();
       this.created = true;
-      // TODO - should be an easy way of toggling helpers
 
       var scene = this.objects['3d'];
       while (scene.parent) {
@@ -61,6 +62,10 @@ elation.require(['janusweb.janusbase'], function() {
       }
       if (this.helper) {
         this.helper.update();
+      }
+      if (this.light_directional || this.light_cone_angle == 1) {
+        this.light.position.subVectors(this.light.position, this.light.target.position).add(player.pos);
+        this.light.target.position.copy(player.pos);
       }
     }
     this.createLight = function() {
@@ -100,7 +105,8 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.light_target) {
         if (elation.utils.isString(this.light_target)) {
           if (room.objects[this.light_target]) {
-            this.light.target = room.objects[this.light_target].objects['3d'];
+            let obj = room.objects[this.light_target];
+            this.light.target = obj.objects['3d'];
           } else if (this.light_target == 'player') {
             this.light.target = player.objects['3d'];
           }
@@ -129,6 +135,13 @@ elation.require(['janusweb.janusbase'], function() {
       this.light.shadow.camera.fov = 90;
       this.light.shadow.mapSize.set(shadowSize, shadowSize);
       this.light.shadow.bias = this.light_shadow_bias;
+
+      // directional light shadow parameters
+      let d = this.light_range;
+      this.light.shadow.camera.left = -d;
+      this.light.shadow.camera.right = d;
+      this.light.shadow.camera.top = d;
+      this.light.shadow.camera.bottom = -d;
     }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {

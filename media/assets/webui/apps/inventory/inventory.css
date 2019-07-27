@@ -3,7 +3,7 @@ ui-grid.models {
   grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   grid-template-rows: repeat(auto-fill, minmax(80px, 1fr));
 }
-ui-grid.models>ui-item {
+ui-grid.models>* {
   height: auto;
   padding: 0;
   position: relative;
@@ -13,7 +13,7 @@ ui-grid.models>ui-item {
   margin: 0;
   display: flex;
 }
-ui-grid.models>ui-item h2 {
+ui-grid.models>* h2 {
   font-size: .8em;
   font-weight: bold;
   margin: 0;
@@ -32,34 +32,34 @@ ui-grid.models>ui-item h2 {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-ui-grid.models>ui-item h3 {
+ui-grid.models>* h3 {
   font-size: .8em;
   margin: 0;
   display: none;
 }
-ui-grid.models>ui-item img {
+ui-grid.models>* img {
   width: 100%;
   border-radius: .5em;
   margin: 0 auto;
   display: block;
 }
-ui-grid.models>ui-item a {
+ui-grid.models>* a {
   margin: 0;
   padding: 0;
   flex: 1 1;
 }
-ui-grid.models>ui-item p {
+ui-grid.models>* p {
   display: none;
   font-size: .8em;
 }
-ui-grid.models>ui-item:hover p {
+ui-grid.models>*:hover p {
   position: absolute;
   display: none;
   width: 100%;
   background: rgba(0,0,0,.5);
   border: 1px solid black;
 }
-ui-grid.models>ui-item:hover {
+ui-grid.models>*:hover {
   transform: scale(1.1);
   position: relative;
   z-index: 1;

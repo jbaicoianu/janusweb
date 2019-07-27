@@ -111,8 +111,12 @@ elation.require([
         elation.template.add('janusweb.url', this.urltemplate);
       }
       this.initScripting();
-      // TODO - this should be config-driven
-      this.registerAdditionalElements(['raycaster', 'teleporter']);
+
+      this.assetpack.executeWhenLoaded(() => {
+        // TODO - this should be config-driven
+        this.registerAdditionalElements(['raycaster']);
+        this.initRoom();
+      });
     }
     this.initScripting = function() {
       if (this.scriptingInitialized) return;
@@ -253,8 +257,6 @@ elation.require([
     }
 
     this.createChildren = function() {
-      var hashargs = elation.url();
-      var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
       var player = this.engine.client.player;
       //setTimeout(elation.bind(this, this.load, starturl, true), 5000);
       //this.initScripting();
@@ -264,13 +266,20 @@ elation.require([
       if (this.networking) {
         this.network.enable(player);
       }
-
-      if (this.autoload || starturl != this.properties.homepage) {
-        this.load(starturl, true);
-      } else {
+      if (!(this.autoload || starturl != this.properties.homepage)) {
         player.disable();
       }
     }
+
+    this.initRoom = function() {
+      var hashargs = elation.url();
+      var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
+
+      if (this.autoload || starturl != this.properties.homepage) {
+        this.load(starturl, true);
+      }
+    }
+
     this.clear = function() {
       if (this.currentroom) {
         this.remove(this.currentroom);

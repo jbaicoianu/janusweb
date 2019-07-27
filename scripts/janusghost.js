@@ -9,7 +9,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         head_id: { type: 'string' },
         head_pos: { type: 'vector3', default: [0,1,0] },
         body_id: { type: 'string' },
+        userid_pos: { type: 'vector3', default: [0,2,0] },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial },
+        showlabel: { type: 'boolean', default: true },
         ghost_scale: { type: 'vector3', default: [1,1,1] },
         ghostassets: { type: 'object' },
         auto_play: { type: 'boolean', default: true },
@@ -69,16 +71,23 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       this.setHead(this.head_id, this.properties.head_pos);
       this.setBody(this.body_id);
       var name = this.properties.ghost_id;
-      this.label = this.head.spawn('label', name + '_label', {
-        size: .1,
-        align: 'center',
-        collidable: false,
-        text: name,
-        position: [0,1.5,0],
-        orientation: [0,1,0,0],
-        pickable: false,
-        collidable: false
-      });
+      if (this.showlabel) {
+        this.label = this.createObject('text', {
+          size: .1,
+          thickness: .03,
+          align: 'center',
+          collidable: false,
+          text: name,
+          pos: this.userid_pos,
+          pickable: false,
+          collidable: false,
+          col: '#ffffff',
+          emissive: '#cccccc',
+          shadow_receive: false,
+          lighting: false,
+          billboard: 'y'
+        });
+      }
 
       if (this.avatar_src) {
         elation.net.get(this.avatar_src, null, {
@@ -152,16 +161,20 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.face = this.head.createObject('object', {
             id: headid,
             pos: headpos.clone().negate(),
-            orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
+            //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
+            rotation: V(0, 180, 0),
             lighting: this.lighting,
-            cull_face: 'none'
+            //cull_face: 'none'
           });
+          this.face.start();
         }
         //this.head.properties.position.copy(headpos);
         if (scale) {
           this.face.scale.fromArray(scale);
-          this.label.scale.fromArray(scale);
-          this.label.properties.position.multiply(this.label.scale);
+          if (this.label) {
+            this.label.scale.fromArray(scale);
+            this.label.pos.multiply(this.label.scale);
+          }
         }
       }
     }
@@ -173,10 +186,12 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       if (bodyid) {
         this.body = this.createObject('object', {
           id: bodyid,
-          orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
+          //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
+          rotation: V(0, 180, 0),
           lighting: this.lighting,
-          cull_face: 'none'
+          //cull_face: 'none'
         });
+        this.body.start();
         if (scale && this.body) this.body.scale.fromArray(scale);
       }
     }

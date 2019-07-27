@@ -177,7 +177,7 @@ ui-tabs>ui-tabbar>ui-button,
 ui-tabs>ui-tabbar>ui-tabcountbutton {
   min-width: 5em;
   text-align: center;
-  padding: .25em .4em;
+  padding: 0em .4em;
   border: 1px solid #1c1e22;
   border-bottom: 1px solid #1c1e22;
   border-radius: .5em .5em 0 0;
@@ -319,6 +319,7 @@ ui-window>.ui_window_resizer {
   z-index: 10;
 }
 ui-window>.ui_window_content {
+  display: block;
   overflow: auto;
   min-width: 100%;
   padding: .5em;
@@ -653,7 +654,7 @@ ui-notificationbutton {
   display: inline-block;
   border: none;
   border-radius: .5em;
-  padding: .25em .5em;
+  padding: .1em .5em;
   color: white;
   cursor: pointer;
   text-align: center;
@@ -703,7 +704,8 @@ ui-togglebutton {
 }
 ui-togglebutton[hover] {
 }
-ui-togglebutton:active {
+ui-togglebutton[active] {
+  background-image: linear-gradient(#028202, #109112 40%, #199b1d);
 }
 ui-togglebutton:disabled {
 }
@@ -769,20 +771,27 @@ ui-dropdownbutton:disabled {
 }
 
 /* <ui-buttonbar> */
-ui-buttonbar {
+ui-buttonbar,
+ui-radiobuttonbar {
   display: flex;
 }
-ui-buttonbar>* {
+ui-buttonbar>ui-button,
+ui-buttonbar>ui-togglebutton,
+ui-radiobuttonbar>ui-togglebutton {
   border-radius: 0;
   border-right: 1px solid #333;
   border-left: 0;
   display: inline-block;
 }
-ui-buttonbar>*:first-child {
+ui-buttonbar>ui-button:first-of-type,
+ui-buttonbar>ui-togglebutton:first-of-type,
+ui-radiobuttonbar>ui-togglebutton:first-of-type {
   border-radius: .5em 0 0 .5em;
   border-left: 1px solid transparent;
 }
-ui-buttonbar>*:last-child {
+ui-buttonbar>ui-button:last-of-type,
+ui-buttonbar>ui-togglebutton:last-of-type,
+ui-radiobuttonbar>ui-togglebutton:last-of-type {
   border-radius: 0 .5em .5em 0;
   border-right: 1px solid transparent;
 }
@@ -810,6 +819,11 @@ ui-buttonlist>ui-button:last-of-type {
 ui-label {
   cursor: pointer;
   user-select: none;
+  white-space: nowrap;
+  text-shadow: 0 0 1px #000;
+}
+ui-select {
+  white-space: nowrap;
 }
 ui-select>select {
   background: #444;

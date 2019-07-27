@@ -3,7 +3,7 @@
 echo "Creating directory tree..."
 DEPENDENCYPATHS=$(npm ls -parseable)
 
-declare -A dependencies
+declare -a dependencies
 
 for DEP in $DEPENDENCYPATHS; do
   DEPNAME=$(basename $DEP)

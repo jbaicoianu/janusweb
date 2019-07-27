@@ -111,15 +111,19 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       setTimeout(elation.bind(this, function() {
         this.cursors = {
-          'default': elation.engine.assets.find('image', 'cursor_arrow'),
+          'default': elation.engine.assets.find('image', 'cursor_crosshair'),
           'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
           'pointer': elation.engine.assets.find('image', 'cursor_hand'),
+          'dot_inactive': elation.engine.assets.find('image', 'cursor_dot_inactive'),
+          'dot_active': elation.engine.assets.find('image', 'cursor_dot_active'),
         };
         this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
         this.engine.systems.world.scene['world-3d'].add(this.cursor);
       }), 1000);
 
+      //this.gazecaster = this.createObject('raycaster', {});
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
+
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
@@ -128,7 +132,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (avatar) {
         this.ghost = this.createObject('ghost', {
           ghost_id: this.getUsername(),
-          avatar_src: 'data:text/plain,' + avatar
+          avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+          showlabel: false
         });
       }
 
@@ -264,16 +269,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
           }
         }
-      }
-
-      if (this.ghost) {
-        if (this.ghost.head) {
-          this.ghost.head.position.copy(this.head.position);
-          this.ghost.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
-        }
-        if (this.ghost.body) {
-          this.ghost.body.position.copy(this.body.position);
-          this.ghost.body.orientation.copy(this.body.orientation);
+        if (this.ghost) {
+          if (this.ghost._target.head) {
+            //this.ghost._target.face.position.copy(this.head.position);
+            //this.ghost._target.face.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
+          }
+          if (this.ghost._target.body) {
+            //this.ghost._target.body.position.copy(this.body.position);
+            //this.ghost._target.body.orientation.copy(this.body.orientation);
+          }
         }
       }
     })();
@@ -339,6 +343,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateVectors = function() {
       var v = this.vectors;
       if (this.objects['3d']) {
+        let playerpos = this.properties.position;
+        if (typeof playerpos.x == 'undefined' || isNaN(playerpos.x)) playerpos.x = 0;
+        if (typeof playerpos.y == 'undefined' || isNaN(playerpos.y)) playerpos.y = 0;
+        if (typeof playerpos.z == 'undefined' || isNaN(playerpos.z)) playerpos.z = 0;
         this.objects['3d'].updateMatrix();
         this.objects['3d'].updateMatrixWorld();
         this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
@@ -414,10 +422,25 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.gazecaster) {
         this.gazecaster.room = room;
       }
+/*
       if (!this.teleporter) {
         this.teleporter = this.room.createObject('user_teleporter');
       } else {
         this.teleporter.setRoom(room.getProxyObject());
+      }
+*/
+      if (!this.room.selfavatar && this.ghost) {
+        this.ghost.die();
+        this.ghost = false;
+      } else if (!this.ghost && this.room.selfavatar) {
+        let avatar = this.getAvatarData();
+        if (avatar) {
+          this.ghost = this.createObject('ghost', {
+            ghost_id: this.getUsername(),
+            avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+            showlabel: false
+          });
+        }
       }
       //room.add(this);
       this.updateGravity();
@@ -515,6 +538,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         addForce:      ['function', 'addForce'],
         removeForce:   ['function', 'removeForce'],
         raycast:       ['function', 'raycast'],
+        getViewFrustum:['function', 'getViewFrustum'],
       });
       return proxy;
     }
@@ -528,9 +552,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.ghost) {
         this.ghost.die();
       }
-      this.ghost = this.createObject('ghost', {
-        ghost_src: avatar
-      });
+      let avatardata = this.getAvatarData();
+      if (avatardata && this.room.selfavatar) {
+        this.ghost = this.createObject('ghost', {
+          ghost_id: this.getUsername(),
+          avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
+          showlabel: false
+        });
+      }
 
       return setting;
     }
@@ -662,7 +691,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
     }
     this.createObject = function(type, args) {
-      return this.room.createObject(type, args, this);
+      if (this.room) {
+        return this.room.createObject(type, args, this);
+      }
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
@@ -738,7 +769,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.handleGazeEnter = function(ev) {
       var obj = ev.data.object;
-      if (obj && obj.dispatchEvent) {
+      if (obj && obj.dispatchEvent && ev.data.intersection) {
         obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
         this.cursor_object = obj;
 
@@ -764,7 +795,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (obj && obj.dispatchEvent) {
         this.cursor_object = obj.js_id || '';
 
-        this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        if (ev.data.intersection.point) {
+          this.vectors.cursor_pos.copy(ev.data.intersection.point);
+        }
       }
     }
     this.handleTouchStart = function(ev) {
@@ -829,5 +862,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       };
     })();
+    this.dispatchEvent = function(event, target) {
+      let firedev = elation.events.fire(event);
+    }
   }, elation.engine.things.player);
 });

@@ -33,6 +33,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         rotate_axis: { type: 'string', default: '0 1 0', set: this.updateRotationSpeed },
         rotate_deg_per_sec: { type: 'float', default: 0, set: this.updateRotationSpeed },
         object: { type: 'object' },
+        layers: { type: 'string', set: this.setLayers },
+        renderorder: { type: 'integer', default: 0 },
         onclick: { type: 'object' },
         anim_id: { type: 'string', set: this.updateAnimation },
         anim_transition_time: { type: 'float', default: .2 },
@@ -45,6 +47,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         classList: { type: 'object', default: [] },
         className: { type: 'string', default: '', set: this.setClassName },
         tag: { type: 'string', default: '' },
+        billboard: { type: 'string', default: '' },
         hasposition: { type: 'boolean', default: true },
         gazetime: { type: 'float' },
         ongazeenter: { type: 'callback' },
@@ -53,6 +56,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         ongazeactivate: { type: 'callback' },
       });
       this.lastframevalues = {
+        position: new THREE.Vector3(0,0,0),
+        scale: new THREE.Vector3(1,1,1),
+        color: new THREE.Color(),
         xdir: new THREE.Vector3(1,0,0),
         ydir: new THREE.Vector3(0,1,0),
         zdir: new THREE.Vector3(0,0,1),
@@ -67,6 +73,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
       this.created = false;
+      elation.events.add(this, 'thing_change', (ev) => this.dispatchEvent({type: 'objectchange'}));
     }
     this.createObject3D = function() {
       if (this.object && this.object instanceof THREE.Object3D) {
@@ -74,13 +81,18 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.properties.orientation.copy(this.object.quaternion);
         return this.object;
       }
+      if (this.renderorder) this.object.renderOrder = this.renderorder;
       return new THREE.Object3D();
     }
     this.createChildren = function() {
       if (typeof this.create == 'function') {
         this.create();
       }
+      if (this.layers) {
+        this.setLayers(this.layers);
+      }
       this.created = true;
+      this.dispatchEvent({type: 'create', bubbles: true});
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
@@ -88,6 +100,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.properties.color = this.properties.color.clone();
           this.defaultcolor.setRGB(1,1,1);
           this.colorIsDefault = false;
+          delete this._proxies['color'];
         }
       }
     }
@@ -118,12 +131,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         } else if (collision_id == 'cube') {
           var halfsize = collision_scale.clone().multiplyScalar(.5);
           this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
-/*
         } else if (collision_id == 'plane') {
           var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
           halfsize.z = .1;
           this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
-*/
         } else if (collision_id == 'cylinder') {
           this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
         } else {
@@ -137,13 +148,18 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                 //collider.bindQuaternion(this.orientation);
                 //collider.bindScale(this.properties.scale);
 
+                let collidercolor = 0x009900;
+                if (this.mass === 0) {
+                  collidercolor = 0x990000;
+                }
+                if (this.collision_trigger) collidercolor = 0x990099;
                 collider.traverse(elation.bind(this, function(n) {
-                  if (n.material) n.material = new THREE.MeshLambertMaterial({color: 0x999900, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
+                  if (n.material) n.material = new THREE.MeshPhongMaterial({color: collidercolor, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                   n.userData.thing = this;
                 }));
                 this.colliders.add(collider);
 
-                //this.setCollider('mesh', {mesh: collider.children[0], scale: this.properties.scale});
+                this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
 console.log('got collider', collider, collision_id);
@@ -246,6 +262,7 @@ console.log('got collider', collider, collision_id);
           vel:      ['property', 'velocity'],
           accel:    ['property', 'acceleration'],
           mass:     ['property', 'mass'],
+          restitution:['property', 'restitution'],
           scale:    ['property', 'scale'],
           col:      ['property', 'color'],
           opacity:  ['property', 'opacity'],
@@ -260,9 +277,12 @@ console.log('got collider', collider, collision_id);
           locked:   ['property', 'locked'],
           visible:  ['property', 'visible'],
           tagName:  ['property', 'tag'],
+          billboard: ['property', 'billboard'],
           className:  ['property', 'className'],
           classList:  ['property', 'classList'],
           gazetime:  ['property', 'gazetime'],
+          layers:  ['property', 'layers'],
+          renderorder:  ['property', 'renderorder'],
 
           pickable:  [ 'property', 'pickable'],
           collision_id:  [ 'property', 'collision_id'],
@@ -273,6 +293,7 @@ console.log('got collider', collider, collision_id);
           collision_radius:  [ 'property', 'collision_radius'],
 
           onupdate:     ['callback', 'update'],
+          onchange:     ['callback', 'change'],
           oncollision:  ['callback', 'collision'],
           onmouseover:  ['callback', 'mouseover'],
           onmouseout:   ['callback', 'mouseout'],
@@ -308,6 +329,7 @@ console.log('got collider', collider, collision_id);
           addForce:            ['function', 'addForce'],
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
+          refresh:             [ 'function', 'refresh'],
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
           addClass:            ['function', 'addClass'],
@@ -442,24 +464,55 @@ console.log('got collider', collider, collision_id);
     this.pushFrameUpdate = function(key, value) {
       this.frameupdates[key] = true;
     }
-    this.handleFrameUpdates = function(ev) {
-      if (this.hasScriptChangedDirvecs()) {
-        this.updateOrientationFromDirvecs();
-        this.updateEulerFromOrientation();
-      } else if (this.hasScriptChangedEuler()) {
-        this.updateOrientationFromEuler();
-        this.updateDirvecsFromOrientation();
-      } else if (this.hasPhysicsChangedOrientation()) {
-        this.updateEulerFromOrientation();
-        this.updateDirvecsFromOrientation();
+    this.handleFrameUpdates = (function() {
+      let playerpos = new THREE.Vector3(),
+          objpos = new THREE.Vector3(),
+          dir = new THREE.Vector3(),
+          up = new THREE.Vector3();
+      return function(ev) {
+        if (this.billboard) {
+          player.camera.localToWorld(playerpos.set(0,0,0));
+          this.localToWorld(objpos.set(0,0,0));
+          dir.subVectors(playerpos, objpos);
+
+          let billboard = this.billboard;
+
+          if (billboard == 'x') {
+            up.set(1,0,0);
+            dir.x = 0;
+          } else if (billboard == 'y') {
+            up.set(0,1,0);
+            dir.y = 0;
+          } else if (billboard == 'z') {
+            up.set(0,0,1);
+            dir.z = 0;
+          } else if (billboard == 'xyz') {
+            player.camera.localToWorld(up.set(0,1,0)).sub(playerpos).normalize();
+          }
+          dir.normalize();
+          this.zdir = dir;
+          this.ydir = up;
+        }
+
+        if (this.hasScriptChangedDirvecs()) {
+          this.updateOrientationFromDirvecs();
+          this.updateEulerFromOrientation();
+        } else if (this.hasScriptChangedEuler()) {
+          this.updateOrientationFromEuler();
+          this.updateDirvecsFromOrientation();
+        } else if (this.hasPhysicsChangedOrientation()) {
+          this.updateEulerFromOrientation();
+          this.updateDirvecsFromOrientation();
+        }
+
+        this.resetFrameUpdates();
+        this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
+        var proxy = this.getProxyObject();
+        if (typeof proxy.update == 'function' && this.created) {
+          proxy.update(ev.data);
+        }
       }
-      this.resetFrameUpdates();
-      this.dispatchEvent({type: 'update', data: ev.data});
-      var proxy = this.getProxyObject();
-      if (typeof proxy.update == 'function' && this.created) {
-        proxy.update(ev.data);
-      }
-    }
+    })();
     this.updateOrientationFromDirvecs = (function() {
       var tmpmat = new THREE.Matrix4(),
           xdir = new THREE.Vector3(),
@@ -488,7 +541,7 @@ console.log('got collider', collider, collision_id);
         // Copy back the orthonormalized values
         this.properties.xdir.copy(xdir);
         this.properties.ydir.copy(ydir);
-        //this.properties.zdir.copy(zdir);
+        this.properties.zdir.copy(zdir);
       }
     })();
     this.updateOrientationFromEuler = (function() {
@@ -529,6 +582,9 @@ console.log('got collider', collider, collision_id);
       }
     })();
     this.resetFrameUpdates = function() {
+      this.frameupdates['position'] = false;
+      this.frameupdates['scale'] = false;
+      this.frameupdates['color'] = false;
       this.frameupdates['xdir'] = false;
       this.frameupdates['ydir'] = false;
       this.frameupdates['zdir'] = false;
@@ -609,7 +665,7 @@ console.error('dunno what this is', other);
     this.setOpacity = function(opacity) {
       if (this.objects['3d'] && this.currentopacity != opacity) {
         this.currentopacity = opacity;
-        this.objects['3d'].traverse(function(n) {
+        this.traverseObjects(function(n) {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
@@ -626,13 +682,13 @@ console.error('dunno what this is', other);
     this.setAlphaTest = function(alphatest) {
       if (this.objects['3d'] && this.currentalphatest != alphatest) {
         this.currentalphatest = alphatest;
-        this.objects['3d'].traverse(function(n) {
+        this.traverseObjects(function(n) {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
-              if (m[i].transparent) {
+              //if (m[i].transparent) {
                 m[i].alphaTest =alphatest;
-              }
+              //}
             }
           }
         });
@@ -659,13 +715,19 @@ console.error('dunno what this is', other);
         this.anim_id = anim_id;
       }
     }
-    this.dispatchEvent = function(event) {
-      if (!event.element) event.element = this;
+    this.dispatchEvent = function(event, target) {
+      if (!event.element) event.element = target || this;
       var handlerfn = 'on' + event.type;
       if (this[handlerfn]) {
         this.executeCallback(this[handlerfn], event);
       }
-      return elation.events.fire(event);
+      // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
+      let firedev = elation.events.fire(event);
+      let returnValue = true;
+      firedev.forEach(e => returnValue &= e.returnValue);
+      if (event.bubbles !== false && returnValue && this.parent && this.parent.dispatchEvent) {
+        this.parent.dispatchEvent(event, event.target);
+      }
     }
     this.addEventListenerProxy = function(name, handler, bubble) {
       var eventobj = {
@@ -769,8 +831,9 @@ console.error('dunno what this is', other);
     }
     this.getParentByTagName = function(tagname) {
       let obj = this.parent;
+      let tag = tagname.toUpperCase();
       while (obj) {
-        if (obj.tag == tagname) {
+        if (obj.tag == tag) {
           return obj;
         }
         obj = obj.parent;
@@ -786,6 +849,126 @@ console.error('dunno what this is', other);
         obj = obj.parent;
       }
       return false;
+    }
+    this.setLayers = function(layers) {
+      // TODO - this system is experimental, and probably isn't quite ready for use
+      //        It should be extended to have named layers, rather than expecting the
+      //        dev to manage numeric layer IDs and know which ones are reserved
+      if (!layers) layers = this.layers;
+      if (!this.objects['3d']) return;
+      let layernums = layers.split(' ');
+      this.objects['3d'].layers.mask = 0;
+      for (let i = 0; i < layernums.length; i++) {
+        this.objects['3d'].layers.enable(layernums[i]);
+      }
+    }
+    this.clone = function() {
+      // Create a new copy of this object
+      function arrayEquals(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length != b.length) return false;
+        for (var i = 0; i < a.length; ++i) {
+          if (a[i] !== b[i]) return false;
+        }
+        return true;
+      }
+      let props = {},
+          skipprops = ['classList', 'color', 'fwd', 'janus', 'orientation', 'parent', 'room', 'tag', 'xdir', 'ydir', 'zdir'],
+          remap = {
+            janusid: 'id',
+            position: 'pos',
+          };
+      for (let k in this._thingdef.properties) {
+        if (skipprops.indexOf(k) != -1) continue;
+
+        let prop = this._thingdef.properties[k];
+        let realkey = (remap[k] ? remap[k] : k);
+        switch (prop.type) {
+          case 'vector2':
+          case 'vector3':
+          case 'vector4':
+          case 'euler':
+          case 'quaternion':
+            if (this[k]) {
+              let arr = this[k].toArray();
+              if (!arrayEquals(arr, prop.default)) {
+                props[realkey] = arr;
+              }
+            } else {
+console.log('its null', k, this[k], prop);
+            }
+            break;
+          default:
+            if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
+              props[realkey] = this[k];
+            }
+        }
+        // Special handling for 'rotation' and 'color'
+        if (realkey == 'rotation') {
+          props['rotation'][0] *= THREE.Math.RAD2DEG;
+          props['rotation'][1] *= THREE.Math.RAD2DEG;
+          props['rotation'][2] *= THREE.Math.RAD2DEG;
+        } else if (realkey == 'color') {
+          if (!this.colorIsDefault) {
+            props['col'] = this.col.toArray();
+          }
+        }
+        //if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
+      }
+console.log('clone', props);
+      let parent = this.parent || room;
+      if (parent) {
+        return parent.createObject(this.tag, props);
+      }
+/*
+      {
+        pos: this.pos.clone(),
+        rotation: this.rotation.clone(),
+        scale: this.scale.clone(),
+        color: this.color.clone(),
+        lighting: this.lighting,
+        id: this.id,
+        js_id: this.js_id + '_copy',
+        collision_id: this.collision_id,
+      });
+*/
+    }
+    this.addControlContext = function(name, defs) {
+      let legacydefs = {};
+      let threshold_activate = .95,
+          threshold_deactivate = .05;
+      // TODO - instead of this compatibility layer, we should just support this object-style syntax and new events in the engine control system directly
+      for (let k in defs) {
+        let def = defs[k];
+        legacydefs[k] = [def.defaultbindings, (ev) => {
+          let absvalue = Math.abs(ev.value);
+          if (absvalue > threshold_activate && def.onactivate) {
+            def.onactivate(ev);
+          } else if (absvalue < threshold_deactivate && def.ondeactivate) {
+            def.ondeactivate(ev);
+          }
+        }];
+      }
+      this.engine.systems.controls.addContext(name, legacydefs);
+    }
+    this.activateControlContext = function(name) {
+      this.engine.systems.controls.activateContext(name, this);
+    }
+    this.deactivateControlContext = function(name) {
+      this.engine.systems.controls.deactivateContext(name);
+    }
+    this.traverseObjects = function(callback, root) {
+      if (!root) root = this.objects['3d'];
+      callback(root);
+      if (root.children) {
+        for (let i = 0; i < root.children.length; i++) {
+          let child = root.children[i];
+          if (!child.userData.thing || child.userData.thing === this) {
+            this.traverseObjects(callback, child);
+          }
+        }
+      }
     }
   }, elation.engine.things.generic);
 });

@@ -3,11 +3,19 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
       elation.engine.things.janusroom.extendclass.postinit.call(this);
+      this.toneMappingTypes = {
+        'none': THREE.NoToneMapping,
+        'linear': THREE.LinearToneMapping,
+        'reinhard': THREE.ReinhardToneMapping,
+        'uncharted2': THREE.Uncharted2ToneMapping,
+        'cineon': THREE.CineonToneMapping,
+        'acesfilmic': THREE.ACESFilmicToneMapping,
+      };
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
@@ -35,13 +43,20 @@ elation.require([
         'near_dist': { type: 'float', default: 0.01, set: this.setNearFar },
         'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
+        'toon': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
+        'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
+        'tonemapping_exposure': { type: 'float', default: 1.0, set: this.updateToneMapping },
+        'tonemapping_whitepoint': { type: 'float', default: 1.0, set: this.updateToneMapping },
+        'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'party_mode': { type: 'bool', default: true },
         'walk_speed': { type: 'float', default: 1.0 },
         'run_speed': { type: 'float', default: 2.0 },
         'jump_velocity': { type: 'float', default: 5.0 },
+        'flying': { type: 'boolean', default: true, set: this.updateFlying },
         'gravity': { type: 'float', default: 0, set: this.updateGravity },
+        'teleport': { type: 'bool', default: true, set: this.updateTeleport },
         'locked': { type: 'bool', default: false },
         'cursor_visible': { type: 'bool', default: true },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
@@ -53,10 +68,13 @@ elation.require([
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
+        'selfavatar': { type: 'boolean', default: true },
+        'onload': { type: 'string' },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
         '^bookmarks$': elation.janusweb.translators.bookmarks({janus: this.janus}),
+        '^dat:': elation.janusweb.translators.dat({janus: this.janus}),
         '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: this.janus}),
         '^error$': elation.janusweb.translators.error({janus: this.janus}),
         '^default$': elation.janusweb.translators.default({janus: this.janus})
@@ -77,6 +95,7 @@ elation.require([
       this.sounds = {};
       this.videos = {};
       this.loaded = false;
+      this.completed = false;
       this.parseerror = false;
 
       this.roomscripts = [];
@@ -92,12 +111,7 @@ elation.require([
       this.onObjectClick = elation.bind(this, this.onObjectClick);
       this.onMouseDown = elation.bind(this, this.onMouseDown);
       this.onMouseUp = elation.bind(this, this.onMouseUp);
-      this.handleDragOver = elation.bind(this, this.handleDragOver);
-      this.handleDrop = elation.bind(this, this.handleDrop);
-      this.editObjectMousemove = elation.bind(this, this.editObjectMousemove);
-      this.editObjectMousewheel = elation.bind(this, this.editObjectMousewheel);
-      this.editObjectClick = elation.bind(this, this.editObjectClick);
-      this.editObjectHandlePointerlock = elation.bind(this, this.editObjectHandlePointerlock);
+      this.onMouseMove = elation.bind(this, this.onMouseMove);
       this.onScriptTick = elation.bind(this, this.onScriptTick);
 
       this.roomedit = {
@@ -108,27 +122,6 @@ elation.require([
         object: false,
         distancescale: 1
       };
-      this.engine.systems.controls.addContext('roomedit', {
-        'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
-        'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
-        'delete':           [ 'keyboard_delete,keyboard_backspace', this.editObjectDelete ],
-        'mode':             [ 'keyboard_tab', this.editObjectToggleMode ],
-        'toggle_raycast':   [ 'keyboard_shift',   this.editObjectToggleRaycast ],
-        'manipulate_left':  [ 'keyboard_j',   this.editObjectManipulateLeft ],
-        'manipulate_right': [ 'keyboard_l',   this.editObjectManipulateRight ],
-        'manipulate_up':    [ 'keyboard_i',   this.editObjectManipulateUp ],
-        'manipulate_down':  [ 'keyboard_k',   this.editObjectManipulateDown ],
-        'manipulate_in':    [ 'keyboard_u',   this.editObjectManipulateIn ],
-        'manipulate_out':   [ 'keyboard_o',   this.editObjectManipulateOut ],
-        //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
-        'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
-        'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
-        'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
-        'snap_thousandths': [ 'keyboard_4',   this.editObjectSnapThousandths ],
-      });
-      this.engine.systems.controls.addContext('roomedit_togglemove', {
-        'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
-      });
 
       if (this.url) {
         this.roomid = md5(this.url);
@@ -151,7 +144,7 @@ elation.require([
     this.createLights = function() {
       this.roomlights = {
         ambient: this.spawn('light_ambient', this.id + '_ambient', {
-          color: this.properties.ambient
+          color: this.properties.ambient._target
         }),
         directional: this.spawn('light_directional', this.id + '_sun', {
           position: [-20,50,25],
@@ -164,14 +157,32 @@ elation.require([
       };
     }
     this.updateLights = function() {
-      if (this.roomlights) {
-        this.roomlights.ambient.lightobj.color = this.ambient;
+      if (!this.roomlights) {
+        this.createLights();
+      }
+      if (!this.objects['3d']) return;
+      this.roomlights.ambient.lightobj.color = this.ambient._target;
+      if (this.defaultlights) {
+        if (this.roomlights.directional.parent != this) {
+          this.add(this.roomlights.directional);
+        }
+        if (this.roomlights.point.parent != this) {
+          this.add(this.roomlights.point);
+        }
+      } else {
+        if (this.roomlights.directional.parent) {
+          this.roomlights.directional.parent.remove(this.roomlights.directional);
+        }
+        if (this.roomlights.point.parent) {
+          this.roomlights.point.parent.remove(this.roomlights.point);
+        }
       }
     }
     this.setActive = function() {
       this.setSkybox();
       this.setFog();
       this.updateBloom();
+      this.updateToneMapping();
       this.setNearFar();
       this.setPlayerPosition();
       this.active = true;
@@ -198,12 +209,14 @@ elation.require([
           position: [0,0,0],
           collidable: false
         });
+/*
         this.skyboxcollider = this.createObject('object', {
           js_id: 'room_skybox',
-          collision_id: 'sphere',
+          collision_id: 'cube',
           collision_scale: V(1000),
           collision_trigger: true
         });
+*/
       }
       if (this.skyboxtexture) {
         this.skybox.setTexture(this.skyboxtexture);
@@ -339,6 +352,12 @@ elation.require([
       if (bloomfilter) {
         bloomfilter.copyUniforms.opacity.value = this.bloom;
       }
+    }
+    this.updateToneMapping = function() {
+      this.engine.systems.render.renderer.toneMapping = this.toneMappingTypes[this.tonemapping_type] || 0;
+      this.engine.systems.render.renderer.toneMappingExposure = this.tonemapping_exposure;
+      this.engine.systems.render.renderer.toneMappingWhitePoint = this.tonemapping_whitepoint;
+      this.refresh();
     }
     this.setNearFar = function() {
       this.engine.client.player.camera.camera.near = this.properties.near_dist;
@@ -602,6 +621,14 @@ elation.require([
           }
           //elation.utils.merge(roomdata.assets.ghosts, this.ghosts);
         }
+        if (roomdata.assets.shaders) {
+          let shaders = roomdata.assets.shaders;
+          for (var i = 0; i < shaders.length; i++) {
+            if (shaders[i].uniforms) {
+              //shaders[i].uniforms = this.parseShaderUniforms(shaders[i].uniforms);
+            }
+          }
+        }
         //this.assetpack = elation.engine.assets.loadJSON(assetlist, this.baseurl);
         if (!this.assetpack) {
           this.assetpack = new elation.engine.assets.pack({name: this.id + '_assets', baseurl: this.baseurl, json: assetlist});
@@ -697,7 +724,10 @@ elation.require([
         if (room.rate) this.properties.rate = room.rate;
         if (room.gazetime) this.properties.gazetime = room.gazetime;
         if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
+        if (typeof room.toon != 'undefined') this.properties.toon = room.toon;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
+        if (typeof room.defaultlights != 'undefined') this.defaultlights = room.defaultlights;
+        if (typeof room.selfavatar != 'undefined') this.properties.selfavatar = room.selfavatar;
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
@@ -709,40 +739,33 @@ elation.require([
         this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
+        this.properties.tonemapping_type = room.tonemapping_type || 'linear';
+        this.properties.tonemapping_exposure = room.tonemapping_exposure || 1.0;
+        this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || 1.0;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
         this.gravity = elation.utils.any(room.gravity, 0);
+        this.flying = elation.utils.any(room.flying, true);
+        this.teleport = elation.utils.any(room.teleport, true);
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
         this.properties.run_speed = room.run_speed || 5.4;
         this.properties.cursor_visible = room.cursor_visible;
 
+        if (room.onload) {
+          this.properties.onload = room.onload;
+          this.addEventListenerProxy('room_load_complete', (ev) => { let func = new Function(room.onload); func();});
+        }
+
         if (assets.scripts) {
           this.pendingScripts = 0;
-          assets.scripts.forEach(elation.bind(this, function(s) {
-            var script = elation.engine.assets.find('script', s.src);
-            this.pendingScripts++;
-
-            if (script._loaded) {
-              // If the script is already part of the document, remove it and readd it so it's reevaluated
-              if (script.parentNode) {
-                script.parentNode.removeChild(script);
-              }
-
-              var oldscript = script;
-              script = document.createElement('script');
-              script.src = oldscript.src;
-              document.head.appendChild(script);
-            }
-            this.roomscripts.push(script);
-            elation.events.add(script, 'asset_load', elation.bind(this, function() {
-              script._loaded = true;
-              document.head.appendChild(script);
-              script.onload = elation.bind(this, this.doScriptOnload);
-            }));
-          }));
+          this.loadScripts(assets.scripts);
+        }
+        if (room.require) {
+          let roomproxy = this.getProxyObject();
+          roomproxy.require(room.require);
         }
       }
       this.applyingEdits = false;
@@ -751,6 +774,30 @@ elation.require([
       //  this.setActive();
       //}
       //this.showDebug();
+    }
+    this.loadScripts = function(scripts) {
+      scripts.forEach(elation.bind(this, function(s) {
+        var script = elation.engine.assets.find('script', s.src);
+        this.pendingScripts++;
+
+        if (script._loaded) {
+          // If the script is already part of the document, remove it and readd it so it's reevaluated
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+
+          var oldscript = script;
+          script = document.createElement('script');
+          script.src = oldscript.src;
+          document.head.appendChild(script);
+        }
+        this.roomscripts.push(script);
+        elation.events.add(script, 'asset_load', elation.bind(this, function() {
+          script._loaded = true;
+          document.head.appendChild(script);
+          script.onload = elation.bind(this, this.doScriptOnload);
+        }));
+      }));
     }
     this.getTranslator = function(url) {
       var keys = Object.keys(this.translators);
@@ -780,10 +827,13 @@ elation.require([
         elation.events.add(window, 'keyup', this.onKeyUp);
         elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
         elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
+        elation.events.add(this.engine.client.container, 'mousemove', this.onMouseMove);
         elation.events.add(this, 'click', this.onObjectClick);
+/*
         elation.events.add(this, 'dragenter', this.handleDragOver);
         elation.events.add(this, 'dragover', this.handleDragOver);
         elation.events.add(this, 'drop', this.handleDrop);
+*/
         elation.events.add(this, 'thing_think', this.onScriptTick);
 
         elation.events.fire({type: 'room_enable', data: this});
@@ -873,6 +923,7 @@ elation.require([
               var attrname = k.toLowerCase();
               existing[attrname] = newobj._content;
             }
+            existing.dispatchEvent({type: 'room_edit'});
             existing.sync = false;
           } else {
             hasNew = true;
@@ -1108,6 +1159,7 @@ elation.require([
             assettype:'image',
             name:args.id,
             src: src,
+            texture: args.texture,
             tex_linear: args.tex_linear,
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
@@ -1120,6 +1172,15 @@ elation.require([
           assetlist.push(assetargs);
         } else if (args.canvas) {
           assetlist.push({ assettype:'image', name:args.id, canvas: args.canvas, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+        } else if (args.texture) {
+          assetlist.push({
+            assettype:'image',
+            name:args.id,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
         }
       } else if (type == 'video') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
@@ -1162,12 +1223,27 @@ elation.require([
           srcparts = src.split(' ');
           src = srcparts[0];
         }
+        let object = args.object;
+        if (args.mesh_verts) {
+          let geo = new THREE.BufferGeometry();
+          geo.addAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
+          if (args.mesh_faces) {
+            geo.setIndex(args.mesh_faces);
+          }
+          if (args.mesh_normals) {
+            geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
+          }
+          if (args.mesh_uvs) {
+            geo.addAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
+          }
+          object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
+        }
         assetlist.push({
           assettype: 'model',
           name: args.id,
           src: src,
           mtl: mtlsrc,
-          object: args.object,
+          object: object,
           tex_linear: args.tex_linear,
           tex0: args.tex || args.tex0 || srcparts[1],
           tex1: args.tex1 || srcparts[2],
@@ -1182,6 +1258,14 @@ elation.require([
           src: src,
           baseurl: this.baseurl
         });
+      } else if (type == 'shader') {
+        assetlist.push({
+          assettype: 'shader',
+          name: args.id,
+          fragment_src: args.src,
+          vertex_src: args.vertex_src,
+          uniforms: args.uniforms,
+        });
       }
 
       this.loadRoomAssets({
@@ -1189,6 +1273,34 @@ elation.require([
           assetlist: assetlist
         }
       });
+    }
+    this.parseShaderUniforms = function(uniformlist) {
+      let uniforms = {};
+      if (uniformlist) {
+        uniformlist.forEach(u => {
+          if (!u.name) {
+            console.warn('Shader uniform specified without name', u, this);
+            return;
+          }
+          if (!u.type) {
+            console.warn('Shader uniform specified without type', u, this);
+            return;
+          }
+          if (u.type == 'sampler2D') {
+            let imgasset = this.getAsset('image', u.value);
+            if (imgasset) {
+              let texture = imgasset.getInstance();
+              uniforms[u.name] = { value: texture };
+            }
+          } else if (u.type == 'vec2' || u.type == 'vec3' || u.type == 'vec4') {
+            let values = this.janus.parser.getVectorValue(u.value);
+            uniforms[u.name] = { value: V.apply(null, values) };
+          } else {
+            uniforms[u.name] = { value: u.value };
+          }
+        });
+      }
+      return uniforms;
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
@@ -1301,6 +1413,7 @@ elation.require([
           if (this.pendingassets.length == 0) {
             this.applyingEdits = false;
             setTimeout(elation.bind(this, function() {
+              this.completed = true;
               elation.events.fire({element: this, type: 'room_load_complete'});
             }), 0);
           }
@@ -1334,26 +1447,27 @@ elation.require([
     }
 */
     this.onKeyDown = function(ev) { 
-      elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase() });
+      elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase(), event: ev});
     }
     this.onKeyUp = function(ev) { 
-      elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase() });
+      elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase(), event: ev });
     }
     this.onMouseDown = function(ev) { 
       elation.events.fire({type: 'janus_room_mousedown', element: this, event: ev});
+      if (ev.button == 0) {
+        this.buttonPressed = true;
+      }
     }
     this.onMouseUp = function(ev) { 
       elation.events.fire({type: 'janus_room_mouseup', element: this, event: ev});
+      if (ev.button == 0) {
+        this.buttonPressed = false;
+      }
     }
-    this.onObjectClick = function(ev) {
-      if (ev.button == 2 && ev.element !== this) {
-        if (this.roomedit.object) {
-          this.editObjectRevert();
-        } else if ((!this.localasset || !this.localasset.isEqual(ev.element)) && !ev.element.locked && !this.locked) {
-          this.editObject(ev.element.getProxyObject());
-        }
-        // TODO - if the user tries to edit a locked object, currently there's no feedback.
-        // We should show some subtle effect to let the user know why they're unable to edit
+    this.onMouseMove = function(ev) { 
+      elation.events.fire({type: 'janus_room_mousemove', element: this, event: ev});
+      if (this.buttonPressed) {
+        elation.events.fire({type: 'janus_room_mousedrag', element: this, event: ev});
       }
     }
     this.onClick = function(ev) {
@@ -1501,6 +1615,15 @@ elation.require([
         this.localasset.col = this.col;
       }
     }
+    this.updateFlying = function() {
+      if (typeof player != 'undefined') {
+        player.flying = this.flying;
+        console.log('Toggle player flying', this.flying);
+      }
+    }
+    this.updateTeleport = function() {
+      console.log('Toggle player teleport', this.teleport);
+    }
     this.updateGravity = function() {
       if (this.loaded) {
         player.updateGravity(this.gravity);
@@ -1554,6 +1677,7 @@ elation.require([
           walk_speed:    ['property', 'walk_speed'],
           run_speed:     ['property', 'run_speed'],
           jump_velocity: ['property', 'jump_velocity'],
+          flying:        ['property', 'flying'],
           gravity:       ['property', 'gravity'],
           fog:           ['property', 'fog'],
           fog_mode:      ['property', 'fog_mode'],
@@ -1562,12 +1686,18 @@ elation.require([
           fog_end:       ['property', 'fog_end'],
           fog_col:       ['property', 'fog_col'],
           ambient:       ['property', 'ambient'],
+          defaultlights: ['property', 'defaultlights'],
           bloom:         ['property', 'bloom'],
+          tonemapping_type:       ['property', 'tonemapping_type'],
+          tonemapping_exposure:   ['property', 'tonemapping_exposure'],
+          tonemapping_whitepoint: ['property', 'tonemapping_whitepoint'],
           pbr:           ['property', 'pbr'],
+          toon:          ['property', 'toon'],
           shadows:       ['property', 'shadows'],
           col:           ['property', 'col'],
           locked:        ['property', 'locked'],
           private:       ['property', 'private'],
+          selfavatar:    ['property', 'selfavatar'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -1598,15 +1728,19 @@ elation.require([
           extendElement:       ['function', 'extendElement'],
           addEventListener:    ['function', 'addEventListenerProxy'],
           removeEventListener: ['function', 'removeEventListenerProxy'],
+          dispatchEvent:       ['function', 'dispatchEvent'],
 
           onLoad:          ['callback', 'janus_room_scriptload'],
           update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
+          postUpdate:      ['callback', 'janusweb_script_frame_end', null, this.janus.scriptframeargs],
           onCollision:     ['callback', 'physics_collide', 'objects.dynamics'],
           onColliderEnter: ['callback', 'janus_room_collider_enter'],
           onColliderExit:  ['callback', 'janus_room_collider_exit'],
           onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
           onMouseDown:     ['callback', 'janus_room_mousedown'],
           onMouseUp:       ['callback', 'janus_room_mouseup'],
+          onMouseMove:     ['callback', 'janus_room_mousemove'],
+          onMouseDrag:     ['callback', 'janus_room_mousedrag'],
           onKeyDown:       ['callback', 'janus_room_keydown'],
           onKeyUp:         ['callback', 'janus_room_keyup']
         });
@@ -1879,547 +2013,6 @@ elation.require([
         }
       }
     }
-
-    /* Room editing functionality */
-
-    this.handleDragOver = function(ev) {
-      //ev.dataTransfer.dropEffect = "link"
-      ev.preventDefault();
-    }
-    this.handleDrop = function(ev) {
-      ev.preventDefault();
-      var files = ev.dataTransfer.files,
-          items = ev.dataTransfer.items;
-      this.roomedit.raycast = true;
-      if (files.length > 0) {
-        var objects = [];
-        for (var i = 0; i < files.length; i++) {
-          var file = files[i];
-          objects[i] = this.loadObjectFromFile(file);
-        }
-        this.editObject(objects[0], true);
-      } else if (items.length > 0) {
-        var types = {};
-        var numitems = items.length;
-        for (var i = 0; i < numitems; i++) {
-          var type = items[i].type;
-          types[type] = items[i];
-        }
-        if (types['text/x-jml']) {
-          types['text/x-jml'].getAsString(elation.bind(this, this.loadObjectFromJML));
-        } else if (types['text/uri-list']) {
-          types['text/uri-list'].getAsString(elation.bind(this, this.loadObjectFromURIList));
-        }
-      }
-      if (this.engine.systems.admin.hidden) {
-        this.engine.systems.controls.requestPointerLock();
-      }
-    }
-    this.loadObjectFromURIList = function(list) {
-      var urls = list.split('\n');
-
-      var objects = [];
-      for (var i = 0; i < urls.length; i++) {
-        var hashidx = urls[i].indexOf('#');
-        let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
-        let type = 'Object';
-        let objargs = {
-          id: id,
-          js_id: player.userid + '-' + id + '-' + window.uniqueId(),
-          //cull_face: 'none',
-          sync: true,
-          pos: player.vectors.cursor_pos.clone()
-        }
-        if (id.length > 0) {
-          var schemeidx = id.indexOf(':');
-          if (schemeidx != -1) {
-            // Handle special schemes which are used for internal primitives
-            var scheme = id.substr(0, schemeidx);
-            if (scheme == 'janus-object') {
-              objargs.id = id.substr(schemeidx+1);
-            } else if (scheme == 'janus-light') {
-              type = 'light';
-              if (id == 'point') {
-                // set up the point light
-                objargs.light_shadow = 'true';
-              }
-            }
-          }
-          if (id.match(/\.(png|gif|jpg|jpeg)/i)) {
-            type = 'image';
-          }
-          if (typeof EventBridge != 'undefined') {
-            // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
-            EventBridge.emitWebEvent(JSON.stringify({
-              type: 'spawn',
-              data: objargs.id
-            }));
-          } else {
-            var newobject = this.createObject(type, objargs);
-            objects.push(newobject);
-          }
-        }
-      }
-      if (objects[0]) {
-        this.editObject(objects[0], true);
-      }
-    }
-    this.loadObjectFromJML = function(jml) {
-      this.applyEditXML(jml);
-    }
-    this.loadObjectFromFile = function(file) {
-      var name = file.name,
-          url = URL.createObjectURL(file),
-          object;
-
-      var type = 'object',
-          args = {
-            id: name,
-            pos: player.vectors.cursor_pos.clone(),
-            sync: true
-          },
-          assetargs = {
-            id: name,
-            src: url
-          };
-
-      var mimeparts = file.type.split('/');
-      if (mimeparts[0] == 'image') {
-        type = 'image';
-        // We're going to send the local file's image data over the network, but we want to cap at a max size to avoid bogging down the network
-        let maxsize = 512;
-        args.onload = (ev) => {
-          if (!args.loaded) {
-            args.loaded = true;
-            let fullcanvas = ev.element.asset.canvas;
-            let rawimage = ev.element.asset.rawimage;
-            let aspect = rawimage.width / rawimage.height;
-
-            let canvas = document.createElement('canvas');
-            let realsize = [rawimage.width, rawimage.height];
-            if (realsize[0] <= maxsize && realsize[1] < maxsize) {
-              object.id = object.image_id = rawimage.toDataURL(file.type);
-            } else {
-              if (realsize[0] > realsize[1]) {
-                canvas.width = maxsize;
-                canvas.height = maxsize / aspect;
-              } else {
-                canvas.height = maxsize;
-                canvas.width = maxsize * aspect;
-              }
-              let ctx = canvas.getContext('2d');
-              ctx.drawImage(rawimage, 0, 0, rawimage.width, rawimage.height, 0, 0, canvas.width, canvas.height);
-              object.id = object.image_id = canvas.toDataURL(file.type);
-            }
-          }
-        };
-      } else if (mimeparts[0] == 'video') {
-        type = 'video';
-        args.video_id = name;
-        assetargs.auto_play = true;
-      } else if (mimeparts[0] == 'audio') {
-        type = 'sound';
-        args.sound_id = name;
-        args.auto_play = true;
-        assetargs.auto_play = true;
-      } else {
-        type = 'object';
-        args.collision_id = name;
-      }
-      this.loadNewAsset(type, assetargs);
-      object = this.createObject(type, args);
-      return object;
-    }
-    this.editObject = function(object, isnew) {
-      this.roomedit.object = object;
-      this.roomedit.objectBoundingBox = false;
-      this.roomedit.modeid = 0;
-      this.roomedit.objectIsNew = isnew;
-      this.roomedit.moving = true;
-      this.roomedit.movespeed.set(0, 0, 0);
-
-      object.sync = true;
-      if (!object.js_id) {
-        object.js_id = player.userid + '-' + window.uniqueId();
-      }
-
-      this.roomedit.objectBoundingBox = object.getBoundingBox(true);
-      object.addEventListener('load', (ev) => {
-        this.roomedit.objectBoundingBox = object.getBoundingBox(true);
-        this.editObjectUpdate();
-        this.editObjectShowWireframe();
-        console.log('update bbox', this.roomedit.objectBoundingBox);
-      });
-
-      this.roomedit.collision_id = object.collision_id;
-      object.collision_id = false;
-      object.collision_radius = null;
-
-      elation.events.add(this, 'mousemove', this.editObjectMousemove);
-      elation.events.add(this, 'wheel', this.editObjectMousewheel);
-      elation.events.add(this, 'mousedown', this.editObjectClick);
-      elation.events.add(document, 'pointerlockchange', this.editObjectHandlePointerlock);
-
-      // Back up properties so we can revert if necessary
-      this.roomedit.startattrs = {};
-      for (var i = 0; i < this.roomedit.modes.length; i++) {
-        var mode = this.roomedit.modes[i];
-        if (object[mode]) {
-          var val = object[mode];
-          if (val instanceof THREE.Vector3 ||
-              val instanceof THREE.Color ||
-              val instanceof THREE.Euler) {
-            val = val.toArray().join(' ');
-          }
-          this.roomedit.startattrs[mode] = val;
-        }
-      }
-
-      // activate context
-      this.engine.systems.controls.activateContext('roomedit', this);
-      //this.engine.systems.controls.activateContext('roomedit_togglemove', this);
-
-      this.editObjectShowWireframe();
-    }
-
-    this.editObjectShowWireframe = function() {
-      if (this.roomedit.wireframe) {
-        this.editObjectRemoveWireframe();
-      }
-      var object = this.roomedit.object;
-      var obj3d = object._target.objects['3d'];
-
-      var material = new THREE.MeshPhongMaterial({
-        wireframe: true,
-        color: 0xff0000,
-        emissive: 0x990000,
-        wireframeLinewidth: 3,
-        depthTest: false,
-        transparent: true,
-        opacity: .2
-      });
-      var root = false;
-      if (obj3d instanceof THREE.Mesh) {
-        root = new THREE.Mesh(obj3d.geometry, material);
-        root.scale.copy(obj3d.scale);
-      } else {
-        var objchild = obj3d.children[obj3d.children.length-1] || obj3d;
-        root = objchild.clone();
-        root.traverse(function(n) {
-          if (n instanceof THREE.Mesh) {
-            n.material = material;
-          }
-        });
-      }
-      this.roomedit.wireframe = root;
-      this.roomedit.object._target.objects['3d'].add(root);
-    }
-    this.editObjectRemoveWireframe = function() {
-      if (this.roomedit.wireframe && this.roomedit.wireframe.parent) {
-        this.roomedit.wireframe.parent.remove(this.roomedit.wireframe);
-      }
-    }
-    this.editObjectStop = function(destroy) {
-      if (this.roomedit.object) {
-        if (destroy) {
-          this.roomedit.object.die();
-        } else {
-          this.roomedit.object.sync = true;
-          if (this.roomedit.collision_id) {
-            // restore collider
-            //this.roomedit.object.collision_id = this.roomedit.collision_id;
-            //this.roomedit.collision_id = false;
-          }
-          this.roomedit.object.collision_id = 'cube';
-          this.roomedit.object.collision_trigger = true;
-          this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
-          this.roomedit.object.collision_pos = this.roomedit.objectBoundingBox.max.clone().add(this.roomedit.objectBoundingBox.min).multiplyScalar(.5);
-        }
-      }
-      this.roomedit.object = false;
-      this.editObjectRemoveWireframe();
-
-      elation.events.remove(this, 'mousemove', this.editObjectMousemove);
-      elation.events.remove(this, 'wheel', this.editObjectMousewheel);
-      elation.events.remove(this, 'mousedown', this.editObjectClick);
-      elation.events.remove(document, 'pointerlockchange', this.editObjectHandlePointerlock);
-
-      // deactivate context
-      this.engine.systems.controls.deactivateContext('roomedit', this);
-      //this.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
-    }
-    this.editObjectRevert = function() {
-      var object = this.roomedit.object;
-      for (var k in this.roomedit.startattrs) {
-        var value = this.roomedit.startattrs[k];
-        object[k] = value;
-      }
-      this.editObjectStop();
-    }
-    this.editObjectMousemove = function(ev) {
-      if (this.roomedit.object) {
-        var obj = this.roomedit.object;
-        if (this.roomedit.moving && this.roomedit.raycast && ev.element.getProxyObject() !== obj) {
-          this.roomedit.objectPosition = ev.data.point;
-          this.editObjectUpdate();
-        }
-      }
-    }
-    this.editObjectUpdate = function() {
-      var obj = this.roomedit.object;
-      var bbox = this.roomedit.objectBoundingBox;
-
-      var point = this.roomedit.objectPosition || this.roomedit.object.position;
-
-      if (!bbox) {
-        bbox = this.roomedit.objectBoundingBox = obj.getBoundingBox(true);
-      }
-      var headpos = player.head.localToWorld(V(0,0,0));
-      var cursorpos = obj.parent.worldToLocal(translate(point, V(0, -bbox.min.y, 0)), true);
-      cursorpos = this.editObjectSnapVector(cursorpos, this.roomedit.snap);
-      var dir = V(cursorpos).sub(headpos);
-      var distance = dir.length();
-      dir.multiplyScalar(1/distance);
-      distance = Math.min(distance, 20);
-      var newpos = V(headpos).add(V(dir).multiplyScalar(distance * this.roomedit.distancescale));
-
-      obj.pos = newpos;
-      obj.sync = true;
-    }
-    this.editObjectMousewheel = (function() {
-      var rot = new THREE.Euler();
-      return function(ev) {
-        //this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
-        let obj = this.roomedit.object;
-        //let rot = obj.rotation;
-        rot.setFromQuaternion(obj.properties.orientation);
-        //obj.rotation = V(rot.x, rot.y += (ev.deltaY > 0 ? 5 : -5), rot.z);
-        let amount = Math.PI/32;
-        let newrot = V(rot.x * THREE.Math.RAD2DEG, (rot.y + (ev.deltaY > 0 ? amount : -amount)) * THREE.Math.RAD2DEG, rot.z * THREE.Math.RAD2DEG);
-        obj.rotation = newrot;
-  //obj.updateOrientationFromEuler();
-  //obj.updateDirvecsFromOrientation();
-        //this.editObjectMousemove(ev);
-      }
-    })();
-    this.editObjectClick = function(ev) {
-      if (this.roomedit.object) {
-        if (ev.button == 0) {
-          this.editObjectStop();
-        } else if (ev.button == 2) {
-          this.editObjectRevert();
-        }
-      }
-    }
-    this.editObjectGetMode = function() {
-      return this.roomedit.modes[this.roomedit.modeid];
-    }
-    this.editObjectToggleMode = function(ev) {
-      var roomedit = ev.target.roomedit;
-      if (ev.value) {
-        var modes = roomedit.modes,
-            modeid = (roomedit.modeid + 1) % modes.length;
-
-        roomedit.modeid = modeid;
-        console.log('set mode:', roomedit.modes[modeid]);
-      }
-    }
-    this.editObjectManipulate = function(vec) {
-      var mode = this.editObjectGetMode();
-      var obj = this.roomedit.object;
-      var space = 'world'; // 'world', 'local', 'player'
-      var player = this.engine.client.player;
-
-      if (!obj) return;
-      switch (mode) {
-        case 'pos':
-          if (space == 'world') {
-            var newpos = translate(obj.pos, scalarMultiply(vec, this.roomedit.snap));
-            obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
-          } else if (space == 'player') {
-            var dir = player.head.localToWorld(vec).sub(player.head.localToWorld(V(0)));
-            var newpos = translate(obj.pos, scalarMultiply(dir, this.roomedit.snap));
-            obj.pos = this.editObjectSnapVector(newpos, this.roomedit.snap);
-          } else if (space == 'local') {
-            var dir = obj.localToWorld(vec).sub(obj.localToWorld(V(0)));
-            obj.pos = translate(obj.pos, scalarMultiply(dir, this.roomedit.snap));
-          }
-          break;
-        case 'rotation':
-          var amount = Math.PI/2 * this.roomedit.snap;
-          var euler = new THREE.Euler().setFromQuaternion(obj._target.orientation);
-          //vec.multiplyScalar(amount);
-          euler.x += vec.x;
-          euler.y += vec.y;
-          euler.z += vec.z;
-          //var quat = new THREE.Quaternion().setFromEuler(euler);
-          //obj._target.properties.orientation.copy(quat);
-          let rot = obj.rotation;
-          var amount = 90;
-          if (this.roomedit.snap == .1) amount = 45;
-          else if (this.roomedit.snap == .01) amount = 15;
-          else if (this.roomedit.snap == .001) amount = 5;
-          obj.properties.rotation.set(rot.x * 180 / Math.PI + vec.x * amount, rot.y * 180 / Math.PI + vec.y * amount, rot.z * 180 / Math.PI + vec.z * amount);
-obj.updateOrientationFromEuler();
-obj.updateDirvecsFromOrientation();
-          //this.roomedit.object.pos = vec;
-          break;
-        case 'scale':
-          if (space == 'world') {
-            obj.scale.add(vec.multiplyScalar(this.roomedit.snap));
-          } else if (space == 'player') {
-            var dir = player.head.localToWorld(vec, true).sub(player.head.localToWorld(V(0)));
-            var newscale = translate(obj.scale, dir.multiplyScalar(this.roomedit.snap));
-            obj.scale = this.editObjectSnapVector(newscale, this.roomedit.snap);
-          } else if (space == 'local') {
-            var newscale = translate(obj.scale, vec.multiplyScalar(this.roomedit.snap));
-            obj.scale = this.editObjectSnapVector(newscale, this.roomedit.snap);
-          }
-          break;
-        case 'col':
-          break;
-      }
-      obj.sync = true;
-    }
-    this.editObjectSnapVector = function(vector, snap) {
-      vector.x = Math.round(vector.x / snap) * snap;
-      vector.y = Math.round(vector.y / snap) * snap;
-      vector.z = Math.round(vector.z / snap) * snap;
-      return vector;
-    }
-    this.editObjectSetSnap = function(amount) {
-      this.roomedit.snap = amount;
-      console.log('set snap to', amount);
-    }
-
-    // FIXME - the following functions aren't bound to "this", because the control system isn't properly managing context
-    this.editObjectManipulateLeft = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(-1, 0, 0));
-        ev.target.roomedit.movespeed.x = -1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.x == -1) {
-        ev.target.roomedit.movespeed.x = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateRight = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(1,0,0));
-        ev.target.roomedit.movespeed.x = 1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.x == 1) {
-        ev.target.roomedit.movespeed.x = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateUp = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(0,1,0));
-        ev.target.roomedit.movespeed.y = 1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.y == 1) {
-        ev.target.roomedit.movespeed.y = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateDown = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(0,-1,0));
-        ev.target.roomedit.movespeed.y = -1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.y == -1) {
-        ev.target.roomedit.movespeed.y = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateIn = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(0,0,1));
-        ev.target.roomedit.movespeed.z = 1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.z == 1) {
-        ev.target.roomedit.movespeed.z = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateOut = function(ev) {
-      if (ev.value) {
-        //ev.target.editObjectManipulate(V(0,0,-1));
-        ev.target.roomedit.movespeed.z = -1;
-        ev.target.roomedit.raycast = false;
-        ev.target.roomedit.keyrepeatdelay = 300;
-      } else if (ev.target.roomedit.movespeed.z == -1) {
-        ev.target.roomedit.movespeed.z = 0;
-      }
-      ev.target.editObjectManipulateTimer();
-    }
-    this.editObjectManipulateTimer = function() {
-      if (this.roomedit.movespeed.x || this.roomedit.movespeed.y || this.roomedit.movespeed.z) {
-        this.editObjectManipulate(V(this.roomedit.movespeed));
-        if (!this.roomedit.movetimer) {
-          this.roomedit.movetimer = setTimeout(() => {
-            this.roomedit.movetimer = false;
-            this.roomedit.keyrepeatdelay = 75;
-            this.editObjectManipulateTimer();
-          }, this.roomedit.keyrepeatdelay);
-        }
-      }
-    }
-    this.editObjectManipulateMouse = function(ev) {
-      ev.target.editObjectManipulate(V(ev.value[0], -ev.value[1], 0));
-    }
-    this.editObjectToggleRaycast = function(ev) {
-      ev.target.roomedit.raycast = ev.value;
-    }
-    this.editObjectSnapOnes = function(ev) {
-      if (ev.value) ev.target.editObjectSetSnap(1);
-    }
-    this.editObjectSnapTenths = function(ev) {
-      if (ev.value) ev.target.editObjectSetSnap(.1);
-    }
-    this.editObjectSnapHundredths = function(ev) {
-      if (ev.value) ev.target.editObjectSetSnap(.01);
-    }
-    this.editObjectSnapThousandths = function(ev) {
-      if (ev.value) ev.target.editObjectSetSnap(.001);
-    }
-    this.editObjectDelete = function(ev) {
-      if (ev.value) {
-        //ev.target.removeObject(ev.target.roomedit.object);
-        ev.target.deletions.push(ev.target.roomedit.object);
-        ev.target.editObjectStop(true);
-      }
-    }
-    this.editObjectCancel = function(ev) {
-      if (ev.value) {
-        if (ev.target.roomedit.objectIsNew) {
-          ev.target.editObjectStop(true);
-        } else {
-          ev.target.editObjectRevert();
-        }
-      }
-    }
-    this.editObjectToggleMove = function(ev) {
-      var roomedit = ev.target.roomedit;
-      if (ev.value == 1) {
-        roomedit.moving = true;
-        this.engine.systems.conyytrols.activateContext('roomedit', this);
-      } else if (ev.value == 0) {
-        roomedit.moving = true;
-        this.engine.systems.controls.deactivateContext('roomedit', this);
-      }
-    }
-    this.editObjectHandlePointerlock = function(ev) {
-      if (!document.pointerLockElement) {
-        this.editObjectRevert();
-      }
-    }
     this.getTypeFromClassname = function(classname) {
       var types = {};
       for (var k in this.customElements) {
@@ -2496,6 +2089,116 @@ obj.updateDirvecsFromOrientation();
         obj = obj.parent;
       }
       return null;
+    }
+    this.require = function(deps) {
+      // Dynamically load components that are needed by this room from any registered repositories
+      if (!elation.utils.isArray(deps)) {
+        deps = deps.split(' ');
+      }
+      if (!this.pendingCustomElementsMap) {
+        this.pendingCustomElementsMap = {};
+      }
+      let foundmap = this.pendingCustomElementsMap;
+      function countMissing() {
+        let missing = 0;
+        for (let k in foundmap) {
+          missing += (foundmap[k] ? 0 : 1);
+        }
+        return missing;
+      }
+      let finished = false,
+          newdeps = [];
+
+      deps.forEach(d => { if (!(d in foundmap)) { newdeps.push(d); foundmap[d] = false; } }); 
+
+      this.pendingCustomElements = countMissing();
+
+      // FIXME - This is a naive implementation which doesn't do proper dependency graph resolution.
+      //         As a result, sometimes the components load out of order, or they try to load multiple times.
+      //         Elation has some built-in functions for resolving complex dependency graphs which we
+      //         should be using here
+      let promise = new Promise((accept, reject) => {
+        for (let i = 0; i < newdeps.length; i++) {
+          let k = newdeps[i];
+          if (!foundmap[k]) {
+            // The requested element isn't registered yet, wait and see if it becomes available
+            this.addEventListener('registerelement', (ev) => {
+              if (ev.data in foundmap && !foundmap[ev.data]) {
+                // Element was registered, update its map entry
+                foundmap[ev.data] = true;
+
+                this.pendingCustomElements = countMissing();
+                if (this.pendingCustomElements == 0) {
+                  // If all our required elements have been loaded, we're done here
+                  finished = true;
+                  elation.events.fire({element: this, type: 'room_load_complete_customelements'});
+                  accept();
+                }
+              }
+            });
+            if (this.pendingScripts) {
+              // We're still waiting for the room to finish loading, so wait for the room_load_complete event before checking if we need to load anything else
+              this.addEventListener('room_load_complete', (ev) => {
+                // Room and all of its assets have finished loading. If our required component still isn't available, check the master package list and autoload if possible
+                if (!finished) {
+                  this.loadComponentList().then(components => {
+                    if (components[k]) {
+                      this.loadNewAsset('script', { src: components[k].url });
+                      this.loadScripts([{src: components[k].url}]);
+                    }
+                  });
+                }
+              });
+            } else {
+              // Room is already loaded and scripts are processed - we still don't know about this component, so load it up
+              this.loadComponentList().then(components => {
+                if (components[k]) {
+                  this.loadNewAsset('script', { src: components[k].url });
+                  this.loadScripts([{src: components[k].url}]);
+                }
+              });
+            }
+          }
+        }
+        if (countMissing() == 0) {
+          accept();
+        }
+      });
+      return promise;
+    }
+    this.loadComponentList = function() {
+      return new Promise((accept, reject) => {
+        if (this.componentrepository) {
+          // Already loaded
+          accept(this.componentrepository);
+        } else {
+          let url = 'https://baicoianu.com/~bai/janusweb/test/components.json'; // FIXME - dumb hack for prototype
+
+          fetch(url)
+            .then(d => d.json())
+            .then(components => {
+              this.componentrepository = components;
+              accept(components);
+            });
+        }
+      });
+    }
+    this.dispatchEvent = function(event, target) {
+      let firedev = elation.events.fire(event);
+/*
+      if (!event.element) event.element = target || this;
+      var handlerfn = 'on' + event.type;
+      if (this[handlerfn]) {
+        this.executeCallback(this[handlerfn], event);
+      }
+      let firedev = elation.events.fire(event);
+      let returnValue = true;
+      firedev.forEach(e => returnValue &= e.returnValue);
+      if (returnValue && this.parent) {
+console.log('dispatch to parent', event, this, event.target);
+        this.parent.dispatchEvent(event, event.target);
+      }
+*/
     }
   }, elation.engine.things.generic);
 });
