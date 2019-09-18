@@ -432,6 +432,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (!this.room.selfavatar && this.ghost) {
         this.ghost.die();
         this.ghost = false;
+        this.visible = false;
       } else if (!this.ghost && this.room.selfavatar) {
         let avatar = this.getAvatarData();
         if (avatar) {
@@ -441,6 +442,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             showlabel: false
           });
         }
+        this.visible = true;
       }
       //room.add(this);
       this.updateGravity();
