@@ -1,3 +1,8 @@
+elation.elements.define('janus.ui.editor.button', class extends elation.elements.ui.togglebutton {
+  create() {
+    super.create();
+  }
+});
 elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
   create() {
     //this.innerHTML = elation.template.get('janus.ui.editor.panel');
