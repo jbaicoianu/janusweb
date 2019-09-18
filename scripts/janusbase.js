@@ -114,10 +114,13 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.removeCollider();
       if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
-      var collision_scale = this.collision_scale || this.scale;
+      var collision_scale = this.scale.clone();
+      if (this.collision_scale) {
+        collision_scale.multiply(this.collision_scale);
+      }
       if (this.collision_radius !== null) {
         collision_id = 'sphere';
-        collision_scale = new THREE.Vector3(this.collision_radius, this.collision_radius, this.collision_radius);
+        collision_scale.multiplyScalar(this.collision_radius);
       }
       if (collision_id) {
         if ((!this.collision_static || this.collision_static == 'false') && this.room.gravity) { // FIXME - should never receive 'false' as a string here
