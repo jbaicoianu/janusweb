@@ -91,7 +91,7 @@ elation.require(['janusweb.janusbase'], function() {
 
       var img = new Image();
       img.crossOrigin = 'anonymous';
-      var url = 'data:image/svg+xml,' + data;
+      var url = 'data:image/svg+xml,' + encodeURIComponent(data);
 
       var timer;
       img.onload = function() {
