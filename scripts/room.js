@@ -46,7 +46,7 @@ elation.require([
         'toon': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
         'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
-        'tonemapping_exposure': { type: 'float', default: 1.0, set: this.updateToneMapping },
+        'tonemapping_exposure': { type: 'float', default: 0.8, set: this.updateToneMapping },
         'tonemapping_whitepoint': { type: 'float', default: 1.0, set: this.updateToneMapping },
         'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
@@ -740,8 +740,8 @@ elation.require([
         this.fog_col = room.fog_col || room.fog_color;
         this.properties.bloom = room.bloom || 0.4;
         this.properties.tonemapping_type = room.tonemapping_type || 'linear';
-        this.properties.tonemapping_exposure = room.tonemapping_exposure || 1.0;
-        this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || 1.0;
+        this.properties.tonemapping_exposure = room.tonemapping_exposure || this.tonemapping_exposure;
+        this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || this.tonemapping_whitepoint;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked;
