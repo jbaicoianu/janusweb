@@ -114,10 +114,13 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.removeCollider();
       if (!this.collidable || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
-      var collision_scale = this.collision_scale || this.scale;
+      var collision_scale = this.scale.clone();
+      if (this.collision_scale) {
+        collision_scale.multiply(this.collision_scale);
+      }
       if (this.collision_radius !== null) {
         collision_id = 'sphere';
-        collision_scale = new THREE.Vector3(this.collision_radius, this.collision_radius, this.collision_radius);
+        collision_scale.multiplyScalar(this.collision_radius);
       }
       if (collision_id) {
         if ((!this.collision_static || this.collision_static == 'false') && this.room.gravity) { // FIXME - should never receive 'false' as a string here
@@ -157,9 +160,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                   if (n.material) n.material = new THREE.MeshPhongMaterial({color: collidercolor, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                   n.userData.thing = this;
                 }));
-                this.colliders.add(collider);
+                // Ignore collider if it's too high-poly
+                if ((collider.geometry instanceof THREE.BufferGeometry && collider.geometry.attributes.position.count <= 16384) ||
+                    (collider.geometry instanceof THREE.Geometry && collider.geometry.vertices.length <= 16384)) {
+                  this.colliders.add(collidermesh);
+                  this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
+                } else {
+                  elation.events.fire({type: 'thing_collider_rejected', element: this, data: collider});
+                  console.warn('Collider mesh rejected, too many polys!', this, collider);
+                }
 
-                this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
 console.log('got collider', collider, collision_id);
