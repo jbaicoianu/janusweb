@@ -95,14 +95,6 @@ elation.require([
         this.mute();
       }
 
-      if (this.networking) {
-        this.network = elation.janusweb.multiplayermanager({
-          janusweb: this,
-          server: this.server,
-          player: this.engine.client.player
-        });
-      }
-
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updatePortals));
       if (this.urltemplate) {
         dust.filters.stripunsafe = function(s) {
@@ -115,6 +107,16 @@ elation.require([
       this.assetpack.executeWhenLoaded(() => {
         // TODO - this should be config-driven
         this.registerAdditionalElements(['raycaster']);
+
+      if (this.networking) {
+        this.network = elation.janusweb.multiplayermanager({
+          janusweb: this,
+          server: this.server,
+          player: this.engine.client.player
+        });
+        this.network.enable(this.engine.client.player);
+      }
+
         this.initRoom();
       });
     }
