@@ -13,6 +13,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lmap_id: { type: 'string', set: this.updateMaterial },
         video_id: { type: 'string', set: this.updateVideo },
         shader_id: { type: 'string', set: this.updateMaterial },
+        shader_chunk_replace: { type: 'object' },
         url: { type: 'string' },
         loop: { type: 'boolean' },
         websurface_id: { type: 'string', set: this.updateWebsurface },
@@ -702,6 +703,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           m.color.copy(oldmat.specular);
         }
         */
+
+        if (this.shader_chunk_replace) {
+          let chunkreplace = this.shader_chunk_replace;
+          m.onBeforeCompile = function(shader) {
+            for (let oldchunkname in chunkreplace) {
+              let newchunkname = chunkreplace[oldchunkname];
+              shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+            }
+          }
+        }
+
       }
 
       return m;
