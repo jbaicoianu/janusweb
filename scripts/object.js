@@ -36,6 +36,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
+        onbeforerender: { type: 'callback', set: this.setupOnBeforeRenderListener },
       });
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
@@ -910,6 +911,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         return this.video.duration;
       }
       return 0;
+    }
+    this.setupOnBeforeRenderListener = function(type, args, arg2, arg3) {
+      if (this.onbeforerender) {
+        console.log('set it up!!!!', this.onbeforerender, type, args, arg2, arg3, this);
+        this.objects['3d'].onBeforeRender = this.onbeforerender;
+      }
     }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
