@@ -68,7 +68,7 @@ elation.require([
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
-        'selfavatar': { type: 'boolean', default: true },
+        'selfavatar': { type: 'boolean', default: false },
         'onload': { type: 'string' },
       });
       this.translators = {
