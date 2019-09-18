@@ -160,9 +160,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                   if (n.material) n.material = new THREE.MeshPhongMaterial({color: collidercolor, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
                   n.userData.thing = this;
                 }));
-                this.colliders.add(collider);
+                // Ignore collider if it's too high-poly
+                if ((collider.geometry instanceof THREE.BufferGeometry && collider.geometry.attributes.position.count <= 16384) ||
+                    (collider.geometry instanceof THREE.Geometry && collider.geometry.vertices.length <= 16384)) {
+                  this.colliders.add(collidermesh);
+                  this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
+                } else {
+                  elation.events.fire({type: 'thing_collider_rejected', element: this, data: collider});
+                  console.warn('Collider mesh rejected, too many polys!', this, collider);
+                }
 
-                this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
 console.log('got collider', collider, collision_id);
