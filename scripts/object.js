@@ -28,6 +28,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         depth_test: { type: 'boolean', default: null },
         envmap_id: { type: 'string', set: this.updateMaterial },
         normalmap_id: { type: 'string', set: this.updateMaterial },
+        bumpmap_id: { type: 'string', set: this.updateMaterial },
+        bumpmap_scale: { type: 'float', default: 1.0, set: this.updateMaterial },
         displacementmap_id: { type: 'string', set: this.updateMaterial },
         displacementmap_scale: { type: 'float', default: 1, set: this.updateMaterial },
         texture_offset: { type: 'vector2', default: [0, 0], set: this.updateTextureOffsets },
@@ -257,6 +259,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture = false,
           textureLightmap = false,
           textureNormal = false,
+          textureBump = false,
           textureDisplacement = false,
           color = false,
           blend_src = false,
@@ -268,6 +271,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
       var image_id = this.image_id,
           normal_image_id = this.normalmap_id,
+          bump_image_id = this.bumpmap_id,
           displacement_image_id = this.displacementmap_id,
           lightmap_image_id = this.lmap_id;
       if (this.janusid) {
@@ -318,6 +322,24 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             textureNormal.repeat.y = 0.5;
           }
           if (textureNormal) {
+            //this.assignTextureParameters(textureNormal, modelasset, textureasset);
+          }
+        }
+      }
+      if (bump_image_id) {
+        let bumptextureasset = this.getAsset('image', bump_image_id, true);
+        if (bumptextureasset) {
+          textureBump = bumptextureasset.getInstance();
+          elation.events.add(textureBump, 'asset_load', elation.bind(this, this.refresh));
+          elation.events.add(textureBump, 'update', elation.bind(this, this.refresh));
+
+          if (bumptextureasset.sbs3d) {
+            textureBump.repeat.x = 0.5;
+          }
+          if (bumptextureasset.ou3d) {
+            textureBump.repeat.y = 0.5;
+          }
+          if (textureBump) {
             //this.assignTextureParameters(textureNormal, modelasset, textureasset);
           }
         }
@@ -529,6 +551,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 }));
                 elation.events.add(m.normalMap, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
               }
+            } else if (textureBump) {
+              m.bumpMap = textureBump;
+              m.bumpScale = this.bumpmap_scale;
             } else if (m.bumpMap) {
               var imagesrc = m.bumpMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
