@@ -265,7 +265,7 @@ elation.require([
       this.userId = player.getUsername();
       player.player_id = this.userId; // FIXME - player spawns without an id, so we fix it up here
       window.player = player.getProxyObject();
-      if (this.networking) {
+      if (this.networking && this.network) {
         this.network.enable(player);
       }
       if (!(this.autoload || starturl != this.properties.homepage)) {
