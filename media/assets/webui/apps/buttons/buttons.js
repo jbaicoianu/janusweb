@@ -53,6 +53,7 @@ elation.elements.define('janus-button-fullscreen', class extends elation.element
   }
 });
 elation.elements.define('janus-button-webvr', class extends elation.elements.ui.togglebutton {
+  xr: false,
   create() {
     this.activelabel = 'WebVR';
     this.inactivelabel = 'WebVR';
@@ -61,32 +62,42 @@ elation.elements.define('janus-button-webvr', class extends elation.elements.ui.
     super.create();
     this.view = janus.engine.client.view;
 
-    window.addEventListener( 'vrdisplayconnect', (ev) => {
+    if ('xr' in navigator) {
+      this.activelabel = 'WebXR';
+      this.inactivelabel = 'WebXR';
+      this.label = this.inactivelabel;
+      this.xr = true;
+    } else if ('getVRDevices' in navigator) {
+      window.addEventListener( 'vrdisplayconnect', (ev) => {
+        this.show();
+      }, false );
 
-      this.show();
+      window.addEventListener( 'vrdisplaydisconnect', (ev) => {
+        this.hide();
+      }, false );
 
-    }, false );
-
-    window.addEventListener( 'vrdisplaydisconnect', (ev) => {
-
-      this.hide();
-
-    }, false );
-
-    window.addEventListener( 'vrdisplaypresentchange', (ev) => {
-
-      if (this.view.vrdisplay.isPresenting) {
-      } else {
-      }
-    }, false );
+      window.addEventListener( 'vrdisplaypresentchange', (ev) => {
+        if (this.view.vrdisplay.isPresenting) {
+        } else {
+        }
+      }, false );
+    }
   }
   onactivate(ev) {
     this.label = this.activelabel;
-    this.view.toggleVR(true);
+    if (this.xr) {
+      this.view.startXR();
+    } else {
+      this.view.toggleVR(true);
+    }
   }
   ondeactivate(ev) {
     this.label = this.inactivelabel;
-    this.view.toggleVR(false);
+    if (this.xr) {
+      this.view.stopXR();
+    } else {
+      this.view.toggleVR(false);
+    }
   }
 });
 elation.elements.define('janus-buttons-chromecast', class extends elation.elements.ui.togglebutton {
