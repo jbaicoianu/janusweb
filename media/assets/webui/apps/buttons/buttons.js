@@ -53,8 +53,8 @@ elation.elements.define('janus-button-fullscreen', class extends elation.element
   }
 });
 elation.elements.define('janus-button-webvr', class extends elation.elements.ui.togglebutton {
-  xr: false,
   create() {
+    this.xr = false;
     this.activelabel = 'WebVR';
     this.inactivelabel = 'WebVR';
 
