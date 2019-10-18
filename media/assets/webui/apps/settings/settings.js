@@ -96,7 +96,7 @@ elation.elements.define('janus.ui.settings.panels', class extends elation.elemen
     this.layouts = {
       'default': {
         'topleft': ['janus-ui-navigation'],
-        'topright': [],
+        'topright': ['janus-ui-editor-panel'],
         'right': ['janus-ui-inventory'],
         'left': ['janus-comms-panel'],
         'bottomright': ['janus-ui-buttons'],
