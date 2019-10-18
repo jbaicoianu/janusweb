@@ -369,8 +369,8 @@ elation.require([
         var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
 
         this.debugwindow = elation.ui.window({title: 'Janus Room', content: content, append: document.body, center: true});
-        this.debugeditor = elation.ui.textarea({append: content, value: this.roomsrc, classname: 'janusweb_room_source'});
-        this.debugwindow.settitle(this.properties.url);
+        this.debugeditor = elation.ui.textarea({append: content, value: this.roomsrc, classname: 'janusweb_room_source', wrap: 'off'});
+        this.debugwindow.settitle('Room Source: ' + this.properties.url);
 
         var updatebutton = elation.ui.button({label: 'Update'});
         var buttons = elation.ui.buttonbar({
