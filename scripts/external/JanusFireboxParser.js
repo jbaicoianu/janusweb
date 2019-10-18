@@ -91,7 +91,10 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       loop: n.loop,
       sbs3d: n.sbs3d == 'true',  
       ou3d: n.ou3d == 'true',  
-      auto_play: n.auto_play == 'true',  
+      hasalpha: n.hasalpha == 'true',
+      flipy: n.flipy,
+      reverse3d: n.reverse3d,
+      auto_play: n.auto_play == 'true',
       baseurl: baseurl,
       proxy: n.proxy && n.proxy != 'false'
     }); 
