@@ -8,14 +8,17 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     //this.innerHTML = elation.template.get('janus.ui.editor.panel');
     let elements = elation.elements.fromTemplate('janus.ui.editor.panel', this);
 console.log('my elements!', elements);
+/*
     elation.events.add(elements.transformtype, 'change', (ev) => this.handleTransformTypeChange(ev));
     elation.events.add(elements.transformspace, 'change', (ev) => this.handleTransformSpaceChange(ev));
     //elements.transformglobal.addEventListener('deactivate', (ev) => this.handleTransformGlobalDeactivate(ev));
 
     elation.events.add(elements.translatesnap, 'change', (ev) => this.handleTranslateSnapChange(ev));
     elation.events.add(elements.rotatesnap, 'change', (ev) => this.handleRotateSnapChange(ev));
+*/
 
     elation.events.add(elements.physicsdebug, 'click', (ev) => this.handlePhysicsDebugClick(ev));
+    elation.events.add(elements.viewsource, 'click', (ev) => this.handleViewSourceClick(ev));
 
     this.elements = elements;
 
@@ -130,9 +133,11 @@ console.log('mouse down!');
     let manipulator = this.getManipulator();
     if (snap == 'Off') snap = 0;
     if (manipulator) manipulator.setTranslationSnap(+snap);
+/*
     if (this.elements.translatesnap.value != snap) {
       this.elements.translatesnap.value = snap || 'Off';
     }
+*/
     this.roomedit.snap = snap;
   }
   setRotationSnap(snap) {
@@ -140,10 +145,12 @@ console.log('mouse down!');
     let manipulator = this.getManipulator();
     if (snap == 'Off') snap = 0;
     if (manipulator) manipulator.setRotationSnap(+snap);
+/*
 console.log('oh snap', snap, this.elements.rotatesnap.value);
     if (this.elements.rotatesnap.value != snap) {
       this.elements.rotatesnap.value = snap || 'Off';
     }
+*/
   }
   handleTransformTypeChange(ev) {
     let manipulator = this.getManipulator();
@@ -181,6 +188,9 @@ console.log('set translation snap', ev.data, ev);
       janus.engine.systems.world.disableDebug();
     }
     janus.engine.systems.render.setdirty();
+  }
+  handleViewSourceClick(ev) {
+    room.showDebug();
   }
   handleRoomClick(ev) {
     if (ev.button == 2) {
@@ -224,7 +234,6 @@ setTimeout(() => {
     object.collision_radius = null;
 }, 0);
 
-console.log('bind mouse move', this.editObjectMousemove);
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
     room.addEventListener('wheel', (ev) => this.editObjectMousewheel(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
@@ -435,10 +444,9 @@ setTimeout(() => {
       let obj = this.roomedit.object,
           mode = this.roomedit.modes[this.roomedit.modeid];
 
-console.log('do go', mode, obj, ev);
       if (mode == 'pos') {
         let move = this.roomedit.snap * (ev.deltaY < 0 ? -1 : 1);
-        if (ev.ctrlKey) {
+        if (ev.altKey) {
           obj.pos.y += move;
         } else if (ev.shiftKey) {
           obj.pos.z += move;
@@ -450,7 +458,7 @@ console.log('do go', mode, obj, ev);
         let rot = new THREE.Euler();
         let quat = new THREE.Quaternion();
         let move = (ev.deltaY > 0 ? 1 : -1) * this.roomedit.rotationsnap * THREE.Math.DEG2RAD;
-        if (ev.ctrlKey) {
+        if (ev.altKey) {
           rot.z += move;
         } else if (ev.shiftKey) {
           rot.x += move;
@@ -462,7 +470,7 @@ console.log('do go', mode, obj, ev);
         //this.editObjectSnapVector(obj.rotation, this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
       } else if (mode == 'scale') {
         let scale = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
-        if (ev.ctrlKey) {
+        if (ev.altKey) {
           obj.scale.y += scale;
         } else if (ev.shiftKey) {
           obj.scale.z += scale;
@@ -607,10 +615,10 @@ console.log('change color', obj.col, vec);
     this.roomedit.snap = amount;
     this.setTranslationSnap(amount);
 
-    if (amount == 1) this.setRotationSnap(90);
-    else if (amount == .1) this.setRotationSnap(45);
-    else if (amount == .01) this.setRotationSnap(15);
-    else if (amount == .001) this.setRotationSnap(5);
+    if (amount == 1) this.setRotationSnap(45);
+    else if (amount == .1) this.setRotationSnap(15);
+    else if (amount == .01) this.setRotationSnap(5);
+    else if (amount == .001) this.setRotationSnap(1.25);
     console.log('set snap to', amount);
   }
 
@@ -785,12 +793,10 @@ console.log('manip left', ev.value, ev);
         let manipulator = this.getManipulator();
         manipulator.enabled = false;
       }, 0);
-console.log('here is the new one', newobj);
       //oldobj.parent.add(oldobj.clone());
     }
   }
   handleDragOver(ev) {
-console.log('do the dragover', ev);
     //ev.dataTransfer.dropEffect = "link"
     ev.preventDefault();
   }
@@ -816,7 +822,9 @@ console.log('do the dragover', ev);
       if (types['text/x-jml']) {
         types['text/x-jml'].getAsString((jml) => this.loadObjectFromJML(jml));
       } else if (types['text/uri-list']) {
-        types['text/uri-list'].getAsString((urilist) =>  this.loadObjectFromURIList(urilist));
+        types['text/uri-list'].getAsString((urilist) => this.loadObjectFromURIList(urilist));
+      } else if (types['text/x-moz-url']) {
+        types['text/x-moz-url'].getAsString((urilist) => this.loadObjectFromURIList(urilist));
       }
     }
     if (janus.engine.systems.admin.hidden) {
@@ -829,6 +837,7 @@ console.log('do the dragover', ev);
     var objects = [];
     for (var i = 0; i < urls.length; i++) {
       var hashidx = urls[i].indexOf('#');
+      let url = urls[i];
       let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
       let type = 'Object';
       let objargs = {
@@ -854,24 +863,66 @@ console.log('do the dragover', ev);
             }
           }
         }
-        if (id.match(/\.(png|gif|jpg|jpeg)/i)) {
-          type = 'image';
-        }
-        if (typeof EventBridge != 'undefined') {
-          // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
-          EventBridge.emitWebEvent(JSON.stringify({
-            type: 'spawn',
-            data: objargs.id
-          }));
-        } else {
-          var newobject = room.createObject(type, objargs);
-          objects.push(newobject);
-        }
+        this.detectMimeTypeForURL(url).then(mimetype => {
+          if (!mimetype) mimetype = 'application/octet-stream';
+          if (id.match(/\.(png|gif|jpg|jpeg)/i) || mimetype.match(/^image\//)) {
+            type = 'image';
+          } else if (mimetype.match(/^audio\//)) {
+            type = 'sound';
+            room.loadNewAsset('sound', {
+              id: objargs.js_id,
+              src: url
+            });
+            objargs.sound_id = objargs.js_id;
+            objargs.id = objargs.js_id;
+            objargs.auto_play = true;
+          } else if (mimetype.match(/^video\//)) {
+            type = 'video';
+            room.loadNewAsset('video', {
+              id: objargs.js_id,
+              src: url,
+              auto_play: true
+            });
+            objargs.video_id = objargs.js_id;
+            objargs.id = objargs.js_id;
+            //objargs.auto_play = true;
+          }
+          if (typeof EventBridge != 'undefined') {
+            // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
+            EventBridge.emitWebEvent(JSON.stringify({
+              type: 'spawn',
+              data: objargs.id
+            }));
+          } else {
+            var newobject = room.createObject(type, objargs);
+            objects.push(newobject);
+          }
+          if (objects[0]) {
+      console.log('edit the object', objects[0]);
+            this.editObject(objects[0], true);
+          }
+        });
       }
     }
-    if (objects[0]) {
-      this.editObject(objects[0], true);
-    }
+  }
+  detectMimeTypeForURL(url) {
+    return new Promise((resolve, reject) => {
+      // Fetch the file so we can read the MIME type.  
+
+      // FIXME - Ideally we'd request only the first 1k of data with a Range header, so we don't have to download 
+      // the whole thing just to determine type - some types can be streamed more effectively if we let the browser
+      // handle them (eg, video).  However, CORS is a nightmare, and most servers don't whitelist Range headers.
+
+      // If mime type detection fails, we could also check for known signatures in the first 1k of data, but we don't do that here yet
+      let proxiedurl = url;
+      if (elation.engine.assets.corsproxy) {
+        proxiedurl = elation.engine.assets.corsproxy + url;
+      }
+      fetch(proxiedurl, { headers: { /*'Range': 'bytes=0-1023'}*/ }}).then(res => resolve(res.headers.get('content-type')))
+                .catch((e) => {
+                  reject();
+                });
+    });
   }
   loadObjectFromJML(jml) {
     room.applyEditXML(jml);
