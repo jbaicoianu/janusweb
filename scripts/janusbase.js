@@ -424,7 +424,13 @@ console.log('got collider', collider, collision_id);
       }
       if (!asset && autocreate) {
         // Asset definition wasn't found, so we'll assume it's a URL and define a new asset
-        this.room.loadNewAsset(type, {id: id, src: id}, false);
+        let assetargs = {id: id, src: id};
+        if (typeof autocreate == 'object') {
+          for (let k in autocreate) {
+            assetargs[k] = autocreate[k];
+          }
+        }
+        this.room.loadNewAsset(type, assetargs, false);
         asset = this.room.getAsset(type, id);
       }
 
