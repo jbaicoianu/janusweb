@@ -21,6 +21,7 @@ body.dark .ui_window:after {
 }
 .janusweb_room_source {
   min-height: 20em;
+  min-width: 40em;
   width: 100%;
   max-height: 100%;
   max-width: 100%;
