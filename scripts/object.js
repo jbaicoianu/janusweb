@@ -389,7 +389,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
         }
       }
-      if (this.websurface_id) {
+      if (this.websurface_id && this.websurface) {
         this.replaceWebsurfaceMaterial();
         return;
       }
@@ -859,10 +859,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
       }
       if (this.websurface_id) {
-        if (!this.websurface) {
+        elation.events.add(this, 'click', elation.bind(this, this.handleWebsurfaceClick));
+        if (!this.websurface && !this.image_id) {
           this.createWebsurface();
         }
-        this.websurface.start();
+        if (this.websurface) {
+          this.websurface.start();
+        }
       }
     }
     this.stop = function() {
@@ -893,6 +896,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         } else {
           video.play();
         }
+      }
+    }
+    this.handleWebsurfaceClick = function() {
+      if (this.websurface_id && !this.websurface) {
+        this.createWebsurface();
       }
     }
     this.handleAutoplayStart = function() {
