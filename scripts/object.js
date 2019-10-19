@@ -273,7 +273,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           normal_image_id = this.normalmap_id,
           bump_image_id = this.bumpmap_id,
           displacement_image_id = this.displacementmap_id,
-          lightmap_image_id = this.lmap_id;
+          lightmap_image_id = this.lmap_id,
+          image_linear = true;
       if (this.janusid) {
         if (!modelasset || modelasset.name != this.janusid) {
           modelasset = this.getAsset('model', this.janusid, true);
@@ -284,10 +285,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         if (modelasset.tex0) {
           image_id = modelasset.tex0;
+          image_linear = (modelasset.tex_linear != 'false');
         }
       }
       if (image_id) {
-        textureasset = this.getAsset('image', image_id, true);
+        textureasset = this.getAsset('image', image_id, {tex_linear: image_linear});
         if (textureasset) {
           texture = textureasset.getInstance();
           elation.events.add(texture, 'asset_load', elation.bind(this, this.refresh));
