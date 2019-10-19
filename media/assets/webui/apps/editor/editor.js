@@ -450,7 +450,7 @@ setTimeout(() => {
           mode = this.roomedit.modes[this.roomedit.modeid];
 
       if (mode == 'pos') {
-        let move = this.roomedit.snap * (ev.deltaY < 0 ? -1 : 1);
+        let move = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
         if (ev.altKey) {
           obj.pos.y += move;
         } else if (ev.shiftKey) {
