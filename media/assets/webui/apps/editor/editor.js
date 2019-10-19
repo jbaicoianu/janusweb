@@ -891,6 +891,14 @@ console.log('manip left', ev.value, ev);
             objargs.video_id = objargs.js_id;
             objargs.id = objargs.js_id;
             //objargs.auto_play = true;
+          } else if (mimetype.match(/^text\/html/)) {
+            type = 'object';
+            room.loadNewAsset('websurface', {
+              id: objargs.js_id,
+              src: url
+            });
+            objargs.websurface_id = objargs.js_id;
+            objargs.id = 'plane';
           }
           if (typeof EventBridge != 'undefined') {
             // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
