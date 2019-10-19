@@ -149,9 +149,8 @@ console.log('mouse down!');
     this.roomedit.rotationsnap = snap;
     let manipulator = this.getManipulator();
     if (snap == 'Off') snap = 0;
-    if (manipulator) manipulator.setRotationSnap(+snap);
+    if (manipulator) manipulator.setRotationSnap(+snap * THREE.Math.DEG2RAD);
 /*
-console.log('oh snap', snap, this.elements.rotatesnap.value);
     if (this.elements.rotatesnap.value != snap) {
       this.elements.rotatesnap.value = snap || 'Off';
     }
