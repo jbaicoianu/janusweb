@@ -1191,6 +1191,7 @@ elation.require([
           loop: args.loop,
           sbs3d: args.sbs3d,
           ou3d: args.ou3d,
+          hasalpha: args.hasalpha,
           auto_play: args.auto_play,
           baseurl: this.baseurl
         });
