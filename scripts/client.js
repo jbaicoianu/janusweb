@@ -270,7 +270,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
             height = (this.fullscreen ? window.innerHeight : this.height);
         var args = {
           url: this.getRoomURL(),
-          homepage: this.homepage,
+          homepage: this.homepage || this.src,
           tracking: this.tracking,
           networking: this.networking,
           //resolution: width + 'x' + height,
