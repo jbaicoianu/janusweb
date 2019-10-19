@@ -20,6 +20,7 @@ elation.require(['engine.things.label'], function() {
         'bevel.enabled':   { type: 'bool', default: false, refreshGeometry: true },
         'bevel.thickness': { type: 'float', default: 0, refreshGeometry: true },
         'bevel.size':      { type: 'float', default: 0, refreshGeometry: true },
+        'visible':         { type: 'boolean', default: true, set: this.toggleVisibility },
       });
       this.emptygeometry = new THREE.Geometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
@@ -43,7 +44,7 @@ elation.require(['engine.things.label'], function() {
           this.material.transparent = true;
         }
 
-        if (geometry !== this.emptygeomety) {
+        if (geometry !== this.emptygeometry) {
           this.textcache[cachename] = geometry;
         }
       }
@@ -201,6 +202,11 @@ elation.require(['engine.things.label'], function() {
         }
       }
       this.updateMaterial();
+    }
+    this.toggleVisibility = function() {
+      if (this.visible && this.objects['3d'].geometry === this.emptygeometry) {
+        this.objects['3d'].geometry = this.createTextGeometry(this.text);
+      }
     }
   }, elation.engine.things.janusbase);
 });
