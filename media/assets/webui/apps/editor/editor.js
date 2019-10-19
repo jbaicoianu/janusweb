@@ -63,20 +63,25 @@ console.log('my elements!', elements);
     });
     janus.engine.systems.controls.activateContext('roomedit_paste');
 
+    this.initialized = new Set();
     if (typeof room != 'undefined') {
       this.initRoomEvents(room);
     }
+    elation.events.add(janus._target, 'room_change', (ev) => this.initRoomEvents(room));
     document.addEventListener('paste', (ev) => this.handlePaste(ev));
   }
   initRoomEvents(room) {
-    room.addEventListener('click', (ev) => this.handleRoomClick(ev));
-    //room.addEventListener('mouseover', (ev) => console.log('mouseover', ev.data));
-    //room.addEventListener('mouseout', (ev) => console.log('mouseout', ev.data));
-    elation.events.add(room, 'dragenter', (ev) => this.handleDragOver(ev));
-    elation.events.add(room, 'dragover', (ev) => this.handleDragOver(ev));
-    room.addEventListener('dragenter', (ev) => this.handleDragOver(ev));
-    room.addEventListener('dragover', (ev) => this.handleDragOver(ev));
-    room.addEventListener('drop', (ev) => this.handleDrop(ev));
+    if (!this.initialized.has(room)) {
+      room.addEventListener('click', (ev) => this.handleRoomClick(ev));
+      //room.addEventListener('mouseover', (ev) => console.log('mouseover', ev.data));
+      //room.addEventListener('mouseout', (ev) => console.log('mouseout', ev.data));
+      elation.events.add(room, 'dragenter', (ev) => this.handleDragOver(ev));
+      elation.events.add(room, 'dragover', (ev) => this.handleDragOver(ev));
+      room.addEventListener('dragenter', (ev) => this.handleDragOver(ev));
+      room.addEventListener('dragover', (ev) => this.handleDragOver(ev));
+      room.addEventListener('drop', (ev) => this.handleDrop(ev));
+      this.initialized.add(room);
+    }
   }
 
   getManipulator() {
