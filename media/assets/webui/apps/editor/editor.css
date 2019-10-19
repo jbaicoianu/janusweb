@@ -44,3 +44,26 @@ janus-ui-editor-property-euler {
   color: #0f0;
   text-shadow: 0 0 2px #000;
 }
+janus-ui-editor-panel ui-togglebutton,
+janus-ui-editor-panel ui-button {
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  -ms-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
+  background-color: transparent;
+  display: inline-block;
+
+  width: 80px;
+  height: 20px;
+  border-radius: 30px;
+  border: 1px solid white;
+  margin: 0 .2em;
+  padding: 0;
+  line-height: 20px;
+  font-size: .7em;
+  font-weight: bold;
+}
