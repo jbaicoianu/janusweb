@@ -56,7 +56,6 @@ elation.require(['engine.things.generic'], function() {
         color: this.hovercolor,
         blending: THREE.NormalBlending,
         opacity: 1,
-        side: THREE.DoubleSide,
         polygonOffset: true,
         polygonOffsetFactor: 1,
         polygonOffsetUnit: 10
@@ -105,6 +104,7 @@ elation.require(['engine.things.generic'], function() {
       if (!this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'none';
+        canvas.style.position = 'absolute';
         this.engine.systems.controls.releasePointerLock();
         this.active = true;
         this.selectionmaterial.color.copy(this.activecolor);
@@ -118,7 +118,7 @@ setTimeout(elation.bind(this, function() {
       if (this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'all';
-        console.log('request plock!', this.engine.systems.controls.pointerLockActive);
+        canvas.style.position = 'static';
         this.engine.systems.controls.requestPointerLock();
         ev.stopPropagation();
         ev.preventDefault();
