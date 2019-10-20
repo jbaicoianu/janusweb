@@ -67,3 +67,6 @@ janus-ui-editor-panel ui-button {
   font-size: .7em;
   font-weight: bold;
 }
+janus-ui-editor-button[active] {
+  background-image: linear-gradient(#028202, #109112 40%, #199b1d);
+}

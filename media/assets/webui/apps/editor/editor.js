@@ -1,6 +1,30 @@
 elation.elements.define('janus.ui.editor.button', class extends elation.elements.ui.togglebutton {
   create() {
     super.create();
+    let editpanel = document.querySelector('ui-panel[name="topright"]');
+    if (editpanel) {
+      editpanel.hide();
+    }
+  }
+  onactivate() {
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    if (inventorypanel) {
+      inventorypanel.expand();
+    }
+    let editpanel = document.querySelector('ui-panel[name="topright"]');
+    if (editpanel) {
+      editpanel.show();
+    }
+  }
+  ondeactivate() {
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    if (inventorypanel) {
+      inventorypanel.collapse();
+    }
+    let editpanel = document.querySelector('ui-panel[name="topright"]');
+    if (editpanel) {
+      editpanel.hide();
+    }
   }
 });
 elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
@@ -17,8 +41,9 @@ console.log('my elements!', elements);
     elation.events.add(elements.rotatesnap, 'change', (ev) => this.handleRotateSnapChange(ev));
 */
 
-    elation.events.add(elements.physicsdebug, 'click', (ev) => this.handlePhysicsDebugClick(ev));
+    elation.events.add(elements.debugview, 'click', (ev) => this.handleDebugviewClick(ev));
     elation.events.add(elements.viewsource, 'click', (ev) => this.handleViewSourceClick(ev));
+    elation.events.add(elements.export, 'click', (ev) => this.handleExportClick(ev));
 
     this.elements = elements;
 
@@ -183,7 +208,7 @@ console.log('set translation snap', ev.data, ev);
 */
     this.setRotationSnap(ev.target.value);
   }
-  handlePhysicsDebugClick(ev) {
+  handleDebugviewClick(ev) {
     if (!ev.target.active) {
       janus.engine.client.view.pickingdebug = true;
       janus.engine.systems.world.enableDebug();
@@ -195,6 +220,25 @@ console.log('set translation snap', ev.data, ev);
   }
   handleViewSourceClick(ev) {
     room.showDebug();
+  }
+  handleExportClick(ev) {
+    let exporter = new THREE.GLTFExporter();
+    exporter.parse(room._target.objects['3d'], (data) => {
+      let filedata = new Blob([data], {type: 'model/gltf-binary'});
+
+      var url = window.URL.createObjectURL(filedata);
+
+      let d = new Date(),
+          ts = d.getFullYear() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDate().toString().padStart(2, '0') + d.getHours().toString().padStart(2, '0') + d.getMinutes().toString().padStart(2, '0') + d.getSeconds().toString().padStart(2, '0')
+
+      var a = document.createElement('A');
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.href = url;
+      a.download = room.title + ' - ' + ts + '.glb';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }, { binary: true });
   }
   handleRoomClick(ev) {
     if (ev.button == 2) {
@@ -910,7 +954,6 @@ console.log('manip left', ev.value, ev);
             objects.push(newobject);
           }
           if (objects[0]) {
-      console.log('edit the object', objects[0]);
             this.editObject(objects[0], true);
           }
         });
