@@ -5,8 +5,8 @@ elation.config.set('engine.assets.workers', 'auto'); // Number of workers to use
 elation.config.set('engine.assets.image.anisotropy', 16); 
 elation.config.set('engine.assets.image.mipmaps', true); 
 
-elation.config.set('janusweb.tracking.enabled', true);
-elation.config.set('janusweb.tracking.clientid', 'UA-49582649-2');
+elation.config.set('janusweb.tracking.enabled', false);
+elation.config.set('janusweb.tracking.clientid', '');
 elation.config.set('janusweb.materials.pbr', false);
 elation.config.set('janusweb.materials.shadows.enabled', false);
 elation.config.set('janusweb.materials.shadows.size', 512);
