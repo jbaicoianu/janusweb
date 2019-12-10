@@ -214,12 +214,14 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       if (!updateOnly && view && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
         view.toggleFullscreen();
       }
-      if (view.isFullscreen()) {
-        this.fullscreenbutton.addclass('state_fullscreen');
-        this.fullscreenbutton.setLabel('Shrink');
-      } else {
-        this.fullscreenbutton.removeclass('state_fullscreen');
-        this.fullscreenbutton.setLabel('Expand');
+      if (this.fullscreenbutton) {
+        if (view.isFullscreen()) {
+          this.fullscreenbutton.addclass('state_fullscreen');
+          this.fullscreenbutton.setLabel('Shrink');
+        } else {
+          this.fullscreenbutton.removeclass('state_fullscreen');
+          this.fullscreenbutton.setLabel('Expand');
+        }
       }
     }
     this.configureOptions = function() {
