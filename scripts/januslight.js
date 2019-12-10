@@ -53,6 +53,34 @@ elation.require(['janusweb.janusbase'], function() {
         });
         scene.add(this.helper);
       }
+      let placeholdergeo = this.getPlaceholderGeometry();
+      if (placeholdergeo) {
+        let placeholder = new THREE.Mesh(placeholdergeo, new THREE.MeshPhongMaterial({color: 0x666666, emissive: 0x333333, opacity: .8, transparent: true}));
+        placeholder.layers.set(10);
+
+        let collider = placeholder.clone();
+        placeholder.userData.thing = this;
+        collider.userData.thing = this;
+
+        this.objects['3d'].add(placeholder);
+        this.colliders.add(collider);
+        this.placeholder = placeholder;
+      }
+    }
+    this.getPlaceholderGeometry = function() {
+      let placeholdergeo = null;
+      if (this.light_cone_angle == 0) {
+        placeholdergeo = new THREE.SphereBufferGeometry(.1);
+      } else if (this.light_cone_angle == 1) {
+        placeholdergeo = new THREE.SphereBufferGeometry(.1);
+      } else {
+        let angle = Math.acos(this.light_cone_angle),
+            height = this.light_shadow_near,
+            radius = Math.tan(angle) * height;
+        placeholdergeo = new THREE.ConeBufferGeometry(radius, height);
+        placeholdergeo.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI/2, 0, 0)).setPosition(0, 0, height / 2));
+      }
+      return placeholdergeo;
     }
     this.update = function() {
       if (!this.light) {
@@ -100,6 +128,12 @@ elation.require(['janusweb.janusbase'], function() {
         this.light.color.copy(this.color);
         this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
         this.light.distance = this.light_range * avgscale;
+        if (this.light_cone_angle > 0 && this.light_cone_angle < 1) {
+          this.light.angle = Math.acos(this.light_cone_angle);
+          if (this.placeholder) {
+            this.placeholder.geometry = this.getPlaceholderGeometry();
+          }
+        }
         this.updateShadowmap();
       }
     }
