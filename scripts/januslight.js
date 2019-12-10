@@ -8,6 +8,8 @@ elation.require(['janusweb.janusbase'], function() {
         light_intensity: { type: 'float', default: 10, set: this.updateLight },
         light_cone_angle: { type: 'float', default: 0, set: this.updateLight },
         light_cone_exponent: { type: 'float', default: 1, set: this.updateLight },
+        light_penumbra: { type: 'float', default: 1, set: this.updateLight },
+        light_decay: { type: 'float', default: 1, set: this.updateLight },
         light_target: { type: 'object', set: this.updateLightTarget },
         light_shadow: { type: 'boolean', default: false, set: this.updateLight },
         light_shadow_near: { type: 'float', default: .1, set: this.updateLight },
@@ -78,7 +80,7 @@ elation.require(['janusweb.janusbase'], function() {
           this.light.position.set(0,0,0);
         } else if (this.light_cone_angle > 0) {
           var angle = Math.acos(this.light_cone_angle);
-          this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle);
+          this.light = new THREE.SpotLight(this.properties.color, 1, this.light_range, angle, this.light_penumbra, this.light_decay);
           this.light.position.set(0,0,0);
 
           this.updateLightTarget();
@@ -93,6 +95,8 @@ elation.require(['janusweb.janusbase'], function() {
         //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
         this.light.intensity = this.light_intensity / 100;
+        this.light.penumbra = this.light_penumbra;
+        this.light.decay = this.light_decay;
         this.light.color.copy(this.color);
         this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
         this.light.distance = this.light_range * avgscale;
@@ -151,6 +155,8 @@ elation.require(['janusweb.janusbase'], function() {
           light_intensity:     [ 'property', 'light_intensity'],
           light_cone_angle:    [ 'property', 'light_cone_angle'],
           light_cone_exponent: [ 'property', 'light_cone_exponent'],
+          light_penumbra:      [ 'property', 'light_penumbra'],
+          light_decay:         [ 'property', 'light_decay'],
           light_target:        [ 'property', 'light_target'],
           light_shadow:        [ 'property', 'light_shadow'],
           light_shadow_near:   [ 'property', 'light_shadow_near'],
