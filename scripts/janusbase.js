@@ -302,7 +302,7 @@ console.log('got collider', collider, collision_id);
           parent:   ['accessor', 'parent.getProxyObject'],
           children: ['accessor', 'getChildProxies'],
           parts:    ['property', 'jsparts'],
-          js_id:    ['property', 'properties.js_id'],
+          js_id:    ['property', 'js_id'],
           pos:      ['property', 'position'],
           vel:      ['property', 'velocity'],
           accel:    ['property', 'acceleration'],
