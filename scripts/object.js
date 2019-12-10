@@ -652,6 +652,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (useVertexColors) {
               m.vertexColors = THREE.VertexColors;
             }
+            m.fog = this.fog;
           }
         } else if (n instanceof THREE.Light && !this.lights) {
           remove.push(n);
