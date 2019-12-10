@@ -11,6 +11,7 @@ janus-controls-analog {
   cursor: grab;
   z-index: 10;
   transform: translate(-50%, -50%);
+  background: rgba(255,255,255,.2);
 }
 janus-controls-analog[top][left] {
   transform: translate(0,0);
@@ -19,10 +20,10 @@ janus-controls-analog[top][right] {
   transform: translate(-100%,0);
 }
 janus-controls-analog[bottom][left] {
-  transform: translate(0,-100%);
+  transform: translate(5%,-95%);
 }
 janus-controls-analog[bottom][right] {
-  transform: translate(-100%,-100%);
+  transform: translate(-95%,-95%);
 }
 janus-controls-analogstick {
   position: absolute;
