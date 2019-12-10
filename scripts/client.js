@@ -10,6 +10,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.pathname);
     var path = elation.utils.any(args.path, elation.config.get('dependencies.path'), '/');
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
+    var corsproxy = elation.utils.any(args.corsproxy, elation.config.get('engine.assets.corsproxy'), document.location.href);
     var container = elation.utils.any(args.container, document.body);
     var fullsize = (container == document.body);
 
@@ -60,7 +61,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var janusweb = elation.janusweb.client({
       append: container, 
       homepage: homepage, 
-      shownavigation: args.shownavigation,
+      corsproxy: corsproxy, 
+      shownavigation: (args.shownavigation && args.shownavigation != "false"),
       uiconfig: args.uiconfig,
       showchat: elation.utils.any(args.showchat, true),
       usevoip: elation.utils.any(args.usevoip, false),
@@ -122,7 +124,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: elation.config.get('engine.assets.corsproxy'),
+          corsproxy: elation.utils.any(this.args.corsproxy, elation.config.get('engine.assets.corsproxy')),
           datapath: elation.config.get('janusweb.datapath'),
           homepage: this.args.homepage,
           url: this.args.url,
@@ -148,13 +150,18 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + (datapath[datapath.length-1] != '/' ? '/' : '') + 'assets/webui/default.json');
       if (this.shownavigation) {
+        this.createUI();
+      }
+      this.view.pickingactive = true;
+    }
+    this.createUI = function() {
+      if (!this.ui) {
         this.ui = elation.elements.create('janus.ui.main', {
           append: this,
           client: this,
           config: this.uiconfig
         });
       }
-      this.view.pickingactive = true;
     }
     this.initLoader = function() {
       var loader = document.getElementsByClassName('engine_loading')[0];
@@ -245,11 +252,13 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           fullscreen: { type: 'boolean', default: true },
           autostart: { type: 'boolean', default: true },
           src: { type: 'string' },
+          corsproxy: { type: 'string' },
           homepage: { type: 'string' },
           width: { type: 'integer', default: 640 },
           height: { type: 'integer', default: 480 },
           tracking: { type: 'boolean', default: true },
           networking: { type: 'boolean', default: true },
+          shownavigation: { type: 'boolean', default: true },
         });
       }
       create() {
@@ -273,8 +282,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           homepage: this.homepage || this.src,
           tracking: this.tracking,
           networking: this.networking,
+          corsproxy: this.corsproxy,
           //resolution: width + 'x' + height,
-          //shownavigation: false,
+          shownavigation: this.shownavigation,
         };
         return args;
       }
