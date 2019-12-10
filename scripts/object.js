@@ -146,7 +146,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateVideo = function() {
       if (!this.modelasset) return;
       if (!this.videoasset || this.videoasset.name != this.video_id) {
-        if (this.video_id && this.video_id != '') {
+        if (this.video_id && this.video_id != '' && !this.image_id) {
           this.loadVideo(this.video_id);
           if (this.modelasset && texture) {
             this.assignTextureParameters(texture, this.modelasset);
@@ -206,8 +206,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
           this.url = url;
         }
+/*
         this.pickable = false;
         this.collidable = false;
+*/
+        if (!this.collision_id) {
+          this.collision_id = this.janusid;
+        }
 
         if (this.objects['3d']) {
           if (!this.websurface) {
@@ -377,7 +382,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
         }
       }
-      if (this.video_id && this.video_id != '') {
+      if (this.video_id && this.video_id != '' && this.image_id == '') {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
@@ -848,7 +853,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       */
       if (this.video_id) {
-        if (this.videoasset && this.videotexture) {
+        if (this.videoasset && this.videotexture && !this.image_id) {
           var texture = this.videotexture;
           var video = texture.image;
           if (!video.playing && this.videoasset.auto_start) {
