@@ -1,7 +1,4 @@
 elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], function() {
-  elation.template.add('janusweb.edit.object', 
-      '<Object id=^{id}^ js_id=^{js_id}^ alphatest=^{alphatest}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{col}^ lighting=^{lighting}^ visible=^{visible}^ />');
-
   elation.component.add('engine.things.janusbase', function() {
     this.defaultcolor = new THREE.Color(0xffffff);
 
@@ -235,30 +232,68 @@ console.log('got collider', collider, collision_id);
       this.refresh();
     } 
     this.summarizeXML = function() {
-      //'<Object id=^{id}^ js_id=^{js_id}^ locked=^false^ pos=^{pos.x} {pos.y} {pos.z}^ vel=^{vel.x} {vel.y} {vel.z}^ accel=^{accel.x} {accel.y} {accel.z}^ xdir=^{xdir}^ ydir=^{ydir}^ zdir=^{zdir}^ scale=^{scale.x} {scale.y} {scale.z}^ col=^{color}^ lighting=^{lighting}^ visible=^{visible}^ />');
+      let proxy = this.getProxyObject(),
 
-      var matrix = new THREE.Matrix4().makeRotationFromQuaternion(this.properties.orientation);
-      var xdir = new THREE.Vector3(),
-          ydir = new THREE.Vector3(),
-          zdir = new THREE.Vector3();
-      matrix.extractBasis(xdir, ydir, zdir);
+          propdefs = this._thingdef.properties,
+          proxydefs = proxy._proxydefs;
+      let attrs = {};
 
-      var objdef = {
-        id: this.properties.render.model,
-        js_id: this.properties.js_id,
-        pos: this.properties.position,
-        vel: this.properties.velocity,
-        accel: this.properties.acceleration,
-        scale: this.properties.scale,
-        xdir: xdir.toArray().join(' '),
-        ydir: ydir.toArray().join(' '),
-        zdir: zdir.toArray().join(' '),
-        col: this.properties.color,
-        lighting: this.properties.lighting,
-        visible: this.properties.visible,
-      };
-
-      var xml = elation.template.get('janusweb.edit.object', objdef);
+      for (let k in proxydefs) {
+        let proxydef = proxydefs[k],
+            propdef = elation.utils.arrayget(propdefs, proxydef[1]);
+        if ( k != 'tagName' && k != 'classList' && proxydef[0] == 'property' && propdef) {
+          let val = elation.utils.arrayget(this.properties, proxydef[1]);
+          let defaultval = propdef.default;
+          if (val instanceof THREE.Vector2) {
+            if (defaultval instanceof THREE.Vector2) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1]))) {
+              attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
+            }
+          } else if (val instanceof THREE.Vector3) {
+            if (defaultval instanceof THREE.Vector3) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+              attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
+            }
+          } else if (val instanceof THREE.Color) {
+            if (defaultval instanceof THREE.Color) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.r == defaultval[0] && val.g == defaultval[1] && val.b == defaultval[2]))) {
+              attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
+            }
+          } else if (val instanceof THREE.Euler) {
+            if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+              attrs[k] = val.toArray().slice(0, 3).map(n => Math.round((n * THREE.Math.RAD2DEG) * 10000) / 10000).join(' ');
+            }
+          } else if (val instanceof THREE.Quaternion) {
+            if (defaultval instanceof THREE.Quaternion) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2] && val.w == defaultval[3]))) {
+              attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
+            }
+          } else if (val !== propdef.default && val !== null && val !== '') {
+            attrs[k] = val;
+          }
+        }
+      }
+      let xml = '<' + this.tag.toLowerCase();
+      for (let k in attrs) {
+        xml += ' ' + k + '="' + attrs[k] + '"';
+      }
+      let children = [];
+      for (let k in this.children) {
+        if (this.children[k].persist) {
+          children.push(k);
+        }
+      }
+      if (children.length > 0) {
+        xml += '>\n';
+        for (let i = 0; i < children.length; i++) {
+          let k = children[i];
+          xml += '  ' + this.children[k].summarizeXML().replace(/\n/g, '\n  ').replace(/\s*$/, '\n');
+        }
+        xml += '</' + this.tag.toLowerCase() + '>\n';
+      } else {
+        xml += ' />\n';
+      }
       return xml;
     }
     this.getProxyObject = function(classdef) {
