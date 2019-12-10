@@ -15,6 +15,8 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     if (editpanel) {
       editpanel.show();
     }
+    player.camera.camera.layers.enable(10);
+    janus.engine.systems.render.setdirty();
   }
   ondeactivate() {
     let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
@@ -25,6 +27,8 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     if (editpanel) {
       editpanel.hide();
     }
+    player.camera.camera.layers.disable(10);
+    janus.engine.systems.render.setdirty();
   }
 });
 elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
@@ -370,11 +374,15 @@ setTimeout(() => {
       });
 */
       root = this.editObjectCloneWireframe(obj3d, null, material, this.roomedit.object._target);
-      root.matrix.identity();
+      if (root) {
+        root.matrix.identity();
+      }
     }
     this.roomedit.wireframe = root;
-    this.roomedit.object._target.objects['3d'].add(root);
-    root.updateMatrixWorld();
+    if (root) {
+      this.roomedit.object._target.objects['3d'].add(root);
+      root.updateMatrixWorld();
+    }
   }
   editObjectCloneWireframe(obj, parent, material, constrain) {
     let newobj = null;
@@ -425,6 +433,7 @@ setTimeout(() => {
           this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
           this.roomedit.object.collision_pos = this.roomedit.objectBoundingBox.max.clone().add(this.roomedit.objectBoundingBox.min).multiplyScalar(.5);
         }
+        this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
     this.roomedit.object = false;
@@ -893,7 +902,8 @@ console.log('manip left', ev.value, ev);
         js_id: player.userid + '-' + id + '-' + window.uniqueId(),
         //cull_face: 'none',
         sync: true,
-        pos: player.vectors.cursor_pos.clone()
+        pos: player.vectors.cursor_pos.clone(),
+        persist: true
       }
       if (id.length > 0) {
         var schemeidx = id.indexOf(':');
