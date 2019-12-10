@@ -102,6 +102,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.touchcache = {
         positions: []
       };
+      this.touchindex = [null, null];
 
       //this.updateVRButton();
       this.party_mode = this.getSetting('partymode.enabled', false);
@@ -335,9 +336,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           }
         }
         this.objects['3d'].updateMatrix();
-        this.objects['3d'].updateMatrixWorld();
+        if (this.objects['3d'].matrixWorldNeedsUpdate) this.objects['3d'].updateMatrixWorld();
         this.camera.objects['3d'].updateMatrix();
-        this.camera.objects['3d'].updateMatrixWorld();
+        if (this.camera.objects['3d'].matrixWorldNeedsUpdate) this.camera.objects['3d'].updateMatrixWorld();
       }
     })();
     this.updateVectors = function() {
@@ -803,16 +804,28 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
     }
     this.handleTouchStart = function(ev) {
-      if (ev.touches.length == 1) {
-        this.touchcache.positions[0] = [ev.touches[0].clientX, ev.touches[0].clientY];
+      let halfscreenwidth = window.innerWidth / 2;
+      for (let i = 0; i < ev.changedTouches.length; i++) {
+        let touch = ev.changedTouches[i];
+        this.touchcache.positions[touch.identifier] = [touch.clientX, touch.clientY];
+        if (touch.clientX < halfscreenwidth) {
+          this.touchindex[0] = touch.identifier;
+        } else {
+          this.touchindex[1] = touch.identifier;
+        }
+      }
+      if (!document.fullscreenElement) {
+        this.engine.client.toggleFullscreen({data: 1});
       }
     }
     this.handleTouchMove = function(ev) {
       if (ev.defaultPrevented) return;
-      if (ev.touches.length == 1) {
-        var touch = ev.touches[0];
-        var distanceX = touch.clientX - this.touchcache.positions[0][0],
-            distanceY = touch.clientY - this.touchcache.positions[0][1];
+      //if (ev.touches.length == 1) {
+        //var touchindex = this.touchindex;
+      for (let i = 0; i < ev.touches.length; i++) {
+        var touch = ev.touches[i];
+        var distanceX = touch.clientX - this.touchcache.positions[touch.identifier][0],
+            distanceY = touch.clientY - this.touchcache.positions[touch.identifier][1];
 
         var flip = this.getSetting('controls.touch.flip'),
             flipx = 0,
@@ -823,21 +836,38 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           flipy = flip.y;
         }
 
-        //this.controlstate.turn_right = distanceX / 20;
-        //this.controlstate.look_down = distanceY / 20;
-        this.updateMouseControls({
-          data: {
-            mouse_look: [(flipx ? -1 : 1) * distanceX / 5, (flipy ? -1 : 1 ) * distanceY / 5]
-          }
-        }, true);
+        if (touch.identifier === this.touchindex[0]) {
+          let size = 32;
+          let dx = distanceX / size,
+              dy = distanceY / size;
 
-        this.touchcache.positions[0][0] = ev.touches[0].clientX;
-        this.touchcache.positions[0][1] = ev.touches[0].clientY;
+          this.controlstate.move_right = dx;
+          this.controlstate.move_forward = -dy;
+        } else if (touch.identifier === this.touchindex[1]) {
+          this.updateMouseControls({
+            data: {
+              mouse_look: [(flipx ? -1 : 1) * distanceX / 5, (flipy ? -1 : 1 ) * distanceY / 5]
+            }
+          }, true);
+          this.touchcache.positions[touch.identifier][0] = touch.clientX;
+          this.touchcache.positions[touch.identifier][1] = touch.clientY;
+        }
+
       }
     }
     this.handleTouchEnd = function(ev) {
-      this.controlstate.turn_right = 0;
-      this.controlstate.look_down = 0;
+      for (let i = 0; i < ev.changedTouches.length; i++) {
+        let touch = ev.changedTouches[i];
+        if (touch.identifier === this.touchindex[0]) {
+          this.controlstate.move_right = 0;
+          this.controlstate.move_forward = 0;
+          this.touchindex[0] = null;
+        } else if (touch.identifier === this.touchindex[1]) {
+          this.controlstate.turn_right = 0;
+          this.controlstate.look_down = 0;
+          this.touchindex[1] = null;
+        }
+      }
     }
     this.updatePartyMode = function(key, value) {
       if (typeof value != 'undefined') {
