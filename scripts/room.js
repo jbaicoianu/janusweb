@@ -51,8 +51,8 @@ elation.require([
         'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'party_mode': { type: 'bool', default: true },
-        'walk_speed': { type: 'float', default: 1.0 },
-        'run_speed': { type: 'float', default: 2.0 },
+        'walk_speed': { type: 'float', default: 1.8 },
+        'run_speed': { type: 'float', default:  5.4 },
         'jump_velocity': { type: 'float', default: 5.0 },
         'flying': { type: 'boolean', default: true, set: this.updateFlying },
         'gravity': { type: 'float', default: 0, set: this.updateGravity },
@@ -69,6 +69,7 @@ elation.require([
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
         'selfavatar': { type: 'boolean', default: false },
+        'requirescripts': { type: 'string' },
         'onload': { type: 'string' },
       });
       this.translators = {
@@ -369,22 +370,29 @@ elation.require([
         var content = elation.ui.panel_vertical({classname: 'janusweb_room_debug'});
 
         this.debugwindow = elation.ui.window({title: 'Janus Room', content: content, append: document.body, center: true});
-        this.debugeditor = elation.ui.textarea({append: content, value: this.roomsrc, classname: 'janusweb_room_source', wrap: 'off'});
+        this.debugeditor = elation.ui.textarea({append: content, value: this.getRoomSource(), classname: 'janusweb_room_source', wrap: 'off'});
         this.debugwindow.settitle('Room Source: ' + this.properties.url);
 
-        var updatebutton = elation.ui.button({label: 'Update'});
+        var applybutton = elation.ui.button({label: 'Apply Changes'});
+        applybutton.disabled = true;
+        var refreshbutton = elation.ui.button({label: 'Refresh'});
         var buttons = elation.ui.buttonbar({
           classname: 'janusweb_room_debug_buttons',
           append: content,
           buttons: {
-            update: updatebutton
+            apply: applybutton,
+            refresh: refreshbutton,
           }
         });
 
         this.debugwindow.setcontent(content);
+        this.debugbuttons = buttons.buttons;
 
-        elation.events.add(this.debugeditor, 'change', elation.bind(this, this.handleEditorInput));
-        elation.events.add(updatebutton, 'click', elation.bind(this, this.handleEditorUpdate));
+        elation.events.add(this.debugeditor, 'input', elation.bind(this, this.handleEditorInput));
+        elation.events.add(this.debugeditor, 'change', elation.bind(this, this.handleEditorChange));
+        elation.events.add(applybutton, 'click', elation.bind(this, this.handleEditorApply));
+        elation.events.add(refreshbutton, 'click', elation.bind(this, this.handleEditorRefresh));
+        elation.events.add(this, 'room_edit', (ev) => { this.debugeditor.value = this.getRoomSource(); console.log('updated source'); });
       }
 
       //elation.ui.content({append: content, content: this.properties.url, classname: 'janusweb_room_url'});
@@ -655,6 +663,7 @@ elation.require([
       for (var k in roomdata) {
         if (exclude.indexOf(k) == -1) {
           roomdata[k].forEach(elation.bind(this, function(n) {
+            n.persist = true;
             this.createObject(k, n, parent);
           }));
         }
@@ -766,6 +775,7 @@ elation.require([
         if (room.require) {
           let roomproxy = this.getProxyObject();
           roomproxy.require(room.require);
+          this.requirescripts = room.require;
         }
       }
       this.applyingEdits = false;
@@ -872,7 +882,7 @@ elation.require([
       if (!title) title = 'Untitled Page';
       this.title = title;
 
-      document.title = 'JanusWeb | ' + this.title;
+      document.title = this.title;
     }
     this.applyEditXML = function(editxml) {
       var xml = elation.utils.parseXML('<edit>' + editxml + '</edit>');
@@ -1699,6 +1709,15 @@ elation.require([
           locked:        ['property', 'locked'],
           private:       ['property', 'private'],
           selfavatar:    ['property', 'selfavatar'],
+          requirescripts:['property', 'requirescripts'],
+          pos:           ['property', 'spawnpoint.position'],
+
+          skybox_left_id: ['property', 'skybox_left'],
+          skybox_right_id:['property', 'skybox_right'],
+          skybox_up_id:   ['property', 'skybox_up'],
+          skybox_down_id: ['property', 'skybox_down'],
+          skybox_front_id:['property', 'skybox_front'],
+          skybox_back_id: ['property', 'skybox_back'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -1910,17 +1929,26 @@ elation.require([
       this.registerElement(tagname, classobj, extendclass);
     }
     this.handleEditorInput = function(ev) {
+      console.log('editor input', this.debugeditor.value);
+      this.debugbuttons.apply.disabled = false;
+    }
+    this.handleEditorChange = function(ev) {
       console.log('editor changed', this.debugeditor.value);
     }
-    this.handleEditorUpdate = function(ev) {
-      console.log('set page source', this.debugeditor.value);
+    this.handleEditorApply = function(ev) {
+      console.log('apply page source', this.debugeditor.value);
       this.applySourceChanges(this.debugeditor.value);
       //this.loadFromSource(this.debugeditor.value);
+      this.debugbuttons.apply.disabled = true;
+    }
+    this.handleEditorRefresh = function(ev) {
+      console.log('refresh page source', this.debugeditor.value);
+      this.debugeditor.value = this.getRoomSource();
     }
     this.applySourceChanges = function(src) {
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
         var roomdata = this.janus.parser.parse(src, this.baseurl, datapath);
-      console.log('apply changes to existing world', roomdata);
+      //console.log('apply changes to existing world', roomdata);
       var exclude = ['#text', 'assets', 'room', 'source'];
 
       for (var k in roomdata) {
@@ -1929,7 +1957,6 @@ elation.require([
           for (var i = 0; i < entities.length; i++) {
             var newentity = entities[i],
                 oldentity = this.jsobjects[newentity.js_id];
-            console.log(newentity, oldentity);
             var changed = false;
             if (oldentity) {
               for (var k in newentity) {
@@ -1949,38 +1976,84 @@ elation.require([
       //console.log(this.jsobjects);
       var assetsrc = '  <Assets>\n';
 
-      var typemap = {};
-      for (var k in this.janus.typemap) {
-        var n = this.janus.typemap[k];
-        if (!typemap[n]) {
-          typemap[n] = k;
-        }
-      }
+      let assettypemap = {
+        model: 'object',
+      };
 
       for (var type in this.roomassets) {
         for (var assetname in this.roomassets[type]) {
           var asset = this.roomassets[type][assetname];
 
-          if (assetname != asset.src) {
-            assetsrc += '    <asset' + type + ' id="' + assetname + '" src="' + asset.src + '" />\n';
+          if (assetname != asset.src && asset !== janus.assetpack.assetmap[type][assetname]) {
+            assetsrc += '    <asset' + (assettypemap[type] || type) + ' id="' + assetname + '" src="' + asset.src + '" />\n';
           }
         }
       }
       assetsrc += '  </Assets>\n';
 
-      var objectsrc = '  <Room>\n';
-      for (var k in this.jsobjects) {
-        var object = this.jsobjects[k];
-        var obj = object._target;
-        var markup = obj.summarizeXML();
-        objectsrc += '    ' + markup.replace('<Object ', '<' + typemap[obj.type] + ' ') + '\n';
+      let roomobj = this.getProxyObject();
+      var objectsrc = '  <Room';
+      let proxydefs = roomobj._proxydefs;
+      for (let k in proxydefs) {
+        let def = proxydefs[k];
+        if (def[0] == 'property') {
+          let propdef = elation.utils.arrayget(this._thingdef.properties, def[1]),
+              val = elation.utils.arrayget(this.properties, def[1]);
+
+          if (k == 'url' || !propdef) continue;
+          if (k == 'requirescripts') k = 'require';
+
+          let defaultval = propdef.default;
+          if (val instanceof THREE.Vector2) {
+            if (defaultval instanceof THREE.Vector2) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1]))) {
+              objectsrc += ' ' + k + '="' + val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ') + '"';
+            }
+          } else if (val instanceof THREE.Vector3) {
+            if (defaultval instanceof THREE.Vector3) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+              objectsrc += ' ' + k + '="' + val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ') + '"';
+            }
+          } else if (val instanceof THREE.Color) {
+            if (defaultval instanceof THREE.Color) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.r == defaultval[0] && val.g == defaultval[1] && val.b == defaultval[2]))) {
+              objectsrc += ' ' + k + '="' + val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ') + '"';
+            }
+          } else if (val instanceof THREE.Euler) {
+            if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+              objectsrc += ' ' + k + '="' + val.toArray().slice(0, 3).map(n => Math.round((n * THREE.Math.RAD2DEG) * 10000) / 10000).join(' ') + '"';
+            }
+          } else if (val instanceof THREE.Quaternion) {
+            if (defaultval instanceof THREE.Quaternion) defaultval = defaultval.toArray();
+            if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2] && val.w == defaultval[3]))) {
+              objectsrc += ' ' + k + '="' + val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ') + '"';
+            }
+          } else if (val !== propdef.default && val !== null && val !== '') {
+            objectsrc += ' ' + k + '="' + val + '"';
+          }
+        }
       }
-      objectsrc += '  </Room>\n';
+
+      // Special handling for onload script
+      if (this.onload) {
+        objectsrc += ' onload="' + this.onload + '"';
+      }
+
+      objectsrc += '>\n';
+      //for (var k in this.jsobjects) {
+      for (let k in this.children) {
+        var object = this.children[k];
+        if (object.janus) {
+          var markup = '    ' + object.summarizeXML().replace(/\n/g, '\n    ').replace(/\s*$/, '\n');
+          objectsrc += markup;
+        }
+      }
+      objectsrc += '</Room>\n';
       var roomsrc = '<FireBoxRoom>\n';
       roomsrc += assetsrc;
       roomsrc += objectsrc;
-      roomsrc += '<FireBoxRoom>\n';
-      console.log(roomsrc);
+      roomsrc += '</FireBoxRoom>\n';
 
       return roomsrc;
     }
