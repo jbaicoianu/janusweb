@@ -443,7 +443,9 @@ console.log('got collider', collider, collision_id);
     this.getChildProxies = function() {
       var childproxies = [];
       for (var k in this.children) {
-        childproxies.push(this.children[k]._proxyobject);
+        if (this.children[k].janus) {
+          childproxies.push(this.children[k]._proxyobject);
+        }
       }
       return childproxies;
     }
