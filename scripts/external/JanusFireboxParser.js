@@ -234,7 +234,7 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
       if (window.DOMParser) {
         var parser = new DOMParser();
         xmldoc = parser.parseFromString(imgxml,"application/xml");
-        node = xmldoc.firstChild;
+        node = xmldoc.children[0];
       } else {
         node = new ActiveXObject("Microsoft.XMLDOM");
         node.async = "false";
@@ -242,7 +242,8 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
       }
 
       // Chrome doesn't throw an exception for malformed XML, so we look for a <parsererror> xml tag
-      var parsererrors = node.getElementsByTagName("parsererror");
+      // Firefox now appears to follow the same behavior, but puts the <parsererror> as the top-level element instead of as a child of the last DOM element which parsed successfully
+      var parsererrors = (node.tagName == 'parsererror' ? [node] : node.getElementsByTagName("parsererror"));
       if (parsererrors.length > 0) {
         // Extract the message from the first div child of the <parsererror> element
         var errorel = parsererrors[0].getElementsByTagName('div')[0] || parsererrors[0];
