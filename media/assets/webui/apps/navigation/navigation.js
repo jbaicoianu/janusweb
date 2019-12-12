@@ -24,6 +24,7 @@ elation.elements.define('janus.ui.navigation', class extends elation.elements.ui
   }
   updateCurrentURL() {
     var room = this.janusweb.currentroom;
+    this.statusindicator.updateCurrentURL(room.getProxyObject());
   }
 });
 elation.elements.define('janus.ui.statusindicator', class extends elation.elements.ui.indicator {
@@ -48,6 +49,8 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     this.inner.appendChild(this.canvas);
 
     elation.events.add(this.janusweb, 'room_load_start', (ev) => this.updateCurrentURL());
+
+    this.updateCurrentURL();
 
     this.percent = 0;
 
@@ -80,11 +83,11 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     }
   }
   updateCurrentURL(room) {
-    if (!room) {
+    if (!room && this.janusweb.currentroom) {
       room = this.janusweb.currentroom.getProxyObject();
     }
-    if (this.room !== room) {
-//console.log('room changed!', this.room, room);
+    if (room && this.room !== room) {
+      // FIXME - need to remove events from previous room
 
       // Set up some event listeners for the new room, so we can respond as it loads
       room.addEventListener('room_load_queued', (ev) => this.updateStatus('queued', ev));
@@ -100,6 +103,12 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
 
       this.room = room;
 
+      if (this.errorwindow) {
+        this.errorwindow.hide();
+        this.removeChild(this.errorwindow);
+        this.errorwindow = false;
+      }
+
       if (room.loaded) {
         this.updateRoomAssets();
       }
@@ -108,11 +117,22 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     this.percent = 0;
     //this.progress.set(0);
     //this.progress.show();
+    this.updateStatus('loading');
   }
   updateStatus(status, ev) {
     if (this.room.parseerror) {
       // Force error status to remain if an error is thrown
       status = 'error';
+
+      if (!this.errorwindow) {
+        this.errorwindow = elation.elements.create('ui-window', {
+          title: 'JML Parse Error',
+          //content: this.room.parseerror,
+          append: this,
+          top: 60
+        });
+        this.errorwindow.setcontent(this.room.parseerror);
+      }
     }
 
     // Set our current status as a class name on this element.  Clear our previous status, if set

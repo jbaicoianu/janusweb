@@ -168,3 +168,11 @@ janus-ui-urlbar-suggestions ui-item img.suggestedroom_thumb {
   width: 60px;
   height: 60px;
 }
+janus-ui-statusindicator.error sourcetext {
+  white-space: pre;
+  color: red;
+  font-family: monospace;
+  font-size: 1.5em;
+  margin: 1em;
+  display: block;
+}
