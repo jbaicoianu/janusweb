@@ -153,6 +153,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         this.createUI();
       }
       this.view.pickingactive = true;
+
+      elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
     }
     this.createUI = function() {
       if (!this.ui) {
