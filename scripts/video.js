@@ -7,6 +7,7 @@ elation.require(['janusweb.janusbase'], function() {
         video_id: { type: 'string', set: this.updateVideo },
         loop: { type: 'boolean', default: false },
         sbs3d: { type: 'boolean', default: false },
+        hasalpha: { type: 'boolean', default: true },
         ou3d: { type: 'boolean', default: false },
         color: { type: 'color', default: 0xffffff },
         lighting: { type: 'boolean', default: true },
