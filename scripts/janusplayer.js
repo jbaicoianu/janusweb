@@ -273,7 +273,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (this.ghost) {
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            //this.ghost._target.face.orientation.copy(this.head.orientation).multiply(this.neck.orientation);
+            this.ghost.head.orientation.copy(this.head.orientation);
           }
           if (this.ghost._target.body) {
             //this.ghost._target.body.position.copy(this.body.position);
