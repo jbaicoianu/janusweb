@@ -141,35 +141,43 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
             var processMeshCollider = elation.bind(this, function(collider) {
-              this.extractColliders(collider, true);
-                //collider.userData.thing = this;
+            this.extractColliders(collider, true);
+              //collider.userData.thing = this;
 
-                //collider.bindPosition(this.position);
-                //collider.bindQuaternion(this.orientation);
-                //collider.bindScale(this.properties.scale);
+              //collider.bindPosition(this.position);
+              //collider.bindQuaternion(this.orientation);
+              //collider.bindScale(this.properties.scale);
 
-                let collidercolor = 0x009900;
-                if (this.mass === 0) {
-                  collidercolor = 0x990000;
-                }
-                if (this.collision_trigger) collidercolor = 0x990099;
-                collider.traverse(elation.bind(this, function(n) {
-                  if (n.material) n.material = new THREE.MeshPhongMaterial({color: collidercolor, opacity: .2, transparent: true, emissive: 0x444400, alphaTest: .01, depthTest: false, depthWrite: false});
-                  n.userData.thing = this;
-                }));
+              let collidercolor = 0x009900;
+              if (this.mass === 0) {
+                collidercolor = 0x990000;
+              }
+              if (this.collision_trigger) collidercolor = 0x990099;
+              collider.traverse(n => {
                 // Ignore collider if it's too high-poly
-                if ((collider.geometry instanceof THREE.BufferGeometry && collider.geometry.attributes.position.count <= 16384) ||
-                    (collider.geometry instanceof THREE.Geometry && collider.geometry.vertices.length <= 16384)) {
-                  this.colliders.add(collidermesh);
-                  this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
+                if (n instanceof THREE.Mesh && !((n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.position.count <= 16384) ||
+                      (n.geometry instanceof THREE.Geometry && n.geometry.vertices.length <= 16384))) {
+                  console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
+                  elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
+                  n.parent.remove(n);
                 } else {
-                  elation.events.fire({type: 'thing_collider_rejected', element: this, data: collider});
-                  console.warn('Collider mesh rejected, too many polys!', this, collider);
+                  if (n.material) {
+                    n.material = new THREE.MeshPhongMaterial({
+                      color: collidercolor,
+                      opacity: .2,
+                      transparent: true,
+                      emissive: 0x444400,
+                      alphaTest: .01,
+                      depthTest: false,
+                      depthWrite: false
+                    });
+                  }
+                  n.userData.thing = this;
                 }
-
+              });
+              this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
-console.log('got collider', collider, collision_id);
             this.collidermesh = collider;
             if (collider.userData.loaded) {
               //this.colliders.add(collider);
