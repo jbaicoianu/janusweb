@@ -712,14 +712,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         if (other.getProxyObject) {
           var proxy = other.getProxyObject();
           //console.log('I collided', proxy, this);
-          elation.events.fire({type: 'collision', element: this, data: proxy});
 
           if (this.collision_trigger || proxy.collision_trigger) {
+            this.dispatchEvent({type: 'trigger', data: { collision: ev.data, other: proxy }});
             ev.preventDefault();
             ev.stopPropagation();
+          } else {
+            this.dispatchEvent({type: 'collision', data: { collision: ev.data, other: proxy }});
           }
         } else {
-console.error('dunno what this is', other);
+          console.error('Collided with unknown object', this, other);
         }
       }
     }
