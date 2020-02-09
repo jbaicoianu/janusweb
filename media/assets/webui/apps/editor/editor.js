@@ -246,17 +246,25 @@ console.log('set translation snap', ev.data, ev);
   }
   handleRoomClick(ev) {
     if (ev.button == 2) {
+        let proxyobj = ev.element.getProxyObject();
         if (this.roomedit.object) {
           this.editObjectRevert();
-        } else if ((!room.localasset || !room.localasset.isEqual(ev.element)) && !ev.element.locked && !room.locked) {
+        } else if ((!room.localasset || !room.localasset.isEqual(proxyobj)) && !this.objectIsLocked(proxyobj)) {
           this.roomedit.raycast = false;
-          this.editObject(ev.element.getProxyObject());
+          this.editObject(proxyobj);
         }
     } else if (ev.button == 0 && !this.roomedit.transforming) {
       if (this.roomedit.object) {
         this.editObjectStop();
       }
     }
+  }
+  objectIsLocked(object) {
+    let locked = object.locked;
+    if (object.parent) {
+      locked = locked || this.objectIsLocked(object.parent);
+    }
+    return locked;
   }
   editObject(object, isnew) {
     this.roomedit.object = object;
@@ -266,7 +274,6 @@ console.log('set translation snap', ev.data, ev);
     this.roomedit.moving = true;
     this.roomedit.movespeed.set(0, 0, 0);
 
-console.log('edit it', object);
     object.sync = true;
     if (!object.js_id) {
       object.js_id = player.userid + '-' + window.uniqueId();
@@ -505,9 +512,11 @@ setTimeout(() => {
         let move = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
         if (ev.altKey) {
           obj.pos.y += move;
-        } else if (ev.shiftKey) {
+        }
+        if (ev.shiftKey) {
           obj.pos.z += move;
-        } else {
+        }
+        if (!ev.altKey && !ev.shiftKey) {
           obj.pos.x += move;
         }
         this.editObjectSnapVector(obj.pos._target, this.roomedit.snap);
@@ -527,7 +536,9 @@ setTimeout(() => {
         //this.editObjectSnapVector(obj.rotation, this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
       } else if (mode == 'scale') {
         let scale = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
-        if (ev.altKey) {
+        if (ev.altKey && ev.shiftKey) {
+          obj.scale.x += scale;
+        } else if (ev.altKey) {
           obj.scale.y += scale;
         } else if (ev.shiftKey) {
           obj.scale.z += scale;
