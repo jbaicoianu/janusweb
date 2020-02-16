@@ -10,6 +10,8 @@ elation.require(['janusweb.janusbase'], function() {
         back_alpha: {type: 'float', default: 1},
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         css: {type: 'string' },
+        depth_write: { type: 'boolean', default: true },
+        depth_test: { type: 'boolean', default: true },
       });
     }
     this.createObject3D = function() {
@@ -31,6 +33,8 @@ elation.require(['janusweb.janusbase'], function() {
         map: texture,
         transparent: true,
         side: sidemap[this.cull_face],
+        depthWrite: this.depth_write,
+        depthTest: this.depth_test,
       };
       if (!this.lighting) {
         return new THREE.MeshBasicMaterial(matargs);
