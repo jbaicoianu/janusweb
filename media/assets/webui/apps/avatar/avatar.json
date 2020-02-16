@@ -1,1 +1,9 @@
-{}
+{
+  "templates": {
+  },
+  "scripts":  ["./avatar.js"],
+  "css":      [],
+  "components": [
+  ]
+}
+
