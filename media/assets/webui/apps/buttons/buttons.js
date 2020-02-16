@@ -86,7 +86,7 @@ elation.elements.define('janus-button-webvr', class extends elation.elements.ui.
   onactivate(ev) {
     this.label = this.activelabel;
     if (this.xr) {
-      this.view.startXR();
+      janus.engine.client.startXR();
     } else {
       this.view.toggleVR(true);
     }
