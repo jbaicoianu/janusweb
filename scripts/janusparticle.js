@@ -209,9 +209,9 @@ elation.require(['janusweb.janusbase'], function() {
         size[i] = point.size;
       }
 
-      geo.addAttribute('position', new THREE.BufferAttribute(position, 3));
-      geo.addAttribute('customColor', new THREE.BufferAttribute(color, 4));
-      geo.addAttribute('size', new THREE.BufferAttribute(size, 1));
+      geo.setAttribute('position', new THREE.BufferAttribute(position, 3));
+      geo.setAttribute('customColor', new THREE.BufferAttribute(color, 4));
+      geo.setAttribute('size', new THREE.BufferAttribute(size, 1));
 
       this.created = true;
       this.emitted = 0;
