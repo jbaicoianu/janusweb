@@ -76,6 +76,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       useWebVRPolyfill: args.useWebVRPolyfill,
       server: args.server,
       tracking: usetracking,
+      avatarsrc: args.avatarsrc,
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -143,7 +144,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         mass: 10,
         movespeed: 5000,
         collidable: true,
-        usevoip: this.args.usevoip
+        usevoip: this.args.usevoip,
+        avatarsrc: this.args.avatarsrc,
       });
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
@@ -262,6 +264,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           height: { type: 'integer', default: 480 },
           tracking: { type: 'boolean', default: true },
           networking: { type: 'boolean', default: true },
+          avatarsrc: { type: 'string', default: false },
           shownavigation: { type: 'boolean', default: true },
         });
       }
@@ -289,6 +292,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           corsproxy: this.corsproxy,
           //resolution: width + 'x' + height,
           shownavigation: this.shownavigation,
+          avatarsrc: this.avatarsrc,
         };
         return args;
       }
