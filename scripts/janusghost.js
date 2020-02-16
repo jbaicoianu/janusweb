@@ -71,7 +71,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       this.setHead(this.head_id, this.properties.head_pos);
       this.setBody(this.body_id);
       var name = this.properties.ghost_id;
-      if (this.showlabel) {
+      if (false && this.showlabel) {
         this.label = this.createObject('text', {
           size: .1,
           thickness: .03,
