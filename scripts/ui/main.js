@@ -21,7 +21,7 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
         fetch(url)
           .then((r) => r.json())
           .catch((e) => {
-            console.error('Failed to load UI config:', this);
+            console.error('Failed to load UI config:', this, e);
             reject();
           })
           .then((json) => this.processJSON(url, json))
