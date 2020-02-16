@@ -35,7 +35,6 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
   create() {
     //this.innerHTML = elation.template.get('janus.ui.editor.panel');
     let elements = elation.elements.fromTemplate('janus.ui.editor.panel', this);
-console.log('my elements!', elements);
 /*
     elation.events.add(elements.transformtype, 'change', (ev) => this.handleTransformTypeChange(ev));
     elation.events.add(elements.transformspace, 'change', (ev) => this.handleTransformSpaceChange(ev));
@@ -49,6 +48,9 @@ console.log('my elements!', elements);
     elation.events.add(elements.viewsource, 'click', (ev) => this.handleViewSourceClick(ev));
     elation.events.add(elements.export, 'click', (ev) => this.handleExportClick(ev));
 
+    // If we've made any changes and the user tries to leave, prompt them to verify that they want to throw the changes away
+    window.addEventListener('beforeunload', (ev) => { if (this.history.length > 0) { ev.returnValue = false; ev.preventDefault(); return "You've made changes to this room, do you really want to leave?"; } });
+
     this.elements = elements;
 
     this.roomedit = {
@@ -60,6 +62,7 @@ console.log('my elements!', elements);
       object: false,
       transforming: false,
     };
+    this.history = [];
     this.editObjectSetSnap(this.roomedit.snap);
 
     janus.engine.systems.controls.addContext('roomedit', {
@@ -121,7 +124,6 @@ console.log('my elements!', elements);
 
       elation.events.add(this.manipulator, 'mouseDown', (ev) => {
         this.roomedit.transforming = true;
-console.log('mouse down!');
         this.editObjectShowInfo(this.roomedit.object);
         if (this.manipulator.object && this.manipulator.object.userData.thing) {
           //elation.events.fire({type: 'admin_edit_start', element: this, data: this.manipulator.object.userData.thing}); 
@@ -255,6 +257,10 @@ console.log('set translation snap', ev.data, ev);
         }
     } else if (ev.button == 0 && !this.roomedit.transforming) {
       if (this.roomedit.object) {
+        if (!this.roomedit.raycast) {
+          // raycasting means this is an initial object placement, we don't need to log a change
+          this.history.push({type: 'changed', object: this.roomedit.object, state: null});
+        }
         this.editObjectStop();
       }
     }
@@ -335,10 +341,7 @@ setTimeout(() => {
 }, 100);
     } else { //if (this.infowindow.title != object.js_id) {
       this.infowindow.settitle(object.js_id);
-// FIXME - wy is dely needed here?
-setTimeout(() => {
       this.objectinfo.updateObject(object);
-}, 100);
     }
     if (this.infowindow.hidden) {
       this.infowindow.show();
@@ -792,6 +795,7 @@ console.log('manip left', ev.value, ev);
     if (ev.value) {
       //ev.target.removeObject(ev.target.roomedit.object);
       room.deletions.push(ev.target.roomedit.object);
+      this.history.push({type: 'addobjects', object: ev.target.roomedit.object});
       ev.target.editObjectStop(true);
     }
   }
@@ -873,8 +877,8 @@ console.log('manip left', ev.value, ev);
     var files = ev.dataTransfer.files,
         items = ev.dataTransfer.items;
     this.roomedit.raycast = true;
+    var objects = [];
     if (files.length > 0) {
-      var objects = [];
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         objects[i] = this.loadObjectFromFile(file);
@@ -888,13 +892,14 @@ console.log('manip left', ev.value, ev);
         types[type] = items[i];
       }
       if (types['text/x-jml']) {
-        types['text/x-jml'].getAsString((jml) => this.loadObjectFromJML(jml));
+        types['text/x-jml'].getAsString((jml) => { this.loadObjectFromJML(jml) });
       } else if (types['text/uri-list']) {
-        types['text/uri-list'].getAsString((urilist) => this.loadObjectFromURIList(urilist));
+        types['text/uri-list'].getAsString((urilist) => { let newobjects = this.loadObjectFromURIList(urilist); objects.push.apply(newobjects);  }) ;
       } else if (types['text/x-moz-url']) {
-        types['text/x-moz-url'].getAsString((urilist) => this.loadObjectFromURIList(urilist));
+        types['text/x-moz-url'].getAsString((urilist) => { let newobjects = this.loadObjectFromURIList(urilist); objects.push.apply(newobjects); } );
       }
     }
+    this.history.push({type: 'addobjects', objects: objects});
     if (janus.engine.systems.admin.hidden) {
       janus.engine.systems.controls.requestPointerLock();
     }
@@ -980,6 +985,7 @@ console.log('manip left', ev.value, ev);
         });
       }
     }
+    return objects;
   }
   detectMimeTypeForURL(url) {
     return new Promise((resolve, reject) => {
@@ -1074,7 +1080,6 @@ console.log('pastey!', ev.clipboardData.items[0], ev);
 elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elements.base {
   create() {
     this.handleThingChange = elation.bind(this, this.handleThingChange);
-console.log('I CREATE', this.handleThingChange);
     this.defineAttributes({
       object: { type: 'object' },
       mode: { type: 'string', default: 'pos' }
@@ -1093,10 +1098,8 @@ console.log('I CREATE', this.handleThingChange);
       //itemtemplate: 'janus.ui.editor.property',
     });
     this.setMode('pos');
-console.log('created objectinfo', this.object, this);
   }
   setMode(mode) {
-console.log('set mode', mode);
     if (this.list) {
       this.list.removeclass('mode_' + this.mode);
     }
@@ -1114,8 +1117,8 @@ console.log('set mode', mode);
       //console.log('new object set', object, this.object);
 
       this.object.addEventListener('objectchange', this.handleThingChange);
-      this.updateProperties();
     }
+    this.updateProperties();
   }
   updateProperties() {
     for (var k in this.propeditors) {
