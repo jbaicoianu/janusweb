@@ -31,10 +31,10 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.createAudio = function(src) {
+      var sound = this.getAsset('sound', this.sound_id);
       if (!src) {
         this.currentsound = this.sound_id;
-        var sound = this.getAsset('sound', this.sound_id); //elation.engine.assets.find('sound', this.sound_id);
-        if (sound) {
+        if (sound && sound.src) {
           src = sound.getProxiedURL(sound.src);
         }
       }
@@ -65,7 +65,10 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         this.audio.setPlaybackRate(this.pitch);
-        elation.events.add(this.audio, 'playing,pause,ended', elation.bind(this, this.updatePlaying));
+        this.audio.offset = this.starttime;
+        //this.seek(this.starttime);
+        this.audio.onEnded = elation.bind(this, this.updatePlaying);
+        elation.events.add(this.audio.buffer, 'playing,pause,ended', elation.bind(this, this.updatePlaying));
         if (src) {
           if (soundcache[src]) {
             this.audio.setBuffer(soundcache[src]);
@@ -84,7 +87,9 @@ elation.require(['janusweb.janusbase'], function() {
               }
             }));
           }
-        } else {
+        } else if (sound.buffer) {
+          soundcache[src] = sound.buffer;
+          this.audio.setBuffer(sound.buffer);
         }
         this.objects['3d'].add(this.audio);
       }
@@ -120,7 +125,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.seek = function(time) {
-      this.audio.currentTime = time;
+      this.audio.source.currentTime = time;
     }
     this.stop = function() {
       if (this.audio && this.audio.isPlaying) {
