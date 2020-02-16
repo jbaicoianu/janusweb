@@ -2,7 +2,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
   elation.requireCSS('janusweb.janusplayer');
 
   elation.component.add('engine.things.janusplayer', function() {
-    this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusvr.com/media/assets/hoverscreen.obj" mtl="https://web.janusvr.com/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" />\n  </Room>\n</FireBoxRoom>'
+    this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusxr.org/media/assets/hoverscreen.obj" mtl="https://web.janusxr.org/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" />\n  </Room>\n</FireBoxRoom>'
 
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
@@ -15,7 +15,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
         collision_radius: {type: 'float', default: .25, set: this.updateCollider},
-        party_mode: { type: 'boolean', set: this.updatePartyMode }
+        party_mode: { type: 'boolean', set: this.updatePartyMode },
+        avatarsrc: { type: 'string' },
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -106,6 +107,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       //this.updateVRButton();
       this.party_mode = this.getSetting('partymode.enabled', false);
+      this.currentavatar = '';
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -129,14 +131,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
 
-      let avatar = this.getAvatarData();
-      if (avatar) {
-        this.ghost = this.createObject('ghost', {
-          ghost_id: this.getUsername(),
-          avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
-          showlabel: false
-        });
-      }
+      this.getAvatarData().then(avatar => {;
+        if (avatar && false) { // FIXME - self avatar is buggy so it's disabled
+          this.ghost = this.createObject('ghost', {
+            ghost_id: this.getUsername(),
+            avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+            showlabel: false
+          });
+        }
+      });
 
       this.updateCollider();
     }
@@ -435,14 +438,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.ghost = false;
         this.visible = false;
       } else if (!this.ghost && this.room.selfavatar) {
-        let avatar = this.getAvatarData();
-        if (avatar) {
-          this.ghost = this.createObject('ghost', {
-            ghost_id: this.getUsername(),
-            avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
-            showlabel: false
-          });
-        }
+        // FIXME - self avatar is buggy so it's disabled
+        this.getAvatarData().then(avatar => {
+          if (avatar) {
+            this.ghost = this.createObject('ghost', {
+              ghost_id: this.getUsername(),
+              avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+              showlabel: false
+            });
+          }
+        });
         this.visible = true;
       }
       //room.add(this);
@@ -546,7 +551,28 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return proxy;
     }
     this.getAvatarData = function() {
-      return this.getSetting('avatar', this.defaultavatar);
+      return new Promise((resolve, reject) => {
+        let avatar = this.getSetting('avatar');
+        if (!avatar) {
+          if (this.avatarsrc) {
+            fetch(this.avatarsrc).then(res => res.text()).then(txt => {
+              this.currentavatar = txt;
+              this.avatarNeedsUpdate = true;
+              resolve(t);
+            });
+          } else {
+            this.currentavatar = this.defaultavatar;
+            this.avatarNeedsUpdate = true;
+            resolve(this.defaultavatar);
+          }
+        } else {
+          this.avatarNeedsUpdate = true;
+          resolve(avatar);
+        }
+      });
+    }
+    this.getCurrentAvatarData = function() {
+      return this.currentavatar;
     }
     this.setAvatar = function(avatar) {
       this.avatarNeedsUpdate = true;
@@ -555,14 +581,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.ghost) {
         this.ghost.die();
       }
-      let avatardata = this.getAvatarData();
-      if (avatardata && this.room.selfavatar) {
-        this.ghost = this.createObject('ghost', {
-          ghost_id: this.getUsername(),
-          avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
-          showlabel: false
-        });
-      }
+      this.getAvatarData().then(avatardata => {
+        // FIXME - self avatar is broken and weird right now, so it's disabled
+        if (avatardata && this.room.selfavatar) {
+          this.ghost = this.createObject('ghost', {
+            ghost_id: this.getUsername(),
+            avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
+            showlabel: false
+          });
+        }
+      });
 
       return setting;
     }
