@@ -6,6 +6,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janussound.extendclass.postinit.call(this);
       this.defineProperties({
         sound_id: { type: 'string', set: this.updateSound },
+        singleshot: { type: 'boolean', default: false },
         loop: { type: 'boolean', default: false },
         auto_play: { type: 'boolean', default: false },
         play_once: { type: 'boolean', default: false },
@@ -60,7 +61,7 @@ elation.require(['janusweb.janusbase'], function() {
           }
           this.audio.panner.panningModel = 'HRTF';
         }
-        this.audio.autoplay = this.auto_play || this.playStarted;
+        this.audio.autoplay = this.auto_play || this.singleshot || this.playStarted;
         this.audio.setLoop(this.loop);
         this.audio.setVolume(this.gain);
         this.audio.setPlaybackRate(this.pitch);
@@ -68,7 +69,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (src) {
           if (soundcache[src]) {
             this.audio.setBuffer(soundcache[src]);
-            if (this.auto_play || this.playStarted) {
+            if (this.auto_play || this.singleshot || this.playStarted) {
               this.play();
             }
           } else {
@@ -77,7 +78,7 @@ elation.require(['janusweb.janusbase'], function() {
               if (buffer) {
                 soundcache[src] = buffer;
                 this.audio.setBuffer(buffer);
-                if ((this.auto_play || this.playStarted) && this.room == this.janus.currentroom) {
+                if ((this.auto_play || this.singleshot || this.playStarted) && this.room == this.janus.currentroom) {
                   this.play();
                 }
               }
@@ -163,6 +164,9 @@ elation.require(['janusweb.janusbase'], function() {
     })();
     this.updatePlaying = function(ev) {
       this.playing = (this.audio ? this.audio.isPlaying : false);
+      if (ev.type == 'ended' && this.singleshot)  {
+        this.die(); 
+      }
       return this.playing;
     }
     this.getProxyObject = function(classdef) {
