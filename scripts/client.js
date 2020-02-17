@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.configuration', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.janusxrplayer', 'janusweb.configuration', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -147,6 +147,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         usevoip: this.args.usevoip,
         avatarsrc: this.args.avatarsrc,
       });
+      elation.events.add(this.engine.systems.render, 'render_view_add', (ev) => this.handleRenderViewAdd(ev));
 
       this.shownavigation = elation.utils.any(this.args.shownavigation, true);
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
@@ -247,6 +248,21 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     this.registerElement = function(tagname, classobj, extendclass) {
       this.janusweb.registerElement(tagname, classobj, extendclass);
+    }
+    this.handleRenderViewAdd = function(ev) {
+      let view = ev.data;
+      if (view.xrsession) {
+        this.xrplayer = this.janusweb.spawn('janusxrplayer', 'xrplayer', {
+          janus: this.janusweb,
+          position: [0,0,0],
+          mass: 10,
+          movespeed: 5000,
+          collidable: false,
+          session: view.xrsession
+        });
+        console.log('Attached XR player to render view', this.xrplayer, view);
+        view.setactivething(this.xrplayer);
+      }
     }
   }, elation.engine.client);
 
