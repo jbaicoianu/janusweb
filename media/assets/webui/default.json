@@ -2,18 +2,15 @@
   "apps": {
     "navigation": "./apps/navigation/navigation.json",
     "comms": "./apps/comms/comms.json",
+    "avatar": "./apps/avatar/avatar.json",
     "settings": "./apps/settings/settings.json",
     "inventory": "./apps/inventory/inventory.json",
     "editor": "./apps/editor/editor.json",
     "transporter": "./apps/transporter/transporter.json",
-    "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json"
+    "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",
+    "buttons": "./apps/buttons/buttons.json"
   },
   "includes": [
-    "./apps/partymode/partymode.json",
-    "./apps/bookmarks/bookmarks.json",
-    "./apps/buttons/buttons.json",
-    "./apps/avatar/avatar.json",
-    "./apps/notifications/notifications.json"
   ],
   "templates": {
     "janusweb.ui": "./default.html"
