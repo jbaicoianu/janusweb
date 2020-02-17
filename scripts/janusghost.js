@@ -62,14 +62,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     this.createChildren = function() {
       elation.engine.things.janusghost.extendclass.createChildren.call(this);
 
-      this.head = this.createObject('object', {
-      });
-      this.shoulders = this.createObject('object', {
-        'js_id': this.properties.player_id + '_shoulders',
-        'pos': V(0, 1.0, 0),
-      });
-      this.setHead(this.head_id, this.properties.head_pos);
-      this.setBody(this.body_id);
+      this.createBodyParts();
+      if (this.head_id) {
+        this.setHead(this.head_id, this.properties.head_pos);
+      }
+      if (this.body_id) {
+        this.setBody(this.body_id);
+      }
       var name = this.properties.ghost_id;
       if (false && this.showlabel) {
         this.label = this.createObject('text', {
@@ -97,6 +96,14 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           })
         });
       }
+    }
+    this.createBodyParts = function() {
+      this.head = this.createObject('object', {
+      });
+      this.shoulders = this.createObject('object', {
+        'js_id': this.properties.player_id + '_shoulders',
+        'pos': V(0, 1.0, 0),
+      });
     }
     this.setGhostAssets = function(assets) {
       this.ghostassets = assets;
@@ -383,6 +390,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       }
     })();
     this.setAvatar = function(avatar) {
+      if (!this.head) {
+        this.createBodyParts();
+      }
       if (!this.avatarcode || this.avatarcode != avatar) {
         this.avatarcode = avatar;
         var things = this.janus.parser.parse(avatar);
