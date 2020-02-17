@@ -45,8 +45,6 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     });
     setTimeout(() => { this.tooltip.hide(); }, 1000);
 
-    this.canvas = document.createElement('canvas');
-    this.inner.appendChild(this.canvas);
 
     elation.events.add(this.janusweb, 'room_load_start', (ev) => this.updateCurrentURL());
 
@@ -61,7 +59,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     elation.events.add([this, this.tooltip], 'mouseout', (ev) => this.handleMouseOut(ev));
   }
   render() {
-    var canvas = this.canvas;
+    var canvas = this.getCanvas();
     var ctx = canvas.getContext('2d');
     canvas.width = this.inner.offsetWidth;
     canvas.height = this.inner.offsetHeight;
@@ -73,6 +71,14 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     ctx.fillStyle = (this.currentstatus == 'complete' ? 'green' : 'darkgreen');
     ctx.fill();
   }
+  getCanvas() {
+    if (!this.canvas) {
+      this.canvas = document.createElement('canvas');
+      this.inner.appendChild(this.canvas);
+    }
+    return this.canvas;
+  }
+
   getClient() {
     var node = this;
     while (node) {
