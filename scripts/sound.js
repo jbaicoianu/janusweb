@@ -16,9 +16,10 @@ elation.require(['janusweb.janusbase'], function() {
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
         rect: { type: 'string', set: this.updateSound }
       });
-      //this.playing = false;
+      this.playing = false;
       //Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
       this.playStarted = false;
+      this.playDelayed = false;
       elation.events.add(this.room, 'janusweb_script_frame', elation.bind(this, this.checkBounds));
     }
     this.createObject3D = function() {
@@ -26,8 +27,10 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.createChildren = function() {
       elation.engine.things.janussound.extendclass.createChildren.call(this);
-      if (!this.audio) {
-        this.createAudio();
+
+      this.updateSound();
+      if (this.auto_play) {
+        this.play();
       }
     }
     this.createAudio = function(src) {
@@ -44,7 +47,7 @@ elation.require(['janusweb.janusbase'], function() {
         }
         this.objects['3d'].remove(this.audio);
       }
-      var listener = this.engine.systems.sound.getRealListener();
+      let listener = this.listener = this.engine.systems.sound.getRealListener();
       if (listener) {
         if (!this.hasposition) {
           this.audio = new THREE.Audio(listener);
@@ -103,14 +106,25 @@ elation.require(['janusweb.janusbase'], function() {
       this.createAudio(url);
     }
     this.play = function() {
-      this.playStarted = true;
-      if (this.audio && this.audio.buffer) { //this.audio.source && this.audio.source.buffer) {
-        this.audio.setVolume(this.gain);
-        if (this.audio.isPlaying) {
-          this.audio.source.currentTime = 0;
-        } else {
-          this.seek(this.starttime);
-          this.audio.play();
+      if (!this.engine.systems.sound.canPlaySound) {
+        if (!this.playDelayed) {
+          this.playDelayed = true;
+          elation.events.add(this.engine.systems.sound, 'sound_enabled', (ev) => { this.play(); });
+          this.dispatchEvent({type: 'sound_delayed'});
+        }
+      } else {
+        this.playStarted = true;
+        if (!this.audio) {
+          this.createAudio();
+        }
+        if (this.audio && this.audio.buffer) { //this.audio.source && this.audio.source.buffer) {
+          this.audio.setVolume(this.gain);
+          if (this.audio.isPlaying) {
+            this.audio.source.currentTime = 0;
+          } else {
+            this.seek(this.starttime);
+            this.audio.play();
+          }
         }
       }
     }
@@ -125,7 +139,9 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.seek = function(time) {
-      this.audio.source.currentTime = time;
+      if (this.audio && this.audio.source) {
+        this.audio.source.currentTime = time;
+      }
     }
     this.stop = function() {
       if (this.audio && this.audio.isPlaying) {
@@ -134,7 +150,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateSound = function() {
       if (!this.objects['3d']) return;
-      if (this.currentsound != this.sound_id) {
+      if (this.canPlay() && this.currentsound != this.sound_id) {
         this.createAudio();
       }
       if (this.audio) {
@@ -156,17 +172,20 @@ elation.require(['janusweb.janusbase'], function() {
     this.checkBounds = (function() {
       var worldpos = new THREE.Vector3();
       return function() {
-        if (this.bounds && this.audio && !this.playing && !(this.play_once && this.playStarted)) {
-          var listener = this.engine.systems.sound.getRealListener();
+        if (this.bounds && !this.playing && !(this.play_once && this.playStarted)) {
+          var listener = this.listener;
           if (listener) {
             worldpos.set(0,0,0).applyMatrix4(listener.matrixWorld);
           }
-          if (this.bounds.containsPoint(worldpos)) {
+          if (!this.playDelayed && this.bounds.containsPoint(worldpos)) {
             this.play();
           }
         }
       }
     })();
+    this.canPlay = function() {
+      return this.engine.systems.sound.canPlaySound;
+    }
     this.updatePlaying = function(ev) {
       this.playing = (this.audio ? this.audio.isPlaying : false);
       if (ev.type == 'ended' && this.singleshot)  {
