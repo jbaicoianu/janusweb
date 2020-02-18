@@ -72,7 +72,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     ctx.fill();
   }
   getCanvas() {
-    if (!this.canvas) {
+    if (!this.canvas && this.inner) {
       this.canvas = document.createElement('canvas');
       this.inner.appendChild(this.canvas);
     }
