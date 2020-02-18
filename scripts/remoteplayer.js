@@ -70,12 +70,12 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false,
       billboard: 'y'
     });
-    this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
-      //loop: true
-    });
-    this.mouth.createAudio();
-    var context = this.mouth.audio.context;
-    if (this.engine.client.player.usevoip) {
+    if (this.engine.client.player.usevoip && this.engine.systems.sound.canPlaySound) {
+      this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
+        //loop: true
+      });
+      this.mouth.createAudio();
+      var context = this.mouth.audio.context;
       this.voip = new JanusVOIPPlayer();
       this.voip.start(context);
       this.audiobuffer = {readyCallbacks: []};//new THREE.AudioBuffer(this.mouth.audio.context);
