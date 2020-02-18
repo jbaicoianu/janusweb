@@ -183,13 +183,14 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
           //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
           tmpMat.copy(head.objects['3d'].matrixWorld);
           tmpMat.extractBasis(tmpVecX, tmpVecY, tmpVecZ);
-          ret.view_dir = (-tmpVecZ.x) + ' ' + (-tmpVecZ.y) + ' ' + (-tmpVecZ.z),
+          ret.view_dir = tmpVecZ.x + ' ' + tmpVecZ.y + ' ' + tmpVecZ.z,
 
           ret.up_dir = tmpVecY.toArray().join(' ');
-          var headpos = head.properties.position.clone();//.sub(new THREE.Vector3(0,1.3,0));
-          headpos.x *= -1;
-          headpos.z *= -1;
-          ret.head_pos = headpos.toArray().join(' '); //this.tmpMat.getPosition().toArray().join(' ');
+          var headpos = head.properties.position;
+          //headpos.x *= -1;
+          //headpos.z *= -1;
+          //ret.head_pos = headpos.toArray().join(' '); //this.tmpMat.getPosition().toArray().join(' ');
+          ret.head_pos = [headpos.x, headpos.y, headpos.z];
         } else {
           ret.view_dir = '0 0 1';
           ret.head_pos = '0 0 0';
@@ -226,7 +227,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
 
       //console.log('[MultiplayerManager] player update', moveData);
       if (this.avatarNeedsUpdate || player.avatarNeedsUpdate) {
-        moveData.avatar = player.getAvatarData().replace(/"/g, "^");
+        moveData.avatar = player.getCurrentAvatarData().replace(/"/g, "^");
         this.avatarNeedsUpdate = false
         player.avatarNeedsUpdate = false
       } else if (moveData.avatar) {

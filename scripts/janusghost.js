@@ -169,7 +169,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             id: headid,
             pos: headpos.clone().negate(),
             //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
-            rotation: V(0, 180, 0),
+            //rotation: V(0, 180, 0),
             lighting: this.lighting,
             //cull_face: 'none'
           });
