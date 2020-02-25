@@ -382,7 +382,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
         }
       }
-      if (this.video_id && this.video_id != '' && this.image_id == '') {
+      if (this.video_id && this.video_id != '' && !this.image_id) {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
@@ -856,7 +856,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.videoasset && this.videotexture && !this.image_id) {
           var texture = this.videotexture;
           var video = texture.image;
-          if (!video.playing && this.videoasset.auto_start) {
+          if (!video.playing && this.videoasset.auto_play) {
             video.play();
             //console.log('start the video!', texture);
           } else if (video.muted) {
