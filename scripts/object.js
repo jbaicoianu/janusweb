@@ -149,7 +149,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.video_id && this.video_id != '' && !this.image_id) {
           this.loadVideo(this.video_id);
           if (this.modelasset && texture) {
-            this.assignTextureParameters(texture, this.modelasset, texture);
+            this.assignTextureParameters(texture, this.modelasset, this.videoasset);
           }
         } else {
           this.videotexture = null;
@@ -386,7 +386,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
-          this.assignTextureParameters(texture, modelasset, texture);
+          this.assignTextureParameters(texture, modelasset, this.videoasset);
           if (this.videoasset.sbs3d) {
             texture.repeat.x *= 0.5;
           }
