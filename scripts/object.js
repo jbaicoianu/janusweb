@@ -146,10 +146,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateVideo = function() {
       if (!this.modelasset) return;
       if (!this.videoasset || this.videoasset.name != this.video_id) {
-        if (this.video_id && this.video_id != '' && !this.image_id) {
+        if (this.video_id && this.video_id != '' && this.image_id == '') {
           this.loadVideo(this.video_id);
           if (this.modelasset && texture) {
-            this.assignTextureParameters(texture, this.modelasset);
+            this.assignTextureParameters(texture, this.modelasset, texture);
           }
         } else {
           this.videotexture = null;
@@ -382,11 +382,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
         }
       }
-      if (this.video_id && this.video_id != '' && this.image_id == '') {
+      if (this.video_id && this.video_id != '' && !this.image_id) {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
-          this.assignTextureParameters(texture, modelasset);
+          this.assignTextureParameters(texture, modelasset, texture);
           if (this.videoasset.sbs3d) {
             texture.repeat.x *= 0.5;
           }
