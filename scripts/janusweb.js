@@ -108,14 +108,14 @@ elation.require([
         // TODO - this should be config-driven
         this.registerAdditionalElements(['raycaster']);
 
-      if (this.networking) {
-        this.network = elation.janusweb.multiplayermanager({
-          janusweb: this,
-          server: this.server,
-          player: this.engine.client.player
-        });
-        this.network.enable(this.engine.client.player);
-      }
+        if (this.networking) {
+          this.network = elation.janusweb.multiplayermanager({
+            janusweb: this,
+            server: this.server,
+            player: this.engine.client.player
+          });
+          this.network.enable(this.engine.client.player);
+        }
 
         this.initRoom();
       });
@@ -276,7 +276,7 @@ elation.require([
     this.initRoom = function() {
       var starturl = this.getStartURL();
 
-      if (this.autoload || starturl != this.properties.homepage) {
+      if (this.autoload) {
         this.load(starturl, true);
       }
     }
