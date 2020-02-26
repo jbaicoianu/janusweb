@@ -268,14 +268,14 @@ elation.require([
       if (this.networking && this.network) {
         this.network.enable(player);
       }
-      if (!(this.autoload || starturl != this.properties.homepage)) {
+      if (!(this.autoload || this.getStartURL() != this.properties.homepage)) {
         player.disable();
       }
     }
 
     this.initRoom = function() {
       var hashargs = elation.url();
-      var starturl = hashargs['janus.url'] || this.properties.url || this.properties.homepage;
+      var starturl = this.getStartURL();
 
       if (this.autoload || starturl != this.properties.homepage) {
         this.load(starturl, true);
@@ -637,6 +637,9 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       }
 
       return asset;
+    }
+    this.getStartURL = function() {
+      return hashargs['janus.url'] || this.properties.url || this.properties.homepage;
     }
   }, elation.engine.things.generic);
 });
