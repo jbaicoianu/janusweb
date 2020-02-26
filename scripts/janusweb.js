@@ -274,7 +274,6 @@ elation.require([
     }
 
     this.initRoom = function() {
-      var hashargs = elation.url();
       var starturl = this.getStartURL();
 
       if (this.autoload || starturl != this.properties.homepage) {
@@ -639,6 +638,7 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       return asset;
     }
     this.getStartURL = function() {
+      var hashargs = elation.url();
       return hashargs['janus.url'] || this.properties.url || this.properties.homepage;
     }
   }, elation.engine.things.generic);
