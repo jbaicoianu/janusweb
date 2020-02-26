@@ -60,6 +60,9 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
   }
   render() {
     var canvas = this.getCanvas();
+
+    if (!canvas) return;
+
     var ctx = canvas.getContext('2d');
     canvas.width = this.inner.offsetWidth;
     canvas.height = this.inner.offsetHeight;
