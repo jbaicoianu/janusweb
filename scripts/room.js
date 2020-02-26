@@ -565,6 +565,9 @@ elation.require([
           //this.parseerror = false;
           elation.events.fire({element: this, type: 'room_load_processed'});
           elation.events.fire({type: 'janus_room_load', element: this});
+          if (this.pendingassets.length == 0) {
+            setTimeout(() => elation.events.fire({element: this, type: 'room_load_complete'}), 0);
+          }
         } catch (e) {
           console.error('Janus room parse error:', e.message);
           this.parseerror = e.message;
