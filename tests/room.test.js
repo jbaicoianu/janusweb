@@ -56,7 +56,7 @@ describe("JanusWeb Init", function() {
   it("should load a room", function(done) {
     try {
 console.log('load landing page');
-      var room = janusweb.load('http://assets.metacade.com/gearvr-landing', true);
+      var room = janusweb.load('https://assets.metacade.com/gearvr-landing/index.html', true);
       var eventlog = {
         room_load_start: [],
         room_load_progress: [],
@@ -70,7 +70,7 @@ console.log('load landing page');
         eventlog[ev.type].push(ev);
       });
       elation.events.add(room, 'room_load_complete', function() {
-        console.log('room load complete', eventlog);
+        //console.log('room load complete', eventlog);
         //expect(eventlog.room_load_queued.length).toBe(1);
         expect(eventlog.room_load_start.length).toBe(1);
         expect(eventlog.room_load_progress.length).toBeGreaterThan(0);
