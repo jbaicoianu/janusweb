@@ -149,7 +149,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.video_id && this.video_id != '' && !this.image_id) {
           this.loadVideo(this.video_id);
           if (this.modelasset && texture) {
-            this.assignTextureParameters(texture, this.modelasset);
+            this.assignTextureParameters(texture, this.modelasset, this.videoasset);
           }
         } else {
           this.videotexture = null;
@@ -382,11 +382,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
         }
       }
-      if (this.video_id && this.video_id != '' && this.image_id == '') {
+      if (this.video_id && this.video_id != '' && !this.image_id) {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
-          this.assignTextureParameters(texture, modelasset);
+          this.assignTextureParameters(texture, modelasset, this.videoasset);
           if (this.videoasset.sbs3d) {
             texture.repeat.x *= 0.5;
           }
@@ -856,7 +856,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.videoasset && this.videotexture && !this.image_id) {
           var texture = this.videotexture;
           var video = texture.image;
-          if (!video.playing && this.videoasset.auto_start) {
+          if (!video.playing && this.videoasset.auto_play) {
             video.play();
             //console.log('start the video!', texture);
           } else if (video.muted) {
