@@ -129,7 +129,7 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
     this.updateStatus('loading');
   }
   updateStatus(status, ev) {
-    if (this.room.parseerror) {
+    if (this.room && this.room.parseerror) {
       // Force error status to remain if an error is thrown
       status = 'error';
 
