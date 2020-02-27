@@ -7,6 +7,9 @@ janus-ui-editor-property-euler {
   display: inline-flex;
   flex-direction: row;
 }
+janus-ui-editor-property-boolean {
+  display: block;
+}
 .janus_editor ui-input {
   font-size: .8em;
 }
@@ -39,7 +42,8 @@ janus-ui-editor-property-euler {
 .mode_pos [propertyname='pos'],
 .mode_rotation [propertyname='rotation'],
 .mode_scale [propertyname='scale'],
-.mode_col [propertyname='col'] {
+.mode_col [propertyname='col'],
+.mode_wireframe [propertyname='wireframe'] {
   font-weight: bold;
   color: #0f0;
   text-shadow: 0 0 2px #000;

@@ -134,3 +134,27 @@ elation.elements.define('janus-ui-editor-property-color', class extends elation.
     this.elements.color.value = '#' + value.getHexString();
   }
 });
+elation.elements.define('janus-ui-editor-property-boolean', class extends elation.elements.janus.ui.editor.property {
+  create() {
+    this.defineAttributes({
+      label: { type: 'string' },
+      value: { type: 'boolean' },
+    });
+    if (this.label) {
+      elation.elements.create('ui-text', {
+        text: this.label,
+        append: this
+      });
+    }
+    this.elements = elation.elements.fromString(`
+      <input type="checkbox" name="wireframe"></input>
+    `, this);
+    if (this.value) {
+      this.updateValue(this.value);
+    }
+  }
+  updateValue(value) {
+    this.value = value;
+    this.elements.wireframe.checked = value;
+  }
+});
