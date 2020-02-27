@@ -27,7 +27,9 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
   }
   create() {
     this.player = player;
-    this.room = room;
+    if (typeof room != 'undefined') {
+      this.room = room;
+    }
     if (janus.nework) {
       this.server = janus.network.getServerForRoom(room);
     }
@@ -37,7 +39,9 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
 elation.elements.define('janus-comms-userlist', class extends elation.elements.ui.list {
   create() {
     this.player = player;
-    this.room = room;
+    if (typeof room != 'undefined') {
+      this.room = room;
+    }
     this.elements = elation.elements.fromTemplate('janus.comms.userlist', this);
     this.client = this.getClient();
     this.janusweb = this.client.janusweb;
@@ -118,9 +122,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     //this.elements.chatinput.addEventListener('accept', (ev) => this.sendMessage(ev.value));
     this.elements.chatinput.onaccept = (ev) => {
       this.sendMessage(this.elements.chatinput.value);
-console.log('dur', this.shouldreturnfocus);
       if (this.shouldreturnfocus) {
-console.log('go back');
         player.enable();
       }
     }
