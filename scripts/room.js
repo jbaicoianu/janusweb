@@ -135,7 +135,20 @@ elation.require([
     }
     this.createChildren = function() {
       this.createLights();
-      //this.setCollider('sphere', {radius: 1e4});
+      this.collidable = false;
+      this.setCollider('sphere', {radius: 1e4});
+
+/*
+      this.skyboxcollider = this.createObject('object', {
+        js_id: 'room_skybox',
+        collision_id: 'sphere',
+        collision_scale: V(10000),
+        collision_trigger: true,
+        pickable: true,
+      });
+      this.skyboxcollider.collidable = false;
+*/
+
 
       this.objects['3d'].add(this.spawnpoint);
 
@@ -208,16 +221,8 @@ elation.require([
       if (!this.skybox) {
         this.skybox = this.spawn('skybox', this.id + '_sky', {
           position: [0,0,0],
-          collidable: false
+          collidable: false,
         });
-/*
-        this.skyboxcollider = this.createObject('object', {
-          js_id: 'room_skybox',
-          collision_id: 'cube',
-          collision_scale: V(1000),
-          collision_trigger: true
-        });
-*/
       }
       if (this.skyboxtexture) {
         this.skybox.setTexture(this.skyboxtexture);
