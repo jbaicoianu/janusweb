@@ -20,8 +20,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         shadow: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial },
+        wireframe: { type: 'boolean', default: false, set: this.updateMaterial },
         fog: { type: 'boolean', default: true, set: this.updateMaterial },
         lights: { type: 'boolean', default: false },
+        lighting: { type: 'boolean', default: true, set: this.updateMaterial },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
@@ -44,6 +46,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       //elation.events.add(this, 'thing_init3d', elation.bind(this, this.assignTextures));
 
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
+      this.refresh = elation.bind(this, this.refresh);
       if (this.anim_id) {
         this.setAnimation(this.anim_id);
       }
@@ -260,6 +263,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.assignTextures = function() {
       //console.log('assign textures', this.name, this.objects['3d']);
       if (!this.objects['3d']) return;
+      if (!this.assetloadhandlers) {
+        this.assetloadhandlers = {};
+      }
       var modelasset = this.modelasset,
           shadermaterial = false,
           texture = false,
@@ -298,12 +304,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         textureasset = this.getAsset('image', image_id, {tex_linear: image_linear});
         if (textureasset) {
           texture = textureasset.getInstance();
-          elation.events.add(textureasset, 'asset_load', elation.bind(this, this.refresh));
-          elation.events.add(texture, 'update', elation.bind(this, this.refresh));
+          if (!this.assetloadhandlers[image_id]) {
+            this.assetloadhandlers[image_id] = true;
+            elation.events.add(textureasset, 'asset_load', this.refresh);
+            elation.events.add(texture, 'update', this.refresh);
+          }
 
-          texture.offset.copy(this.texture_offset);
-          texture.repeat.copy(this.texture_repeat);
-          texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+          //texture.offset.copy(this.texture_offset);
+          //texture.repeat.copy(this.texture_repeat);
+          //texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
 
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
@@ -320,8 +329,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let normaltextureasset = this.getAsset('image', normal_image_id, true);
         if (normaltextureasset) {
           textureNormal = normaltextureasset.getInstance();
-          elation.events.add(textureNormal, 'asset_load', elation.bind(this, this.refresh));
-          elation.events.add(textureNormal, 'update', elation.bind(this, this.refresh));
+          if (!this.assetloadhandlers[normal_image_id]) {
+            this.assetloadhandlers[normal_image_id] = true;
+            elation.events.add(textureNormal, 'asset_load', elation.bind(this, this.refresh));
+            elation.events.add(textureNormal, 'update', elation.bind(this, this.refresh));
+          }
 
           if (normaltextureasset.sbs3d) {
             textureNormal.repeat.x = 0.5;
@@ -338,9 +350,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let bumptextureasset = this.getAsset('image', bump_image_id, true);
         if (bumptextureasset) {
           textureBump = bumptextureasset.getInstance();
-          elation.events.add(bumptextureasset, 'asset_load', elation.bind(this, this.refresh));
-          elation.events.add(textureBump, 'update', elation.bind(this, this.refresh));
-
+          if (!this.assetloadhandlers[bump_image_id]) {
+            this.assetloadhandlers[bump_image_id] = true;
+            elation.events.add(bumptextureasset, 'asset_load', elation.bind(this, this.refresh));
+            elation.events.add(textureBump, 'update', elation.bind(this, this.refresh));
+          }
           if (bumptextureasset.sbs3d) {
             textureBump.repeat.x = 0.5;
           }
@@ -356,9 +370,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let displacementtextureasset = this.getAsset('image', displacement_image_id, true);
         if (displacementtextureasset) {
           textureDisplacement = displacementtextureasset.getInstance();
-          elation.events.add(displacementtextureasset, 'asset_load', elation.bind(this, this.refresh));
-          elation.events.add(textureDisplacement, 'update', elation.bind(this, this.refresh));
-
+          if (!this.assetloadhandlers[displacement_image_id]) {
+            this.assetloadhandlers[displacement_image_id] = true;
+            elation.events.add(displacementtextureasset, 'asset_load', elation.bind(this, this.refresh));
+            elation.events.add(textureDisplacement, 'update', elation.bind(this, this.refresh));
+          }
           if (displacementtextureasset.sbs3d) {
             textureDisplacement.repeat.x = 0.5;
           }
@@ -374,15 +390,18 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lightmaptextureasset = this.getAsset('image', lightmap_image_id);
         if (lightmaptextureasset) {
           textureLightmap = lightmaptextureasset.getInstance();
-          elation.events.add(lightmaptextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
-          elation.events.add(textureLightmap, 'update', elation.bind(this, this.refresh));
+          if (!this.assetloadhandlers[lightmap_image_id]) {
+            this.assetloadhandlers[lightmap_image_id] = true;
+            elation.events.add(lightmaptextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
+            elation.events.add(textureLightmap, 'update', elation.bind(this, this.refresh));
+          }
 
           if (textureLightmap) {
             this.assignTextureParameters(textureLightmap, modelasset, lightmaptextureasset);
           }
         }
       }
-      if (this.video_id && this.video_id != '' && this.image_id == '') {
+      if (this.video_id && this.video_id != '' && !this.image_id) {
         this.loadVideo(this.video_id);
         texture = this.videotexture;
         if (texture) {
@@ -488,268 +507,268 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
           }
 
-          for (var i = 0; i < materials.length; i++) {
-            let m = materials[i];
-            if (color) {
-              m.color = color;
-            }
-            if (texture) {
-              if (!color) m.color.setHex(0xffffff);
-              m.map = texture; 
-              elation.events.add(texture, 'asset_update', (ev) => {
-                m.map = ev.data;
-                m.map.offset.copy(this.texture_offset);
-                m.map.repeat.copy(this.texture_repeat);
-                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-                this.refresh();
-              });
+            for (var i = 0; i < materials.length; i++) {
+              let m = materials[i];
+              if (color) {
+                m.color = color;
+              }
+              if (texture) {
+                if (!color) m.color.setHex(0xffffff);
+                m.map = texture; 
+                texture.encoding = THREE.sRGBEncoding;
+                elation.events.add(texture, 'asset_update', (ev) => {
+                  m.map = ev.data;
+                  this.updateTextureOffsets();
+                  this.refresh();
+                });
 
-              // Set up per-eye render hooks if we're using a 3D texture
-              if (texture instanceof THREE.SBSTexture || texture instanceof THREE.SBSVideoTexture) {
-                let vrlayer = new THREE.Layers();
-                vrlayer.set(2);
-                n.onBeforeRender = (renderer, scene, camera) => {
-                  if (camera.layers.test(vrlayer)) {
-                    texture.setEye('right');
-                  } else {
-                    texture.setEye('left');
+                // Set up per-eye render hooks if we're using a 3D texture
+                if (texture instanceof THREE.SBSTexture || texture instanceof THREE.SBSVideoTexture) {
+                  let vrlayer = new THREE.Layers();
+                  vrlayer.set(2);
+                  n.onBeforeRender = (renderer, scene, camera) => {
+                    if (camera.layers.test(vrlayer)) {
+                      texture.setEye('right');
+                    } else {
+                      texture.setEye('left');
+                    }
                   }
                 }
-              }
-              m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
-            } else if (m.map && m.map.sourceFile) {
-              var imagesrc = m.map.sourceFile;
-              var asset = this.getAsset('image', imagesrc, true);
-              if (asset) {
-                if (asset.hasalpha) {
-                  m.transparent = true;
-                  m.alphaTest = this.alphatest;
-                }
-                m.map = asset.getInstance();
-                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
-                  m.map = ev.data;
-                  m.map.offset.copy(this.texture_offset);
-                  m.map.repeat.copy(this.texture_repeat);
-                  m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(m, asset, ev) {
-                  if (asset.hasalpha && !m.transparent) {
+                m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
+              } else if (m.map && m.map.sourceFile) {
+                var imagesrc = m.map.sourceFile;
+                var asset = this.getAsset('image', imagesrc, true);
+                if (asset) {
+                  if (asset.hasalpha) {
                     m.transparent = true;
                     m.alphaTest = this.alphatest;
-                    m.needsUpdate = true;
                   }
-                  this.refresh();
-                }, m, asset));
+                  m.map = asset.getInstance();
+                  elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
+                    m.map = ev.data;
+                    this.updateTextureOffsets();
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(m, asset, ev) {
+                    if (asset.hasalpha && !m.transparent) {
+                      m.transparent = true;
+                      m.alphaTest = this.alphatest;
+                      m.needsUpdate = true;
+                    }
+                    this.refresh();
+                  }, m, asset));
+                }
+                if (m.map) {
+                  this.assignTextureParameters(m.map, modelasset, asset);
+                }
               }
-              if (m.map) {
-                this.assignTextureParameters(m.map, modelasset, asset);
+              if (m.normalMap) {
+                var imagesrc = m.normalMap.sourceFile;
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                if (asset) {
+                  m.normalMap = asset.getInstance();
+                  m.normalMap = asset.getInstance();
+                  elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) {
+                    m.normalMap = ev.data; this.refresh();
+                    this.updateTextureOffsets();
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
+              } else if (textureBump) {
+                m.bumpMap = textureBump;
+                m.bumpScale = this.bumpmap_scale;
+              } else if (m.bumpMap) {
+                var imagesrc = m.bumpMap.sourceFile;
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                if (asset) {
+                  m.normalMap = asset.getInstance();
+                  m.normalMap = asset.getInstance();
+                  elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
+                    m.normalMap = ev.data; this.refresh();
+                    m.normalMap.offset.copy(this.texture_offset);
+                    m.normalMap.repeat.copy(this.texture_repeat);
+                    m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
               }
-            }
-            if (m.normalMap) {
-              var imagesrc = m.normalMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
-              if (asset) {
-                m.normalMap = asset.getInstance();
-                m.normalMap = asset.getInstance();
-                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) {
-                  m.normalMap = ev.data; this.refresh();
-                  m.normalMap.offset.copy(this.texture_offset);
-                  m.normalMap.repeat.copy(this.texture_repeat);
-                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+              if (textureNormal) {
+                m.normalMap = textureNormal;
+              } else if (m.normalMap) {
+                var imagesrc = m.normalMap.sourceFile;
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                if (asset) {
+                  m.normalMap = asset.getInstance();
+                  elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
               }
-            } else if (textureBump) {
-              m.bumpMap = textureBump;
-              m.bumpScale = this.bumpmap_scale;
-            } else if (m.bumpMap) {
-              var imagesrc = m.bumpMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
-              if (asset) {
-                m.normalMap = asset.getInstance();
-                m.normalMap = asset.getInstance();
-                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
-                  m.normalMap = ev.data; this.refresh();
-                  m.normalMap.offset.copy(this.texture_offset);
-                  m.normalMap.repeat.copy(this.texture_repeat);
-                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
-              }
-            }
-            if (textureNormal) {
-              m.normalMap = textureNormal;
-            } else if (m.normalMap) {
-              var imagesrc = m.normalMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
-              if (asset) {
-                m.normalMap = asset.getInstance();
-                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
-              }
-            }
 
-            if (textureLightmap && textureLightmap.image) {
-              if (lightmaptextureasset.loaded) {
-                m.lightMap = textureLightmap; 
+              if (textureLightmap && textureLightmap.image) {
+                if (lightmaptextureasset.loaded) {
+                  m.lightMap = textureLightmap; 
+                } else {
+                }
+                elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+              } else if (m.lightMap) {
+                var imagesrc = m.lightMap.sourceFile;
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                if (asset) {
+                  m.lightMap = asset.getInstance();
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
+                  elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                }
+              }
+              if (textureDisplacement) {
+                m.displacementMap = textureDisplacement;
+                m.displacementScale = this.displacementmap_scale;
+              }
+
+              if (this.isUsingPBR()) {
+                m.envMap = this.getEnvmap();
+              }
+
+              //m.roughness = 0.75;
+              m.side = side;
+
+              if (blend_src || blend_dest) {
+                if (blend_src) m.blendSrc = blend_src;
+                if (blend_dest) m.blendDst = blend_dest;
+                m.blending = THREE.CustomBlending;
+
+                m.blendSrcAlpha = THREE.SrcAlphaFactor;
+                m.blendDstAlpha = THREE.OneFactor;
+                if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
+                  m.transparent = true;
+                }
               } else {
+                m.blending = THREE.NormalBlending;
               }
-              elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
-            } else if (m.lightMap) {
-              var imagesrc = m.lightMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
-              if (asset) {
-                m.lightMap = asset.getInstance();
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
-                elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+              if (this.depth_write !== null) {
+                m.depthWrite = this.depth_write;
               }
-            }
-            if (textureDisplacement) {
-              m.displacementMap = textureDisplacement;
-              m.displacementScale = this.displacementmap_scale;
-            }
-
-            if (this.isUsingPBR()) {
-              m.envMap = this.getEnvmap();
-            }
-
-            //m.roughness = 0.75;
-            m.side = side;
-
-            if (blend_src || blend_dest) {
-              if (blend_src) m.blendSrc = blend_src;
-              if (blend_dest) m.blendDst = blend_dest;
-              m.blending = THREE.CustomBlending;
-
-              m.blendSrcAlpha = THREE.SrcAlphaFactor;
-              m.blendDstAlpha = THREE.OneFactor;
-              if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
-                m.transparent = true;
+              if (this.depth_test !== null) {
+                m.depthTest = this.depth_test;
               }
-            } else {
-              m.blending = THREE.NormalBlending;
-            }
-            if (this.depth_write !== null) {
-              m.depthWrite = this.depth_write;
-            }
-            if (this.depth_test !== null) {
-              m.depthTest = this.depth_test;
-            }
-            // If our diffuse texture has an alpha channel, set up a customDepthMaterial / customDistanceMaterial to allow shadows to work
-            if (true) { //this.shadow && m.transparent && m.map) {
-              if (!n.customDepthMaterial) {
-                n.customDepthMaterial = new THREE.MeshDepthMaterial({
-                  depthPacking: THREE.RGBADepthPacking,
-                  map: m.map,
-                  alphaTest: 0.5
-                });
+              // If our diffuse texture has an alpha channel, set up a customDepthMaterial / customDistanceMaterial to allow shadows to work
+              if (m.map) { //this.shadow && m.transparent && m.map) {
+                if (!n.customDepthMaterial) {
+                  n.customDepthMaterial = new THREE.MeshDepthMaterial({
+                    depthPacking: THREE.RGBADepthPacking,
+                    map: m.map,
+                    alphaTest: 0.5
+                  });
+                }
+                if (!n.customDistanceMaterial) {
+                  n.customDistanceMaterial = new THREE.MeshDistanceMaterial({
+                    //depthPacking: THREE.RGBADepthPacking,
+                    map: m.map,
+                    alphaTest: 0.5
+                  });
+                }
               }
-              if (!n.customDistanceMaterial) {
-                n.customDistanceMaterial = new THREE.MeshDistanceMaterial({
-                  //depthPacking: THREE.RGBADepthPacking,
-                  map: m.map,
-                  alphaTest: 0.5
-                });
+              //m.needsUpdate = true;
+              m.skinning = useSkinning;
+              if (useVertexColors) {
+                m.vertexColors = THREE.VertexColors;
               }
+              m.fog = this.fog;
+              m.wireframe = this.wireframe;
             }
-            //m.needsUpdate = true;
-            m.skinning = useSkinning;
-            if (useVertexColors) {
-              m.vertexColors = THREE.VertexColors;
-            }
-            m.fog = this.fog;
+          } else if (n instanceof THREE.Light && !this.lights) {
+            remove.push(n);
           }
-        } else if (n instanceof THREE.Light && !this.lights) {
-          remove.push(n);
+        }));
+        for (var i = 0; i < remove.length; i++) {
+          remove[i].parent.remove(remove[i]);
         }
-      }));
-      for (var i = 0; i < remove.length; i++) {
-        remove[i].parent.remove(remove[i]);
+        this.updateTextureOffsets();
+        this.refresh();
       }
-      this.refresh();
-    }
-    this.copyMaterial = function(oldmat) {
-//console.log('cloning material', oldmat);
-      if (elation.utils.isArray(oldmat)) {
-        var materials = [];
-        for (var i = 0; i < oldmat.length; i++) {
-          materials.push(this.copyMaterial(oldmat[i]));
-        }
-        var m = materials;
-      } else if (oldmat instanceof THREE.PointsMaterial) {
-        var m = oldmat.clone(); 
-      } else {
-        var m = this.allocateMaterial();
-        m.anisotropy = 16;
-        m.name = oldmat.name;
-        m.map = oldmat.map;
-        m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : this.opacity);
-        m.alphaTest = this.alphatest;
-        m.aoMap = oldmat.aoMap;
-        m.normalMap = oldmat.normalMap;
-        m.bumpMap = oldmat.bumpMap;
-
-        if (!(m instanceof THREE.MeshBasicMaterial)) {
-          if (oldmat.emissiveMap) {
-            m.emissiveMap = oldmat.emissiveMap;
-            m.emissive.setRGB(1,1,1);
-          } else if (oldmat.emissive) {
-            m.emissive = oldmat.emissive;
+      this.copyMaterial = function(oldmat) {
+  //console.log('cloning material', oldmat);
+        if (elation.utils.isArray(oldmat)) {
+          var materials = [];
+          for (var i = 0; i < oldmat.length; i++) {
+            materials.push(this.copyMaterial(oldmat[i]));
           }
-          if (this.emissive) {
-            m.emissive.copy(this.emissive);
-          }
-        }
+          var m = materials;
+        } else if (oldmat instanceof THREE.PointsMaterial || 
+                   oldmat instanceof THREE.LineBasicMaterial ||
+                   oldmat instanceof THREE.LineDashedMaterial
+                  ) {
+          var m = oldmat.clone(); 
+        } else {
+          var m = this.allocateMaterial();
+          m.anisotropy = 16;
+          m.name = oldmat.name;
+          m.map = oldmat.map;
+          m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1) * this.opacity;
+          m.alphaTest = this.alphatest;
+          m.aoMap = oldmat.aoMap;
+          m.normalMap = oldmat.normalMap;
+          m.bumpMap = oldmat.bumpMap;
 
-        m.lightMap = oldmat.lightMap;
-        if (oldmat.color) {
-          m.color.copy(oldmat.color);
-        }
-        m.transparent = m.opacity < 1;
-        m.alphaTest = oldmat.alphaTest;
-        m.skinning = oldmat.skinning;
-
-        if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
-        if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
-        if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
-        if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
-        if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
-
-        m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
-
-        if (oldmat.roughnessMap !== undefined) {
-          m.roughnessMap = oldmat.roughnessMap;
-        } else if (oldmat.specularMap !== undefined) {
-          m.roughnessMap = oldmat.specularMap;
-        }
-        if (oldmat.roughness !== undefined) {
-          m.roughness = oldmat.roughness;
-        } else if (oldmat.shininess !== undefined) {
-          m.roughness = 1 - oldmat.shininess / 512;
-        } else if (!m.roughnessMap) {
-          m.roughness = 0.6;
-        }
-        if (this.isUsingPBR()) {
-          m.envMap = this.getEnvmap();
-        }
-
-        /*
-        if (oldmat.specular && oldmat.specular.b != 0 && oldmat.specular.g != 0 && oldmat.specular.b != 0) {
-          m.color.copy(oldmat.specular);
-        }
-        */
-
-        if (this.shader_chunk_replace) {
-          let chunkreplace = this.shader_chunk_replace;
-          m.onBeforeCompile = function(shader) {
-            for (let oldchunkname in chunkreplace) {
-              let newchunkname = chunkreplace[oldchunkname];
-              shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+          if (!(m instanceof THREE.MeshBasicMaterial)) {
+            if (oldmat.emissiveMap) {
+              m.emissiveMap = oldmat.emissiveMap;
+              m.emissive.setRGB(1,1,1);
+            } else if (oldmat.emissive) {
+              m.emissive = oldmat.emissive;
+            }
+            if (this.emissive) {
+              m.emissive.copy(this.emissive);
             }
           }
-        }
 
-      }
+          m.lightMap = oldmat.lightMap;
+          if (oldmat.color) {
+            m.color.copy(oldmat.color);
+          }
+          m.transparent = m.opacity < 1;
+          m.alphaTest = oldmat.alphaTest;
+          m.skinning = oldmat.skinning;
+
+          if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
+          if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
+          if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
+          if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
+          if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
+
+          m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
+
+          if (oldmat.roughnessMap !== undefined) {
+            m.roughnessMap = oldmat.roughnessMap;
+          } else if (oldmat.specularMap !== undefined) {
+            m.roughnessMap = oldmat.specularMap;
+          }
+          if (oldmat.roughness !== undefined) {
+            m.roughness = oldmat.roughness;
+          } else if (oldmat.shininess !== undefined) {
+            m.roughness = 1 - oldmat.shininess / 512;
+          } else if (!m.roughnessMap) {
+            m.roughness = 0.6;
+          }
+          if (this.isUsingPBR()) {
+            m.envMap = this.getEnvmap();
+          }
+
+          /*
+          if (oldmat.specular && oldmat.specular.b != 0 && oldmat.specular.g != 0 && oldmat.specular.b != 0) {
+            m.color.copy(oldmat.specular);
+          }
+          */
+
+          if (this.shader_chunk_replace) {
+            let chunkreplace = this.shader_chunk_replace;
+            m.onBeforeCompile = function(shader) {
+              for (let oldchunkname in chunkreplace) {
+                let newchunkname = chunkreplace[oldchunkname];
+                shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+              }
+            }
+          }
+
+        }
 
       return m;
     }
@@ -981,7 +1000,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           blend_src: [ 'property', 'blend_src' ],
           blend_dest: [ 'property', 'blend_dest' ],
 
-          // vide properties/functions
+          wireframe: [ 'property', 'wireframe'],
+          fog: [ 'property', 'fog'],
+          lights: [ 'property', 'lights'],
+
+          // video properties/functions
           current_time: [ 'accessor', 'getCurrentTime'],
           total_time: [ 'accessor', 'getTotalTime'],
           isPlaying: [ 'function', 'isPlaying'],
