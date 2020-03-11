@@ -481,7 +481,7 @@ ui-toggle>div {
   cursor: pointer;
   z-index: 2;
   display: inline-block;
-  width: 2em;
+  width: 3em;
   vertical-align: middle;
   margin: .2em .8em .2em .4em;
 }
@@ -506,6 +506,13 @@ ui-toggle>div::before {
   z-index: -1;
   border-radius: 0 .5em .5em 0;
   box-shadow: 2px 0 5px rgba(0,0,0,.8);
+  content: 'OFF';
+  font-size: 10px;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  line-height: 1.8em;
+  color: #aaa;
 }
 ui-toggle>div::after {
   display: block;
@@ -525,6 +532,8 @@ ui-toggle[checked]>div::before {
   background: green;
   box-shadow: -2px 0 5px rgba(0,0,0,.8);
   border-radius: .5em 0 0 .5em;
+  content: 'ON';
+  color: #fff;
 }
 ui-toggle[checked]>div::after {
   right: 0;
@@ -999,3 +1008,94 @@ janus-ui-main {
 ui-content[align="right"] {
   align-content: end;
 }
+
+
+ui-treeview {
+/*
+  background: black;
+  color: white;
+*/
+}
+ui-treeview ui-list {
+  /*background: rgba(0,0,0,.8);*/
+  list-style: none;
+  border-left: 0.15em solid #999;
+  margin: 0 0 0 .3em;
+  padding-left: .8em;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(0,0,0,0); 
+}
+ui-treeview>ui-list {
+  border-left: 0;
+  margin-left: 0;
+  padding-left: 0;
+}
+ui-treeview ui-treeviewitem {
+  position: relative;
+  white-space: nowrap;
+  /*max-height: 1.2em;*/
+  overflow: hidden;
+  line-height: 1.2em;
+  display: flex;
+  flex-direction: column;
+  order: 2;
+  padding-left: 1em;
+}
+ui-treeview ui-treeviewitem>ui-text {
+  order: 1;
+}
+ui-treeview ui-treeviewitem:hover>ui-text {
+  color: #9c9;
+  cursor: pointer;
+}
+ui-treeview ui-treeviewitem>ui-text:hover {
+  color: #7f7;
+}
+ui-treeview ui-treeviewitem.state_selected>ui-text {
+  color: #0f0;
+}
+ui-treeview ul li.state_selected, 
+ui-treeview ul li.state_hover li.state_selected {
+  max-height: none;
+}
+ui-treeview ui-treeviewitem ui-text:before {
+  content: ' ';
+  display: inline-block;
+  float: left;
+  clear: left;
+  width: .8em;
+  margin-left: -1.2em;
+}
+ui-treeview ui-treeviewitem.haschildren>ui-text:before {
+  content: '▼';
+}
+ui-treeview ui-treeviewitem:last-child>ul {
+  border-left: 0;
+}
+/*
+ui-treeview ul li.state_disabled:before,
+ui-treeview ul li.state_disabled,
+ui-treeview ul li.state_hover li.state_disabled,
+ui-treeview ul li.state_selected li.state_disabled {
+  color: #666;
+}
+ui-treeview ul li.state_hover,
+ui-treeview ul li.state_selected li.state_hover {
+  color: yellow;
+  background: rgba(1,1,0,.5);
+}
+ui-treeview ul li.state_hover:before,
+ui-treeview ul li.state_selected li.state_hover:before {
+  color: white;
+}
+ui-treeview ul li.state_selected,
+ui-treeview ul li.state_hover li.state_selected {
+  color: red;
+}
+ui-treeview ul li.state_hover li,
+ui-treeview ul li.state_selected li {
+  color: white;
+  background: transparent;
+}
+*/
+
