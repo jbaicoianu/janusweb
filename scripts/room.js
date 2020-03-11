@@ -1218,11 +1218,13 @@ elation.require([
           baseurl: this.baseurl
         });
       } else if (type == 'sound') {
-        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        var src = (args.src && args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({
           assettype:'sound',
           name:args.id,
           src: src,
+          buffer: args.buffer,
+          rate: args.rate,
           baseurl: this.baseurl
         });
       } else if (type == 'websurface') {
