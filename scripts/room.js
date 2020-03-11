@@ -679,26 +679,25 @@ elation.require([
       }
       
       if (room && !parent) {
-        if (room.use_local_asset && room.visible !== false) {
-//setTimeout(elation.bind(this, function() {
-        var collisionid = room.use_local_asset + '_collision',
-            collisionscale = V(1,1,1);
-        if (room.use_local_asset == 'room_plane') {
-          collisionid = 'cube';
-          collisionscale.set(1000,.1,1000);
-        }
-        this.localasset = this.createObject('object', {
-          id: room.use_local_asset,
-          collision_id: collisionid,
-          collision_scale: collisionscale,
-          col: room.col,
-          fwd: room.fwd,
-          xdir: room.xdir,
-          ydir: room.ydir,
-          zdir: room.zdir,
-          shadows: true
-        });
-//}), Math.random() * 500);
+        if (room.use_local_asset) {
+          var modelid = (room.visible !== false ? room.use_local_asset : undefined),
+              collisionid = room.use_local_asset + '_collision',
+              collisionscale = V(1,1,1);
+          if (modelid == 'room_plane') {
+            collisionid = 'cube';
+            collisionscale.set(1000,.1,1000);
+          }
+          this.localasset = this.createObject('object', {
+            id: modelid,
+            collision_id: collisionid,
+            collision_scale: collisionscale,
+            col: room.col,
+            fwd: room.fwd,
+            xdir: room.xdir,
+            ydir: room.ydir,
+            zdir: room.zdir,
+            shadows: true
+          });
         }
         // set player spawnpoint based on room info
         if (room.pos) {
