@@ -961,7 +961,7 @@ elation.require([
         }
         if (hasNew) {
           //elation.engine.assets.loadJSON(diff.assets.objects, this.baseurl);
-          this.createRoomObjects(diff);
+          this.createRoomObjects(diff, this);
         }
       }));
       // Clear the list of edits which have been applied this frame
