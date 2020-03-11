@@ -905,7 +905,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.minFilter = (linear && !this.video_id ? THREE.LinearMipMapLinearFilter : THREE.NearestFilter);
       texture.magFilter = (linear ? THREE.LinearFilter : THREE.NearestFilter);
       texture.anisotropy = (linear ? elation.config.get('engine.assets.image.anisotropy', 4) : 1);
-      texture.generateMipmaps = linear && textureasset.detectImageType() != 'basis';
+      texture.generateMipmaps = linear && (textureasset && textureasset.detectImageType() != 'basis');
       texture.offset.copy(this.texture_offset);
       texture.repeat.copy(this.texture_repeat);
       texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
