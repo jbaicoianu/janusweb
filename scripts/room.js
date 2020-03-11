@@ -902,7 +902,7 @@ elation.require([
       var waslocked = this.locked;
       //this.locked = true;
       this.applyingEdits = true;
-      var skip = ['sync'];
+      var skip = ['sync', 'autosync'];
       keys.forEach(elation.bind(this, function(k) {
         var newobjs = edit[k];
         if (!elation.utils.isArray(newobjs)) newobjs = [newobjs];
@@ -1022,6 +1022,10 @@ elation.require([
       if (objectargs.class) {
         objectargs.className = objectargs.class;
         delete objectargs.class;
+      }
+
+      if (objectargs.autosync) {
+        objectargs.sync = true;
       }
 
       switch (realtype) {
@@ -1503,7 +1507,7 @@ elation.require([
           if (!this.appliedchanges[thing.js_id]) {
             this.changes[thing.js_id] = proxy;
           }
-          proxy.sync = false;
+          proxy.sync = proxy.autosync;
         }
       }
     }
@@ -1782,6 +1786,7 @@ elation.require([
     this.getChanges = function() {
       var changeids = Object.keys(this.changes);
       var changestr = '';
+      let ignoreattributes = ['tagName', 'parts', 'extendclass', 'obj', 'objcount', 'sync', 'autosync'];
       if (changeids.length > 0) {
         var xmldoc = document.implementation.createDocument(null, 'edit', null);
         var editroot = xmldoc.documentElement;
@@ -1806,6 +1811,9 @@ elation.require([
             var attrs = Object.keys(change);
             for (var i = 0; i < attrs.length; i++) {
               var k = attrs[i];
+
+              if (ignoreattributes.indexOf(k) != -1) continue;
+
               var val = change[k];
               if (val instanceof THREE.Vector2 ||
                   val instanceof THREE.Quaternion ||
