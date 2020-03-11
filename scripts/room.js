@@ -2006,7 +2006,8 @@ elation.require([
         for (var assetname in this.roomassets[type]) {
           var asset = this.roomassets[type][assetname];
 
-          if (assetname != asset.src && asset !== janus.assetpack.assetmap[type][assetname]) {
+          let defaultasset = (janus.assetpack.assetmap[type] ? janus.assetpack.assetmap[type][assetname] : undefined);
+          if (assetname != asset.src && asset !== defaultasset) {
             assetsrc += '    <asset' + (assettypemap[type] || type) + ' id="' + assetname + '" src="' + asset.src + '" />\n';
           }
         }
