@@ -2,16 +2,21 @@ janus-ui-editor-panel {
   font-size: .8em;
   white-space: nowrap;
 }
+janus-ui-editor-property-vector2,
 janus-ui-editor-property-vector3,
-janus-ui-editor-property-euler {
-  display: inline-flex;
+janus-ui-editor-property-euler,
+janus-ui-editor-property-boolean,
+janus-ui-editor-property-color,
+janus-ui-editor-property-float,
+janus-ui-editor-property-string,
+janus-ui-editor-property-integer {
+  display: flex;
   flex-direction: row;
-}
-janus-ui-editor-property-boolean {
-  display: block;
 }
 .janus_editor ui-input {
   font-size: .8em;
+  vertical-align: middle;
+  flex: 1 1;
 }
 .janus_editor ui-input>ui-label {
   padding: .2em;
@@ -27,23 +32,40 @@ janus-ui-editor-property-boolean {
   padding: 0 .2em;
 }
 .janus_editor ui-text {
-  flex: none;
-  width: 4em;
+  flex: 0 0;
+  width: 10em;
+  min-width: 10em;
   padding-right: .5em;
+  font-size: .8em;
+  cursor: pointer;
+}
+.janus_editor ui-text:hover {
+  color: #9f9;
 }
 .janus_editor ui-text::after {
   content: ':';
+}
+janus-ui-editor-property-vector2>ui-input:first-of-type,
+janus-ui-editor-property-vector3>ui-input:first-of-type,
+janus-ui-editor-property-euler>ui-input:first-of-type,
+janus-ui-editor-property-color>ui-input:first-of-type {
+  margin-left: -1em;
 }
 .janus_editor {
   list-style: none;
 }
 .janus-editor li {
 }
+.janus_editor>* {
+  display: flex;
+}
 .mode_pos [propertyname='pos'],
 .mode_rotation [propertyname='rotation'],
 .mode_scale [propertyname='scale'],
 .mode_col [propertyname='col'],
-.mode_wireframe [propertyname='wireframe'] {
+.mode_wireframe [propertyname='wireframe'],
+.mode_lighting [propertyname='lighting'],
+.selected {
   font-weight: bold;
   color: #0f0;
   text-shadow: 0 0 2px #000;
@@ -73,4 +95,67 @@ janus-ui-editor-panel ui-button {
 }
 janus-ui-editor-button[active] {
   background-image: linear-gradient(#028202, #109112 40%, #199b1d);
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-inventory {
+  order: 1;
+  flex: 0;
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-scenetree::before {
+  display: block;
+  content: 'Scene';
+  color: white;
+  font-size: 1.17em;
+  border-bottom: 1px solid black;
+  font-weight: bold;
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-scenetree {
+  order: 2;
+  flex: 1 1;
+  height: 10vh;
+  display: flex;
+  flex-direction: column;
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-scenetree>ui-treeview {
+  flex: 1 1;
+  overflow: auto;
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-objectinfo {
+  order: 3;
+  overflow: auto;
+  flex: 2 1;
+}
+ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-panel {
+  order: 4;
+  flex: 0 0;
+}
+.selected ui-input input {
+  background: white;
+  border: 2px solid #0a0;
+  box-shadow: 0 0 4px #090;
+}
+janus-ui-editor-property-vector3.selected[constraint] ui-input {
+  color: #c8c8c8;
+}
+janus-ui-editor-property-vector3.selected[constraint] ui-input input {
+  border: 1px solid black;
+  box-shadow; none;
+  background: #999;
+}
+janus-ui-editor-property-vector2.selected[constraint*="x"] ui-input[name="x"],
+janus-ui-editor-property-vector2.selected[constraint*="y"] ui-input[name="y"],
+janus-ui-editor-property-vector3.selected[constraint*="x"] ui-input[name="x"],
+janus-ui-editor-property-vector3.selected[constraint*="y"] ui-input[name="y"],
+janus-ui-editor-property-vector3.selected[constraint*="z"] ui-input[name="z"],
+janus-ui-editor-property-vector3.selected[constraint="none"] ui-input {
+  color: #0f0;
+}
+janus-ui-editor-property-vector2.selected[constraint*="x"] ui-input[name="x"] input,
+janus-ui-editor-property-vector2.selected[constraint*="y"] ui-input[name="y"] input,
+janus-ui-editor-property-vector3.selected[constraint*="x"] ui-input[name="x"] input,
+janus-ui-editor-property-vector3.selected[constraint*="y"] ui-input[name="y"] input,
+janus-ui-editor-property-vector3.selected[constraint*="z"] ui-input[name="z"] input,
+janus-ui-editor-property-vector3.selected[constraint="none"] ui-input input {
+  background: white;
+  border: 2px solid #0a0;
+  box-shadow: 0 0 4px #090;
 }

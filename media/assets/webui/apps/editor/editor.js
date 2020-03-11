@@ -5,11 +5,22 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     if (editpanel) {
       editpanel.hide();
     }
+    janus.engine.systems.controls.addContext('editor', {
+      'toggle':           [ 'keyboard_f1', (ev) => { if (ev.value) this.toggle(); } ],
+    });
+    janus.engine.systems.controls.activateContext('editor');
   }
   onactivate() {
     let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
     if (inventorypanel) {
-      inventorypanel.expand();
+      let editorpanel = inventorypanel.querySelector('janus-ui-editor-panel');
+      if (!editorpanel) {
+        elation.elements.create('janus-ui-editor-panel', { append: inventorypanel });
+      }
+      let inventory = inventorypanel.querySelector('janus-ui-inventory');
+      if (!inventory) {
+        elation.elements.create('janus-ui-inventory', { append: inventorypanel });
+      }
     }
     let editpanel = document.querySelector('ui-panel[name="topright"]');
     if (editpanel) {
@@ -17,6 +28,9 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     }
     player.camera.camera.layers.enable(10);
     janus.engine.systems.render.setdirty();
+    setTimeout(() => {
+      inventorypanel.expand();
+    }, 100);
   }
   ondeactivate() {
     let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
@@ -56,7 +70,7 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     this.roomedit = {
       snap: .01,
       rotationsnap: 5,
-      modes: ['pos', 'rotation', 'scale', 'col'],
+      modes: ['pos', 'rotation', 'scale', 'col', 'wireframe', 'lighting', 'fog', 'shadow_cast', 'shadow_receive'],
       movespeed: new THREE.Vector3(),
       modeid: 0,
       object: false,
@@ -66,29 +80,38 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     this.editObjectSetSnap(this.roomedit.snap);
 
     janus.engine.systems.controls.addContext('roomedit', {
-      'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
-      'cancel':           [ 'keyboard_esc', this.editObjectCancel ],
-      'delete':           [ 'keyboard_delete,keyboard_backspace', this.editObjectDelete ],
-      'mode':             [ 'keyboard_nomod_tab', this.editObjectToggleMode ],
-      'mode_reverse':     [ 'keyboard_shift_tab', this.editObjectToggleModeReverse ],
-      //'toggle_raycast':   [ 'keyboard_shift',   this.editObjectToggleRaycast ],
-      'manipulate_left':  [ 'keyboard_j',   this.editObjectManipulateLeft ],
-      'manipulate_right': [ 'keyboard_l',   this.editObjectManipulateRight ],
-      'manipulate_up':    [ 'keyboard_i',   this.editObjectManipulateUp ],
-      'manipulate_down':  [ 'keyboard_k',   this.editObjectManipulateDown ],
-      'manipulate_in':    [ 'keyboard_u',   this.editObjectManipulateIn ],
-      'manipulate_out':   [ 'keyboard_o',   this.editObjectManipulateOut ],
-      //'manipulate_mouse': [ 'mouse_delta',   this.editObjectManipulateMouse ],
-      'snap_ones':        [ 'keyboard_1',   this.editObjectSnapOnes ],
-      'snap_tenths':      [ 'keyboard_2',   this.editObjectSnapTenths ],
-      'snap_hundredths':  [ 'keyboard_3',   this.editObjectSnapHundredths ],
-      'snap_thousandths': [ 'keyboard_4',   this.editObjectSnapThousandths ],
+      //'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
+      //'cancel':           [ 'keyboard_esc', (ev) => this.editObjectCancel(ev) ],
+      'delete':           [ 'keyboard_delete,keyboard_backspace', (ev) => this.editObjectDelete(ev) ],
+      'mode':             [ 'keyboard_nomod_tab', (ev) => this.editObjectToggleMode(ev) ],
+      'mode_reverse':     [ 'keyboard_shift_tab', (ev) => this.editObjectToggleModeReverse(ev) ],
+      //'toggle_raycast':   [ 'keyboard_shift',  (ev) => this.editObjectToggleRaycast(ev) ],
+/*
+      'manipulate_left':  [ 'keyboard_j',  (ev) => this.editObjectManipulateLeft(ev) ],
+      'manipulate_right': [ 'keyboard_l',  (ev) => this.editObjectManipulateRight(ev) ],
+      'manipulate_up':    [ 'keyboard_i',  (ev) => this.editObjectManipulateUp(ev) ],
+      'manipulate_down':  [ 'keyboard_k',  (ev) => this.editObjectManipulateDown(ev) ],
+      'manipulate_in':    [ 'keyboard_u',  (ev) => this.editObjectManipulateIn(ev) ],
+      'manipulate_out':   [ 'keyboard_o',  (ev) => this.editObjectManipulateOut(ev) ],
+*/
+      'manipulate_toggle':[ 'keyboard_space',  (ev) => this.editObjectManipulateToggle(ev) ],
+      //'manipulate_mouse': [ 'mouse_delta',  (ev) => this.editObjectManipulateMouse ],
+      'snap_ones':        [ 'keyboard_1',  (ev) => this.editObjectSnapOnes(ev) ],
+      'snap_tenths':      [ 'keyboard_2',  (ev) => this.editObjectSnapTenths(ev) ],
+      'snap_hundredths':  [ 'keyboard_3',  (ev) => this.editObjectSnapHundredths(ev) ],
+      'snap_thousandths': [ 'keyboard_4',  (ev) => this.editObjectSnapThousandths(ev) ],
 
       'copy':     [ 'keyboard_ctrl_c', (ev) => { if (ev.value == 1) this.editObjectCopy(ev); } ],
       'cut':     [ 'keyboard_ctrl_x', (ev) => { if (ev.value == 1) this.editObjectCut(ev); } ],
     });
     janus.engine.systems.controls.addContext('roomedit_togglemove', {
-      'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
+      //'togglemove':       [ 'keyboard_shift', elation.bind(this, this.editObjectToggleMove)],
+      'manipulate_left':  [ 'keyboard_a',  (ev) => this.editObjectManipulateLeft(ev) ],
+      'manipulate_right': [ 'keyboard_d',  (ev) => this.editObjectManipulateRight(ev) ],
+      'manipulate_up':    [ 'keyboard_w',  (ev) => this.editObjectManipulateUp(ev) ],
+      'manipulate_down':  [ 'keyboard_s',  (ev) => this.editObjectManipulateDown(ev) ],
+      'manipulate_in':    [ 'keyboard_q',  (ev) => this.editObjectManipulateIn(ev) ],
+      'manipulate_out':   [ 'keyboard_e',  (ev) => this.editObjectManipulateOut(ev) ],
     });
     janus.engine.systems.controls.addContext('roomedit_paste', {
       'paste':     [ 'keyboard_ctrl_v', (ev) => { if (ev.value == 1) this.editObjectPaste(ev); } ],
@@ -101,6 +124,14 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     }
     elation.events.add(janus._target, 'room_change', (ev) => this.initRoomEvents(room));
     document.addEventListener('paste', (ev) => this.handlePaste(ev));
+    room.addEventListener('wheel', (ev) => this.editObjectMousewheel(ev));
+    window.addEventListener('keydown', (ev) => this.editObjectKeydown(ev));
+    window.addEventListener('keyup', (ev) => this.editObjectKeyup(ev));
+
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    this.scenetree = elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
+    elation.events.add(this.scenetree, 'select', (ev) => { console.log('hell yeah', ev.data); this.editObject(ev.data); });
+    this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
   }
   initRoomEvents(room) {
     if (!this.initialized.has(room)) {
@@ -136,10 +167,13 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
         }, 0);
       });
       elation.events.add(this.manipulator, 'change', (ev) => {
+        let constraint = (ev.target.axis ? ev.target.axis.toLowerCase() : false);
+        this.updateEditConstraints(constraint);
         janus.engine.systems.render.setdirty();
       });
       elation.events.add(this.manipulator, 'objectChange', (ev) => {
         this.editObjectShowInfo(this.roomedit.object);
+        this.roomedit.object.sync = true;
       });
     }
     if (this.manipulator.parent != room._target.objects['3d']) {
@@ -164,6 +198,14 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     if (this.objectinfo) {
       this.objectinfo.setMode(mode);
     }
+  }
+  nextMode() {
+    let mode = this.objectinfo.nextMode();
+    this.setMode(mode);
+  }
+  prevMode() {
+    let mode = this.objectinfo.prevMode();
+    this.setMode(mode);
   }
   setTranslationSnap(snap) {
     let manipulator = this.getManipulator();
@@ -252,13 +294,14 @@ console.log('set translation snap', ev.data, ev);
         if (this.roomedit.object) {
           this.editObjectRevert();
         } else if ((!room.localasset || !room.localasset.isEqual(proxyobj)) && !this.objectIsLocked(proxyobj)) {
-          this.roomedit.raycast = false;
+          this.roomedit.raycast = ev.ctrlKey;
           this.editObject(proxyobj);
         }
     } else if (ev.button == 0 && !this.roomedit.transforming) {
       if (this.roomedit.object) {
         if (!this.roomedit.raycast) {
           // raycasting means this is an initial object placement, we don't need to log a change
+          // FIXME - this is no longer the case, you can activate raycast mode by holding ctrl while clicking an object
           this.history.push({type: 'changed', object: this.roomedit.object, state: null});
         }
         this.editObjectStop();
@@ -274,6 +317,7 @@ console.log('set translation snap', ev.data, ev);
   }
   editObject(object, isnew) {
     this.roomedit.object = object;
+    this.roomedit.parentObject = null;
     this.roomedit.objectBoundingBox = false;
     this.roomedit.modeid = 0;
     this.roomedit.objectIsNew = isnew;
@@ -300,9 +344,8 @@ setTimeout(() => {
 }, 0);
 
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
-    room.addEventListener('wheel', (ev) => this.editObjectMousewheel(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
-    elation.events.add(document, 'pointerlockchange', (ev) => this.editObjectHandlePointerlock(ev));
+    //elation.events.add(document, 'pointerlockchange', (ev) => this.editObjectHandlePointerlock(ev));
 
     // Back up properties so we can revert if necessary
     this.roomedit.startattrs = {};
@@ -321,7 +364,6 @@ setTimeout(() => {
 
     // activate context
     janus.engine.systems.controls.activateContext('roomedit', this);
-    //this.engine.systems.controls.activateContext('roomedit_togglemove', this);
 
     this.editObjectShowWireframe();
     this.editObjectShowInfo(object);
@@ -333,19 +375,13 @@ setTimeout(() => {
 
   editObjectShowInfo(object) {
     //let content = elation.template.get('janus.ui.editor.object.info', {object: object, editmode: this.roomedit.modes[this.roomedit.modeid]});
-    if (!this.infowindow) {
-      this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { object: object });
-      this.infowindow = elation.elements.create('ui-window', {top: 50, right: 1, width: '16em', title: object.js_id, minimizable: 0, maximizable: 0, closable: 0, append: document.body, content: this.objectinfo});
-setTimeout(() => {
-      this.objectinfo.updateObject(object);
-}, 100);
-    } else { //if (this.infowindow.title != object.js_id) {
-      this.infowindow.settitle(object.js_id);
-      this.objectinfo.updateObject(object);
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    this.objectinfo.updateObject(object);
+
+    if (this.objectinfo.hidden) {
+      this.objectinfo.show();
     }
-    if (this.infowindow.hidden) {
-      this.infowindow.show();
-    }
+    inventorypanel.refresh();
   }
 
   editObjectShowWireframe() {
@@ -427,6 +463,46 @@ setTimeout(() => {
       this.roomedit.wireframe.parent.remove(this.roomedit.wireframe);
     }
   }
+  editObjectShowParentWireframe() {
+    if (this.roomedit.parentObject) {
+      let bbox = this.roomedit.parentObject.getBoundingBox(true);
+      console.log('parent bbox!', bbox);
+      if (!this.roomedit.parentwireframe) {
+        let root = this.roomedit.parentObject.createObject('object', { });
+        let hiddenfaces = root.createObject('object', {
+          id: 'cube',
+          wireframe: true,
+          col: V(0,0,1,.2),
+          depth_write: false,
+          depth_test: false,
+          pos: V()
+        });
+        root.createObject('object', {
+          id: 'cube',
+          wireframe: true,
+          col: 'blue',
+          opacity: 1,
+          depth_write: false,
+          depth_test: true
+        });
+        this.roomedit.parentwireframe = root;
+      }
+      let wireframe = this.roomedit.parentwireframe;
+      wireframe.scale.subVectors(bbox.max, bbox.min);
+      wireframe.pos.addVectors(bbox.max, bbox.min).divideScalar(2);
+      if (wireframe.parent != this.roomedit.parentObject) {
+        this.roomedit.parentObject.appendChild(wireframe);
+      }
+console.log('show the parent wireframe', wireframe.pos, wireframe.scale, wireframe, wireframe.parent);
+    } else {
+    }
+  }
+  editObjectRemoveParentWireframe() {
+    if (this.roomedit.parentwireframe && this.roomedit.parentwireframe.parent) {
+console.log('dont hide the parent wireframe', this.roomedit.parentwireframe);
+        //this.roomedit.parentwireframe.parent.removeChild(this.roomedit.parentwireframe);
+    }
+  }
   editObjectStop(destroy) {
     if (this.roomedit.object) {
       if (destroy) {
@@ -442,27 +518,39 @@ setTimeout(() => {
           this.roomedit.object.collision_trigger = true;
           this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
           this.roomedit.object.collision_pos = this.roomedit.objectBoundingBox.max.clone().add(this.roomedit.objectBoundingBox.min).multiplyScalar(.5);
+          //this.roomedit.object.collision_id = this.roomedit.object.id;
+        }
+
+        if (this.roomedit.parentObject) {
+          let parentpos = this.roomedit.parentObject.worldToLocal(this.roomedit.object.getWorldPosition());
+          this.roomedit.parentObject.add(this.roomedit.object);
+          this.roomedit.object.pos = parentpos;
         }
         this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
     this.roomedit.object = false;
+    this.roomedit.parentObject = null;
     this.editObjectRemoveWireframe();
+    this.editObjectRemoveParentWireframe();
     let manipulator = this.getManipulator();
     manipulator.detach();
     manipulator.enabled = false;
-    if (this.infowindow) {
-      this.infowindow.hide();
+    if (this.objectinfo) {
+      //this.objectinfo.hide();
     }
 
     elation.events.remove(room, 'mousemove', this.editObjectMousemove);
-    elation.events.remove(this, 'wheel', this.editObjectMousewheel);
+    //elation.events.remove(this, 'wheel', this.editObjectMousewheel);
     elation.events.remove(this, 'mousedown', this.editObjectClick);
     elation.events.remove(document, 'pointerlockchange', this.editObjectHandlePointerlock);
 
     // deactivate context
     janus.engine.systems.controls.deactivateContext('roomedit', this);
-    //this.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
+    if (!this.roomedit.moving) {
+      this.roomedit.moving = true;
+      janus.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
+    }
   }
   editObjectRevert() {
     var object = this.roomedit.object;
@@ -483,6 +571,11 @@ setTimeout(() => {
         manipulator.enabled = false;
         this.editObjectUpdate();
       }
+      if (ev.shiftKey) {
+        this.roomedit.parentObject = ev.data.thing;
+      } else {
+        this.roomedit.parentObject = null;
+      }
     }
   }
   editObjectUpdate() {
@@ -500,57 +593,117 @@ setTimeout(() => {
     var dir = V(cursorpos).sub(headpos);
     var distance = dir.length();
     dir.multiplyScalar(1/distance);
+    if (distance > 2500) distance = 10; // probably the skybox
     //distance = Math.min(distance, 20);
     var newpos = V(headpos).add(V(dir).multiplyScalar(distance));
 
-    obj.pos = newpos;
+    obj.pos = newpos;//obj.parent.worldToLocal(newpos);
     obj.sync = true;
+
+    if (this.roomedit.parentObject) {
+      this.editObjectShowParentWireframe();
+    } else if (this.roomedit.parentwireframe) {
+      this.editObjectRemoveParentWireframe();
+    }
+
   }
   editObjectMousewheel(ev) {
-      //this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
-      let obj = this.roomedit.object,
-          mode = this.roomedit.modes[this.roomedit.modeid];
-
-      if (mode == 'pos') {
+    //this.roomedit.distancescale *= (ev.deltaY > 0 ? .9 : 1.1);
+    let obj = this.roomedit.object,
+        mode = this.editObjectGetMode(),
+        editor = this.objectinfo.getModeEditor();
+    if (obj) {
+      let attrtype = editor._elation.classdef.value.type,
+          defs = obj._proxyobject._proxydefs;
+      let attrname = defs[editor.propertyname][1];
+      if (attrtype == 'vector3') {
         let move = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
         if (ev.altKey) {
-          obj.pos.y += move;
+          obj[attrname].x += move;
+        }
+        if (ev.ctrlKey) {
+          obj[attrname].y += move;
         }
         if (ev.shiftKey) {
-          obj.pos.z += move;
+          obj[attrname].z += move;
         }
-        if (!ev.altKey && !ev.shiftKey) {
-          obj.pos.x += move;
+        if (!ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
+          // Default to translating on the Y axis (FIXME - is this really the best default?)
+          obj[attrname].y += move;
         }
-        this.editObjectSnapVector(obj.pos._target, this.roomedit.snap);
-      } else if (mode == 'rotation') {
+        this.editObjectSnapVector(obj[attrname], this.roomedit.snap);
+      } else if (attrtype == 'euler') {
         let rot = new THREE.Euler();
         let quat = new THREE.Quaternion();
         let move = (ev.deltaY > 0 ? 1 : -1) * this.roomedit.rotationsnap * THREE.Math.DEG2RAD;
-        if (ev.altKey) {
-          rot.z += move;
-        } else if (ev.shiftKey) {
+        if (ev.ctrlKey) {
           rot.x += move;
-        } else {
+        }
+        if (ev.altKey) {
+          rot.y += move;
+        }
+        if (ev.shiftKey) {
+          rot.z += move;
+        }
+        if (!ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
+          // Default to rotating around Y axis
           rot.y += move;
         }
         quat.setFromEuler(rot);
-        obj.orientation.multiply(quat);
+        obj[attrname].multiply(quat);
         //this.editObjectSnapVector(obj.rotation, this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
-      } else if (mode == 'scale') {
-        let scale = this.roomedit.snap * (ev.deltaY < 0 ? 1 : -1);
-        if (ev.altKey && ev.shiftKey) {
-          obj.scale.x += scale;
-        } else if (ev.altKey) {
-          obj.scale.y += scale;
-        } else if (ev.shiftKey) {
-          obj.scale.z += scale;
-        } else {
-          obj.scale.x += scale;
-          obj.scale.y += scale;
-          obj.scale.z += scale;
+      } else if (attrtype == 'color') {
+        let move = 4/255 * (ev.deltaY < 0 ? 1 : -1);
+
+        let col = obj[mode].clone();
+console.log('opacity before', obj.opacity, obj.col, attrname, mode, col);
+        if (ev.altKey) {
+          col.r += move;
         }
+        if (ev.ctrlKey) {
+          col.g += move;
+        }
+        if (ev.shiftKey) {
+          col.b += move;
+        }
+        if (!ev.ctrlKey && !ev.altKey && !ev.shiftKey) {
+          // Default to translating on the Y axis (FIXME - is this really the best default?)
+          col.r += move;
+          col.g += move;
+          col.b += move;
+        }
+        col.r = THREE.Math.clamp(col.r, 0, 1);
+        col.g = THREE.Math.clamp(col.g, 0, 1);
+        col.b = THREE.Math.clamp(col.b, 0, 1);
+        console.log('opacity after', obj.opacity);
+        obj[mode] = col;
+obj.opacity = obj.opacity;
+        //this.editObjectSnapVector(obj[attrname], this.roomedit.snap);
+      } else if (attrtype == 'float') {
+        let attrdef = obj._thingdef.properties[attrname];
+        let amount = (ev.deltaY < 0 ? 1 : -1);
+        let min = -Infinity,
+            max = Infinity;
+        let divisor = 10;
+
+        if (ev.shiftKey) {
+          divisor *= 2;
+        }
+        if (ev.ctrlKey) {
+          divisor *= 10;
+        }
+
+        if ('min' in attrdef && 'max' in attrdef) {
+          min = attrdef.min;
+          max = attrdef.max;
+          amount *= (max - min) / divisor; 
+        } else {
+          amount /= divisor;
+        }
+        obj[attrname] = THREE.Math.clamp(obj[attrname] + amount, min, max);
+
       }
+      obj.sync = true;
       obj.refresh();
       this.editObjectShowInfo(obj);
       ev.preventDefault();
@@ -558,44 +711,68 @@ setTimeout(() => {
 //obj.updateDirvecsFromOrientation();
       //this.editObjectMousemove(ev);
     }
+  }
+  editObjectKeydown(ev) {
+    this.updateEditConstraints(ev);
+  }
+  editObjectKeyup(ev) {
+    this.updateEditConstraints(ev);
+  }
   editObjectClick(ev) {
     if (this.roomedit.object) {
       if (ev.button == 0) {
-        this.editObjectStop();
+        //this.editObjectStop();
       } else if (ev.button == 2) {
-        this.editObjectRevert();
+        if (ev.shiftKey) {
+          console.log('select additional object', ev.data.thing);
+        } else {
+          //this.editObjectRevert();
+        }
       }
     }
   }
   editObjectGetMode() {
-    return this.roomedit.modes[this.roomedit.modeid];
+    //return this.roomedit.modes[this.roomedit.modeid];
+    return this.objectinfo.mode;
+  }
+  editObjectGetAttributeType(mode) {
+      let obj = this.roomedit.object;
+      let proxydef = obj._proxydefs[mode];
+      let attrdef = obj._thingdef.properties[proxydef[1]];
+    return attrdef.type;
   }
   editObjectToggleMode(ev) {
     var roomedit = ev.target.roomedit;
     if (!roomedit.object) return;
     if (ev.value) {
+/*
       var modes = roomedit.modes,
           modeid = (roomedit.modeid + 1) % modes.length;
 
       roomedit.modeid = modeid;
       ev.target.editObjectShowInfo(roomedit.object);
 
-console.log('toggle up');
       ev.target.setMode(modes[modeid]);
+*/
+      ev.target.nextMode();
+      ev.target.editObjectShowInfo(roomedit.object);
     }
   }
   editObjectToggleModeReverse(ev) {
     var roomedit = ev.target.roomedit;
     if (!roomedit.object) return;
     if (ev.value) {
+/*
       var modes = roomedit.modes,
           modeid = (modes.length + roomedit.modeid - 1) % modes.length;
 
       roomedit.modeid = modeid;
       ev.target.editObjectShowInfo(roomedit.object);
 
-console.log('toggle down');
       ev.target.setMode(modes[modeid]);
+*/
+      ev.target.prevMode();
+      ev.target.editObjectShowInfo(roomedit.object);
     }
   }
   editObjectManipulate(vec) {
@@ -695,7 +872,6 @@ console.log('change color', obj.col, vec);
 
   // FIXME - the following functions aren't bound to "this", because the control system isn't properly managing context
   editObjectManipulateLeft(ev) {
-console.log('manip left', ev.value, ev);
     if (ev.value) {
       //ev.target.editObjectManipulate(V(-1, 0, 0));
       ev.target.roomedit.movespeed.x = -1;
@@ -761,6 +937,34 @@ console.log('manip left', ev.value, ev);
     }
     ev.target.editObjectManipulateTimer();
   }
+  editObjectManipulateToggle(ev) {
+    if (ev.value) {
+      if (this.roomedit.object) {
+        let mode = this.editObjectGetMode();
+        let attrtype = this.editObjectGetAttributeType(mode);
+        switch (attrtype) {
+        case 'vector3':
+        case 'euler':
+          if (this.roomedit.moving) {
+            this.roomedit.moving = false;
+            janus.engine.systems.controls.activateContext('roomedit_togglemove', this);
+          } else {
+            this.roomedit.moving = true;
+            janus.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
+          }
+          break;
+        case 'bool':
+        case 'boolean':
+          this.roomedit.object[mode] = !this.roomedit.object[mode];
+          this.roomedit.object.sync = true;
+          break;
+        case 'string':
+          let editor = this.objectinfo.getModeEditor();
+          editor.focus();
+        }
+      }
+    }
+  }
   editObjectManipulateTimer() {
     if (this.roomedit.movespeed.x || this.roomedit.movespeed.y || this.roomedit.movespeed.z) {
       this.editObjectManipulate(V(this.roomedit.movespeed));
@@ -812,9 +1016,9 @@ console.log('manip left', ev.value, ev);
     var roomedit = ev.target.roomedit;
     if (ev.value == 1) {
       roomedit.moving = true;
-      this.engine.systems.conyytrols.activateContext('roomedit', this);
+      this.engine.systems.controls.activateContext('roomedit', this);
     } else if (ev.value == 0) {
-      roomedit.moving = true;
+      roomedit.moving = false;
       this.engine.systems.controls.deactivateContext('roomedit', this);
     }
   }
@@ -1075,6 +1279,39 @@ console.log('manip left', ev.value, ev);
   handlePaste(ev) {
 console.log('pastey!', ev.clipboardData.items[0], ev);
   }
+  updateEditConstraints(constraint) {
+    if (constraint instanceof Event) {
+      let ev = constraint;
+      constraint = '';
+
+      let type = 'vector3';
+
+      if (type == 'vector3') {
+        if (ev.altKey) {
+          constraint += 'x';
+        }
+        if (ev.ctrlKey) {
+          constraint += 'y';
+        }
+        if (ev.shiftKey) {
+          constraint += 'z';
+        }
+        if (!ev.shiftKey && !ev.ctrlKey && !ev.altKey) {
+          constraint = 'y';
+        }
+      }
+    }
+    
+    if (this.objectinfo) {
+      let editor = this.objectinfo.getModeEditor();
+      if (editor) {
+        editor.constraint = constraint || 'none';
+      }
+    }
+    if (this.manipulator) {
+      this.manipulator.axis = (constraint ? constraint.toUpperCase() : null);
+    }
+  }
 });
 
 elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elements.base {
@@ -1085,14 +1322,25 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
       mode: { type: 'string', default: 'pos' }
     });
     this.propeditors = {
+/*
       pos: elation.elements.create('janus.ui.editor.property.vector3', {label: 'Position', propertyname: 'pos'}),
       rotation: elation.elements.create('janus.ui.editor.property.euler', {label: 'Rotation', propertyname: 'rotation'}),
       scale: elation.elements.create('janus.ui.editor.property.vector3', {label: 'Scale', propertyname: 'scale'}),
       col: elation.elements.create('janus.ui.editor.property.color', {label: 'Color', propertyname: 'col'}),
+      wireframe: elation.elements.create('janus.ui.editor.property.boolean', {label: 'Wireframe', propertyname: 'wireframe'}),
+      lighting: elation.elements.create('janus.ui.editor.property.boolean', {label: 'Lighting', propertyname: 'lighting'}),
+      fog: elation.elements.create('janus.ui.editor.property.boolean', {label: 'Fog', propertyname: 'fog'}),
+      shadow_cast: elation.elements.create('janus.ui.editor.property.boolean', {label: 'Cast Shadows', propertyname: 'shadow_cast'}),
+      shadow_receive: elation.elements.create('janus.ui.editor.property.boolean', {label: 'Receive Shadows', propertyname: 'shadow_receive'}),
+*/
     };
+    this.header = elation.elements.create('h3', {
+      innerHTML: 'Properties',
+      append: this
+    });
     this.list = elation.elements.create('ui-list', {
       class: 'janus_editor',
-      items: Object.values(this.propeditors),
+      //items: Object.values(this.propeditors),
       append: this,
       //itemcomponent: 'janus.ui.editor.property',
       //itemtemplate: 'janus.ui.editor.property',
@@ -1103,10 +1351,38 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
     if (this.list) {
       this.list.removeclass('mode_' + this.mode);
     }
+    let oldmode = this.mode;
+    if (this.propeditors && this.propeditors[oldmode]) {
+      this.propeditors[oldmode].removeclass('selected');
+    }
     this.mode = mode;
     if (this.list) {
       this.list.addclass('mode_' + mode);
     }
+    if (this.propeditors[mode]) {
+      this.propeditors[mode].addclass('selected');
+      if (this.propeditors[mode].scrollIntoViewIfNeeded) {
+        this.propeditors[mode].scrollIntoViewIfNeeded();
+      }
+    }
+  }
+  nextMode() {
+    let modes = Object.keys(this.propeditors);
+    let idx = modes.indexOf(this.mode);
+    let newmode = modes[(idx + 1) % modes.length];
+    this.setMode(newmode);
+    return newmode;
+  }
+  prevMode() {
+    let modes = Object.keys(this.propeditors);
+    let idx = modes.indexOf(this.mode);
+    let newmode = modes[(modes.length + idx - 1) % modes.length]
+    this.setMode(newmode);
+    return newmode;
+  }
+  getModeEditor() {
+    if (!this.propeditors) return null;
+    return this.propeditors[this.mode];
   }
   updateObject(object) {
     if (this.object !== object) {
@@ -1117,18 +1393,85 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
       //console.log('new object set', object, this.object);
 
       this.object.addEventListener('objectchange', this.handleThingChange);
+      this.updatePropertyList();
     }
     this.updateProperties();
   }
+  updatePropertyList() {
+    this.propeditors = {};
+    let obj = this.object,
+        attrs = {},
+        defs = obj._proxyobject._proxydefs;
+    for (let k in defs) {
+      if (defs[k][0] == 'property') {
+        let attr = obj._thingdef.properties[defs[k][1]];
+        if (attr) {
+          let type = attr.type;
+          if (type == 'bool') type = 'boolean';
+          if (elation.elements.janus.ui.editor.property[type]) {
+            let editor = elation.elements.create('janus.ui.editor.property.' + type, {
+              label: k,
+              propertyname: k,
+              //value: this.object[k],
+              title: attr.comment || '',
+              selectable: true
+            });
+            //editor.updateValue(this.object[k]);
+            this.propeditors[k] = editor;
+            elation.events.add(editor, 'editorchange', (ev) => this.handleEditorChange(ev, k, attr));
+            elation.events.add(editor, 'select', (ev) => this.handleEditorSelect(ev, k, attr));
+          } else {
+            console.log('UNKNOWN PROPERTY TYPE', k, attr);
+          }
+        }
+      }
+    }
+    this.list.clear();
+    this.list.innerHTML = ''; // FIXME - shouldn't be needed
+    this.list.setItems(Object.values(this.propeditors));
+  }
   updateProperties() {
     for (var k in this.propeditors) {
-      this.propeditors[k].updateValue(this.object[k]);
+      if (!this.propeditors[k].editing) {
+        this.propeditors[k].updateValue(this.object[k]);
+      }
     }
   }
   handleThingChange(ev) {
     let obj = ev.target;
-    //console.log('thing changed!', ev, obj, this);
+    //console.log('thing changed!', ev, obj.changes, obj, this);
     this.updateProperties();
+  }
+  handleEditorChange(ev, attrname, attrdef) {
+    //console.log('the editor changed', ev.target.value, ev, attrname, attrdef);
+    this.object[attrname] = ev.target.value;
+    this.object.refresh();
+  }
+  handleEditorSelect(ev, attrname, attrdef) {
+    //console.log('selected it', attrname);
+    this.setMode(attrname);
+  }
+});
+elation.elements.define('janus.ui.editor.scenetree', class extends elation.elements.base {
+  create() {
+    this.tree = elation.elements.create('ui.treeview', {
+      append: this,
+      draggable: true,
+      selectable: true
+    });
+    this.tree.attrs = {
+      name: 'id',
+      label: 'id',
+      children: 'children'
+    };
+    elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
+setTimeout(() => {
+    this.tree.setItems({room: room});
+}, 0);
+  }
+  handleTreeviewSelect(ev) {
+console.log('treeview select', ev);
+    elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
   }
 });
 
