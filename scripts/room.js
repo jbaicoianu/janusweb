@@ -761,7 +761,7 @@ elation.require([
         this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || this.tonemapping_whitepoint;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
-        this.properties.locked = room.locked;
+        this.properties.locked = room.locked || false;
         this.gravity = elation.utils.any(room.gravity, 0);
         this.flying = elation.utils.any(room.flying, true);
         this.teleport = elation.utils.any(room.teleport, true);
