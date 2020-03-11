@@ -43,7 +43,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         roughness_id: { type: 'string', set: this.updateMaterial, comment: 'Roughness map texture ID' },
         metalness_id: { type: 'string', set: this.updateMaterial, comment: 'Metalness map texture ID' },
         emissive: { type: 'color', default: [0,0,0], set: this.updateMaterial, comment: 'Material emissive color' },
-        emissiveIntensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
+        emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
         roughness: { type: 'float', default: .5, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: 0, set: this.updateMaterial, comment: 'Material metalness value' },
         onloadstart: { type: 'callback' },
@@ -281,6 +281,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           textureNormal = false,
           textureBump = false,
           textureDisplacement = false,
+          textureEmissive = false,
+          textureRoughness = false,
+          textureMetalness = false,
           color = false,
           blend_src = false,
           blend_dest = false,
@@ -294,6 +297,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           bump_image_id = this.bumpmap_id,
           displacement_image_id = this.displacementmap_id,
           lightmap_image_id = this.lmap_id,
+          emissive_image_id = this.emissive_id,
+          roughness_image_id = this.roughness_id,
+          metalness_image_id = this.metalness_id,
           image_linear = true;
       if (this.janusid) {
         if (!modelasset || modelasset.name != this.janusid) {
@@ -406,6 +412,51 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
           if (textureLightmap) {
             this.assignTextureParameters(textureLightmap, modelasset, lightmaptextureasset);
+          }
+        }
+      }
+      if (emissive_image_id) {
+        emissivetextureasset = this.getAsset('image', emissive_image_id);
+        if (emissivetextureasset) {
+          textureEmissive = emissivetextureasset.getInstance();
+          if (!this.assetloadhandlers[emissive_image_id]) {
+            this.assetloadhandlers[emissive_image_id] = true;
+            elation.events.add(emissivetextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
+            elation.events.add(textureEmissive, 'update', elation.bind(this, this.refresh));
+          }
+
+          if (textureEmissive) {
+            this.assignTextureParameters(textureEmissive, modelasset, emissivetextureasset);
+          }
+        }
+      }
+      if (roughness_image_id) {
+        roughnesstextureasset = this.getAsset('image', roughness_image_id);
+        if (roughnesstextureasset) {
+          textureRoughness = roughnesstextureasset.getInstance();
+          if (!this.assetloadhandlers[roughness_image_id]) {
+            this.assetloadhandlers[roughness_image_id] = true;
+            elation.events.add(roughnesstextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
+            elation.events.add(textureRoughness, 'update', elation.bind(this, this.refresh));
+          }
+
+          if (textureRoughness) {
+            this.assignTextureParameters(textureRoughness, modelasset, roughnesstextureasset);
+          }
+        }
+      }
+      if (metalness_image_id) {
+        metalnesstextureasset = this.getAsset('image', metalness_image_id);
+        if (metalnesstextureasset) {
+          textureMetalness = metalnesstextureasset.getInstance();
+          if (!this.assetloadhandlers[metalness_image_id]) {
+            this.assetloadhandlers[metalness_image_id] = true;
+            elation.events.add(metalnesstextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
+            elation.events.add(textureMetalness, 'update', elation.bind(this, this.refresh));
+          }
+
+          if (textureMetalness) {
+            this.assignTextureParameters(textureMetalness, modelasset, metalnesstextureasset);
           }
         }
       }
@@ -630,6 +681,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.displacementMap = textureDisplacement;
                 m.displacementScale = this.displacementmap_scale;
               }
+              if (textureEmissive) {
+                m.emissiveMap = textureEmissive;
+                m.emissive = new THREE.Color(0xffffff);
+              } else {
+                m.emissive = this.emissive;
+              }
+              m.emissiveIntensity = this.emissive_intensity;
+              if (textureRoughness) {
+                m.roughnessMap = textureRoughness;
+              } else {
+                m.roughness = this.roughness;
+              }
+              if (textureMetalness) {
+                m.metalnessMap = textureMetalness;
+              } else {
+                m.metalness = this.metalness;
+              }
 
               if (this.isUsingPBR()) {
                 m.envMap = this.getEnvmap();
@@ -739,6 +807,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
           if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
           if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
+          if (oldmat.roughnessMap !== undefined) m.roughnessMap = oldmat.roughnessMap;
           if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
           if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
 
@@ -999,6 +1068,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           lmap_id:  [ 'property', 'lmap_id'],
           envmap_id:  [ 'property', 'envmap_id'],
           websurface_id:  [ 'property', 'websurface_id'],
+          normalmap_id:  [ 'property', 'normalmap_id'],
+          displacementmap_id:  [ 'property', 'displacementmap_id'],
+          displacementmap_scale:  [ 'property', 'displacementmap_scale'],
+          emissive_id:  [ 'property', 'emissive_id'],
+          roughness_id:  [ 'property', 'roughness_id'],
+          metalness_id:  [ 'property', 'metalness_id'],
 
           lighting: [ 'property', 'lighting' ],
           shadow: [ 'property', 'shadow' ],
@@ -1007,10 +1082,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           cull_face: [ 'property', 'cull_face' ],
           blend_src: [ 'property', 'blend_src' ],
           blend_dest: [ 'property', 'blend_dest' ],
+          depth_write: [ 'property', 'depth_write' ],
+          depth_test: [ 'property', 'depth_test' ],
 
           wireframe: [ 'property', 'wireframe'],
           fog: [ 'property', 'fog'],
           lights: [ 'property', 'lights'],
+          emissive: [ 'property', 'emissive'],
+          emissive_intensity: [ 'property', 'emissive_intensity'],
+          roughness: [ 'property', 'roughness'],
+          metalness: [ 'property', 'metalness'],
+
+          texture_offset: [ 'property', 'texture_offset'],
+          texture_repeat: [ 'property', 'texture_repeat'],
+          texture_rotation: [ 'property', 'texture_rotation'],
+
 
           // video properties/functions
           current_time: [ 'accessor', 'getCurrentTime'],
