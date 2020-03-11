@@ -158,7 +158,7 @@ elation.require([
     this.createLights = function() {
       this.roomlights = {
         ambient: this.spawn('light_ambient', this.id + '_ambient', {
-          color: this.properties.ambient._target
+          color: this.properties.ambient
         }),
         directional: this.spawn('light_directional', this.id + '_sun', {
           position: [-20,50,25],
