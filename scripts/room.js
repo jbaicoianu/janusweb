@@ -132,6 +132,7 @@ elation.require([
       } else if (this.source) {
         this.loadFromSource(this.source);
       }
+      elation.events.add(this, 'thing_remove', elation.bind(this, this.onThingRemove));
     }
     this.createChildren = function() {
       this.createLights();
@@ -1512,7 +1513,7 @@ elation.require([
       }
     }
     this.onThingRemove = function(ev) {
-      var thing = ev.target;
+      var thing = ev.data.thing;
       if (!this.applyingEdits && thing.js_id && this.jsobjects[thing.js_id]) {
         var proxy = this.jsobjects[thing.js_id];
         if (proxy.sync) {
@@ -1520,6 +1521,10 @@ elation.require([
             this.deletions.push(proxy);
           }
         }
+      }
+      //this.removeObject(thing.getProxyObject());
+      if (this.jsobjects[thing.js_id]) {
+        delete this.jsobjects[thing.js_id];
       }
     }
     this.onRoomEdit = function(ev) {
