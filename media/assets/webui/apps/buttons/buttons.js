@@ -100,6 +100,38 @@ elation.elements.define('janus-button-webvr', class extends elation.elements.ui.
     }
   }
 });
+elation.elements.define('janus-button-webar', class extends elation.elements.ui.togglebutton {
+  create() {
+    this.xr = false;
+    this.activelabel = 'Exit AR';
+    this.inactivelabel = 'Enter AR';
+    this.enabled = false;
+
+    this.label = this.activelabel;
+    super.create();
+    this.view = janus.engine.client.view;
+
+    if ('xr' in navigator) {
+      this.label = this.inactivelabel;
+      this.xr = true;
+      navigator.xr.isSessionSupported('immersive-ar').then(supported => {
+        this.enabled = supported;
+      });
+    }
+  }
+  onactivate(ev) {
+    this.label = this.activelabel;
+    if (this.xr) {
+      janus.engine.client.startXR('immersive-ar');
+    }
+  }
+  ondeactivate(ev) {
+    this.label = this.inactivelabel;
+    if (this.xr) {
+      this.view.stopXR();
+    }
+  }
+});
 elation.elements.define('janus-buttons-chromecast', class extends elation.elements.ui.togglebutton {
 });
 elation.elements.define('janus-buttons-equirectangular', class extends elation.elements.ui.togglebutton {
