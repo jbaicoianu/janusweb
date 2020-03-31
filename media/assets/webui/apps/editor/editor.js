@@ -15,11 +15,12 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     if (inventorypanel) {
       let editorpanel = inventorypanel.querySelector('janus-ui-editor-panel');
       if (!editorpanel) {
-        elation.elements.create('janus-ui-editor-panel', { append: inventorypanel });
+        editorpanel = elation.elements.create('janus-ui-editor-panel', { append: inventorypanel });
       }
       let inventory = inventorypanel.querySelector('janus-ui-inventory');
       if (!inventory) {
-        elation.elements.create('janus-ui-inventory', { append: inventorypanel });
+        inventory = elation.elements.create('janus-ui-inventory', { append: inventorypanel });
+        elation.events.add(inventory, 'assetselect', (ev) => editorpanel.handleInventorySelect(ev));
       }
     }
     let editpanel = document.querySelector('ui-panel[name="topright"]');
@@ -1311,6 +1312,9 @@ console.log('pastey!', ev.clipboardData.items[0], ev);
     if (this.manipulator) {
       this.manipulator.axis = (constraint ? constraint.toUpperCase() : null);
     }
+  }
+  handleInventorySelect(ev) {
+    // TODO - handle select
   }
 });
 
