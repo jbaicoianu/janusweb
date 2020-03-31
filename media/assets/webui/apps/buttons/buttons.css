@@ -1,4 +1,5 @@
 janus-button-webvr,
+janus-button-webar,
 janus-ui-editor-button {
   border: none;
   border-radius: .5em;
@@ -15,14 +16,17 @@ janus-ui-editor-button {
   display: inline-block;
 }
 janus-button-webvr[hover],
+janus-button-webar[hover],
 janus-ui-editor-button[hover] {
   background-image: linear-gradient(#323232, #404142 40%, #393b3d);
 }
 janus-button-webvr:active,
+janus-button-webar:active,
 janus-ui-editor-button:active {
   background-image: linear-gradient(#020202, #101112 40%, #191b1d);
 }
 janus-button-webvr[disabled],
+janus-button-webar[disabled],
 janus-ui-editor-button[disabled] {
   color: #999;
   background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
@@ -33,6 +37,7 @@ janus-ui-buttons>ui-buttonbar>ui-button,
 janus-ui-buttons>ui-buttonbar>ui-button:first-of-type,
 janus-ui-buttons>ui-buttonbar>ui-button:last-of-type,
 janus-ui-buttons>ui-buttonbar>janus-button-webvr,
+janus-ui-buttons>ui-buttonbar>janus-button-webar,
 janus-ui-buttons>ui-buttonbar>janus-ui-settings-button,
 janus-ui-buttons>ui-buttonbar>janus-ui-editor-button {
     width: 60px;
