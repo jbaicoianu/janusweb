@@ -1,7 +1,7 @@
 ui-grid.models {
-  height: 40vh;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  grid-template-rows: repeat(auto-fill, minmax(80px, 1fr));
+  height: 20vh;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-rows: repeat(auto-fill, minmax(60px, 1fr));
 }
 ui-grid.models>* {
   height: auto;
@@ -83,4 +83,10 @@ ui-input {
 */
 janus-ui-inventory>ui-tabs>ui-tab {
   height: 40vh;
+  padding: 0;
+}
+janus-ui-inventory ui-flexpanel {
+  padding: 0;
+  max-height: 20vh;
+  width: 100%;
 }

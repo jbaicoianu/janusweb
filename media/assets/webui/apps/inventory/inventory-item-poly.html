@@ -1,4 +1,4 @@
-      <a href="{model.root.url}" draggable="true" onclick="room.loadObjectFromURIList(this.href); janus.engine.systems.controls.requestPointerLock(); return false">
+      <a href="{model.root.url}" draggable="true" onclick="return false" xonclick="room.loadObjectFromURIList(this.href); janus.engine.systems.controls.requestPointerLock(); return false">
         <img src="{value.thumbnail.url}" />
         <h2>{value.displayName}</h2>
         <h3>By {value.authorName}</h3>
