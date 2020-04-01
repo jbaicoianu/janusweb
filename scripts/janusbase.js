@@ -734,8 +734,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             this.dispatchEvent({type: 'trigger', data: { collision: ev.data, other: proxy }});
             ev.preventDefault();
             ev.stopPropagation();
-          } else {
+          } else if (this.collidable) {
             this.dispatchEvent({type: 'collision', data: { collision: ev.data, other: proxy }});
+          } else {
+            ev.preventDefault();
           }
         } else {
           console.error('Collided with unknown object', this, other);
