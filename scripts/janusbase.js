@@ -1,6 +1,7 @@
 elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], function() {
   elation.component.add('engine.things.janusbase', function() {
     this.defaultcolor = new THREE.Color(0xffffff);
+    this.colorIsDefault = true;
 
     this.postinit = function() {
       elation.engine.things.janusbase.extendclass.postinit.call(this);
@@ -66,7 +67,6 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
 
       this.eventlistenerproxies = {};
       //if (this.col) this.color = this.col;
-      this.colorIsDefault = true;
 
       // FIXME - saving references to bound functions, for future use.  This should happen deeper in the component framework
       this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
@@ -100,6 +100,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.colorIsDefault = false;
           delete this._proxies['color'];
         }
+      } else {
+        this.colorIsDefault = false;
+        delete this._proxies['color'];
       }
     }
     this.updateOpacity = function() {
