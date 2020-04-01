@@ -773,6 +773,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           }
         });
       }
+      this.refresh();
     }
     this.setAlphaTest = function(alphatest) {
       if (this.objects['3d'] && this.currentalphatest != alphatest) {
