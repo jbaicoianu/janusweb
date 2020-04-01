@@ -113,7 +113,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
     this.updateCollider = function() {
       this.removeCollider();
-      if (!this.collidable || !this.objects['dynamics']) return;
+      if (!(this.collidable || this.pickable) || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
       var collision_scale = this.scale.clone();
       if (this.collision_scale) {
@@ -129,7 +129,6 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.objects.dynamics.addForce('static', new THREE.Vector3(0, this.room.gravity, 0));
         }
 
-        this.collidable = true;
         if (collision_id == 'sphere') {
           this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2, offset: this.collision_pos});
         } else if (collision_id == 'cube') {
@@ -157,13 +156,14 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                 collidercolor = 0x990000;
               }
               if (this.collision_trigger) collidercolor = 0x990099;
+              let remove = [];
               collider.traverse(n => {
                 // Ignore collider if it's too high-poly
                 if (n instanceof THREE.Mesh && !((n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.position.count <= 16384) ||
                       (n.geometry instanceof THREE.Geometry && n.geometry.vertices.length <= 16384))) {
                   console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
                   elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
-                  n.parent.remove(n);
+                  remove.push(n);
                 } else {
                   if (n.material) {
                     n.material = new THREE.MeshPhongMaterial({
@@ -179,6 +179,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                   n.userData.thing = this;
                 }
               });
+              if (remove.length > 0) {
+                remove.forEach(n => n.parent.remove(n));
+              }
               this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
             });
             var collider = colliderasset.getInstance();
@@ -342,6 +345,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           renderorder:  ['property', 'renderorder'],
 
           pickable:  [ 'property', 'pickable'],
+          collidable:  [ 'property', 'collidable'],
           collision_id:  [ 'property', 'collision_id'],
           collision_pos: [ 'property', 'collision_pos' ],
           collision_scale:  [ 'property', 'collision_scale'],
