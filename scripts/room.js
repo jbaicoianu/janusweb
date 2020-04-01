@@ -744,7 +744,7 @@ elation.require([
         if (typeof room.toon != 'undefined') this.properties.toon = room.toon;
         if (typeof room.ambient != 'undefined') this.ambient = room.ambient;
         if (typeof room.defaultlights != 'undefined') this.defaultlights = room.defaultlights;
-        if (typeof room.selfavatar != 'undefined') this.properties.selfavatar = room.selfavatar;
+        if (typeof room.selfavatar != 'undefined') this.properties.selfavatar = (room.selfavatar == "true");
 
         this.properties.near_dist = parseFloat(room.near_dist) || 0.01;
         this.properties.far_dist = parseFloat(room.far_dist) || 1000;
