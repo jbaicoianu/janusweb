@@ -545,13 +545,17 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           dir = new THREE.Vector3(),
           up = new THREE.Vector3();
       return function(ev) {
-        if (this.billboard) {
-          player.camera.localToWorld(playerpos.set(0,0,0));
-          this.localToWorld(objpos.set(0,0,0));
+        let parent = this.parent;
+        let billboard = this.properties.billboard;
+        if (billboard && parent) {
+          //player.camera.localToWorld(playerpos.set(0,0,0));
+          //this.localToWorld(objpos.set(0,0,0));
+          /*
+          player.camera.getWorldPosition(playerpos);
+          this.getWorldPosition(objpos);
           dir.subVectors(playerpos, objpos);
 
-          let billboard = this.billboard;
-
+          let billboard = this.properties.billboard;
           if (billboard == 'x') {
             up.set(1,0,0);
             dir.x = 0;
@@ -565,8 +569,17 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             player.camera.localToWorld(up.set(0,1,0)).sub(playerpos).normalize();
           }
           dir.normalize();
-          this.zdir = dir;
-          this.ydir = up;
+          this.zdir.copy(this.parent.worldToLocal(dir).sub(this.parent.worldToLocal(objpos.set(0,0,0))).normalize());
+          this.ydir.copy(up);
+          */
+          // TODO - Simple trig makes this much faster, but to get the same functionality as before we'll need to implement each dimension
+          //        For now, we only support billboarding with the Y axis locked (eg, doom sprites)
+          parent.worldToLocal(player.camera.getWorldPosition(playerpos));
+          dir.copy(playerpos).normalize();
+          if (billboard == 'y') {
+            this.rotation.set(0, Math.atan2(dir.x, dir.z) * THREE.Math.RAD2DEG, 0);
+            this.frameupdates['rotation'] = true;
+          }
         }
 
         if (this.hasScriptChangedDirvecs()) {
