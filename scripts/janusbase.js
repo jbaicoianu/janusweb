@@ -700,6 +700,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           realobj.stop();
           this.remove(realobj);
           this.updateScriptChildren();
+          if (room.objects[obj.js_id]) {
+            delete room.objects[obj.js_id];
+          }
         }
       }
     }
