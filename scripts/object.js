@@ -681,13 +681,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.displacementMap = textureDisplacement;
                 m.displacementScale = this.displacementmap_scale;
               }
-              if (textureEmissive) {
-                m.emissiveMap = textureEmissive;
-                m.emissive = new THREE.Color(0xffffff);
-              } else {
-                m.emissive = this.emissive;
+              if (this.lighting) {
+                if (textureEmissive) {
+                  m.emissiveMap = textureEmissive;
+                  m.emissive = new THREE.Color(0xffffff);
+                } else {
+                  m.emissive = this.emissive;
+                }
+                m.emissiveIntensity = this.emissive_intensity;
               }
-              m.emissiveIntensity = this.emissive_intensity;
               if (textureRoughness) {
                 m.roughnessMap = textureRoughness;
               } else {
