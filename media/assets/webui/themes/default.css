@@ -971,32 +971,32 @@ ui-collapsiblepanel[right][collapsed] {
   width: 0;
   padding-right: 0;
 }
-ui-collapsiblepanel>ui-togglebutton.collapse {
+ui-collapsiblepanel>ui-togglebutton {
   position: absolute;
   transform-origin: bottom left;
   background: #333;
   border: 1px solid black;
   line-height: 1em;
 }
-ui-collapsiblepanel[top]>ui-togglebutton.collapse {
+ui-collapsiblepanel[top]>ui-togglebutton {
   bottom: -1.4em;
   left: -1px;
   border-radius: 0 0 .5em .5em;
   border-top: none;
 }
-ui-collapsiblepanel[bottom]>ui-togglebutton.collapse {
+ui-collapsiblepanel[bottom]>ui-togglebutton {
   top: -1.4em;
   left: -1px;
   border-radius: .5em .5em 0 0;
   border-bottom: none;
 }
-ui-collapsiblepanel[left]>ui-togglebutton.collapse {
+ui-collapsiblepanel[left]>ui-togglebutton {
   right: -1.4em;
   top: -1px;
   border-radius: 0 .5em .5em 0;
   border-left: none;
 }
-ui-collapsiblepanel[right]>ui-togglebutton.collapse {
+ui-collapsiblepanel[right]>ui-togglebutton {
   left: -1.4em;
   top: -1px;
   border-radius: .5em 0 0 .5em;
