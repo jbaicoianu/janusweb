@@ -574,7 +574,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           */
           // TODO - Simple trig makes this much faster, but to get the same functionality as before we'll need to implement each dimension
           //        For now, we only support billboarding with the Y axis locked (eg, doom sprites)
-          parent.worldToLocal(player.camera.getWorldPosition(playerpos));
+          parent.worldToLocal(player.camera.getWorldPosition(playerpos)).sub(this.position);
           dir.copy(playerpos).normalize();
           if (billboard == 'y') {
             this.rotation.set(0, Math.atan2(dir.x, dir.z) * THREE.Math.RAD2DEG, 0);
