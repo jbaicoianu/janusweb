@@ -84,7 +84,7 @@ elation.require(['engine.things.generic'], function() {
 
           var iframe = elation.html.create('iframe');
           iframe.src = this.url;
-          iframe.allow = 'vr';
+          iframe.allow = 'xr-spatial-tracking';
           var div = elation.html.create('div');
           div.className = 'janusweb_websurface ';
           div.appendChild(iframe);
