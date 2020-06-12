@@ -481,6 +481,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (!asset && parent && typeof parent.getAsset == 'function') {
         asset = parent.getAsset(type, id);
       }
+      if (!asset && parent !== janus._target) {
+        // Asset not found in object hierarchy, check the built-in assets
+        asset = janus.getAsset(type, id);
+      }
       if (!asset && autocreate) {
         // Asset definition wasn't found, so we'll assume it's a URL and define a new asset
         let assetargs = {id: id, src: id};
