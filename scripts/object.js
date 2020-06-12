@@ -44,8 +44,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         metalness_id: { type: 'string', set: this.updateMaterial, comment: 'Metalness map texture ID' },
         emissive: { type: 'color', default: [0,0,0], set: this.updateMaterial, comment: 'Material emissive color' },
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
-        roughness: { type: 'float', default: .5, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
-        metalness: { type: 'float', default: 0, set: this.updateMaterial, comment: 'Material metalness value' },
+        roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
+        metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
@@ -685,20 +685,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (this.lighting) {
                 if (textureEmissive) {
                   m.emissiveMap = textureEmissive;
+                  textureEmissive.encoding = THREE.sRGBEncoding;
                   m.emissive = new THREE.Color(0xffffff);
                 } else {
-                  m.emissive = this.emissive;
+                  //m.emissive = this.emissive.clone();
                 }
                 m.emissiveIntensity = this.emissive_intensity;
               }
               if (textureRoughness) {
                 m.roughnessMap = textureRoughness;
-              } else {
+              } else if (this.roughness !== null) {
                 m.roughness = this.roughness;
               }
               if (textureMetalness) {
                 m.metalnessMap = textureMetalness;
-              } else {
+              } else if (this.metalness !== null) {
                 m.metalness = this.metalness;
               }
 
@@ -792,10 +793,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.emissiveMap = oldmat.emissiveMap;
               m.emissive.setRGB(1,1,1);
             } else if (oldmat.emissive) {
-              m.emissive = oldmat.emissive;
-            }
-            if (this.emissive) {
-              m.emissive.copy(this.emissive);
+              m.emissive = oldmat.emissive.clone();
+
+              // FIXME - this logic needs some work, we shouldn't apply the object's emissive property unless it's a non-default value
+              if (this.emissive) {
+                m.emissive.copy(this.emissive);
+              }
             }
           }
 
