@@ -131,6 +131,7 @@ elation.require(['janusweb.janusbase'], function() {
       } );
 
       this.material = mat;
+      this.updateMaterial();
       this.scale.set(1,1,1);
       var obj = new THREE.Points(geo, mat);
       if (this.renderorder) obj.renderOrder = this.renderorder;
@@ -160,8 +161,44 @@ elation.require(['janusweb.janusbase'], function() {
     this.updateMaterial = function() {
       if (this.material) {
         this.material.opacity = this.opacity;
+        this.material.transparent = this.opacity < 1;
         this.material.color = this.color;
         this.material.size = this.particle_scale.x + this.rand_scale.x; 
+
+        let blend_src = false,
+            blend_dest = false,
+            srcfactors = {
+              'zero': THREE.ZeroFactor,
+              'one': THREE.OneFactor,
+              'src_color': THREE.SrcColorFactor,
+              'dst_color': THREE.DstColorFactor,
+              'src_alpha': THREE.SrcAlphaFactor,
+              'dst_alpha': THREE.DstAlphaFactor,
+              'one_minus_src_color': THREE.OneMinusSrcColorFactor,
+              'one_minus_src_alpha': THREE.OneMinusSrcAlphaFactor,
+              'one_minus_dst_color': THREE.OneMinusDstColorFactor,
+              'one_minus_dst_alpha': THREE.OneMinusDstAlphaFactor,
+            };
+        if (srcfactors[this.blend_src]) {
+          blend_src = srcfactors[this.blend_src];
+        }
+        if (srcfactors[this.blend_dest]) {
+          blend_dest = srcfactors[this.blend_dest];
+        }
+        if (blend_src || blend_dest) {
+          let m = this.material;
+          if (blend_src) m.blendSrc = blend_src;
+          if (blend_dest) m.blendDst = blend_dest;
+          m.blending = THREE.CustomBlending;
+
+          m.blendSrcAlpha = THREE.SrcAlphaFactor;
+          m.blendDstAlpha = THREE.OneFactor;
+          if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
+            m.transparent = true;
+          }
+        } else {
+          m.blending = THREE.NormalBlending;
+        }
       }
     }
     this.createForces = function() {
@@ -361,6 +398,8 @@ elation.require(['janusweb.janusbase'], function() {
         pointpos.add(this.emitpoints[rand_id]);
       }
       pointpos.add(this.emitter_pos);
+
+      point.opacity = this.opacity;
 
       var vel = point.vel,
           accel = point.accel,
