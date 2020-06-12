@@ -14,6 +14,7 @@ elation.require(['janusweb.janusbase'], function() {
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
         gain: { type: 'float', default: 1.0, set: this.updateSound },
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
+        distanceModel: { type: 'string', set: this.updateSound },
         rect: { type: 'string', set: this.updateSound }
       });
       this.playing = false;
