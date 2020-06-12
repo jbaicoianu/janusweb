@@ -108,6 +108,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       //this.updateVRButton();
       this.party_mode = this.getSetting('partymode.enabled', false);
       this.currentavatar = '';
+      this.getAvatarData().then(d => this.currentavatar = d);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
