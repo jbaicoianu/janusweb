@@ -1004,7 +1004,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         var texture = elation.engine.assets.find('image', this.image_id);
         //console.log('stop the image!', texture);
       }
-      if (this.video_id) {
+      if (this.video_id && this.video) {
         //var texture = elation.engine.assets.find('video', this.video_id);
         //texture.image.pause();
         //console.log('stop the video!', texture);
