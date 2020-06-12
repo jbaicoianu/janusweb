@@ -2,7 +2,7 @@
   "templates": {
   },
   "scripts":  ["./avatar.js"],
-  "css":      [],
+  "css":      ["./avatar.css"],
   "components": [
   ]
 }
