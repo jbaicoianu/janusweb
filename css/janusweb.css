@@ -57,7 +57,7 @@ body.dark .ui_window:after {
   height: 1000px;
 }
 .engine_view {
-  background: url(https://web.janusvr.com/media/images/background.png);
+  xbackground: url(https://web.janusvr.com/media/images/background.png);
   background-size: cover;
 }
 .engine_view .engine_systems_render_css3d {
