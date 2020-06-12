@@ -125,11 +125,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }), 1000);
 
       //this.gazecaster = this.createObject('raycaster', {});
+      /*
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
-
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
+      */
 
       this.getAvatarData().then(avatar => {;
         if (avatar && false) { // FIXME - self avatar is buggy so it's disabled
