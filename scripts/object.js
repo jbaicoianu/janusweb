@@ -919,8 +919,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateTextureOffsets = function() {
       // FIXME - should cache textures instead of iterating each time
       if (this.objects['3d']) {
-        this.traverseObjects(n => {
-          if (n.material) {
+        if (!this.objectMeshes || this.objectMeshes.length == 0) {
+          this.objectMeshes = [];
+          this.traverseObjects(n => {
+            if (n.material) {
+/*
             let materials = (n.material instanceof THREE.Material ? [n.material] : n.material);
             materials.forEach(m => {
               if (m.map) {
@@ -934,6 +937,27 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
               }
               // TODO - all maps which use uv layer 0 should be changed here
+            });
+*/
+              this.objectMeshes.push(n)
+            }
+          });
+        }
+        let applyTextureOffset = (texture) => {
+          texture.offset.copy(this.texture_offset);
+          texture.repeat.copy(this.texture_repeat);
+          texture.rotation = this.texture_rotation;
+        }
+        this.objectMeshes.forEach(n => {
+          n.onBeforeRender = () => {
+            let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+            materials.forEach(m => {
+              if (m.map) applyTextureOffset(m.map);
+              if (m.normalMap) applyTextureOffset(m.normalMap);
+              if (m.emissiveMap) applyTextureOffset(m.emissiveMap);
+              if (m.roughnessMap) applyTextureOffset(m.roughnessMap);
+              if (m.metalnessMap) applyTextureOffset(m.metalnessMap);
+              if (m.displacementMap) applyTextureOffset(m.displacementMap);
             });
           };
         });
