@@ -2,6 +2,7 @@ elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.januslight', function() {
     this.postinit = function() {
       elation.engine.things.januslight.extendclass.postinit.call(this);
+      this.targetIsSet = false;
       this.defineProperties({
         light_directional: { type: 'bool', default: false, set: this.updateLight },
         light_range: { type: 'float', default: 0, set: this.updateLight, min: 0, comment: 'Max distance at which light can affect objects' },
@@ -78,7 +79,7 @@ elation.require(['janusweb.janusbase'], function() {
             height = this.light_shadow_near,
             radius = Math.tan(angle) * height;
         placeholdergeo = new THREE.ConeBufferGeometry(radius, height);
-        placeholdergeo.applyMatrix(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI/2, 0, 0)).setPosition(0, 0, height / 2));
+        placeholdergeo.applyMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-Math.PI/2, 0, 0)).setPosition(0, 0, height / 2));
       }
       return placeholdergeo;
     }
@@ -92,6 +93,9 @@ elation.require(['janusweb.janusbase'], function() {
       }
       if (this.helper) {
         this.helper.update();
+      }
+      if (this.light_target && !this.targetIsSet) {
+        this.updateLightTarget();
       }
       if (this.light_directional || this.light_cone_angle == 1) {
         this.light.position.subVectors(this.light.position, this.light.target.position).add(player.pos);
@@ -122,7 +126,8 @@ elation.require(['janusweb.janusbase'], function() {
         }
         //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
-        this.light.intensity = this.light_intensity / 100;
+        //this.light.intensity = this.light_intensity / 100;
+        this.light.intensity = .1;
         this.light.penumbra = this.light_penumbra;
         this.light.decay = this.light_decay;
         this.light.color.copy(this.color);
@@ -145,13 +150,17 @@ elation.require(['janusweb.janusbase'], function() {
           if (room.objects[this.light_target]) {
             let obj = room.objects[this.light_target];
             this.light.target = obj.objects['3d'];
+            this.targetIsSet = true;
           } else if (this.light_target == 'player') {
             this.light.target = player.objects['3d'];
+            this.targetIsSet = true;
           }
         } else if (this.light_target.objects && this.light_target.objects['3d']) {
           this.light.target = this.light_target.objects['3d'];
+          this.targetIsSet = true;
         } else if (this.light_target instanceof THREE.Object3D) {
           this.light.target = this.light_target;
+          this.targetIsSet = true;
         }
       }
 
