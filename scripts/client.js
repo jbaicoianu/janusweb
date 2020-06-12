@@ -254,7 +254,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       if (view.xrsession) {
         this.xrplayer = this.janusweb.spawn('janusxrplayer', 'xrplayer', {
           janus: this.janusweb,
-          position: [0,0,0],
+          position: V(player.pos),
           mass: 10,
           movespeed: 5000,
           collidable: false,
