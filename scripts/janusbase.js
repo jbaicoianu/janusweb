@@ -633,7 +633,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         // Copy back the orthonormalized values
         this.properties.xdir.copy(xdir);
         this.properties.ydir.copy(ydir);
-        this.properties.zdir.copy(zdir);
+        this.properties.zdir.copy(fwd);
       }
     })();
     this.updateOrientationFromEuler = (function() {
