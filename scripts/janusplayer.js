@@ -548,6 +548,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         removeForce:   ['function', 'removeForce'],
         raycast:       ['function', 'raycast'],
         getViewFrustum:['function', 'getViewFrustum'],
+        getUsername:   ['function', 'getUsername'],
+        setUsername:   ['function', 'setUsername'],
+        getSetting:   ['function', 'getSetting'],
+        setSetting:   ['function', 'setSetting'],
+        setAvatar:    ['function', 'setAvatar'],
       });
       return proxy;
     }
@@ -577,6 +582,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setAvatar = function(avatar) {
       this.avatarNeedsUpdate = true;
+      this.currentavatar = avatar;
       let setting = this.setSetting('avatar', avatar);
 
       if (this.ghost) {
@@ -700,6 +706,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.setUsername = function(username) {
       this.setSetting('username', username);
       elation.events.fire({type: 'username_change', element: this, data: username});
+    }
+    this.getNetworkUsername = function() {
+      if (this.room) {
+        let server = janus.network.getServerForRoom(this.room);
+        if (server) {
+          return server._userId + server._useridSuffix
+        }
+      }
     }
     this.updateCursorStyle = function(ev) {
       var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
