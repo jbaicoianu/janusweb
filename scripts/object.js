@@ -98,6 +98,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (!object) {
         object = new THREE.Object3D();
       }
+      if (this.renderorder) object.renderOrder = this.renderorder;
 
       return object;
     }
