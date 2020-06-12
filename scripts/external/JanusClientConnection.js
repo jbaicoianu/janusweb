@@ -326,6 +326,7 @@ JanusClientConnection.prototype.connect = function() {
   this.pendingReconnect = false;
   this._websocket.onopen = function() {
     this.status = 2;
+    this._useridSuffix = '';
     this.sendLogon();
     while (this.msgQueue.length > 0) {
       this.send(this.msgQueue.shift());
@@ -394,7 +395,6 @@ JanusClientConnection.prototype.onMessage = function(msg) {
   var data = JSON.parse(msg.data);
   if (!this.loggedin && this.loggingin) {
     if (data.method == 'okay') {
-      this._useridSuffix = '';
       this.loggedin = true;
       this.dispatchEvent({type: 'login'});
       if (this._roomUrl) {
