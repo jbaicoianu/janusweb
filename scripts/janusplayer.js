@@ -371,7 +371,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (this.gaze.object.gazetime) {
           gazetime = this.gaze.object.gazetime;
         } else if (this.gaze.object.room && this.gaze.object.room.gazetime) {
-          gazetime = this.gaze.object.room.gazetime;;
+          gazetime = this.gaze.object.room.gazetime;
         }
         var diff = now - this.gaze.start;
         var percent = diff / gazetime;
@@ -697,7 +697,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return true;
     }
     this.getUsername = function() {
-      var username = this.getSetting('username');;
+      var username = this.getSetting('username');
       if (!username) {
         username = this.getRandomUsername();
       }
