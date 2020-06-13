@@ -989,7 +989,15 @@ elation.require([
       //var classmap = this.janus.classmap;
       if (!args) args = {};
 
-      var parentobj = (parent ? parent._target || parent : this);
+      var parentobj = this;
+      if (parent) {
+        parentobj = parent._target || parent;
+      } else if (args.parent_id) {
+        let newparent = this.getObjectById(args.parent_id);
+        if (newparent) {
+          parentobj = newparent._target;
+        }
+      }
       if (!customElement) {
         if (!this.unknownElements[type]) this.unknownElements[type] = [];
         this.unknownElements[type].push({args: args, parent: parent});
