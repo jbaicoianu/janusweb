@@ -91,7 +91,7 @@ elation.require(['janusweb.janusbase'], function() {
               }
             }));
           }
-        } else if (sound.buffer) {
+        } else if (sound && sound.buffer) {
           soundcache[src] = sound.buffer;
           this.audio.setBuffer(sound.buffer);
         }
