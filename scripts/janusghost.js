@@ -15,6 +15,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         ghost_scale: { type: 'vector3', default: [1,1,1] },
         ghostassets: { type: 'object' },
         auto_play: { type: 'boolean', default: true },
+        screen_name: { type: 'string' },
       });
 
       this.frames = false;
@@ -106,8 +107,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       });
     }
     this.setGhostAssets = function(assets) {
-      this.ghostassets = assets;
-      this.assetpack = elation.engine.assets.loadJSON(assets.assetlist);
+      if (!this.ghostassets) {
+        this.ghostassets = assets;
+        this.assetpack = elation.engine.assets.loadJSON(assets.assetlist);
+      } else {
+        console.log(this.ghostassets);
+        this.assetpack.loadJSON(assets.assetlist);
+      }
     }
     this.getGhostObjects = function() {
       var objects = {};
@@ -162,18 +168,24 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       if (headid && this.head) {
         if (!this.face || this.face.janusid != headid) {
           if (headpos) {
-            this.head.properties.position.copy(headpos);
+            //this.head.properties.position.copy(headpos);
           }
 
-          this.face = this.head.createObject('object', {
-            id: headid,
-            pos: headpos.clone().negate(),
-            //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
-            //rotation: V(0, 180, 0),
-            lighting: this.lighting,
-            //cull_face: 'none'
-          });
-          this.face.start();
+          if (elation.utils.isString(headid)) {
+            this.face = this.head.createObject('object', {
+              id: headid,
+              //pos: headpos.clone().negate(),
+              //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
+              //rotation: V(0, 180, 0),
+              lighting: this.lighting,
+              //cull_face: 'none'
+            });
+            this.face.start();
+          } else {
+            this.face = headid;
+            this.head.appendChild(headid);
+            this.face.start();
+          }
         }
         //this.head.properties.position.copy(headpos);
         if (scale) {
@@ -185,82 +197,27 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         }
       }
     }
-    this.setBody = function(bodyid, scale) {
+    this.setBody = function(bodyid, scale, pos) {
       if (this.body) {
         this.body.die();
         this.body = false;
       }
       if (bodyid) {
-        this.body = this.createObject('object', {
-          id: bodyid,
-          //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
-          rotation: V(0, 180, 0),
-          lighting: this.lighting,
-          //cull_face: 'none'
-        });
+        if (elation.utils.isString(bodyid)) {
+          this.body = this.createObject('object', {
+            id: bodyid,
+            //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
+            //rotation: V(0, 180, 0),
+            lighting: this.lighting,
+            //cull_face: 'none'
+          });
+        } else {
+          this.body = bodyid;
+          this.appendChild(bodyid);
+        }
+        if (pos) this.body.pos = pos;
         this.body.start();
         if (scale && this.body) this.body.scale.fromArray(scale);
-      }
-    }
-    this.setAnimation = function(anim_id) {
-      if (anim_id != this.anim_id) {
-        if (!this.body || !this.body.animationmixer) return;
-        if (this.activeanimation) {
-          this.activeanimation.fadeOut(this.anim_transition_time);
-          var oldanim = this.activeanimation;
-          setTimeout(elation.bind(this, function() {
-            if (this.activeanimation !== oldanim)
-              oldanim.stop();
-          }), this.anim_transition_time * 1000);
-        }
-        if (this.body.animationactions && this.body.animationactions[anim_id]) {
-          var action = this.body.animationactions[anim_id];
-          //console.log('found action!', anim_id, action);
-          action.fadeIn(this.anim_transition_time);
-          action.play();
-          this.activeanimation = action;
-        } else {
-          console.log('need to load action', anim_id, this.ghostassets, this.skeleton);
-          //this.loadAsset()
-          var objects = this.getGhostObjects();
-          var assetid = anim_id;
-
-          if (objects && objects[anim_id]) {
-            assetid = this.player_name + '_anim_' + anim_id;
-            var asset = elation.engine.assets.find('model', assetid, true);
-            if (!asset) {
-              asset = elation.engine.assets.get({
-                assettype: 'model',
-                name: assetid,
-                src: objects[anim_id].src,
-                mtl: objects[anim_id].mtl,
-              });
-            }
-
-            if (asset.loaded) {
-              var animations = asset.extractAnimations();
-              if (animations.length > 0) {
-                var action = this.body.animationmixer.clipAction(animations[0]);
-                this.body.animationactions[anim_id] = action;
-                action.play();
-              }
-            } else {
-              asset.getInstance();
-              elation.events.add(asset, 'asset_load', elation.bind(this, function() {
-                var animations = asset.extractAnimations();
-                if (animations.length > 0) {
-                  var action = this.body.animationmixer.clipAction(animations[0]);
-                  this.body.animationactions[anim_id] = action;
-                  if (anim_id == this.anim_id) {
-                    action.play();
-                    this.activeanimation = action;
-                  }
-                }
-              }));
-            }
-          }
-        }
-        this.anim_id = anim_id;
       }
     }
     this.rebindAnimations = function() {
@@ -296,15 +253,16 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       var xdir = new THREE.Vector3(),
             ydir = new THREE.Vector3(),
             zdir = new THREE.Vector3(),
-            matrix = new THREE.Matrix4();
+            matrix = new THREE.Matrix4(),
+            q1 = new THREE.Quaternion();
       return function(movedata) {
         var parser = this.janus.parser;
-        if (movedata.dir && this.body) {
-          this.body.properties.zdir.fromArray(parser.getVectorValue(movedata.dir)).normalize();
-          this.body.properties.ydir.set(0,1,0);
-          this.body.properties.xdir.crossVectors(this.body.properties.ydir, this.body.properties.zdir).normalize();
-          this.body.properties.zdir.crossVectors(this.body.properties.xdir, this.body.properties.ydir).normalize();
-          this.body.updateOrientationFromDirvecs();
+        if (movedata.dir) {
+          this.properties.zdir.fromArray(parser.getVectorValue(movedata.dir)).normalize();
+          this.properties.ydir.set(0,1,0);
+          this.properties.xdir.crossVectors(this.properties.ydir, this.properties.zdir).normalize();
+          this.properties.zdir.crossVectors(this.properties.xdir, this.properties.ydir).normalize();
+          this.updateOrientationFromDirvecs();
         }
 
         if (movedata.avatar) {
@@ -323,14 +281,17 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             zdir.crossVectors(xdir, ydir).normalize();
 
             matrix.makeBasis(xdir, ydir, zdir);
-            this.head.properties.orientation.setFromRotationMatrix(matrix);
+            q1.setFromRotationMatrix(matrix);
+            this.head.properties.orientation.copy(this.orientation).inverse().multiply(q1);
             if (movedata.head_pos && this.face) {
               var headpos = this.head.properties.position;
               var facepos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
               headpos.copy(this.head_pos);
-              facepos.fromArray(newpos).sub(this.head_pos);
+              facepos.fromArray(newpos).sub(headpos);
               if (this.body) {
+if (this.head.parent != this.body)
+this.body.appendChild(this.head);
                 headpos.multiply(this.body.scale);
                 facepos.multiply(this.body.scale);
               }
@@ -385,6 +346,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (movedata.anim_id) {
           this.setAnimation(movedata.anim_id);
         }
+        if (movedata.userid_pos) {
+          this.userid_pos = movedata.userid_pos;
+        }
         this.objects.dynamics.updateState();
         this.refresh();
       }
@@ -405,13 +369,27 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           headpos.fromArray(ghostdef.head_pos.split(' '));
           this.head_pos = headpos;
         }
+        if (ghostdef.screen_name) {
+          this.screen_name = ghostdef.screen_name;
+        }
         this.setGhostAssets(things.assets);
-        this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
-        this.setBody(ghostdef.body_id, ghostdef.scale);
+        if (ghostdef.head_id) {
+          this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
+        }
+        if (ghostdef.body_id) {
+          this.setBody(ghostdef.body_id, ghostdef.scale, ghostdef.pos);
+        }
         if (ghostdef._children) {
           for (var type in ghostdef._children) {
             for (var i = 0; i < ghostdef._children[type].length; i++) {
-              this.createObject(type, ghostdef._children[type][i]);
+              let js_id = ghostdef._children[type][i].js_id;
+              delete ghostdef._children[type][i].js_id;
+              let childobj = this.createObject(type, ghostdef._children[type][i]);
+              if (js_id == 'head') {
+                this.setHead(childobj, headpos, ghostdef.scale);
+              } else if (js_id == 'body') {
+                this.setBody(childobj, ghostdef.scale, ghostdef.pos);
+              }
             }
           }
         }
@@ -491,6 +469,36 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           room.add(this);
         }
       }
+    }
+    this.setRemoteVideo = function(video) {
+      this.remotevideo = video;
+      video.srcObject.addEventListener('addtrack', (ev) => console.log('added a track', ev, this));
+      video.srcObject.addEventListener('active', (ev) => console.log('tracks activated', ev, this));
+      video.srcObject.addEventListener('inactive', (ev) => console.log('tracks deactivated', ev, this));
+      video.srcObject.addEventListener('removetrack', (ev) => console.log('removed a track', ev, this));
+      this.setGhostAssets({
+        assetlist: [{
+          assettype: 'video',
+          name: 'screen',
+          video: video
+        }]
+      });
+      this.getChildren().forEach(n => {
+        let screen = false;
+        let c = n.getProxyObject();
+        if (c.video_id == 'screen') {
+          screen = c;
+        } else if (this.screen_name && c.parts[this.screen_name]) {
+          screen = c.parts[this.screen_name];
+        }
+        if (screen) {
+          screen.video_id = '';
+          setTimeout(() => {
+            screen.video_id = 'screen';
+            screen.visible = true;
+          }, 50);
+        }
+      });
     }
   }, elation.engine.things.janusbase);
 });
