@@ -2,15 +2,21 @@
 
 janus-comms-panel {
   display: flex;
-  background: rgba(0,0,0,.8);
+  background: rgba(0,0,0,.5);
   flex-direction: column;
-  width: 30em;
+  z-index: 100;
+  padding-right: .5em;
+}
+janus-comms-panel details>summary {
+  cursor: pointer;
+  outline: 0;
 }
 janus-comms-chat ui-list[name="chatlist"] {
   height: 10em;
   overflow-y: scroll;
   font-family: Inconsolata, monospace;
   transform: rotate(0); /* Using an empty transform here forces the browser to composite this element, which fixes bugs which cause elements to disappear while scrolling */
+  min-width:30em;
 }
 janus-comms-chat ui-list[name="chatlist"]>ui-item {
   padding: 0;
