@@ -989,7 +989,15 @@ elation.require([
       //var classmap = this.janus.classmap;
       if (!args) args = {};
 
-      var parentobj = (parent ? parent._target || parent : this);
+      var parentobj = this;
+      if (parent) {
+        parentobj = parent._target || parent;
+      } else if (args.parent_id) {
+        let newparent = this.getObjectById(args.parent_id);
+        if (newparent) {
+          parentobj = newparent._target;
+        }
+      }
       if (!customElement) {
         if (!this.unknownElements[type]) this.unknownElements[type] = [];
         this.unknownElements[type].push({args: args, parent: parent});
@@ -1205,18 +1213,32 @@ elation.require([
           });
         }
       } else if (type == 'video') {
-        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-        assetlist.push({
-          assettype:'video',
-          name:args.id,
-          src: src,
-          loop: args.loop,
-          sbs3d: args.sbs3d,
-          ou3d: args.ou3d,
-          hasalpha: args.hasalpha,
-          auto_play: args.auto_play,
-          baseurl: this.baseurl
-        });
+        if (args.src) {
+          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            src: src,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            baseurl: this.baseurl
+          });
+        } else if (args.video) {
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            video: args.video,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            baseurl: this.baseurl
+          });
+        }
       } else if (type == 'sound') {
         var src = (args.src && args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({

@@ -1,0 +1,52 @@
+janus-avatar-picker {
+  display: block;
+  width: 100%;
+  max-width: 40em;
+  text-align: center;
+}
+janus-avatar-picker ui-list {
+  height: 20vh;
+  overflow: auto;
+  border: 0;
+  background: transparent;
+}
+janus-avatar-picker-item {
+  display: inline-block;
+  position: relative;
+  border-radius: 5px;
+  border: 1px solid black;
+  cursor: pointer;
+  transition: transform 250ms ease-out;
+  margin: 2px;
+  cursor: pointer;
+}
+janus-avatar-picker-item:hover {
+  transform: scale(1.1, 1.1);
+  border: 1px solid #9fc;
+  box-shadow: 0 0 5px #9fc;
+}
+janus-avatar-picker-item[selected] {
+  transform: scale(1.1, 1.1);
+  border: 2px solid #0f0;
+  margin: 1px;
+  box-shadow: 0 0 5px #9fc;
+}
+janus-avatar-picker-item img {
+  width: 64px;
+  height: 64px;
+  border-radius: 5px;
+  display: block;
+  cursor: pointer;
+}
+janus-avatar-picker-item h2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: .8em;
+  font-weight: bold;
+  background: rgba(0,0,0,.2);
+}
+janus-avatar-picker ui-button {
+  font-size: 2em;
+}

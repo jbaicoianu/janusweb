@@ -81,32 +81,36 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     var users = Object.keys(remoteplayers);
     users.unshift(player.userid);
 
-    this.elements.roomusers.count = users.length;
+    this.elements.roomusers.value = users.length;
     
     this.userlist_room.setItems(users);
 
     // TODO - Spawn some 3D object to represent the player's gamertag
-    /*
-    for (var k in remoteplayers) {
-      var p = remoteplayers[k].getProxyObject();
+console.log('check for user updates', remoteplayers);
+    for (let k in remoteplayers) {
+      let p = remoteplayers[k].getProxyObject();
+console.log('p?', p, this.usermarkers[k]?.parent);
       if (!this.usermarkers[k]) {
 setTimeout(() => {
 // simple test of a 3d object controlled from the ui
-        this.usermarkers[k] = p.createObject('object', {
-          id: 'cone',
-          col: '#0000ff'
+        this.usermarkers[k] = p.createObject('playerlabel', {
+          player_name: k,
+          pos: V(p.userid_pos),
         });
+        this.usermarkers[k].start();
 }, 100);
+      } else if (this.usermarkers[k].parent !== p) {
+if (this.usermarkers[k].parent) {
+  this.usermarkers[k].parent.remove(this.usermarkers[k]);
+}
+setTimeout(() => {
+        p.appendChild(this.usermarkers[k]);
+console.log('reappend', p, this.usermarkers[k]);
+        this.usermarkers[k].updateCanvas();
+        this.usermarkers[k].start();
+}, 1000);
       }
     }
-    */
-  }
-});
-elation.elements.define('janus-comms-voip', class extends elation.elements.base {
-  init() {
-  }
-  create() {
-    this.elements = elation.elements.fromTemplate('janus.comms.voip', this);
   }
 });
 elation.elements.define('janus-comms-chat', class extends elation.elements.base {
@@ -115,6 +119,8 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     elation.events.add(janus.network, 'janusweb_user_joined', (ev) => this.handleUserJoined(ev));
     elation.events.add(janus.network, 'janusweb_user_left', (ev) => this.handleUserLeft(ev));
     elation.events.add(janus.network, 'janusweb_user_disconnected', (ev) => this.handleUserDisconnected(ev));
+
+    this.numunread = 0;
   }
   create() {
     this.elements = elation.elements.fromTemplate('janus.comms.chat', this);
@@ -129,6 +135,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     this.elements.chatinput.onfocus = (ev) => {
       this.elements.chatinput.placeholder = 'Type something!';
       player.disable();
+      this.updateUnread(0, true);
     }
     this.elements.chatinput.onblur = (ev) => this.elements.chatinput.placeholder = 'Press T for text chat';
 
@@ -143,6 +150,8 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       }
     });
     elation.events.add(janus._target, 'clientprint', (ev) => this.handleClientPrint(ev.data));
+    // FIXME - first element with the current design is a <detail> element, but this is fragile if that changes
+    this.elements[0].addEventListener('toggle', (ev) => this.elements.chatinput.focus());
   }
   scrollToBottom() {
     setTimeout(() => {
@@ -188,6 +197,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       message: data.message.data
     });
     this.scrollToBottom();
+    this.updateUnread(1);
   }
   sendMessage(msg) {
     if (msg && msg.length > 0) {
@@ -210,5 +220,109 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       message: msg[0]
     });
     this.scrollToBottom();
+  }
+  updateUnread(incr=0, clear=false) {
+    if (clear) {
+      this.numunread = 0;
+    }
+    if (incr) {
+      this.numunread += incr;
+    }
+    this.elements.unread.count = this.numunread;
+  }
+});
+
+elation.elements.define('janus-comms-voip', class extends elation.elements.base {
+  init() {
+  }
+  create() {
+    this.elements = elation.elements.fromTemplate('janus.comms.voip', this);
+  }
+});
+
+janus.registerElement('playerlabel', {
+  player_name: '',
+
+  create() {
+    this.currentcolor = V(255,255,255);
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 512;
+    this.canvas.height = 64;
+    let imageid = this.player_name + '_playerlabel';
+    room.loadNewAsset('image', {
+      id: imageid,
+      canvas: this.canvas,
+      hasalpha: true,
+      srgb: false,
+    });
+    this.label = this.createObject('object', {
+      id: 'plane',
+      collision_id: 'cube',
+      collision_scale: V(.85,7,.1),
+      collision_pos: V(0,-3,0),
+      //collidable: true,
+      //pickable: true,
+      scale: V(2,.25,1),
+      image_id: imageid,
+      billboard: 'y',
+      lighting: false,
+      opacity: .9,
+      transparent: true,
+      renderorder: 10,
+    });
+    this.updateCanvas();
+    this.label.addEventListener('mouseover', ev => this.handleMouseOver(ev));
+    this.label.addEventListener('mouseout', ev => this.handleMouseOut(ev));
+    this.label.addEventListener('click', ev => this.handleClick(ev));
+  },
+  updateCanvas() {
+    let ctx = this.canvas.getContext('2d');
+
+    let font = 'bold 60px monospace';
+    ctx.font = font;
+    let measure = ctx.measureText(this.player_name);
+
+    let width = Math.pow(2, Math.ceil(Math.log(measure.width) / Math.log(2)));
+    this.canvas.width = width;
+    if (this.label) {
+      let oldscale = this.label.scale.x;
+      this.label.scale.x = width / this.canvas.height * this.label.scale.y;
+      this.label.collision_scale = V(.85 / this.label.scale.x, 7, .1); // FIXME - shouldn't be hardcoded
+    }
+
+    ctx.font = font;
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    let c = this.currentcolor;
+    // background color
+/*
+    ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 0.1)';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+*/
+
+    // text with shadow
+    ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+    ctx.shadowBlur = 2;
+    ctx.shadowColor = 'rgba(0,0,0,1)';
+    ctx.fillText(this.player_name, (this.canvas.width - measure.width) / 2, this.canvas.height - 10);
+
+/*
+    // outer border
+    ctx.strokeStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+    ctx.shadowColor = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+    ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+*/
+    elation.events.fire({element: this.canvas, type: 'update'});
+  },
+  handleMouseOver(ev) {
+    this.currentcolor.set(0,255,0);
+    this.updateCanvas();
+  },
+  handleMouseOut(ev) {
+    this.currentcolor.set(255,255,255);
+    this.updateCanvas();
+  },
+  handleClick(ev) {
+    // Present some contextual UI for this user (mute, block, add friend, etc)
   }
 });

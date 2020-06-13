@@ -254,7 +254,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       if (view.xrsession) {
         this.xrplayer = this.janusweb.spawn('janusxrplayer', 'xrplayer', {
           janus: this.janusweb,
-          position: [0,0,0],
+          position: V(player.pos),
           mass: 10,
           movespeed: 5000,
           collidable: false,
@@ -281,6 +281,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           tracking: { type: 'boolean', default: true },
           networking: { type: 'boolean', default: true },
           avatarsrc: { type: 'string', default: false },
+          uiconfig: { type: 'string', default: false },
           shownavigation: { type: 'boolean', default: true },
         });
       }
@@ -309,6 +310,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           //resolution: width + 'x' + height,
           shownavigation: this.shownavigation,
           avatarsrc: this.avatarsrc,
+          uiconfig: this.uiconfig,
+          container: this,
         };
         return args;
       }

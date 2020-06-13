@@ -108,6 +108,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       //this.updateVRButton();
       this.party_mode = this.getSetting('partymode.enabled', false);
       this.currentavatar = '';
+      this.getAvatarData().then(d => this.currentavatar = d);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -125,11 +126,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }), 1000);
 
       //this.gazecaster = this.createObject('raycaster', {});
+      /*
       this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
-
       elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
       elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
       elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
+      */
 
       this.getAvatarData().then(avatar => {;
         if (avatar && false) { // FIXME - self avatar is buggy so it's disabled
@@ -370,7 +372,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (this.gaze.object.gazetime) {
           gazetime = this.gaze.object.gazetime;
         } else if (this.gaze.object.room && this.gaze.object.room.gazetime) {
-          gazetime = this.gaze.object.room.gazetime;;
+          gazetime = this.gaze.object.room.gazetime;
         }
         var diff = now - this.gaze.start;
         var percent = diff / gazetime;
@@ -547,6 +549,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         removeForce:   ['function', 'removeForce'],
         raycast:       ['function', 'raycast'],
         getViewFrustum:['function', 'getViewFrustum'],
+        getUsername:   ['function', 'getUsername'],
+        setUsername:   ['function', 'setUsername'],
+        getSetting:   ['function', 'getSetting'],
+        setSetting:   ['function', 'setSetting'],
+        setAvatar:    ['function', 'setAvatar'],
       });
       return proxy;
     }
@@ -576,6 +583,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setAvatar = function(avatar) {
       this.avatarNeedsUpdate = true;
+      this.currentavatar = avatar;
       let setting = this.setSetting('avatar', avatar);
 
       if (this.ghost) {
@@ -690,7 +698,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return true;
     }
     this.getUsername = function() {
-      var username = this.getSetting('username');;
+      var username = this.getSetting('username');
       if (!username) {
         username = this.getRandomUsername();
       }
@@ -699,6 +707,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.setUsername = function(username) {
       this.setSetting('username', username);
       elation.events.fire({type: 'username_change', element: this, data: username});
+    }
+    this.getNetworkUsername = function() {
+      if (this.room) {
+        let server = janus.network.getServerForRoom(this.room);
+        if (server) {
+          return server._userId + server._useridSuffix
+        }
+      }
     }
     this.updateCursorStyle = function(ev) {
       var vrdisplay = this.engine.systems.render.views.main.vrdisplay;

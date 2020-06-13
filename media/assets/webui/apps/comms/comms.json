@@ -8,10 +8,14 @@
     "janus.comms.chat_message": "./chat_message.html"
   },
   "scripts": [
-    "./comms.js"
+    "./external/naf-shim.js",
+    "./external/naf-janus-adapter.js",
+    "./comms.js",
+    "./voip.js"
   ],
   "css": [
-    "./comms.css"
+    "./comms.css",
+    "./voip.css"
   ],
   "components": [
     "janus-comms-panel",

@@ -44,8 +44,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         metalness_id: { type: 'string', set: this.updateMaterial, comment: 'Metalness map texture ID' },
         emissive: { type: 'color', default: [0,0,0], set: this.updateMaterial, comment: 'Material emissive color' },
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
-        roughness: { type: 'float', default: .5, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
-        metalness: { type: 'float', default: 0, set: this.updateMaterial, comment: 'Material metalness value' },
+        roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
+        metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
@@ -98,6 +98,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (!object) {
         object = new THREE.Object3D();
       }
+      if (this.renderorder) object.renderOrder = this.renderorder;
 
       return object;
     }
@@ -684,20 +685,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (this.lighting) {
                 if (textureEmissive) {
                   m.emissiveMap = textureEmissive;
+                  textureEmissive.encoding = THREE.sRGBEncoding;
                   m.emissive = new THREE.Color(0xffffff);
                 } else {
-                  m.emissive = this.emissive;
+                  //m.emissive = this.emissive.clone();
                 }
                 m.emissiveIntensity = this.emissive_intensity;
               }
               if (textureRoughness) {
                 m.roughnessMap = textureRoughness;
-              } else {
+              } else if (this.roughness !== null) {
                 m.roughness = this.roughness;
               }
               if (textureMetalness) {
                 m.metalnessMap = textureMetalness;
-              } else {
+              } else if (this.metalness !== null) {
                 m.metalness = this.metalness;
               }
 
@@ -791,10 +793,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.emissiveMap = oldmat.emissiveMap;
               m.emissive.setRGB(1,1,1);
             } else if (oldmat.emissive) {
-              m.emissive = oldmat.emissive;
-            }
-            if (this.emissive) {
-              m.emissive.copy(this.emissive);
+              m.emissive = oldmat.emissive.clone();
+
+              // FIXME - this logic needs some work, we shouldn't apply the object's emissive property unless it's a non-default value
+              if (this.emissive) {
+                m.emissive.copy(this.emissive);
+              }
             }
           }
 
@@ -918,8 +922,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateTextureOffsets = function() {
       // FIXME - should cache textures instead of iterating each time
       if (this.objects['3d']) {
-        this.traverseObjects(n => {
-          if (n.material) {
+        if (!this.objectMeshes || this.objectMeshes.length == 0) {
+          this.objectMeshes = [];
+          this.traverseObjects(n => {
+            if (n.material) {
+/*
             let materials = (n.material instanceof THREE.Material ? [n.material] : n.material);
             materials.forEach(m => {
               if (m.map) {
@@ -933,6 +940,27 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
               }
               // TODO - all maps which use uv layer 0 should be changed here
+            });
+*/
+              this.objectMeshes.push(n)
+            }
+          });
+        }
+        let applyTextureOffset = (texture) => {
+          texture.offset.copy(this.texture_offset);
+          texture.repeat.copy(this.texture_repeat);
+          texture.rotation = this.texture_rotation;
+        }
+        this.objectMeshes.forEach(n => {
+          n.onBeforeRender = () => {
+            let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+            materials.forEach(m => {
+              if (m.map) applyTextureOffset(m.map);
+              if (m.normalMap) applyTextureOffset(m.normalMap);
+              if (m.emissiveMap) applyTextureOffset(m.emissiveMap);
+              if (m.roughnessMap) applyTextureOffset(m.roughnessMap);
+              if (m.metalnessMap) applyTextureOffset(m.metalnessMap);
+              if (m.displacementMap) applyTextureOffset(m.displacementMap);
             });
           };
         });
@@ -979,7 +1007,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         var texture = elation.engine.assets.find('image', this.image_id);
         //console.log('stop the image!', texture);
       }
-      if (this.video_id) {
+      if (this.video_id && this.video) {
         //var texture = elation.engine.assets.find('video', this.video_id);
         //texture.image.pause();
         //console.log('stop the video!', texture);

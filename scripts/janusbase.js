@@ -481,6 +481,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (!asset && parent && typeof parent.getAsset == 'function') {
         asset = parent.getAsset(type, id);
       }
+      if (!asset && parent !== janus._target) {
+        // Asset not found in object hierarchy, check the built-in assets
+        asset = janus.getAsset(type, id);
+      }
       if (!asset && autocreate) {
         // Asset definition wasn't found, so we'll assume it's a URL and define a new asset
         let assetargs = {id: id, src: id};
@@ -574,7 +578,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           */
           // TODO - Simple trig makes this much faster, but to get the same functionality as before we'll need to implement each dimension
           //        For now, we only support billboarding with the Y axis locked (eg, doom sprites)
-          parent.worldToLocal(player.camera.getWorldPosition(playerpos));
+          parent.worldToLocal(player.camera.getWorldPosition(playerpos)).sub(this.position);
           dir.copy(playerpos).normalize();
           if (billboard == 'y') {
             this.rotation.set(0, Math.atan2(dir.x, dir.z) * THREE.Math.RAD2DEG, 0);
@@ -629,7 +633,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         // Copy back the orthonormalized values
         this.properties.xdir.copy(xdir);
         this.properties.ydir.copy(ydir);
-        this.properties.zdir.copy(zdir);
+        this.properties.zdir.copy(fwd);
       }
     })();
     this.updateOrientationFromEuler = (function() {

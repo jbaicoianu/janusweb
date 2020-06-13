@@ -63,8 +63,8 @@ elation.elements.define('janus-button-webvr', class extends elation.elements.ui.
     this.view = janus.engine.client.view;
 
     if ('xr' in navigator) {
-      this.activelabel = 'WebXR';
-      this.inactivelabel = 'WebXR';
+      this.activelabel = 'Exit VR';
+      this.inactivelabel = 'Enter VR';
       this.label = this.inactivelabel;
       this.xr = true;
     } else if ('getVRDevices' in navigator) {
@@ -94,7 +94,8 @@ elation.elements.define('janus-button-webvr', class extends elation.elements.ui.
   ondeactivate(ev) {
     this.label = this.inactivelabel;
     if (this.xr) {
-      this.view.stopXR();
+      //this.view.stopXR();
+      janus.engine.client.stopXR();
     } else {
       this.view.toggleVR(false);
     }

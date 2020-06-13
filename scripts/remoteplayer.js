@@ -58,6 +58,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false
     });
 */
+/*
     this.label = this.createObject('text', {
       size: .1,
       thickness: .002,
@@ -70,6 +71,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false,
       billboard: 'y'
     });
+*/
     if (this.engine.client.player.usevoip && this.engine.systems.sound.canPlaySound) {
       this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
         //loop: true
@@ -127,6 +129,25 @@ elation.component.add('engine.things.remoteplayer', function() {
       //this.mouth.audio.play(ev.data.start, ev.data.end);
     } else {
       //console.log('already playing');
+    }
+  }
+  this.addVoice = function(stream) {
+    this.mouth = this.createObject('sound', { pos: V(0, 0, 0), distanceModel: 'exponential' });
+    this.head.add(this.mouth._target);
+    this.mouth.createAudio();
+
+    let panner = this.mouth.audio.panner,
+        context = panner.context,
+        source = context.createMediaStreamSource(stream);
+
+    if (this.engine.systems.sound.canPlaySound) {
+      source.connect(panner);
+      this.mouth.audio.play();
+    } else {
+      elation.events.add(this.engine.systems.sound, 'sound_enabled', (ev) => {
+        source.connect(panner);
+        this.mouth.audio.play();
+      });
     }
   }
 }, elation.engine.things.janusghost);

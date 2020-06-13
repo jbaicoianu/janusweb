@@ -17,6 +17,22 @@ elation.require(['engine.things.generic'], function() {
       };
       
     }
+    this.setSession = function(session) {
+      this.session = session;
+      console.log('xr player session changed', this.session);
+      this.inputs = {};
+      if (session) {
+        session.addEventListener('inputsourceschange', (ev) => { this.processInputSources(this.session.inputSources);});
+      } else {
+        this.resetOrientation();
+      }
+    }
+    this.resetOrientation = function() {
+        player.pos.copy(this.position);
+        //player.orientation.copy(this.orientation);
+        player.head.orientation.set(0,0,0,1);
+        player.head.position.set(0,0,0);
+    }
     this.processInputSources = function(inputs) {
       for (let i = 0; i < inputs.length; i++) {
         let input = inputs[i];
@@ -47,6 +63,10 @@ elation.require(['engine.things.generic'], function() {
           this.trackedobjects[id].visible = false;
         }
       }
+      player.pos.copy(this.position);
+      //player.orientation.copy(this.orientation);
+      player.head.orientation.copy(this.trackedobjects['head'].orientation);
+      player.head.position.copy(this.trackedobjects['head'].position)
       this.dispatchEvent({type: 'xrframe', data: xrReferenceFrame});
     }
     this.getReferenceFrame = function() {
@@ -103,6 +123,7 @@ elation.require(['engine.things.generic'], function() {
     janus.registerElement('trackedplayer_head', {
       device: null,
       create() {
+/*
         this.headmodel = this.createObject('object', {
           id: 'sphere',
           //collision_id: 'sphere',
@@ -123,6 +144,7 @@ elation.require(['engine.things.generic'], function() {
           scale: V(.15, .05, .05),
           pos: V(0, -.05, -.075)
         });
+*/
       },
       updatePose(pose) {
         if (pose) {

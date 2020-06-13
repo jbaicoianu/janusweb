@@ -35,3 +35,55 @@ janus.registerElement('avatar_rigged', {
   updateXR(pose, referenceSpace) {
   }
 });
+
+elation.elements.define('janus-avatar-picker', class extends elation.elements.base {
+  init() {
+    this.defineAttribute('src', { type: 'string' });
+    this.selected = false;
+  }
+  create() {
+    this.elements = elation.elements.fromString(`
+      <collection-jsonapi id="avatarlist" endpoint="${this.src}"></collection-jsonapi>
+      <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
+      <ui-button name="confirm" disabled="1">Confirm</ui-button>
+      <ui-button name="reset">Reset</ui-button>
+    `, this);
+    elation.events.add(this.elements['avatar'], 'select', (ev) => this.handleAvatarSelect(ev));
+    elation.events.add(this.elements['confirm'], 'click', (ev) => this.handleAvatarConfirm(ev));
+    elation.events.add(this.elements['reset'], 'click', (ev) => this.handleAvatarReset(ev));
+  }
+  handleAvatarSelect(ev) {
+    console.log('selected an avatar', ev.data);
+    if (this.avatarpreview) {
+      this.avatarpreview.die();
+    }
+    this.selected = ev.data;
+    this.avatarpreview = player.createObject('ghost', { avatar_src: ev.data.url, pos: V(-2, 0, -3) });
+    this.elements.confirm.disabled = false;
+  }
+  handleAvatarConfirm(ev) {
+    if (this.avatarpreview) {
+      this.avatarpreview.die();
+    }
+    if (this.selected) {
+      fetch(this.selected.url)
+        .then(r => r.text())
+        .then(t => {
+          player.setAvatar(t);
+          this.dispatchEvent(new CustomEvent('select', { detail: this.selected }));
+        });
+    }
+  }
+  handleAvatarReset(ev) {
+    player.setAvatar(player.defaultAvatar);
+  }
+});
+elation.elements.define('janus-avatar-picker-item', class extends elation.elements.ui.item {
+  create() {
+    elation.events.add(this, 'click', (ev) => { console.log('duh', this); this.click(ev) });
+    let item = this.value;
+    this.elements = elation.elements.fromString(`
+      <img src="${item.thumb}">
+    `, this);
+  }
+});

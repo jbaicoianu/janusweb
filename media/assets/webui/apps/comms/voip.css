@@ -1,0 +1,76 @@
+janus-voip-client {
+  display: block;
+  border: 1px solid black;
+  position: relative;
+}
+janus-voip-localuser {
+  display: block;
+  position: absolute;
+  bottom: 0px;
+  right: -72px; 
+  border: 1px solid black;
+  padding: 0px;
+  background: white;
+  box-shadow: 0 0 5px black;
+  z-index: 10;
+}
+janus-voip-localuser video {
+  max-width: 64px;
+  height: 64px;
+  display: block;
+  margin: 1px 0 0 1px;
+}
+janus-voip-remoteuser {
+  display: inline-block;
+  border: 1px solid black;
+  position: relative;
+  font-family: monospace;
+  transition: transform 250ms ease;
+  transform: scale(0, 0);
+  min-width: 5em;
+}
+janus-voip-remoteuser video {
+  display: none;
+  max-width: 128px;
+  height: 128px;
+}
+janus-voip-remoteuser video.active {
+  display: block;
+}
+janus-voip-remoteuser[active] {
+  transform: scale(1, 1);
+}
+janus-voip-remoteuser h2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0;
+  background: rgba(0,0,0,.2);
+  text-shadow: 0 0 5px black;
+  color: white;
+  font-size: .8em;
+}
+janus-voip-remoteuser {
+}
+janus-voip-localuser ui-button {
+}
+janus-voip-localuser ui-button.muted {
+  background: red;
+}
+janus-voip-picker-audio {
+  display: block;
+  text-align: center;
+}
+janus-voip-picker-audio ul {
+  list-style: none;
+  text-align: left;
+  width: 20em;
+  margin: 0 auto;
+}
+janus-voip-picker-audio ui-label {
+  width: 10em;
+}
+janus-voip-picker-audio ui-select>select {
+  width: 100%;
+}
