@@ -58,6 +58,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false
     });
 */
+/*
     this.label = this.createObject('text', {
       size: .1,
       thickness: .002,
@@ -70,6 +71,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       collidable: false,
       billboard: 'y'
     });
+*/
     if (this.engine.client.player.usevoip && this.engine.systems.sound.canPlaySound) {
       this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
         //loop: true
