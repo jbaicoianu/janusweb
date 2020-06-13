@@ -97,6 +97,7 @@ elation.require(['janusweb.janusbase'], function() {
 
       this.soundobj = new THREE.PositionalAudio(listener);
       this.objects['3d'].add(this.soundobj);
+      this.soundobj.isPlaying = true;
       //this.panner = this.context.createPanner();
 
       //this.panner.connect(ctx.destination);
@@ -153,8 +154,16 @@ elation.require(['janusweb.janusbase'], function() {
       return (video && video.currentTime > 0 && !video.paused && !video.ended);
     }
     this.play = function() {
-      if (!this.isPlaying()) {
-        this.video.play();
+      if (!this.engine.systems.sound.canPlaySound) {
+        if (!this.playDelayed) {
+          this.playDelayed = true;
+          elation.events.add(this.engine.systems.sound, 'sound_enabled', (ev) => { this.play(); });
+          this.dispatchEvent({type: 'sound_delayed'});
+        }
+      } else {
+        if (!this.isPlaying()) {
+          this.video.play();
+        }
       }
     }
     this.pause = function() {
