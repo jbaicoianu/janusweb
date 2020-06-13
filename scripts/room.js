@@ -1213,18 +1213,32 @@ elation.require([
           });
         }
       } else if (type == 'video') {
-        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
-        assetlist.push({
-          assettype:'video',
-          name:args.id,
-          src: src,
-          loop: args.loop,
-          sbs3d: args.sbs3d,
-          ou3d: args.ou3d,
-          hasalpha: args.hasalpha,
-          auto_play: args.auto_play,
-          baseurl: this.baseurl
-        });
+        if (args.src) {
+          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            src: src,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            baseurl: this.baseurl
+          });
+        } else if (args.video) {
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            video: args.video,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            baseurl: this.baseurl
+          });
+        }
       } else if (type == 'sound') {
         var src = (args.src && args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
         assetlist.push({
