@@ -516,6 +516,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             screen.updateMaterial();
             setTimeout(() => {
               screen.video_id = 'screen';
+              screen.emissive_id = 'screen';
               screen.visible = true;
               screen.updateMaterial();
               if (screen.parent === null && screen !== c) {
