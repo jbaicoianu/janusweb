@@ -63,7 +63,7 @@ elation.require(['engine.things.generic'], function() {
           this.trackedobjects[id].visible = false;
         }
       }
-      player.pos.copy(this.position);
+      this.position.copy(player.pos);
       //player.orientation.copy(this.orientation);
       player.head.orientation.copy(this.trackedobjects['head'].orientation);
       player.head.position.copy(this.trackedobjects['head'].position)
