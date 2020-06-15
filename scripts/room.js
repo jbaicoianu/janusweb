@@ -1228,6 +1228,8 @@ elation.require([
             ou3d: args.ou3d,
             hasalpha: args.hasalpha,
             auto_play: args.auto_play,
+            type: args.type,
+            format: args.format,
             baseurl: this.baseurl
           });
         } else if (args.video) {
@@ -1240,6 +1242,8 @@ elation.require([
             ou3d: args.ou3d,
             hasalpha: args.hasalpha,
             auto_play: args.auto_play,
+            type: args.type,
+            format: args.format,
             baseurl: this.baseurl
           });
         }
