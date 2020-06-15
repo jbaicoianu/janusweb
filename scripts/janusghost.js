@@ -186,6 +186,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             this.head.appendChild(headid);
             this.face.start();
           }
+          if (this.remotevideo) {
+            this.updateVideoScreen();
+            this.face.addEventListener('load', (ev) => {
+              console.log('the asset for my face loaded', ev, this);
+              this.updateVideoScreen();
+            });
+          }
         }
         //this.head.properties.position.copy(headpos);
         if (scale) {
@@ -290,9 +297,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               headpos.copy(this.head_pos);
               facepos.fromArray(newpos).sub(headpos);
               if (this.body) {
-if (this.head.parent != this.body)
-this.body.appendChild(this.head);
-                headpos.multiply(this.body.scale);
+                if (this.head.parent != this.body) {
+                  this.body.appendChild(this.head);
+                }
+                //headpos.divide(this.body.scale);
                 facepos.multiply(this.body.scale);
               }
             }
@@ -471,34 +479,54 @@ this.body.appendChild(this.head);
       }
     }
     this.setRemoteVideo = function(video) {
-      this.remotevideo = video;
-      video.srcObject.addEventListener('addtrack', (ev) => console.log('added a track', ev, this));
-      video.srcObject.addEventListener('active', (ev) => console.log('tracks activated', ev, this));
-      video.srcObject.addEventListener('inactive', (ev) => console.log('tracks deactivated', ev, this));
-      video.srcObject.addEventListener('removetrack', (ev) => console.log('removed a track', ev, this));
-      this.setGhostAssets({
-        assetlist: [{
-          assettype: 'video',
-          name: 'screen',
-          video: video
-        }]
-      });
-      this.getChildren().forEach(n => {
-        let screen = false;
-        let c = n.getProxyObject();
-        if (c.video_id == 'screen') {
-          screen = c;
-        } else if (this.screen_name && c.parts[this.screen_name]) {
-          screen = c.parts[this.screen_name];
-        }
-        if (screen) {
-          screen.video_id = '';
-          setTimeout(() => {
-            screen.video_id = 'screen';
-            screen.visible = true;
-          }, 50);
-        }
-      });
+      if (video) {
+        this.remotevideo = video;
+        /*
+        video.srcObject.addEventListener('addtrack', (ev) => console.log('added a track', ev, this));
+        video.srcObject.addEventListener('active', (ev) => console.log('tracks activated', ev, this));
+        video.srcObject.addEventListener('inactive', (ev) => console.log('tracks deactivated', ev, this));
+        video.srcObject.addEventListener('removetrack', (ev) => console.log('removed a track', ev, this));
+        */
+        video.addEventListener('play', (ev) => this.updateVideoScreen());
+        video.addEventListener('resize', (ev) => this.updateVideoScreen());
+        this.setGhostAssets({
+          assetlist: [{
+            assettype: 'video',
+            name: 'screen',
+            video: video
+          }]
+        });
+      }
+      this.updateVideoScreen();
+    }
+    this.updateVideoScreen = function() {
+      if (this.remotevideo && this.remotevideo.videoWidth > 0) {
+        this.getChildren().forEach(n => {
+          let screen = false;
+          let c = n.getProxyObject();
+          if (c.video_id == 'screen') {
+            screen = c;
+          } else if (this.screen_name && c.parts[this.screen_name]) {
+            screen = c.parts[this.screen_name];
+            console.log('found a screen part', screen);
+            // FIXME - sometimes the screen part's parent is NULL, which causes the screen to disappear
+          }
+          if (screen) {
+            screen.video_id = '';
+            screen.updateMaterial();
+            setTimeout(() => {
+              screen.video_id = 'screen';
+              screen.visible = true;
+              screen.updateMaterial();
+              if (screen.parent === null && screen !== c) {
+                // FIXME - this is an attempt to fix the FIXME above, but it's hacky and I need to verify that it actually works
+                console.log('Screen had no parent, adding it to ourselves', screen, c);
+                c.appendChild(screen);
+              }
+            }, 50);
+          }
+        });
+      }
     }
   }, elation.engine.things.janusbase);
 });
