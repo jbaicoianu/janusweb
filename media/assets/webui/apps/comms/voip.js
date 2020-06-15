@@ -4,6 +4,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
   }
   connect() {
     let sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
+    this.sfu = sfu;
 
 console.log('new thing', room.id);
     sfu.connect('wss://voip.janusxr.org/', 'default', room.id, true);
@@ -36,6 +37,11 @@ setTimeout(() => this.removeChild(user), 250);
       sfu.adapter.setLocalMediaStream(localStream);
       sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
     });
+    // FIXME - player proxy should expose .addEventListener()
+    elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+  }
+  handleUsernameChange(ev) {
+    this.sfu.setClientId(ev.data);
   }
 });
 
@@ -242,6 +248,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
         <li><ui-toggle name="webcamEnabled" label="Webcam"></ui-toggle></li>
         <li><ui-select name="videoDevice" label="Webcam" hidden="1"></ui-select></li>
       </ul>
+      <ui-label name="error" hidden></ui-label>
       <ui-button name="submit">Continue</ui-button>
     `, this);
 
@@ -255,7 +262,9 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     elation.events.add(this.elements.noiseSuppression, 'toggle', (ev) => this.getUserMedia());
     //elation.events.add(this.elements.webcam, 'toggle', (ev) => this.getUserMedia());
     elation.events.add(this.elements.submit, 'click', (ev) => { 
-      this.dispatchEvent(new CustomEvent('select', {detail: this.stream})); 
+      if (!this.elements.submit.disabled) {
+        this.dispatchEvent(new CustomEvent('select', {detail: this.stream})); 
+      }
     });
     elation.events.add(this.elements.webcamEnabled, 'toggle', (ev) => {
       console.log('toggled', ev.data, ev);
@@ -265,8 +274,10 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     });
   }
   updateDevices() {
+    this.elements.submit.disabled = true;
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
+        this.elements.submit.disabled = false;
         this.devices = devices;
         let inputs = this.elements.inputDevice,
             cameras = this.elements.videoDevice,
@@ -293,9 +304,13 @@ console.log('got a videoinput', d);
             elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: outputs.select});
           }
         });        
-        if (hasWebcamPermission) {
+        if (hasWebcamPermission && this.elements.videoDevice.hidden ) {
           this.elements.webcamEnabled.hide();
           this.elements.videoDevice.show();
+console.log(this.elements.videoDevice.select.childNodes);
+          let option = this.elements.videoDevice.select.childNodes[0];
+          option.selected = true;
+          this.elements.videoDevice.select.value = option.value;
         } else {
           console.log('NO WEBCAM PERMISSION');
           this.elements.webcamEnabled.show();
@@ -331,9 +346,11 @@ console.log('got a videoinput', d);
   }
   getUserMedia(overrideconstraints) {
 
+    this.elements.submit.disabled = true;
     let constraints = this.getUserMediaConstraints(overrideconstraints);
     navigator.mediaDevices.getUserMedia(constraints)
       .then(stream => {
+        this.elements.submit.disabled = false;
         this.elements.mictest.setStream(stream);
         if (this.stream) {
           let tracks = this.stream.getTracks();
@@ -346,6 +363,12 @@ console.log('got a videoinput', d);
         if (!this.devices || overrideconstraints) {
           this.updateDevices();
         }
+        this.elements.error.innerHTML = '';
+        this.elements.error.hide();
+      }).catch(err => {
+        console.log('OH NO!', err);
+        this.elements.error.innerHTML = err;
+        this.elements.error.show();
       });
   }
 });

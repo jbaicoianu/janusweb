@@ -149,4 +149,13 @@ console.log('occupants received', occupantList);
       ]
     };
   }
+  setClientId(clientId) {
+    if (clientId != this.clientId) {
+      this.clientId = clientId;
+      if (this.adapter) {
+        this.adapter.setClientId(this.clientId);
+        this.adapter.reconnect();
+      }
+    }
+  }
 }
