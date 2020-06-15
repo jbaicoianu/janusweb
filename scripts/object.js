@@ -317,6 +317,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (image_id) {
         textureasset = this.getAsset('image', image_id, {tex_linear: image_linear});
+        if (!textureasset) { // no image found, try video
+          textureasset = this.getAsset('video', image_id, {tex_linear: image_linear});
+        }
         if (textureasset) {
           texture = textureasset.getInstance();
           if (!this.assetloadhandlers[image_id]) {
@@ -383,6 +386,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (displacement_image_id) {
         let displacementtextureasset = this.getAsset('image', displacement_image_id, true);
+        if (!displacementtextureasset) { // no image found, try video
+          displacementtextureasset = this.getAsset('video', displacement_image_id, true);
+        }
         if (displacementtextureasset) {
           textureDisplacement = displacementtextureasset.getInstance();
           if (!this.assetloadhandlers[displacement_image_id]) {
@@ -418,6 +424,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
       if (emissive_image_id) {
         emissivetextureasset = this.getAsset('image', emissive_image_id);
+        if (!emissivetextureasset) { // no image found, try video
+          emissivetextureasset = this.getAsset('video', emissive_image_id);
+        }
         if (emissivetextureasset) {
           textureEmissive = emissivetextureasset.getInstance();
           if (!this.assetloadhandlers[emissive_image_id]) {
