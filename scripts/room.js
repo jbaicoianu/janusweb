@@ -44,7 +44,7 @@ elation.require([
         'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
         'pbr': { type: 'boolean', default: false },
         'toon': { type: 'boolean', default: false },
-        'bloom': { type: 'float', default: 0.4, set: this.updateBloom },
+        'bloom': { type: 'float', default: 0.05, set: this.updateBloom },
         'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
         'tonemapping_exposure': { type: 'float', default: 0.8, set: this.updateToneMapping },
         'tonemapping_whitepoint': { type: 'float', default: 1.0, set: this.updateToneMapping },
@@ -358,6 +358,10 @@ elation.require([
       var bloomfilter = this.engine.client.view.effects['bloom'];
       if (bloomfilter) {
         bloomfilter.copyUniforms.opacity.value = this.bloom;
+      }
+      var bloomfilter2 = this.engine.client.view.effects['unrealbloom'];
+      if (bloomfilter2) {
+        bloomfilter2.strength = this.bloom / 2; // unrealbloom seems to be a lot stronger than the old bloom method, so we scale it to keep things somewhat in line
       }
     }
     this.updateToneMapping = function() {
@@ -755,7 +759,7 @@ elation.require([
         this.properties.fog_start = parseFloat(room.fog_start) || this.properties.near_dist;
         this.properties.fog_end = parseFloat(room.fog_end) || this.properties.far_dist;
         this.fog_col = room.fog_col || room.fog_color;
-        this.properties.bloom = room.bloom || 0.4;
+        this.properties.bloom = room.bloom || 0.05;
         this.properties.tonemapping_type = room.tonemapping_type || 'linear';
         this.properties.tonemapping_exposure = room.tonemapping_exposure || this.tonemapping_exposure;
         this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || this.tonemapping_whitepoint;
