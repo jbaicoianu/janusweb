@@ -414,7 +414,7 @@ elation.require(['janusweb.janusbase'], function() {
       var thickness = 0.05 * this.size.z;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
-      box.applyMatrix(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
+      box.applyMatrix4(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
 
       this.collision_scale = V(this.size.x, this.size.y, thickness);
       this.collision_pos = V(0, this.size.y / 2, 0);
