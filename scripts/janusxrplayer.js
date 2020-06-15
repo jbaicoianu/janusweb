@@ -15,7 +15,7 @@ elation.require(['engine.things.generic'], function() {
       this.trackedobjects = {
         head: this.createObject('trackedplayer_head', { })
       };
-      
+      this.camera = this.spawn('camera', this.name + '_camera', { position: [0,0,0] } );
     }
     this.setSession = function(session) {
       this.session = session;
