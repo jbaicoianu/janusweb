@@ -36,7 +36,7 @@ elation.require(['engine.things.label'], function() {
           geometry.computeBoundingBox();
           var geosize = new THREE.Vector3().subVectors(geometry.boundingBox.max, geometry.boundingBox.min);
           var geoscale = 1 / Math.max(1e-6, text.length * this.font_size);
-          geometry.applyMatrix(new THREE.Matrix4().makeScale(geoscale, geoscale, geoscale));
+          geometry.applyMatrix4(new THREE.Matrix4().makeScale(geoscale, geoscale, geoscale));
         }
 
         if (this.properties.opacity < 1.0) {
@@ -114,28 +114,28 @@ elation.require(['engine.things.label'], function() {
       // horizontal alignment
       if (this.properties.align == 'center') {
         geomod.makeTranslation(-.5 * diff.x, 0, 0);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       } else if (this.properties.align == 'right') {
         geomod.makeTranslation(-1 * diff.x, 0, 0);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       }
 
       // vertical alignment
       if (this.properties.verticalalign == 'middle') {
         geomod.makeTranslation(0, -.5 * diff.y, 0);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       } else if (this.properties.verticalalign == 'top') {
         geomod.makeTranslation(0, -1 * diff.y, 0);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       }
 
       // z-alignment
       if (this.properties.zalign == 'middle') {
         geomod.makeTranslation(0, 0, -.5 * diff.z);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       } else if (this.properties.zalign == 'front') {
         geomod.makeTranslation(0, 0, -1 * diff.z);
-        geometry.applyMatrix(geomod);
+        geometry.applyMatrix4(geomod);
       }
       geometry.computeBoundingBox();
       this.textcache[cachename] = geometry;
