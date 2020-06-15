@@ -1,13 +1,14 @@
 <ui-tabs>
-  <ui-tab label="UI">
-    <janus-ui-settings-ui></janus-ui-settings-ui>
-  </ui-tab>
-  <ui-tab label="Avatar">
+  <ui-tab label="Identity">
     <ui-formgroup>
       <ui-input label="Username"></ui-input>
       <ui-textarea label="Avatar"></ui-textarea>
+      <janus-avatar-picker></janus-avatar-picker>
     </ui-formgroup>
     <!-- janus-viewer-avatar src="https://kool.website/avatars/chibii/1/1.txt" width="500" height="200"></janus-viewer-avatar -->
+  </ui-tab>
+  <ui-tab label="Social">
+    <janus-voip-picker></janus-voip-picker>
   </ui-tab>
   <ui-tab label="Controls">
     <ui-tabs>
@@ -91,5 +92,8 @@
       <ui-toggle label="Positional HRTF"></ui-toggle>
       <ui-toggle label="Allow Autoplay"></ui-toggle>
     </ui-formgroup>
+  </ui-tab>
+  <ui-tab label="UI">
+    <janus-ui-settings-ui></janus-ui-settings-ui>
   </ui-tab>
 </ui-tabs>
