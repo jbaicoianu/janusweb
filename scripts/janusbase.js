@@ -1038,21 +1038,27 @@ console.log('clone', props);
     }
     this.addControlContext = function(name, defs) {
       let legacydefs = {};
-      let threshold_activate = .95,
+      let threshold_activate = .9,
           threshold_deactivate = .05;
+      let active = {};
       // TODO - instead of this compatibility layer, we should just support this object-style syntax and new events in the engine control system directly
       for (let k in defs) {
         let def = defs[k];
         legacydefs[k] = [def.defaultbindings, (ev) => {
           let absvalue = Math.abs(ev.value);
-          if (absvalue > threshold_activate && def.onactivate) {
-            def.onactivate(ev);
-          } else if (absvalue < threshold_deactivate && def.ondeactivate) {
-            def.ondeactivate(ev);
+          if (!active[k] && absvalue > threshold_activate) {
+            active[k] = true;
+            if (def.onactivate) def.onactivate(ev);
+          } else if (active[k] && absvalue < threshold_deactivate) {
+            active[k] = false;
+            if (def.ondeactivate) def.ondeactivate(ev);
+          }
+          if (def.onchange) {
+            def.onchange(ev);
           }
         }];
       }
-      this.engine.systems.controls.addContext(name, legacydefs);
+      return this.engine.systems.controls.addContext(name, legacydefs);
     }
     this.activateControlContext = function(name) {
       this.engine.systems.controls.activateContext(name, this);
