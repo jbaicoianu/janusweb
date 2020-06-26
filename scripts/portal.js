@@ -20,11 +20,14 @@ elation.require(['janusweb.janusbase'], function() {
         'mirror': { type: 'boolean', default: false, set: this.updateGeometry },
         'mirror_recursion': { type: 'integer', default: 2, set: this.updateGeometry },
         'mirror_texturesize': { type: 'integer', default: 1024, set: this.updateGeometry },
+        'external': { type: 'boolean', default: false },
+        'target': { type: 'string', default: '' },
       });
       this.addTag('usable');
       elation.engine.things.janusportal.extendclass.postinit.call(this);
       elation.events.add(this, 'thing_use_focus', elation.bind(this, this.useFocus));
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
+      elation.events.add(player, 'player_enable', elation.bind(this, this.disableDebounce));
     }
     this.createObject3D = function() {
       this.objects['3d'] = new THREE.Object3D();
@@ -68,6 +71,8 @@ elation.require(['janusweb.janusbase'], function() {
         //elation.events.add(this.label, 'mouseover,mousemove,mouseout,click', this);
       this.updateCollider();
       elation.events.add(this, 'click', elation.bind(this, this.activate));
+      elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
+      elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
     }
     this.createMaterial = function() {
       var matargs = { color: 0xdddddd };
@@ -120,7 +125,7 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
     }
-    this.hover = function() {
+    this.hover = function(ev) {
       if (this.label) {
         this.label.setEmissionColor(0x2222aa);
       }
@@ -143,11 +148,17 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
       var gamepads = this.engine.systems.controls.gamepads;
-      if (!this.hoverstate && gamepads && gamepads[0] && gamepads[0].hapticActuators) {
-        if (gamepads[0].hapticActuators[0]) {
-          gamepads[0].hapticActuators[0].pulse(1, 90);
+      if (!this.hoverstate) {
+        let gamepad = null;
+        if (ev.data.gamepad) gamepad = ev.data.gamepad;
+        if (!gamepad && gamepads && gamepads[0]) {
+          gamepad = gamepads[0];
+        }
+        if (gamepad && gamepad.hapticActuators && gamepad.hapticActuators[0]) {
+          gamepad.hapticActuators[0].pulse(.5, 30);
         }
       }
+
       this.hoverstate = true;
       this.refresh();
       this.engine.client.player.cursor_style = 'pointer';
@@ -201,14 +212,25 @@ elation.require(['janusweb.janusbase'], function() {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
       }
-      if (this.seamless) {
-        if (!this.open) {
-          this.openPortal();
-        } else {
-          this.closePortal();
+      if (this.external && this.url) {
+        if (!this.debounceclick) {
+          this.debounceclick = true;
+          if (this.target) {
+            window.open(this.url, this.target);
+          } else {
+            document.location = this.url;
+          }
         }
-      } else if (this.url) {
-        this.properties.janus.setActiveRoom(this.url, [0,0,0]);
+      } else {
+        if (this.seamless) {
+          if (!this.open) {
+            this.openPortal();
+          } else {
+            this.closePortal();
+          }
+        } else if (this.url) {
+          this.properties.janus.setActiveRoom(this.url, [0,0,0]);
+        }
       }
       var gamepads = this.engine.systems.controls.gamepads;
       if (gamepads && gamepads[0] && gamepads[0].hapticActuators) {
@@ -498,6 +520,12 @@ elation.require(['janusweb.janusbase'], function() {
         }
         return group;
       }
+    }
+    this.disableDebounce = function() {
+      setTimeout(() => {
+        this.debounceclick = false;
+        console.log('debounce disabled');
+      }, 1000);
     }
   }, elation.engine.things.janusbase);
 });
