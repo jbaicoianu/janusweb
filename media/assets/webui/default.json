@@ -7,6 +7,7 @@
     "inventory": "./apps/inventory/inventory.json",
     "editor": "./apps/editor/editor.json",
     "transporter": "./apps/transporter/transporter.json",
+    "locomotion": "./apps/locomotion/locomotion.json",
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",
     "buttons": "./apps/buttons/buttons.json"
   },
