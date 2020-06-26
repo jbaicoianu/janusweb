@@ -316,6 +316,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this._proxyobject = new elation.proxy(this, {
           parent:   ['accessor', 'parent.getProxyObject'],
           children: ['accessor', 'getChildProxies'],
+          room:     ['property', 'room'],
           parts:    ['property', 'jsparts'],
           js_id:    ['property', 'js_id'],
           pos:      ['property', 'position'],
@@ -384,6 +385,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           ongazeactivate: ['callback', 'gazeactivate'],
           ongazeprogress: ['callback', 'gazeprogress'],
 
+          setRoom:             ['function', 'setRoom'],
           createObject:        ['function', 'createObject'],
           appendChild:         ['function', 'appendChild'],
           removeChild:         ['function', 'removeChild'],
@@ -1067,6 +1069,22 @@ console.log('clone', props);
           if (!child.userData.thing || child.userData.thing === this) {
             this.traverseObjects(callback, child);
           }
+        }
+      }
+    }
+    this.setRoom = function(room, ischild) {
+      if (this.room !== room) {
+        if (!ischild) {
+          this.stop();
+        }
+        this.room = room;
+        for (let k in this.children) {
+          if (this.children[k].setRoom) {
+            this.children[k].setRoom(room, true);
+          }
+        }
+        if (!ischild) {
+          this.start();
         }
       }
     }
