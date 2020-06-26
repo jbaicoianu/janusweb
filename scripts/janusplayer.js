@@ -148,10 +148,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.enable = function() {
       elation.engine.things.janusplayer.extendclass.enable.call(this);
       this.engine.systems.controls.activateContext('janusplayer');
+      this.dispatchEvent({type: 'player_enable'});
     }
     this.disable = function() {
       this.engine.systems.controls.deactivateContext('janusplayer');
       elation.engine.things.janusplayer.extendclass.disable.call(this);
+      this.dispatchEvent({type: 'player_disable'});
     }
     this.updateVRButton = function() {
       if (this.engine.client.view.vrdisplay) {
