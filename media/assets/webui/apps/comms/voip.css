@@ -70,6 +70,7 @@ janus-voip-picker-audio ul {
 }
 janus-voip-picker-audio ui-label {
   width: 10em;
+  color: white;
 }
 janus-voip-picker-audio ui-select>select {
   width: 100%;
