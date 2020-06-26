@@ -67,6 +67,7 @@
   { "assettype":"model", "name":"room_plane2_collision", "src":"assets/rooms/room_plane2_collision.obj" },
 
   { "assettype":"image", "name":"black", "src":"assets/black.png", "hasalpha": false, "preload": false },
+  { "assettype":"image", "name":"clear", "src":"assets/clear.png", "hasalpha": true, "preload": false },
   { "assettype":"image", "name":"dark_back", "src":"assets/skybox/dark_back.png", "hasalpha": false, "preload": false },
   { "assettype":"image", "name":"dark_down", "src":"assets/skybox/dark_down.png", "hasalpha": false, "preload": false },
   { "assettype":"image", "name":"dark_front", "src":"assets/skybox/dark_front.png", "hasalpha": false, "preload": false },
