@@ -252,16 +252,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     this.handleRenderViewAdd = function(ev) {
       let view = ev.data;
       if (view.xrsession) {
-        this.xrplayer = this.janusweb.spawn('janusxrplayer', 'xrplayer', {
-          janus: this.janusweb,
-          position: V(player.pos),
-          mass: 10,
-          movespeed: 5000,
-          collidable: false,
+        this.xrplayer = this.player.createObject('xrplayer', {
           session: view.xrsession
         });
         console.log('Attached XR player to render view', this.xrplayer, view);
-        view.setactivething(this.xrplayer);
+        view.setactivething(this.xrplayer._target);
       }
     }
   }, elation.engine.client);
