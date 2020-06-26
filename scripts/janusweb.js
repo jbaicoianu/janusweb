@@ -51,6 +51,7 @@ elation.require([
       'light': 'januslight',
       'particle': 'janusparticle',
       'ghost': 'janusghost',
+      'xrplayer': 'janusxrplayer',
     };
     this.classmap = {};
     this.customElements = {};
@@ -135,6 +136,7 @@ elation.require([
         'light': 'januslight',
         'particle': 'janusparticle',
         'ghost': 'janusghost',
+        'xrplayer': 'janusxrplayer',
       });
 
       window.delta_time = 1000/60;
