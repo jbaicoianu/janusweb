@@ -1,4 +1,4 @@
-elation.require(['engine.things.generic'], function() {
+elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profiles'], function() {
   elation.component.add('engine.things.janusxrplayer', function() {
     this.postinit = function() {
       elation.engine.things.janusxrplayer.extendclass.postinit.call(this);
@@ -9,6 +9,9 @@ elation.require(['engine.things.generic'], function() {
         console.log('xr player gets a session', this.session);
         let sess = this.session;
         sess.addEventListener('inputsourceschange', (ev) => { this.processInputSources(this.session.inputSources);});
+        sess.addEventListener('selectstart', (ev) => { this.handleSelectStart(ev);});
+        sess.addEventListener('selectend', (ev) => { this.handleSelectEnd(ev);});
+        sess.addEventListener('select', (ev) => { this.handleSelect(ev);});
       }
       this.inputs = {};
       initJanusObjects();
@@ -16,6 +19,8 @@ elation.require(['engine.things.generic'], function() {
         head: this.createObject('trackedplayer_head', { })
       };
       this.camera = this.spawn('camera', this.name + '_camera', { position: [0,0,0] } );
+
+      this.teleporter = player.createObject('locomotion_teleporter', { xrplayer: this.getProxyObject() });
     }
     this.setSession = function(session) {
       this.session = session;
@@ -36,6 +41,10 @@ elation.require(['engine.things.generic'], function() {
     this.processInputSources = function(inputs) {
       for (let i = 0; i < inputs.length; i++) {
         let input = inputs[i];
+        let id = 'hand_' + input.handedness;
+        if (this.trackedobjects[id]) {
+          this.trackedobjects[id].updateDevice(input);
+        }
         this.inputs[input.handedness] = input;
       }
     }
@@ -44,7 +53,7 @@ elation.require(['engine.things.generic'], function() {
       let xrReferenceFrame = this.getReferenceFrame();
       let viewerPose = xrFrame.getViewerPose(xrReferenceFrame);
       if (viewerPose) {
-        this.trackedobjects['head'].updatePose(viewerPose);
+        this.trackedobjects['head'].updatePose(viewerPose, xrFrame, xrReferenceFrame);
       } else {
         // You've lost your head!  Should we do something about it?
       }
@@ -52,25 +61,47 @@ elation.require(['engine.things.generic'], function() {
         let input = this.inputs[k];
         let id = 'hand_' + k;
         if (!this.trackedobjects[id]) {
-          //this.trackedobjects[id] = this.spawn('janusxrplayer_trackedobject', null, { });
           this.trackedobjects[id] = this.createObject('trackedplayer_hand', { device: input });
         }
         let pose = xrFrame.getPose(input.gripSpace, xrReferenceFrame);
         if (pose) {
-          this.trackedobjects[id].updatePose(pose);
+          let raypose = xrFrame.getPose(input.targetRaySpace, xrReferenceFrame);
+          this.trackedobjects[id].updatePose(pose, xrFrame, xrReferenceFrame, raypose);
           this.trackedobjects[id].visible = true;
         } else {
           this.trackedobjects[id].visible = false;
         }
       }
-      this.position.copy(player.pos);
+      //this.position.copy(player.pos);
       //player.orientation.copy(this.orientation);
       player.head.orientation.copy(this.trackedobjects['head'].orientation);
       player.head.position.copy(this.trackedobjects['head'].position)
       this.dispatchEvent({type: 'xrframe', data: xrReferenceFrame});
+//this.orientation.copy(player.orientation);
     }
     this.getReferenceFrame = function() {
       return this.engine.client.xrspace;
+    }
+    this.handleSelectStart = function(ev) {
+      console.log('select started', ev);
+      let handid = 'hand_' + ev.inputSource.handedness;
+      if (this.trackedobjects[handid]) {
+        this.trackedobjects[handid].handleSelectStart(ev);
+      }
+    }
+    this.handleSelectEnd = function(ev) {
+      console.log('select ended', ev);
+      let handid = 'hand_' + ev.inputSource.handedness;
+      if (this.trackedobjects[handid]) {
+        this.trackedobjects[handid].handleSelectEnd(ev);
+      }
+    }
+    this.handleSelect = function(ev) {
+      console.log('selected', ev);
+      let handid = 'hand_' + ev.inputSource.handedness;
+      if (this.trackedobjects[handid]) {
+        this.trackedobjects[handid].handleSelect(ev);
+      }
     }
   }, elation.engine.things.janusbase);
   elation.component.add('engine.things.janusxrplayer_trackedobject', function() {
@@ -84,7 +115,7 @@ elation.require(['engine.things.generic'], function() {
       });
 */
     },
-    this.updatePose = function(pose) {
+    this.updatePose = function(pose, xrFrame, xrReferenceFrame) {
       this.position.copy(pose.transform.position);
       this.orientation.copy(pose.transform.orientation);
     }
@@ -146,7 +177,7 @@ elation.require(['engine.things.generic'], function() {
         });
 */
       },
-      updatePose(pose) {
+      updatePose(pose, xrFrame, xrReferenceFrame) {
         if (pose) {
           let pos = pose.transform.position;
           if (pos) {
@@ -165,54 +196,76 @@ elation.require(['engine.things.generic'], function() {
     janus.registerElement('trackedplayer_hand', {
       device: null,
       create() {
-        this.handle = this.createObject('object', {
-          id: 'sphere',
-          col: '#333',
-          scale: V(.03, .03, .1),
-          pos: V(0,0,.05),
-          rotation: V(15,0,0)
+        this.gamepad = this.device.gamepad;
+        if (this.gamepad) {
+          this.createMotionController(this.device);
+          janus.engine.systems.controls.addVirtualGamepad(this.device.gamepad);
+        }
+        this.pointer = this.parent.createObject('trackedplayer_controller_laser', {
+          hand: this
         });
-this.handle.col = 'red';
-    /*
-        this.ring = this.createObject('object', {
-          id: 'torus',
-          scale: V(.075),
-          pos: V(0,0,0),
-          col: '#333',
-          rotation: V(30,0,0),
-        });
-        this.ring.opacity = .1;
-    */
-        this.face = this.createObject('object', {
-          pos: V(0, 0.02, .01),
-          rotation: V(5,0,0)
-        });
-        this.underface = this.face.createObject('object', {
-          id: 'cylinder',
-          scale: V(.045, .0075, .045),
-          pos: V(0,-.0075,0),
-          col: '#333',
-        });
-        this.buttons = [];
-        this.createButtons();
-
-    /*
-        this.pointer = this.createObject('trackedplayer_controller_laser', {
-          positions: [V(0,0,0), V(0,0,-1000)],
-          col: 'red'
-        });
-    */
-    /*
-    if (this.device.hand == 'left') {
-    this.createObject('fpscounter', {
-      pos: V(),
-      scale: V(.25),
-      rotation: V(-90, 0, 0)
-    });
-    }
-    */
       },
-      updatePose(pose) {
+      updateDevice(device) {
+        if (device !== this.device) {
+          this.device = device;
+          if (this.device.gamepad !== this.gamepad) {
+            janus.engine.systems.controls.removeVirtualGamepad(this.gamepad);
+            janus.engine.systems.controls.addVirtualGamepad(this.device.gamepad);
+            this.gamepad = this.device.gamepad;
+          }
+        }
+      },
+      stopInput() {
+        janus.engine.systems.controls.removeVirtualGamepad(this.device.gamepad);
+      },
+      async createMotionController(xrInputSource) {
+        let uri = 'https://baicoianu.com/~bai/webxr-input-profiles/packages/assets/dist/profiles';
+        const { profile, assetPath } = await elation.janusweb.external.webxrinput.fetchProfile(xrInputSource, uri);
+        const motionController = new elation.janusweb.external.webxrinput.MotionController(xrInputSource, profile, assetPath);
+        this.motionController = motionController;
+
+        this.controller = this.createObject('object', {
+          id: motionController.assetUrl,
+        });
+      },
+      updateMotionControllerModel(motionController) {
+        // Update the 3D model to reflect the button, thumbstick, and touchpad state
+        const motionControllerRoot = this.objects['3d'].getObjectByName('root');
+
+        if (!motionControllerRoot) {
+          return;
+        }
+
+        Object.values(motionController.components).forEach((component) => {
+          for (let k in component.visualResponses) {
+            let visualResponse = component.visualResponses[k];
+            // Find the topmost node in the visualization
+            const valueNode = motionControllerRoot.getObjectByName(visualResponse.valueNodeName);
+
+            // Calculate the new properties based on the weight supplied
+            if (visualResponse.valueNodeProperty === 'visibility') {
+              valueNode.visible = visualResponse.value;
+            } else if (visualResponse.valueNodeProperty === 'transform') {
+              const minNode = motionControllerRoot.getObjectByName(visualResponse.minNodeName);
+              const maxNode = motionControllerRoot.getObjectByName(visualResponse.maxNodeName);
+
+              THREE.Quaternion.slerp(
+                minNode.quaternion,
+                maxNode.quaternion,
+                valueNode.quaternion,
+                visualResponse.value
+              );
+
+              valueNode.position.lerpVectors(
+                minNode.position,
+                maxNode.position,
+                visualResponse.value
+              );
+            }
+          };
+        });
+      },
+      updatePose(pose, xrFrame, xrReferenceFrame, raypose) {
         if (pose) {
           let pos = pose.transform.position;
           this.pos.copy(pos);
@@ -244,6 +297,26 @@ this.handle.col = 'red';
             }
           }
 */
+          if (this.device.hand) {
+            if (!this.handmodel) {
+              console.log('new hand!', this.device.hand, this.device);
+              this.handmodel = this.createObject('object', {
+                id: 'cube',
+                scale: V(.2, .075, .025),
+                col: 'green'
+              });
+            }
+            let handpos = xrFrame.getPose(this.device.hand[XRHand.WRIST], xrReferenceFrame);
+            this.handmodel.pos = handpos.transform.position;
+            this.handmodel.orientation.copy(handpos.transform.orientation);
+          }
+          if (this.motionController) {
+            this.updateMotionControllerModel(this.motionController);
+          }
+          if (this.pointer && raypose) {
+            this.pointer.pos.copy(raypose.transform.position);
+            this.pointer.orientation.copy(raypose.transform.orientation);
+          }
         }
       },
       createButtons() {
@@ -297,7 +370,21 @@ this.handle.col = 'red';
             ha.pulse(value, duration);
           });
         }
-      }
+      },
+      raycast(dir, pos) {
+        if (this.pointer) {
+          return this.pointer.raycast(dir, pos);
+        }
+      },
+      handleSelectStart(ev) {
+        this.pointer.handleSelectStart(ev);
+      },
+      handleSelectEnd(ev) {
+        this.pointer.handleSelectEnd(ev);
+      },
+      handleSelect(ev) {
+        this.pointer.handleSelect(ev);
+      },
     });
     janus.registerElement('trackedplayer_controller_button', {
       size: .1,
@@ -373,24 +460,111 @@ this.handle.col = 'red';
     });
 
     janus.registerElement('trackedplayer_controller_laser', {
+      hand: null,
       create() {
         this.lasercolor = V(1,0,0);
         this.laser = this.createObject('linesegments', {
           positions: [V(0,0,0), V(0,0,-1000)],
+          opacity: .5,
           col: this.lasercolor
         });
         this.raycaster = this.createObject('raycaster', {
+          //rotation: V(-45,0,0),
         });
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
         this.raycaster.addEventListener('raycastleave', (ev) => this.handleRaycastLeave(ev));
       },
       handleRaycastEnter(ev) {
-        this.laser.color = V(0,1,0);
-        this.laser.updateColor();
+        let proxyobj = ev.data.object,
+            obj = proxyobj._target;
+
+        if (this.activeobject) {
+          this.engine.client.view.proxyEvent({
+            type: "mouseout",
+            element: this.activeobject.objects['3d'],
+            //relatedTarget: oldpickedthing,
+            data: ev.data.intersection,
+            clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+            clientY: 0,
+          }, this.activeobject.objects['3d']);
+        }
+        this.activeobject = proxyobj;
+
+        if (obj && proxyobj && (
+              obj.onclick ||
+              elation.events.hasEventListener(obj, 'click') ||
+              elation.events.hasEventListener(proxyobj, 'click') ||
+              obj.onmousedown ||
+              elation.events.hasEventListener(obj, 'mousedown') ||
+              elation.events.hasEventListener(proxyobj, 'mousedown')
+            )) {
+          this.laser.col.setRGB(0,1,0);
+          this.laser.opacity = .4;
+          this.laser.updateColor();
+        } else {
+          this.laser.col.setRGB(1,0,0);
+          this.laser.opacity = .1;
+          this.laser.updateColor();
+        }
+
+        let evdata = {
+          type: "mouseover",
+          element: ev.data.intersection.mesh,
+          //relatedTarget: oldpickedthing,
+          data: ev.data.intersection,
+          clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+          clientY: 0,
+        };
+        if (this.hand) {
+          evdata.data.gamepad = this.hand.device.gamepad;
+        }
+        //elation.events.fire(evdata);
+        this.engine.client.view.proxyEvent(evdata, evdata.element);
       },
       handleRaycastLeave(ev) {
-        this.laser.color = V(0,1,1);
+        this.laser.col.setRGB(0,1,1);
+        this.laser.opacity = .2;
         this.laser.updateColor();
+      },
+      handleSelectStart(ev) {
+        if (this.activeobject) {
+          let obj = this.activeobject.objects['3d'];
+          this.engine.client.view.proxyEvent({
+            type: "mousedown",
+            element: obj,
+            //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+            clientY: 0,
+            button: 0,
+          }, obj);
+        }
+      },
+      handleSelectEnd(ev) {
+        if (this.activeobject) {
+          let obj = this.activeobject.objects['3d'];
+          this.engine.client.view.proxyEvent({
+            type: "mousemove",
+            element: obj,
+            //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+            clientY: 0,
+            button: 0,
+          }, obj);
+        }
+      },
+      handleSelect(ev) {
+        if (this.activeobject) {
+          let obj = this.activeobject.objects['3d'];
+          console.log('CLICK IT', this.activeobject);
+          this.engine.client.view.proxyEvent({
+            type: "click",
+            element: obj,
+            //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+            clientY: 0,
+            button: 0,
+          }, obj);
+        }
       },
     });
   }
