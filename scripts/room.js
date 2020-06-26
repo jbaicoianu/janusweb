@@ -25,6 +25,7 @@ elation.require([
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
+        'skybox': { type: 'boolean', default: true },
         'skybox_left': { type: 'string' },
         'skybox_right': { type: 'string' },
         'skybox_up': { type: 'string' },
@@ -219,14 +220,21 @@ elation.require([
     }
     this.setSkybox = function() {
       if (!this.loaded) return;
+
       if (!this.skybox) {
-        this.skybox = this.spawn('skybox', this.id + '_sky', {
+        this.engine.systems.render.renderer.setClearAlpha(0);
+      } else {
+        this.engine.systems.render.renderer.setClearAlpha(1);
+      }
+
+      if (!this.skyboxobj) {
+        this.skyboxobj = this.spawn('skybox', this.id + '_sky', {
           position: [0,0,0],
           collidable: false,
         });
       }
       if (this.skyboxtexture) {
-        this.skybox.setTexture(this.skyboxtexture);
+        this.skyboxobj.setTexture(this.skyboxtexture);
         return;
       }
 
@@ -324,7 +332,7 @@ elation.require([
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
           if (this.janus.currentroom === this) {
-            this.skybox.setTexture(this.skyboxtexture);
+            this.skyboxobj.setTexture(this.skyboxtexture);
           }
           return true;
         }
@@ -728,6 +736,7 @@ elation.require([
           });
         }
 
+        if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
         if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
         if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
@@ -1760,6 +1769,7 @@ elation.require([
           requirescripts:['property', 'requirescripts'],
           pos:           ['property', 'spawnpoint.position'],
 
+          skybox:         ['property', 'skybox'],
           skybox_left_id: ['property', 'skybox_left'],
           skybox_right_id:['property', 'skybox_right'],
           skybox_up_id:   ['property', 'skybox_up'],
