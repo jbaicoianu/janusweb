@@ -34,6 +34,12 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
       this.server = janus.network.getServerForRoom(room);
     }
     this.elements = elation.elements.fromTemplate('janus.comms.status', this);
+
+    elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+  }
+  handleUsernameChange(ev) {
+    // Update the userid label if player's name changes
+    this.elements.useridlabel.innerText = player.userid;
   }
 });
 elation.elements.define('janus-comms-userlist', class extends elation.elements.ui.list {
