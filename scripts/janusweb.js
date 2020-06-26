@@ -1,6 +1,6 @@
 elation.require([
   'janusweb.config', 'engine.things.generic','janusweb.remoteplayer', 'janusweb.room', 'janusweb.tracking', 'janusweb.multiplayermanager', 'janusweb.external.JanusFireboxParser', 'utils.proxy',
-  'janusweb.elements.raycaster', 'janusweb.elements.teleporter'], function() {
+  'janusweb.elements.raycaster', 'janusweb.elements.teleporter', 'janusweb.elements.linesegments'], function() {
 
   elation.requireCSS('janusweb.janusweb');
   elation.component.add('engine.things.janusweb', function() {
@@ -28,8 +28,8 @@ elation.require([
       invertpitch: false,
       avatarlighting: true,
       uivoice: true,
-      launchurl: 'http://www.janusvr.com/index.html',
-      server: 'presence.janusvr.com',
+      launchurl: 'https://www.janusxr.com/',
+      server: 'presence.janusxr.org',
       port: 5566,
       rate: 200,
       fov: 70.0,
@@ -106,7 +106,7 @@ elation.require([
 
       this.assetpack.executeWhenLoaded(() => {
         // TODO - this should be config-driven
-        this.registerAdditionalElements(['raycaster']);
+        this.registerAdditionalElements(['raycaster', 'linesegments']);
 
         if (this.networking) {
           this.network = elation.janusweb.multiplayermanager({
