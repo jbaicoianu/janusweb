@@ -6,6 +6,7 @@ janus-comms-panel {
   flex-direction: column;
   z-index: 100;
   padding-right: .5em;
+  width: 25vw;
 }
 janus-comms-panel details>summary {
   cursor: pointer;
@@ -16,7 +17,7 @@ janus-comms-chat ui-list[name="chatlist"] {
   overflow-y: scroll;
   font-family: Inconsolata, monospace;
   transform: rotate(0); /* Using an empty transform here forces the browser to composite this element, which fixes bugs which cause elements to disappear while scrolling */
-  min-width:30em;
+  width: 100%;
 }
 janus-comms-chat ui-list[name="chatlist"]>ui-item {
   padding: 0;
