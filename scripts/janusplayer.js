@@ -430,13 +430,6 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.gazecaster) {
         this.gazecaster.room = room;
       }
-/*
-      if (!this.teleporter) {
-        this.teleporter = this.room.createObject('user_teleporter');
-      } else {
-        this.teleporter.setRoom(room.getProxyObject());
-      }
-*/
       if (!this.room.selfavatar && this.ghost) {
         this.ghost.die();
         this.ghost = false;
@@ -454,6 +447,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         });
         this.visible = true;
       }
+
+      for (let k in this.children) {
+        if (this.children[k].setRoom) {
+          this.children[k].setRoom(room);
+          this.children[k].start();
+        }
+      }
+
       //room.add(this);
       this.updateGravity();
     }
@@ -491,6 +492,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.getProxyObject = function() {
       var proxy = new elation.proxy(this, {
         parent:        ['accessor', 'parent.getProxyObject'],
+        room:          ['property', 'room'],
         pos:           ['property', 'position'],
         vel:           ['property', 'velocity'],
         accel:         ['property', 'acceleration'],
