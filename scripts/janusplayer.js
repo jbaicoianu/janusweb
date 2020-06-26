@@ -710,6 +710,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setUsername = function(username) {
       this.setSetting('username', username);
+      this.userid = username;
+      this.player_id = username;
+      janus.userId = username;
       elation.events.fire({type: 'username_change', element: this, data: username});
     }
     this.getNetworkUsername = function() {
