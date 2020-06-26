@@ -134,3 +134,31 @@ console.log('layoutname:', layoutname, layout);
     });
   }
 });
+elation.elements.define('janus.username.picker', class extends elation.elements.base {
+  init() {
+    this.defineAttributes({
+      label: { type: 'string', default: 'Change' }
+    });
+  }
+  create() {
+    this.elements = elation.elements.fromString(`
+      <form name="usernameform">
+        <ui-input label="Username" name="username"></ui-input>
+        <input type="submit" value="${this.label}">
+      </form>
+    `, this);
+    this.elements.usernameform.addEventListener('submit', ev => this.handleFormSubmit(ev));
+    this.elements.username.value = player.userid;
+  }
+  handleFormSubmit(ev) {
+    console.log('submitted');
+    ev.preventDefault();
+    let newname = this.elements.username.value;
+    if (newname != player.userid) {
+      player.setUsername(newname);
+      this.dispatchEvent(new CustomEvent('change', { detail: newname }));
+    }
+  }
+  handleFormReset() {
+  }
+});

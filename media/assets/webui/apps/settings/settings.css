@@ -131,3 +131,9 @@ janus-ui-applayout>ui-label {
   width: 60em;
   height: 50em;
 }
+form[name="usernameform"] {
+  display: flex;
+}
+form[name="usernameform"]>ui-input {
+  flex: 1;
+}
