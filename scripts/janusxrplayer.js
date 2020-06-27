@@ -468,11 +468,14 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           opacity: .5,
           col: this.lasercolor
         });
-        this.raycaster = this.createObject('raycaster', {
-          //rotation: V(-45,0,0),
-        });
+        this.raycaster = this.createObject('raycaster', {});
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
+        this.raycaster.addEventListener('raycastmove', (ev) => this.handleRaycastMove(ev));
         this.raycaster.addEventListener('raycastleave', (ev) => this.handleRaycastLeave(ev));
+      },
+      updateLaserEndpoint(endpoint) {
+        this.worldToLocal(this.laser.positions[1].copy(endpoint));
+        this.laser.updateLine();
       },
       handleRaycastEnter(ev) {
         let proxyobj = ev.data.object,
@@ -507,6 +510,8 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.updateColor();
         }
 
+        this.updateLaserEndpoint(ev.data.intersection.point);
+
         let evdata = {
           type: "mouseover",
           element: ev.data.intersection.mesh,
@@ -520,6 +525,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         }
         //elation.events.fire(evdata);
         this.engine.client.view.proxyEvent(evdata, evdata.element);
+      },
+      handleRaycastMove(ev) {
+        this.updateLaserEndpoint(ev.data.intersection.point);
       },
       handleRaycastLeave(ev) {
         this.laser.col.setRGB(0,1,1);
