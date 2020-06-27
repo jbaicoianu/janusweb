@@ -256,7 +256,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       for (let k in proxydefs) {
         let proxydef = proxydefs[k],
             propdef = elation.utils.arrayget(propdefs, proxydef[1]);
-        if ( k != 'tagName' && k != 'classList' && proxydef[0] == 'property' && propdef) {
+        if ( k != 'room' && k != 'tagName' && k != 'classList' && proxydef[0] == 'property' && propdef) {
           let val = elation.utils.arrayget(this.properties, proxydef[1]);
           let defaultval = propdef.default;
           if (val instanceof THREE.Vector2) {
