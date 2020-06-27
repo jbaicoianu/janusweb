@@ -25,12 +25,14 @@ janus.registerElement('locomotion_teleporter', {
       scale: V(.1,.5,.0125),
       pos: V(0,.01,0)
     });
+/*
     this.light = this.createObject('Light', {
       col: '#009',
       pos: V(0,1,0),
       light_range: 20,
       light_intensity: 8
     });
+*/
     this.particles = this.createObject('Particle', {
       col: V(0,.2,1,.2),
       pos: V(-.25,.1,-.25),
