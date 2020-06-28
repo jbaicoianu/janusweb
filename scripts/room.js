@@ -1835,7 +1835,7 @@ elation.require([
     this.getChanges = function() {
       var changeids = Object.keys(this.changes);
       var changestr = '';
-      let ignoreattributes = ['tagName', 'parts', 'extendclass', 'obj', 'objcount', 'sync', 'autosync'];
+      let ignoreattributes = ['room', 'tagName', 'parts', 'extendclass', 'obj', 'objcount', 'sync', 'autosync'];
       if (changeids.length > 0) {
         var xmldoc = document.implementation.createDocument(null, 'edit', null);
         var editroot = xmldoc.documentElement;
