@@ -144,7 +144,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
             var processMeshCollider = elation.bind(this, function(collider) {
-            this.extractColliders(collider, true);
+            this.extractColliders(collider);
               //collider.userData.thing = this;
 
               //collider.bindPosition(this.position);
