@@ -144,7 +144,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
             var processMeshCollider = elation.bind(this, function(collider) {
-            this.extractColliders(collider);
+              this.extractColliders(collider);
               //collider.userData.thing = this;
 
               //collider.bindPosition(this.position);
@@ -405,6 +405,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           removeClass:         ['function', 'removeClass'],
           hasClass:            ['function', 'hasClass'],
           raycast:             ['function', 'raycast'],
+          start:               ['function', 'start'],
+          stop:                ['function', 'stop'],
           getElementsByTagName:['function', 'getElementsByTagName'],
         });
 
@@ -1078,15 +1080,17 @@ console.log('clone', props);
         }
       }
     }
-    this.setRoom = function(room, ischild) {
-      if (this.room !== room) {
+    this.setRoom = function(newroom, ischild) {
+      if (room._target) room = room._target; // If the proxy object is passed in, use its target instead
+
+      if (this.room !== newroom) {
         if (!ischild) {
           this.stop();
         }
-        this.room = room;
+        this.room = newroom;
         for (let k in this.children) {
           if (this.children[k].setRoom) {
-            this.children[k].setRoom(room, true);
+            this.children[k].setRoom(newroom, true);
           }
         }
         if (!ischild) {
