@@ -448,6 +448,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.visible = true;
       }
 
+      room.appendChild(this.getProxyObject());
       for (let k in this.children) {
         if (this.children[k].setRoom) {
           this.children[k].setRoom(room);
