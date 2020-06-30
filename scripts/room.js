@@ -729,13 +729,23 @@ elation.require([
         }
 
         // If we have a referrer, check to see if a reciprocal link exists.  If it does, use this as our spawn point.
+        let hasReciprocalLink = false;
         if (roomdata.link && this.referrer) {
           roomdata.link.forEach(link => {
             if (link.url == this.referrer) {
               this.spawnpoint.quaternion.copy(link.orientation.inverse());
               this.spawnpoint.position.fromArray(link.pos);
               this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
+              hasReciprocalLink = true;
             }
+          });
+        }
+        if (!hasReciprocalLink) {
+          // If no reciprocal link was found, spawn one so we can find our way back
+          this.createObject('link', {
+            pos: this.spawnpoint.position,
+            orientation: this.spawnpoint.quaternion,
+            url: this.referrer,
           });
         }
 
