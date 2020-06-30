@@ -230,7 +230,7 @@ elation.require(['janusweb.janusbase'], function() {
             this.closePortal();
           }
         } else if (this.url) {
-          this.properties.janus.setActiveRoom(this.url, [0,0,0]);
+          this.properties.janus.setActiveRoom(this.url);
         }
       }
       var gamepads = this.engine.systems.controls.gamepads;
