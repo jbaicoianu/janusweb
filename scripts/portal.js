@@ -59,7 +59,8 @@ elation.require(['janusweb.janusbase'], function() {
               emissive: 0x222266,
               scale: [1/this.scale.x, 1/this.scale.y, 1/this.scale.z],
               thickness: 0.5,
-              collidable: false
+              collidable: false,
+              pickable: false,
             });
           }
         }
