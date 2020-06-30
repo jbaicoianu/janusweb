@@ -63,10 +63,16 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         if (!this.trackedobjects[id]) {
           this.trackedobjects[id] = this.createObject('trackedplayer_hand', { device: input });
         }
-        let pose = xrFrame.getPose(input.gripSpace, xrReferenceFrame);
+        let pose = null,
+            raypose = null;
+        if (input.gripSpace) {
+          pose = xrFrame.getPose(input.gripSpace, xrReferenceFrame);
+        }
+        if (input.targetRaySpace) {
+          raypose = xrFrame.getPose(input.targetRaySpace, xrReferenceFrame);
+        }
+        this.trackedobjects[id].updatePose(pose, xrFrame, xrReferenceFrame, raypose);
         if (pose) {
-          let raypose = xrFrame.getPose(input.targetRaySpace, xrReferenceFrame);
-          this.trackedobjects[id].updatePose(pose, xrFrame, xrReferenceFrame, raypose);
           this.trackedobjects[id].visible = true;
         } else {
           this.trackedobjects[id].visible = false;
@@ -116,8 +122,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
 */
     },
     this.updatePose = function(pose, xrFrame, xrReferenceFrame) {
-      this.position.copy(pose.transform.position);
-      this.orientation.copy(pose.transform.orientation);
+      if (pose) {
+        this.position.copy(pose.transform.position);
+        this.orientation.copy(pose.transform.orientation);
+      }
     }
   }, elation.engine.things.janusbase);
 
@@ -313,10 +321,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           if (this.motionController) {
             this.updateMotionControllerModel(this.motionController);
           }
-          if (this.pointer && raypose) {
-            this.pointer.pos.copy(raypose.transform.position);
-            this.pointer.orientation.copy(raypose.transform.orientation);
-          }
+        }
+        if (this.pointer && raypose) {
+          this.pointer.pos.copy(raypose.transform.position);
+          this.pointer.orientation.copy(raypose.transform.orientation);
         }
       },
       createButtons() {
