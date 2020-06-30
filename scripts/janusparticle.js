@@ -205,7 +205,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janusparticle.extendclass.createForces.call(this);
       this.properties.particle_vel.copy(this.properties.velocity);
       this.properties.velocity.set(0,0,0); // FIXME - hack to override "vel" property mapping
-      if (!this.collider) {
+      if ((this.collidable || this.pickable) && !this.collider) {
         this.collider = new THREE.Points(this.geometry, new THREE.PointsMaterial({color: 0xffff00, opacity: .2, transparent: true, size: this.particle_scale.x + this.rand_scale.x, }));
         this.colliders.add(this.collider);
       }
