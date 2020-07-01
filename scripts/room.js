@@ -206,17 +206,38 @@ elation.require([
     }
     this.setPlayerPosition = function(pos, orientation) {
       if (!pos) {
-        pos = this.spawnpoint.position;
-        orientation = this.spawnpoint.quaternion;
+        let spawnpoint = this.getSpawnpoint(this.referrer);
+        pos = spawnpoint.position;
+        orientation = spawnpoint.orientation;
       }
       var player = this.engine.client.player;
       this.appendChild(player);
-      player.reset_position();
+      player.position.copy(pos);
+      player.orientation.copy(orientation);
+      //player.reset_position();
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
       player.cursor_visible = elation.utils.any(this.cursor_visible, true);
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
-      setTimeout(elation.bind(player, player.reset_position), 0);
+      //setTimeout(elation.bind(player, player.reset_position), 0);
+    }
+    this.getSpawnpoint = function(referrer) {
+      let spawnpoint = {
+        position: this.spawnpoint.position,
+        orientation: this.spawnpoint.quaternion,
+      };
+      if (referrer) {
+        let links = this.getObjectsByTagName('link');
+        for (let i = 0; i < links.length; i++) {
+          if (links[i].url == referrer) {
+            //spawnpoint.position = links[i].position;
+            spawnpoint.position = links[i].localToWorld(V(0,0,player.fatness*2));
+            spawnpoint.orientation = links[i].orientation.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
+            break;
+          }
+        }
+      }
+      return spawnpoint;
     }
     this.setSkybox = function() {
       if (!this.loaded) return;
@@ -729,25 +750,34 @@ elation.require([
         }
 
         // If we have a referrer, check to see if a reciprocal link exists.  If it does, use this as our spawn point.
-        let hasReciprocalLink = false;
-        if (roomdata.link && this.referrer) {
-          roomdata.link.forEach(link => {
-            if (link.url == this.referrer) {
-              this.spawnpoint.quaternion.copy(link.orientation.inverse());
-              this.spawnpoint.position.fromArray(link.pos);
-              this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
-              hasReciprocalLink = true;
-            }
-          });
+        if (this.referrer) {
+          let hasReciprocalLink = false;
+          if (roomdata.link) {
+            roomdata.link.forEach(link => {
+              if (link.url == this.referrer) {
+                this.spawnpoint.quaternion.copy(link.orientation.inverse());
+                this.spawnpoint.position.fromArray(link.pos);
+                this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
+                hasReciprocalLink = true;
+              }
+            });
+          }
+          if (!hasReciprocalLink) {
+            // If no reciprocal link was found, spawn one so we can find our way back
+            let linkrot = this.spawnpoint.rotation.clone();
+            linkrot.x *= THREE.Math.RAD2DEG;
+            linkrot.y = (linkrot.y * THREE.Math.RAD2DEG) + 180;
+            linkrot.z *= THREE.Math.RAD2DEG;
+            let linkpos = this.spawnpoint.localToWorld(V(0,0,player.fatness/2));
+            this.createObject('link', {
+              pos: linkpos,
+              rotation: linkrot,
+              scale: V(1, 1.8, 1),
+              url: this.referrer,
+            });
+          }
         }
-        if (!hasReciprocalLink) {
-          // If no reciprocal link was found, spawn one so we can find our way back
-          this.createObject('link', {
-            pos: this.spawnpoint.position,
-            orientation: this.spawnpoint.quaternion,
-            url: this.referrer,
-          });
-        }
+        setTimeout(() => this.setPlayerPosition(), 0);
 
         if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
