@@ -784,7 +784,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (this.collision_radius > 0) {
           this.setCollider('sphere', {
             radius: this.collision_radius,
-            //offset: V(0, this.collision_radius, 0)
+            offset: V(0, this.collision_radius, 0)
           });
         } else {
           this.removeCollider();
