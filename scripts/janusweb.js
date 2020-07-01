@@ -331,7 +331,7 @@ elation.require([
       var dataurl = 'data:text/html,' + encodeURIComponent(source);
       return this.load(dataurl, makeactive, baseurl)
     }
-    this.setActiveRoom = function(url, pos, skipURLUpdate) {
+    this.setActiveRoom = function(url, referrer, skipURLUpdate) {
       var oldroom = this.currentroom;
 
       var room = false;
@@ -357,7 +357,9 @@ elation.require([
         }
         if (oldroom !== room) {
           // Set referrer so we know where this link came from
-          if (oldroom) {
+          if (referrer) {
+            room.referrer = referrer;
+          } else if (oldroom) {
             room.referrer = oldroom.url;
           }
 
@@ -372,11 +374,6 @@ elation.require([
           this.properties.url = url;
           this.loading = false;
           elation.events.fire({element: this, type: 'room_change', data: url});
-        }
-        if (!pos) pos = this.currentroom.spawnpoint.position;
-        if (pos) {
-          player.properties.position.copy(pos);
-          player.properties.orientation.copy(this.currentroom.spawnpoint.quaternion);
         }
         if (changed && !skipURLUpdate) {
           this.updateClientURL(url);
@@ -436,14 +433,14 @@ elation.require([
         if (m) {
           var url = this.getFixedURL(m[1]);
           if (url != this.currentroom.url) {
-            this.setActiveRoom(url, null, true);
+            this.setActiveRoom(url, this.currentroom.url, true);
           }
         }
       } else {
         var hashargs = elation.url();
         var hashurl = hashargs['janus.url'];
         if (hashurl && hashurl != this.properties.url && !this.loading) {
-          this.setActiveRoom(hashurl, null, true);
+          this.setActiveRoom(hashurl, this.currentroom.url, true);
         } else if (!hashurl && this.properties.url != this.homepage) {
           this.setActiveRoom(this.homepage);
         }
