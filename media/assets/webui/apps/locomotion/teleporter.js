@@ -11,19 +11,25 @@ janus.registerElement('locomotion_teleporter', {
       id: 'pipe',
       col: V(0,0,155),
       emissive: V(0,0,155),
-      scale: V(.5,.01,.5)
+      scale: V(.5,.01,.5),
+      collidable: false,
+      pickable: false,
     });
     this.cylinder = this.marker.createObject('object', {
       id: 'cylinder',
       col: V(0,0,155,.2),
-      scale: V(.5,1.5,.5)
+      scale: V(.5,1.5,.5),
+      collidable: false,
+      pickable: false,
     });
     this.pointer = this.marker.createObject('Object', {
       id: 'pyramid',
       col: 'red',
       rotation: V(90,0,0),
       scale: V(.1,.5,.0125),
-      pos: V(0,.01,0)
+      pos: V(0,.01,0),
+      collidable: false,
+      pickable: false,
     });
 /*
     this.light = this.createObject('Light', {
@@ -48,13 +54,13 @@ janus.registerElement('locomotion_teleporter', {
       count: 50,
       duration: 1,
       collision_id: '',
+      collidable: false,
       pickable: false,
       loop: true
     });
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
     this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
 
-    //this.setRoom(this.room);
     this.disableCursor();
     window.addEventListener('mousemove', this.handleMouseMove);
     window.addEventListener('touchmove', this.handleTouchMove, true);
@@ -76,53 +82,46 @@ janus.registerElement('locomotion_teleporter', {
       },
     });
     this.activateControlContext('teleporter');
+
+    elation.events.add(janus._target, 'room_change', (ev) => this.handleRoomChange(ev));
   },
   update() {
     if (this.active) {
-      //this.orientation.copy(player.orientation);
-      let controls = this.activecontrols;
-      let angle = Math.atan2(controls.teleport_x, controls.teleport_y);
-      this.pointer.rotation = V(90, 0, -angle * 180 / Math.PI);
-//console.log('bleh', angle, this.pointer.rotation);
       let hand = this.xrplayer.trackedobjects.hand_right; // FIXME - figure out hand based on which controller is triggering the teleporter
       let hits = hand.raycast(V(0,0,-1));
       if (hits.length > 0) {
         let hit = hits[0];
         if (hit.distance < 200) {
           this.pos = player.worldToLocal(hits[0].point);
+          this.updateTeleportAngle();
         }
+      }
+      this.pointer.rotation = V(90, 0, -this.teleportangle * 180 / Math.PI);
+    }
+  },
+  handleRoomChange(ev) {
+    this.setRoom(room);
+  },
+  handleTeleportChange(ev) {
+    if (this.teleportactive) {
+      let controls = this.activecontrols;
+      let xy = new THREE.Vector2(controls.teleport_x, controls.teleport_y),
+          len = xy.length();
+
+      if (len > .8) {
+        this.updateTeleportAngle();
+      } else if (len < .01) {
+        this.teleport();
+        this.teleportactive = false;
+        this.disableCursor();
       }
     }
   },
-  castTeleportRay() {
-    
-  },
-  handleTeleportChange(ev) {
-    let controls = this.activecontrols;
-    let xy = new THREE.Vector2(controls.teleport_x, controls.teleport_y),
-        len = xy.length();
-
-/*
-    if (len > .9 && !this.teleportactive) {
-      this.teleportactive = true;
-      console.log('it worked', xy);
-      this.pos = player.localToWorld(V(0,0,-2));
-      this.enableCursor();
-    } else if (len < .01 && this.teleportactive) {
-      this.teleportactive = false;
-      console.log('ok stop', xy);
-      this.disableCursor();
-    }
-*/
-    if (len < .01 && this.teleportactive) {
-      this.teleportactive = false;
-      this.disableCursor();
-    }
-  },
   handleTeleportStart(ev) {
-    if (!this.teleportactive && ev.value < 0) {
+    if (!this.teleportactive && Math.abs(ev.value) > .8) {
       this.teleportactive = true;
       this.enableCursor();
+      this.updateTeleportAngle();
     }
   },
   handleTeleportTurn(ev) {
@@ -133,24 +132,21 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleTeleportTrigger(ev) {
-    console.log('triggered', ev);
     if (this.active) {
-      let pos = player.localToWorld(this.pos.clone());
-      player.pos = pos;
-      let controls = this.activecontrols;
-      let angle = Math.atan2(controls.teleport_x, controls.teleport_y);
-      this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, Math.PI + angle, 0)); // FIXME - should do a proper coordinate space transform here rather than hardcoding 180 degrees
+
     }
   },
-  setRoom(room) {
-    if (!room.addEventListener) room = room.getProxyObject();
-    this.stop();
-    room.appendChild(this);
-    this.room = room;
-    this.start();
-    room.addEventListener('mousedown', this.handleMouseDown);
-    room.addEventListener('mouseup', this.handleMouseUp);
-    this.disableCursor();
+  teleport() {
+    let pos = player.localToWorld(this.pos.clone());
+    player.pos = pos;
+    let playerangle = Math.atan2(this.pos.x, this.pos.z);
+    this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
+  },
+  updateTeleportAngle() {
+    let controls = this.activecontrols;
+    let controllerangle = Math.atan2(controls.teleport_x, controls.teleport_y);
+    let playerangle = Math.atan2(this.pos.x, this.pos.z);
+    this.teleportangle = (controllerangle + playerangle) + Math.PI;
   },
   handleMouseDown(ev) {
     if (ev.button == 0 && player.enabled) {
@@ -203,7 +199,6 @@ janus.registerElement('locomotion_teleporter', {
     this.disableCursor();
   },
   enableCursor() {
-    //this.pos = player.cursor_pos;
     this.visible = true;
     this.active = true;
     this.particles.start();
@@ -213,11 +208,4 @@ janus.registerElement('locomotion_teleporter', {
     this.active = false;
     this.particles.stop();
   },
-/*
-  update() {
-    if (this.active) {
-      this.pos = player.cursor_pos;
-    }
-  }
-*/
 });
