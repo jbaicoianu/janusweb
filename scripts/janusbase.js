@@ -821,6 +821,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
     this.dispatchEvent = function(event, target) {
       if (!event.element) event.element = target || this;
+      if (!event.target) {
+        event.target = target || event.element;
+      }
       var handlerfn = 'on' + event.type;
       if (this[handlerfn]) {
         this.executeCallback(this[handlerfn], event);
