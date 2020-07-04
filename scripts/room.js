@@ -2366,7 +2366,7 @@ elation.require([
       });
     }
     this.dispatchEvent = function(event, target) {
-      let firedev = elation.events.fire(event);
+      let firedev = elation.events.fire({element: this, target: target || event.target, event: event});
 /*
       if (!event.element) event.element = target || this;
       var handlerfn = 'on' + event.type;
