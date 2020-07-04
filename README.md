@@ -77,14 +77,15 @@ client via its API.  This looks something like this:
     <title>My JanusVR Room</title>
   </head>
   <body>
-    <FireBoxRoom>
-      <Room use_local_asset="room1">
-        <Object id="cube" pos="0 1 5" />
-        <Text col="1 0 0" pos="0 2 4">My First Room</Text>
-      </Room>
-    </FireBoxRoom>
     <script src="https://web.janusvr.com/janusweb.js"></script>
-    <script>elation.janusweb.init({url: document.location.href})</script>
+    <janus-viewer>
+      <FireBoxRoom>
+        <Room use_local_asset="room1">
+          <Object id="cube" pos="0 1 5" />
+          <Text col="1 0 0" pos="0 2 4">My First Room</Text>
+        </Room>
+      </FireBoxRoom>
+    </janus-viewer>
   </body>
 </html>
 ```
