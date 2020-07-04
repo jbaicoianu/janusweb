@@ -88,18 +88,24 @@ elation.require(['janusweb.janusbase'], function() {
               mat.transparent = true;
               mat.alphaTest = 0.1;
             }
+            this.adjustAspectRatio(asset.rawimage);
           } else {
             elation.events.add(thumb, 'asset_load', function() {
               if (mat && asset.hasalpha) {
                 mat.transparent = true;
                 mat.alphaTest = 0.1;
               }
+              this.adjustAspectRatio(asset.rawimage);
             });
           }
           elation.events.add(thumb, 'asset_update', elation.bind(this, function(ev) { mat.map = ev.data; }));
         }
       }
       return mat;
+    }
+    this.adjustAspectRatio = function(image) {
+      let aspect = image.width / image.height;
+      this.mesh.scale.set(aspect, 1, 1);
     }
     this.updateMaterial = function() {
       if (this.objects['3d'] && this.material) {
@@ -114,12 +120,14 @@ elation.require(['janusweb.janusbase'], function() {
                 this.material.transparent = true;
                 this.material.alphaTest = 0.1;
               }
+              this.adjustAspectRatio(asset.rawimage);
             } else {
               elation.events.add(thumb, 'asset_load', elation.bind(this, function() {
                 if (this.material && asset.hasalpha) {
                   this.material.transparent = true;
                   this.material.alphaTest = 0.1;
                 }
+                this.adjustAspectRatio(asset.rawimage);
               }));
             }
           }
