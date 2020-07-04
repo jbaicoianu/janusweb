@@ -91,12 +91,10 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     
     this.userlist_room.setItems(users);
 
-    // TODO - Spawn some 3D object to represent the player's gamertag
-console.log('check for user updates', remoteplayers);
     for (let k in remoteplayers) {
       let p = remoteplayers[k].getProxyObject();
-console.log('p?', p, this.usermarkers[k]?.parent);
       if (!this.usermarkers[k]) {
+// FIXME - timeout hacks probably aren't needed
 setTimeout(() => {
 // simple test of a 3d object controlled from the ui
         this.usermarkers[k] = p.createObject('playerlabel', {
@@ -111,7 +109,6 @@ if (this.usermarkers[k].parent) {
 }
 setTimeout(() => {
         p.appendChild(this.usermarkers[k]);
-console.log('reappend', p, this.usermarkers[k]);
         this.usermarkers[k].updateCanvas();
         this.usermarkers[k].start();
 }, 1000);
