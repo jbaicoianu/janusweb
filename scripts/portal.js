@@ -90,7 +90,7 @@ elation.require(['janusweb.janusbase'], function() {
             }
             this.adjustAspectRatio(asset.rawimage);
           } else {
-            elation.events.add(thumb, 'asset_load', function() {
+            elation.events.add(thumb, 'asset_load', () => {
               if (mat && asset.hasalpha) {
                 mat.transparent = true;
                 mat.alphaTest = 0.1;
