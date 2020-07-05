@@ -211,7 +211,10 @@ elation.require([
         orientation = spawnpoint.orientation;
       }
       var player = this.engine.client.player;
-      this.appendChild(player);
+      if (player.parent !== this) {
+        // Reparent player to the room if necessary
+        this.appendChild(player.getProxyObject());
+      }
       player.position.copy(pos);
       player.orientation.copy(orientation);
       //player.reset_position();
@@ -1202,6 +1205,8 @@ elation.require([
       if (proxyobj) {
         if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
           proxyobj.parent.removeChild(proxyobj);
+        } else if (proxyobj._target.parent && typeof proxyobj._target.parent.remove == 'function') {
+          proxyobj._target.parent.remove(proxyobj._target);
         }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
