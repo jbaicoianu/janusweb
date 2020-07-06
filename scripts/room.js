@@ -757,7 +757,8 @@ elation.require([
           let hasReciprocalLink = false;
           if (roomdata.link) {
             roomdata.link.forEach(link => {
-              if (link.url == this.referrer) {
+              let url = this.getFullRoomURL(link.url);
+              if (url == this.referrer) {
                 this.spawnpoint.quaternion.copy(link.orientation.inverse());
                 this.spawnpoint.position.fromArray(link.pos);
                 this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
@@ -2386,6 +2387,15 @@ console.log('dispatch to parent', event, this, event.target);
         this.parent.dispatchEvent(event, event.target);
       }
 */
+    }
+    this.getFullRoomURL = function(url) {
+      if (!url) url = this.url;
+      if (url[0] == '/') {
+        url = this.baseurl.replace(/^(https?:\/\/[^\/]+\/).*$/, '$1') + url;
+      } else if (!url.match(/https?:\/\//i)) {
+        url = this.baseurl + url;
+      }
+      return url;
     }
   }, elation.engine.things.generic);
 });
