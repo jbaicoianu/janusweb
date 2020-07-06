@@ -1164,6 +1164,8 @@ elation.require([
       if (realtype == 'janussound') {
         this.sounds[objectargs.sound_id] = object;
         this.sounds[objectargs.js_id] = object;
+
+        this.jsobjects[objectargs.js_id].addEventListener('sound_delayed', (ev) => this.handleDelayedSound(ev));
       }
       if (realtype == 'janusvideo') {
         this.videos[objectargs.video_id] = object;
@@ -2387,6 +2389,9 @@ console.log('dispatch to parent', event, this, event.target);
         this.parent.dispatchEvent(event, event.target);
       }
 */
+    }
+    this.handleDelayedSound = function(ev) {
+      // TODO - implement some visual indicator that this room is trying to play sound but was temporarily blocked
     }
     this.getFullRoomURL = function(url) {
       if (!url) url = this.url;
