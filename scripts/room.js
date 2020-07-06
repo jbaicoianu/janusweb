@@ -2155,7 +2155,7 @@ elation.require([
       //for (var k in this.jsobjects) {
       for (let k in this.children) {
         var object = this.children[k];
-        if (object.janus) {
+        if (object.janus && typeof object.summarizeXML == 'function') {
           var markup = '    ' + object.summarizeXML().replace(/\n/g, '\n    ').replace(/\s*$/, '\n');
           objectsrc += markup;
         }
