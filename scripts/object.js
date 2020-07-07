@@ -42,7 +42,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         emissive_id: { type: 'string', set: this.updateMaterial, comment: 'Emissive map texture ID' },
         roughness_id: { type: 'string', set: this.updateMaterial, comment: 'Roughness map texture ID' },
         metalness_id: { type: 'string', set: this.updateMaterial, comment: 'Metalness map texture ID' },
-        emissive: { type: 'color', default: [0,0,0], set: this.updateMaterial, comment: 'Material emissive color' },
+        emissive: { type: 'color', default: null, set: this.updateMaterial, comment: 'Material emissive color' },
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
         roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
