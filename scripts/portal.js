@@ -536,5 +536,14 @@ elation.require(['janusweb.janusbase'], function() {
         console.log('debounce disabled');
       }, 1000);
     }
+    this.getFullURL = function() {
+      let url = this.url;
+      if (url[0] == '/') {
+        url = this.baseurl.replace(/^(https?:\/\/[^\/]+\/).*$/, '$1') + url;
+      } else if (!url.match(/https?:\/\//i)) {
+        url = this.baseurl + this.url;
+      }
+      return url;
+    }
   }, elation.engine.things.janusbase);
 });
