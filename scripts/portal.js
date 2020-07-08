@@ -104,7 +104,7 @@ elation.require(['janusweb.janusbase'], function() {
       return mat;
     }
     this.adjustAspectRatio = function(image) {
-      let aspect = image.width / image.height;
+      let aspect = (image.width / image.height) / (this.size.x / this.size.y);
       this.mesh.scale.set(aspect, 1, 1);
     }
     this.updateMaterial = function() {
