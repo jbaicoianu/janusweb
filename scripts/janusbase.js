@@ -701,8 +701,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         proxyobj = this.room.jsobjects[obj];
       }
       if (proxyobj) {
-        if (proxyobj.parent && typeof proxyobj.parent.removeChild == 'function') {
-          proxyobj.parent.removeChild(proxyobj);
+        if (proxyobj.parent) {
+          if (typeof proxyobj.parent.removeChild == 'function') {
+            proxyobj.parent.removeChild(proxyobj);
+          } else if (typeof proxyobj.parent.remove == 'function') {
+            proxyobj.parent.remove(proxyobj._target);
+          }
         }
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
