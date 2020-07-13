@@ -391,7 +391,11 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
       if (url.indexOf(':') == -1) {
         url = 'http://' + url;
       }
-      janus.setActiveRoom(url);
+      if (ev.altKey) {
+        janus.setActiveRoom(url);
+      } else {
+        player.spawnPortal(url);
+      }
     }
   }
   handleFocus(ev) {
