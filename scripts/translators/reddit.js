@@ -87,17 +87,38 @@ elation.require(['elation.collection'], function() {
           var thumb = 'reddit_default';
           if (item.over_18) {
             thumb = 'reddit_over18';
-          } else if (item.thumbnail) {
-            if (item.thumbnail.match(/^(https?:)?\/\//)) {
-              elation.engine.assets.loadJSON([{ assettype: 'image', name: item.thumbnail, src: item.thumbnail }]);
-              thumb = item.thumbnail;
-            } else {
-              thumb = 'reddit_' + item.thumbnail;
+          } else {
+            if (item.preview && item.preview.images) {
+              let preview = item.preview.images[0].resolutions.pop();
+              let parser = new DOMParser;
+              let dom = parser.parseFromString('<!doctype html><body>' + preview.url, 'text/html');
+              thumb = dom.body.textContent;
+console.log('my thumb', thumb, item);
+
+              room.loadNewAsset('image', {
+                id: thumb,
+                src: thumb,
+              });
+            } else if (item.thumbnail) {
+              if (item.thumbnail.match(/^(https?:)?\/\//)) {
+                //elation.engine.assets.loadJSON([{ assettype: 'image', name: item.thumbnail, src: item.thumbnail }]);
+                room.loadNewAsset('image', {
+                  id: item.thumbnail,
+                  src: item.thumbnail
+                });
+                thumb = item.thumbnail;
+              } else {
+                thumb = 'reddit_' + item.thumbnail;
+              }
             }
           }
           
+          let url = item.url;
+          if (url[0] == '/') {
+            url = 'https://old.reddit.com' + url;
+          }
           link.title = item.title;
-          link.url = item.url;
+          link.url = url;
           link.thumb_id = thumb,
           lastid = item.name;
         }
