@@ -75,7 +75,7 @@ elation.require(['janusweb.janusbase'], function() {
 
       var texture = null;
       if (this.image_id) {
-        texture = elation.engine.assets.find('image', this.image_id);
+        texture = this.getAsset('image', this.image_id);
         //elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
         elation.events.add(texture, 'update', elation.bind(this, this.refresh));
       }
