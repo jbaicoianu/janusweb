@@ -1389,6 +1389,12 @@ elation.require([
           vertex_src: args.vertex_src,
           uniforms: args.uniforms,
         });
+      } else if (type == 'font') {
+        assetlist.push({
+          assettype: 'font',
+          name: args.id,
+          src: args.src,
+        });
       }
 
       this.loadRoomAssets({
