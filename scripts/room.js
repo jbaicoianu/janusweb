@@ -1411,10 +1411,12 @@ elation.require([
             console.warn('Shader uniform specified without name', u, this);
             return;
           }
+/*
           if (!u.type) {
             console.warn('Shader uniform specified without type', u, this);
             return;
           }
+*/
           if (u.type == 'sampler2D') {
             let imgasset = this.getAsset('image', u.value);
             if (imgasset) {
