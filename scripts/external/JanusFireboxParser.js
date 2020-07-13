@@ -125,7 +125,8 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
     assetlist.push({
       assettype: 'shader',
       name: n.id,
-      fragment_src: n.src,
+      shadertype: n.shadertype || 'default',
+      fragment_src: n.src || n.fragment_src,
       vertex_src: n.vertex_src,
       uniforms: n.uniforms,
       baseurl: baseurl,
