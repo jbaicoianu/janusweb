@@ -530,21 +530,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
       if (this.shader_id) {
         let shader = this.getAsset('shader', this.shader_id);
-        shadermaterial = shader.getInstance();
-        shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
-        this.traverseObjects((n) => {
-          if (n.material) {
-            if (Array.isArray(n.material)) {
-              for (let i = 0; i < n.material.length; i++) {
-                n.material[i] = shadermaterial;
+        if (shader) {
+          shadermaterial = shader.getInstance();
+          shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+          this.traverseObjects((n) => {
+            if (n.material) {
+              if (Array.isArray(n.material)) {
+                for (let i = 0; i < n.material.length; i++) {
+                  n.material[i] = shadermaterial;
+                }
+              } else {
+                n.material = shadermaterial;
               }
-            } else {
-              n.material = shadermaterial;
             }
-          }
-        });
-        this.shader = shadermaterial;
-        return;
+          });
+          this.shader = shadermaterial;
+          return;
+        }
       } 
 
       this.traverseObjects(elation.bind(this, function(n) { 
