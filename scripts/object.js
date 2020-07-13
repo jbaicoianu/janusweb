@@ -1017,11 +1017,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.stop = function() {
       elation.engine.things.janusobject.extendclass.stop.call(this);
       if (this.image_id) {
-        var texture = elation.engine.assets.find('image', this.image_id);
+        var texture = this.getAsset('image', this.image_id);
         //console.log('stop the image!', texture);
       }
       if (this.video_id && this.video) {
-        //var texture = elation.engine.assets.find('video', this.video_id);
+        //var texture = this.getAsset('video', this.video_id);
         //texture.image.pause();
         //console.log('stop the video!', texture);
         this.pause();
