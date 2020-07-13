@@ -968,5 +968,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.engine.systems.render.setdirty();
       }
     }
+    this.spawnPortal = function(url) {
+      room.createObject('link', {
+        pos: this.localToWorld(V(0, 0, -2)),
+        zdir: this.dir.clone(),
+        url: url,
+        sync: true,
+        round: true,
+        shader_id: 'defaultportal',
+      });
+    }
   }, elation.engine.things.player);
 });
