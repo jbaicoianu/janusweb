@@ -17,15 +17,37 @@ elation.require(['engine.things.label'], function() {
         'depthTest':       { type: 'bool', default: true },
         'thickness':       { type: 'float', refreshGeometry: true },
         'segments':        { type: 'int', default: 6, refreshGeometry: true },
-        'bevel.enabled':   { type: 'bool', default: false, refreshGeometry: true },
-        'bevel.thickness': { type: 'float', default: 0, refreshGeometry: true },
-        'bevel.size':      { type: 'float', default: 0, refreshGeometry: true },
+        'bevel':           { type: 'bool', default: false, refreshGeometry: true },
+        'bevel_thickness': { type: 'float', default: 0, refreshGeometry: true },
+        'bevel_size':      { type: 'float', default: 0, refreshGeometry: true },
+        'bevel_segments':  { type: 'int', default: 3, refreshGeometry: true },
+        'bevel_offset':    { type: 'float', default: 0, refreshGeometry: true },
         'visible':         { type: 'boolean', default: true, set: this.toggleVisibility },
+        'roughness':       { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
+        'metalness':       { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
+        'envmap_id':       { type: 'string', set: this.updateMaterial, comment: 'Environment map texture ID (overrides skybox reflections)' },
       });
       this.emptygeometry = new THREE.Geometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
     }
     this.createObject3D = function() {
+      this.objects['3d'] = new THREE.Object3D();
+      if (!this.fontasset) {
+        this.fontasset = this.getAsset('font', this.properties.font);
+        if (!this.fontasset) this.fontasset = this.getAsset('font', 'helvetiker');
+
+        if (this.fontasset.loaded) {
+          this.createTextMesh();
+        } else {
+          elation.events.add(this.fontasset, 'asset_load', (ev) => this.createTextMesh());
+        }
+      } else {
+        this.createTextMesh();
+      }
+      elation.events.add(this.room, 'room_load_complete', ev => { console.log('YUHHHHHHHHHHHH', this); this.updateMaterial(); });
+      return this.objects['3d'];
+    }
+    this.createTextMesh = function() {
       var text = this.properties.text || '';//this.name;
       var cachename = this.getCacheName(text);
       var geometry = this.textcache[cachename];
@@ -39,7 +61,7 @@ elation.require(['engine.things.label'], function() {
           geometry.applyMatrix4(new THREE.Matrix4().makeScale(geoscale, geoscale, geoscale));
         }
 
-        if (this.properties.opacity < 1.0) {
+        if (this.material && this.properties.opacity < 1.0) {
           this.material.opacity = this.properties.opacity;
           this.material.transparent = true;
         }
@@ -48,29 +70,33 @@ elation.require(['engine.things.label'], function() {
           this.textcache[cachename] = geometry;
         }
       }
-      var mesh;
-      if (this.objects['3d']) {
-        mesh = this.objects['3d'];
+      let mesh = this.mesh;
+      if (mesh) {
         mesh.geometry = geometry;
       } else {
         this.material = this.createTextMaterial(text);
         mesh = new THREE.Mesh(geometry, this.material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        this.mesh = mesh;
       }
-      
-      return mesh;
+      this.objects['3d'].add(mesh);
+      this.refresh();
     }
     this.createTextMaterial = function() {
       var matargs = {
         color: this.properties.color || new THREE.Color(0xffffff), 
+        opacity: this.properties.opacity,
+        transparent: this.properties.opacity < 1,
         emissive: this.properties.emissive, 
         flatShading: false,
         depthTest: this.properties.depthTest,
         reflectivity: .5
       };
       if (this.room.pbr) {
-        matargs.roughness = .5;
+        matargs.roughness = this.roughness;
+        matargs.metalness = this.metalness;
+        matargs.envMap = this.getEnvmap();
       }
       var material = (this.room.pbr ? new THREE.MeshPhysicalMaterial(matargs) : new THREE.MeshPhongMaterial(matargs));
 
@@ -78,7 +104,19 @@ elation.require(['engine.things.label'], function() {
         material.opacity = this.properties.opacity;
         material.transparent = true;
       }
+      this.material = material;
       return material;
+    }
+    this.updateMaterial = function() {
+      if (this.material) {
+        this.material.color = this.color;
+        if (this.room.pbr) {
+          this.material.roughness = this.roughness;
+          this.material.metalness = this.metalness;
+          this.material.envMap = this.getEnvmap();
+        }
+        this.material.needsUpdate = true;
+      }
     }
     this.createTextGeometry = function(text) {
       // Early out for invisible geometry
@@ -91,10 +129,9 @@ elation.require(['engine.things.label'], function() {
         return this.textcache[cachename];
       }
 
-      var font = elation.engine.assets.find('font', this.properties.font);
-      if (!font) font = elation.engine.assets.find('font', 'helvetiker');
+      let font = this.fontasset.getInstance();
 
-      var geometry = new THREE.TextGeometry( text, {
+      var geometry = new THREE.TextBufferGeometry( text, {
         size: this.font_size,
         height: this.properties.thickness || this.font_size / 2,
         curveSegments: this.segments,
@@ -103,9 +140,11 @@ elation.require(['engine.things.label'], function() {
         weight: "normal",
         style: "normal",
 
-        bevelThickness: this.properties.bevel.thickness,
-        bevelSize: this.properties.bevel.size,
-        bevelEnabled: this.properties.bevel.enabled
+        bevelEnabled: this.bevel,
+        bevelThickness: this.bevel_thickness,
+        bevelSize: this.bevel_size,
+        bevelSegments: this.bevel_segments,
+        bevelOffset: this.bevel_offset,
       });                                                
       geometry.computeBoundingBox();
       var bbox = geometry.boundingBox;
@@ -180,17 +219,21 @@ elation.require(['engine.things.label'], function() {
           text:  [ 'property', 'text'],
           col:   [ 'property', 'color'],
           emissive:  [ 'property', 'emissive'],
+          font:  [ 'property', 'font'],
+          bevel:  [ 'property', 'bevel'],
+          bevel_thickness:  [ 'property', 'bevel_thickness'],
+          bevel_size:  [ 'property', 'bevel_size'],
+          bevel_segments:  [ 'property', 'bevel_segments'],
+          bevel_offset:  [ 'property', 'bevel_offset'],
+          roughness:  [ 'property', 'roughness'],
+          metalness:  [ 'property', 'metalness'],
+          envmap_id:  [ 'property', 'envmap_id'],
         };
       }
       return this._proxyobject;
     }
-    this.updateMaterial = function() {
-      if (this.material) {
-        this.material.color = this.color;
-      }
-    }
     this.getCacheName = function(text) {
-      return text + '_' + this.font + '_' + this.font_size + (this.font_scale ? '_scaled' : '');
+      return [text, this.font, this.font_size, this.align, this.verticalalign, this.zalign, this.thickness, this.segments, this.bevel, this.bevel_thickness, this.bevel_size, this.bevel_segments, this.bevel_offset, (this.font_scale ? 'scaled' : 'unscaled')].join('_');
     }
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
@@ -206,6 +249,20 @@ elation.require(['engine.things.label'], function() {
     this.toggleVisibility = function() {
       if (this.visible && this.objects['3d'].geometry === this.emptygeometry) {
         this.objects['3d'].geometry = this.createTextGeometry(this.text);
+      }
+    }
+    this.getEnvmap = function() {
+      if (this.envmap_id) {
+        if (this.envmap) return this.envmap;
+        var envmapasset = this.getAsset('image', this.envmap_id);
+        if (envmapasset) {
+          this.envmap = envmapasset.getInstance();
+          this.envmap.mapping = THREE.EquirectangularReflectionMapping;
+          return this.envmap;
+        }
+      } else {
+        var scene = this.engine.systems.world.scene['world-3d'];
+        return scene.background;
       }
     }
   }, elation.engine.things.janusbase);
