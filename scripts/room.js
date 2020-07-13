@@ -43,7 +43,7 @@ elation.require([
         'ambient': { type: 'color', default: 0x666666, set: this.updateLights },
         'near_dist': { type: 'float', default: 0.01, set: this.setNearFar },
         'far_dist': { type: 'float', default: 1000.0, set: this.setNearFar },
-        'pbr': { type: 'boolean', default: false },
+        'pbr': { type: 'boolean', default: true },
         'toon': { type: 'boolean', default: false },
         'bloom': { type: 'float', default: 0.05, set: this.updateBloom },
         'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
