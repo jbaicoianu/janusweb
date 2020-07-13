@@ -1121,8 +1121,14 @@ elation.require([
             var linkurl = (args.url.match(/^(https?:)?\/\//) || this.getTranslator(args.url) ? args.url : this.baseurl + args.url);
             objectargs.url = linkurl;
           }
-          objectargs.size = objectargs.scale;
-          objectargs.scale = new THREE.Vector3(1,1,1);
+          let scale = objectargs.scale,
+              size = objectargs.size;
+          if (size) {
+            objectargs.size = size;
+          } else if (scale && !(scale.x == 1 && scale.y == 1 && scale.z == 1)) {
+            objectargs.size = scale;
+            objectargs.scale = new THREE.Vector3(1,1,1);
+          }
           break;
         case 'janusimage':
           objectargs.image_id = args.id;
