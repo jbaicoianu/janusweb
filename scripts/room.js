@@ -776,8 +776,9 @@ elation.require([
             this.createObject('link', {
               pos: linkpos,
               rotation: linkrot,
-              scale: V(1, 1.8, 1),
               url: this.referrer,
+              round: true,
+              shader_id: 'defaultportal',
             });
           }
         }
