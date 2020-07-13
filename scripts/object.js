@@ -552,6 +552,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.traverseObjects(elation.bind(this, function(n) { 
         n.receiveShadow = this.shadow && this.shadow_receive;
         n.castShadow = this.shadow && this.shadow_cast;
+        n.renderOrder = this.renderorder;
 
         var useSkinning = n instanceof THREE.SkinnedMesh;
         var useVertexColors = n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.color;
