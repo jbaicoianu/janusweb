@@ -62,6 +62,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
   var ghostassets = this.getAsArray(this.arrayget(assetxml, "_children.assetghost", [])); 
   var websurfaceassets = this.getAsArray(this.arrayget(assetxml, "_children.assetwebsurface", [])); 
   var shaderassets = this.getAsArray(this.arrayget(assetxml, "_children.assetshader", []));
+  var fontassets = this.getAsArray(this.arrayget(assetxml, "_children.assetfont", []));
   var assetlist = [];
   if (!datapath) {
     datapath = 'http://web.janusvr.com/media';
@@ -127,6 +128,14 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       fragment_src: n.src,
       vertex_src: n.vertex_src,
       uniforms: n.uniforms,
+      baseurl: baseurl,
+    });
+  });
+  fontassets.forEach(function(n) {
+    assetlist.push({
+      assettype: 'font',
+      name: n.id,
+      src: n.src,
       baseurl: baseurl,
     });
   });
