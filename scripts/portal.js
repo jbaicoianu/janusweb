@@ -5,8 +5,9 @@ elation.require(['janusweb.janusbase'], function() {
         'url': { type: 'string' },
         'title': { type: 'string' },
         'janus': { type: 'object' },
+        'room': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
-        'size': { type: 'vector3', default: new THREE.Vector3(1,1,1), set: this.updateGeometry },
+        'size': { type: 'vector3', default: new THREE.Vector3(1.4,2.2,1), set: this.updateGeometry },
         'url': { type: 'string', set: this.updateTitle },
         'open': { type: 'boolean', default: false },
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
@@ -17,11 +18,13 @@ elation.require(['janusweb.janusbase'], function() {
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
         'auto_load': { type: 'boolean', default: false },
         'thumb_id': { type: 'string', set: this.updateMaterial },
+        'shader_id': { type: 'string', set: this.updateMaterial, default: 'lava' },
         'mirror': { type: 'boolean', default: false, set: this.updateGeometry },
         'mirror_recursion': { type: 'integer', default: 2, set: this.updateGeometry },
         'mirror_texturesize': { type: 'integer', default: 1024, set: this.updateGeometry },
         'external': { type: 'boolean', default: false },
         'target': { type: 'string', default: '' },
+        'round': { type: 'boolean', default: false },
       });
       this.addTag('usable');
       elation.engine.things.janusportal.extendclass.postinit.call(this);
@@ -45,7 +48,13 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updateTitle = function() {
       if (this.draw_text) {
-        var title = this.title || this.url;
+        var title = this.title;
+        if (!title) {
+          title = this.url.replace(/^https?:\/\//i, '');
+          if (title.match(/^[^\/]+\/$/)) {
+            title = title.substr(0, title.length - 1);
+          }
+        }
         if (title && title.length > 0) {
           if (this.flatlabel) {
             this.flatlabel.setText(title);
@@ -53,14 +62,20 @@ elation.require(['janusweb.janusbase'], function() {
           } else {
             this.flatlabel = this.spawn('label2d', this.id + '_label', { 
               text: title, 
-              position: [0, .75 * this.size.y, .15],
+              position: [0, this.size.y, .05],
               persist: false,
-              color: 0x0000ee,
+              color: 0x0099ff,
               emissive: 0x222266,
               scale: [1/this.scale.x, 1/this.scale.y, 1/this.scale.z],
               thickness: 0.5,
               collidable: false,
               pickable: false,
+              background: 'rgba(255,255,255,.4)',
+              font: 'impact',
+              fontWeight: 'bold',
+              textShadowBlur: 5,
+              textShadowColor: 'black',
+              height: .1,
             });
           }
         }
@@ -74,11 +89,30 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'click', elation.bind(this, this.activate));
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
+      elation.events.add(this, 'collide', (ev) => this.activate());
     }
     this.createMaterial = function() {
-      var matargs = { color: 0xdddddd };
-      var mat = new THREE.MeshBasicMaterial(matargs);
-      if (this.thumb_id) {
+      var matargs = {
+        color: 0xdddddd,
+        side: THREE.DoubleSide,
+      };
+      var mat;
+      if (this.shader_id) {
+        let shader = this.getAsset('shader', this.shader_id);
+        //console.log('shader', this.shader_id, shader);
+        if (shader) {
+          let shadermaterial = shader.getInstance();
+          shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+          mat = shadermaterial;
+          mat.transparent = true;
+          mat.side = THREE.DoubleSide;
+          this.shader = mat;
+        }
+      }
+      if (!mat) {
+        mat = new THREE.MeshBasicMaterial(matargs);
+      }
+      if (mat && this.thumb_id) {
         var asset = this.getAsset('image', this.thumb_id);
         if (asset) var thumb = asset.getInstance();
         if (thumb) {
@@ -152,7 +186,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.material) {
         if (this.material.emissive) {
           this.material.emissive.setHex(0x111111);
-        } else {
+        } else if (this.material.colod) {
           this.material.color.setHex(0xffffff);
         }
       }
@@ -190,7 +224,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.material) {
         if (this.material.emissive) {
           this.material.emissive.setHex(0x000000);
-        } else {
+        } else if (this.material.color) {
           this.material.color.setHex(0xdddddd);
         }
       }
@@ -265,6 +299,9 @@ elation.require(['janusweb.janusbase'], function() {
           url: ['property', 'url'],
           title: ['property', 'title'],
           thumb_id: ['property', 'thumb_id'],
+          shader_id: ['property', 'shader_id'],
+          size: ['property', 'size'],
+          round: ['property', 'round'],
         };
       }
       return this._proxyobject;
@@ -444,7 +481,13 @@ elation.require(['janusweb.janusbase'], function() {
     this.updateGeometry = function() {
       var thickness = 0.05 * this.size.z;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
-      var box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
+      var box;
+      if (this.round) {
+        box = new THREE.CircleBufferGeometry(.5, 64);
+        box.applyMatrix4(new THREE.Matrix4().makeScale(this.size.x, this.size.y, thickness));
+      } else {
+        box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
+      }
       box.applyMatrix4(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
 
       this.collision_scale = V(this.size.x, this.size.y, thickness);
@@ -544,6 +587,15 @@ elation.require(['janusweb.janusbase'], function() {
         url = this.baseurl + this.url;
       }
       return url;
+    }
+    this.handleFrameUpdates = function(ev) {
+      elation.engine.things.janusportal.extendclass.handleFrameUpdates.call(this, ev);
+      if (this.shader) {
+        if (this.shader.uniforms.time) {
+          this.shader.uniforms.time.value = performance.now() / 1000;
+          this.refresh();
+        }
+      }
     }
   }, elation.engine.things.janusbase);
 });
