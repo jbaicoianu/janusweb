@@ -120,6 +120,8 @@
   { "assettype":"model", "name":"controller_daydream", "src":"assets/controllers/daydream/vr_controller_daydream.obj", "mtl":"vr_controller_daydream.mtl" },
   { "assettype":"model", "name":"controller_vive", "src":"assets/controllers/vive/ViveController.dae.gz" },
   { "assettype":"model", "name":"controller_touch_left", "src":"assets/controllers/oculus/TouchLeftModified.dae.gz" },
-  { "assettype":"model", "name":"controller_touch_right", "src":"assets/controllers/oculus/TouchRight.dae.gz" }
+  { "assettype":"model", "name":"controller_touch_right", "src":"assets/controllers/oculus/TouchRight.dae.gz" },
+  { "assettype":"font", "name":"helvetiker", "src":"assets/fonts/helvetiker_regular.typeface.json" },
+  { "assettype":"shader", "name":"defaultportal", "shadertype":"shadertoy","fragment_src":"assets/shaders/greenportal2.shadertoy.frag", "preload":true }
 
 ]
