@@ -960,9 +960,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           });
         }
         let applyTextureOffset = (texture) => {
-          texture.offset.copy(this.texture_offset);
-          texture.repeat.copy(this.texture_repeat);
-          texture.rotation = this.texture_rotation;
+          texture.offset.copy(this.properties.texture_offset);
+          texture.repeat.copy(this.properties.texture_repeat);
+          texture.rotation = this.properties.texture_rotation;
         }
         this.objectMeshes.forEach(n => {
           n.onBeforeRender = () => {
