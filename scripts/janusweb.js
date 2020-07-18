@@ -380,11 +380,16 @@ elation.require([
         }
 
         if (!this.currentroom.loaded) {
+          if (this.currentroom.completed) {
+            // Room was previously loaded but deallocated, reload it
+            this.currentroom.load();
+          }
           elation.events.add(this.currentroom, 'janus_room_load', elation.bind(this, function() {
             this.currentroom.enable();
           }));
         } else {
           this.currentroom.enable();
+          this.currentroom.setTitle(this.currentroom.title);
         }
         //this.enter_room(url);
       } else {
