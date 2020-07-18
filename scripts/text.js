@@ -44,7 +44,7 @@ elation.require(['engine.things.label'], function() {
       } else {
         this.createTextMesh();
       }
-      elation.events.add(this.room, 'room_load_complete', ev => { console.log('YUHHHHHHHHHHHH', this); this.updateMaterial(); });
+      elation.events.add(this.room, 'room_load_complete', ev => this.updateMaterial());
       return this.objects['3d'];
     }
     this.createTextMesh = function() {
