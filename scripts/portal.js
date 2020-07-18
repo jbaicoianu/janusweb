@@ -186,7 +186,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.material) {
         if (this.material.emissive) {
           this.material.emissive.setHex(0x111111);
-        } else if (this.material.colod) {
+        } else if (this.material.color) {
           this.material.color.setHex(0xffffff);
         }
       }
