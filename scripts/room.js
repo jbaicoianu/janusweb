@@ -2418,6 +2418,12 @@ console.log('dispatch to parent', event, this, event.target);
       }
       return url;
     }
+    this.dispose = function() {
+      if (this.assetpack) {
+        this.assetpack.dispose();
+      }
+      this.loaded = false;
+    }
   }, elation.engine.things.generic);
 });
 
