@@ -76,8 +76,9 @@ elation.require(['janusweb.janusbase'], function() {
       var texture = null;
       if (this.image_id) {
         texture = this.getAsset('image', this.image_id);
-        //elation.events.add(texture, 'asset_load', elation.bind(this, this.assignTextures));
+        elation.events.add(texture, 'asset_load', elation.bind(this, this.updateMaterial));
         elation.events.add(texture, 'update', elation.bind(this, this.refresh));
+        this.imageasset = texture;
       }
       if (this.emitter_id) {
         var asset = this.getAsset('model', this.emitter_id);
@@ -161,7 +162,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.updateMaterial = function() {
       if (this.material) {
         this.material.opacity = this.opacity;
-        this.material.transparent = this.opacity < 1;
+        this.material.transparent = (this.imageasset && this.imageasset.hasalpha) || (this.opacity < 1);
         this.material.color = this.color;
         this.material.size = this.particle_scale.x + this.rand_scale.x; 
 
