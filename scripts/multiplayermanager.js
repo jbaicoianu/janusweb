@@ -375,12 +375,13 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
     this.handleUserMoved = function(msg) {
       var userId = msg.data.data.position._userId;
 
+      var room = this.rooms[msg.data.data.roomId] || this.activeroom;
       if (!this.remoteplayers[userId]) {
         var remoteplayer = this.spawnRemotePlayer(msg.data.data);
+        remoteplayer.setRoom(room);
         elation.events.fire({element: this, type: 'janusweb_user_joined', data: remoteplayer});
       } else {
         var remote = this.remoteplayers[userId];
-        var room = this.rooms[msg.data.data.roomId] || this.activeroom;
         var movedata = msg.data.data.position;
 
         if (remote.room !== room) {
@@ -409,10 +410,9 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
     this.handleUserEnter = function(msg) {
       var remoteplayer = this.remoteplayers[msg.data.data.userId];
       console.log('[MultiplayerManager] player entered', msg, remoteplayer);
+      var room = this.rooms[msg.data.data.roomId];
       if (!remoteplayer) {
         remoteplayer = this.spawnRemotePlayer(msg.data.data);
-      } else {
-        var room = this.rooms[msg.data.data.roomId];
       }
       if (remoteplayer.room !== room) {
         remoteplayer.setRoom(room);
