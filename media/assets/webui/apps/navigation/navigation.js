@@ -399,7 +399,7 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     }
   }
   handleFocus(ev) {
-    this.input.selectall();
+    this.input.select();
     if (this.input.value.length > 0) {
       this.suggestions.show();
     }
