@@ -113,17 +113,15 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
 
-      setTimeout(elation.bind(this, function() {
-        this.cursors = {
-          'default': elation.engine.assets.find('image', 'cursor_crosshair'),
-          'crosshair': elation.engine.assets.find('image', 'cursor_crosshair'),
-          'pointer': elation.engine.assets.find('image', 'cursor_hand'),
-          'dot_inactive': elation.engine.assets.find('image', 'cursor_dot_inactive'),
-          'dot_active': elation.engine.assets.find('image', 'cursor_dot_active'),
-        };
-        this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
-        this.engine.systems.world.scene['world-3d'].add(this.cursor);
-      }), 1000);
+      this.cursors = {
+        'default': janus.getAsset('image', 'cursor_crosshair'),
+        'crosshair': janus.getAsset('image', 'cursor_crosshair'),
+        'pointer': janus.getAsset('image', 'cursor_hand'),
+        'dot_inactive': janus.getAsset('image', 'cursor_dot_inactive'),
+        'dot_active': janus.getAsset('image', 'cursor_dot_active'),
+      };
+      this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
+      this.engine.systems.world.scene['world-3d'].add(this.cursor);
 
       //this.gazecaster = this.createObject('raycaster', {});
       /*
@@ -333,9 +331,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
 
             if (this.cursors[this.cursor_style]) {
-              this.cursor.material.map = this.cursors[this.cursor_style];
+              this.cursor.material.map = this.cursors[this.cursor_style]._texture;
             } else if (this.cursors['default']) {
-              this.cursor.material.map = this.cursors['default'];
+              this.cursor.material.map = this.cursors['default']._texture;
             } else {
               this.cursor.material.map = null;
               this.cursor.visible = false;
