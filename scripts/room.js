@@ -48,7 +48,6 @@ elation.require([
         'bloom': { type: 'float', default: 0.05, set: this.updateBloom },
         'tonemapping_type': { type: 'string', default: 'linear', set: this.updateToneMapping },
         'tonemapping_exposure': { type: 'float', default: 0.8, set: this.updateToneMapping },
-        'tonemapping_whitepoint': { type: 'float', default: 1.0, set: this.updateToneMapping },
         'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'party_mode': { type: 'bool', default: true },
@@ -398,7 +397,6 @@ elation.require([
     this.updateToneMapping = function() {
       this.engine.systems.render.renderer.toneMapping = this.toneMappingTypes[this.tonemapping_type] || 0;
       this.engine.systems.render.renderer.toneMappingExposure = this.tonemapping_exposure;
-      this.engine.systems.render.renderer.toneMappingWhitePoint = this.tonemapping_whitepoint;
       this.refresh();
     }
     this.setNearFar = function() {
@@ -818,7 +816,6 @@ elation.require([
         this.properties.bloom = room.bloom || 0.05;
         this.properties.tonemapping_type = room.tonemapping_type || 'linear';
         this.properties.tonemapping_exposure = room.tonemapping_exposure || this.tonemapping_exposure;
-        this.properties.tonemapping_whitepoint = room.tonemapping_whitepoint || this.tonemapping_whitepoint;
         this.properties.shadows = elation.utils.any(room.shadows, false);
         this.properties.party_mode = elation.utils.any(room.party_mode, true);
         this.properties.locked = room.locked || false;
@@ -1824,7 +1821,6 @@ elation.require([
           bloom:         ['property', 'bloom'],
           tonemapping_type:       ['property', 'tonemapping_type'],
           tonemapping_exposure:   ['property', 'tonemapping_exposure'],
-          tonemapping_whitepoint: ['property', 'tonemapping_whitepoint'],
           pbr:           ['property', 'pbr'],
           toon:          ['property', 'toon'],
           shadows:       ['property', 'shadows'],
