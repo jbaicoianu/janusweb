@@ -719,8 +719,8 @@ elation.require([
               collisionpos = V(0,0,0);
           if (room.use_local_asset == 'room_plane') {
             collisionid = 'cube';
-            collisionscale.set(1000,10,1000);
-            collisionpos.set(0,-5,0);
+            collisionscale.set(100000,100,100000);
+            collisionpos.set(0,-50,0);
           }
           this.localasset = this.createObject('object', {
             id: modelid,
