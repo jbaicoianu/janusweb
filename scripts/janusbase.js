@@ -216,7 +216,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           rotate_speed = this.properties.rotate_deg_per_sec || 0;
       if (this.objects.dynamics && rotate_axis) {
         var speed = (rotate_speed * Math.PI/180);
-        var axisparts = rotate_axis.split(' ');
+        var axisparts = (rotate_axis instanceof THREE.Vector3 ? rotate_axis.toArray() : rotate_axis.split(' '));
         var axis = new THREE.Vector3().set(axisparts[0], axisparts[1], axisparts[2]);
         axis.multiplyScalar(speed);
         this.objects.dynamics.setAngularVelocity(axis);
