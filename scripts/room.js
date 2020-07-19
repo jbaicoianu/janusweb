@@ -136,7 +136,6 @@ elation.require([
       elation.events.add(this, 'thing_remove', elation.bind(this, this.onThingRemove));
     }
     this.createChildren = function() {
-      this.createLights();
       this.collidable = false;
       this.setCollider('sphere', {radius: 1e4});
 
