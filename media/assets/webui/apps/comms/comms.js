@@ -167,7 +167,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       timestamp: new Date().getTime(),
       type: 'join',
       userId: data.id,
-      message: 'has joined the room'
+      message: 'has joined ' + (data.room.title || data.room.url),
     });
     this.scrollToBottom();
   }
