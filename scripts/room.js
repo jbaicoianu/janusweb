@@ -1269,7 +1269,14 @@ elation.require([
           };
           assetlist.push(assetargs);
         } else if (args.canvas) {
-          assetlist.push({ assettype:'image', name:args.id, canvas: args.canvas, tex_linear: args.tex_linear, hasalpha: args.hasalpha, baseurl: this.baseurl });
+          assetlist.push({
+            assettype: 'image',
+            name: args.id,
+            canvas: args.canvas,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
         } else if (args.texture) {
           assetlist.push({
             assettype:'image',
