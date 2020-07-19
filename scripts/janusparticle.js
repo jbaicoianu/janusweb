@@ -14,12 +14,12 @@ elation.require(['janusweb.janusbase'], function() {
     `,
     fragment: `
       uniform vec3 color;
-      uniform sampler2D texture;
+      uniform sampler2D sprite;
       varying vec4 vColor;
       void main() {
         gl_FragColor = vec4( color * vColor.rgb, vColor.a );
         #ifdef USE_MAP
-          gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+          gl_FragColor = gl_FragColor * texture2D( sprite, gl_PointCoord );
         #endif
       }
     `
@@ -118,7 +118,7 @@ elation.require(['janusweb.janusbase'], function() {
       var mat = new THREE.ShaderMaterial( {
         uniforms: {
           color: { value: new THREE.Color( 0xffffff ) },
-          texture: { value: texture },
+          sprite: { value: texture.getInstance() },
         },
         defines: shaderdefines,
         vertexShader: shaderdef.vertex,
@@ -506,9 +506,13 @@ elation.require(['janusweb.janusbase'], function() {
           rand_accel:  [ 'property', 'rand_accel'],
           rand_col:  [ 'property', 'rand_col'],
           particle_vel:  [ 'property', 'particle_vel'],
+          image_id:  [ 'property', 'image_id'],
           emitter_id:  [ 'property', 'emitter_id'],
           emitter_scale:  [ 'property', 'emitter_scale'],
           emitter_pos:  [ 'property', 'emitter_pos'],
+          rate:  [ 'property', 'rate'],
+          count:  [ 'property', 'count'],
+          duration:  [ 'property', 'duration'],
           opacity:  [ 'property', 'opacity'],
           depthwrite:  [ 'property', 'depthwrite'],
           depthtest:  [ 'property', 'depthtest'],
