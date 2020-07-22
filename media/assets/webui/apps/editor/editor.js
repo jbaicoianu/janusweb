@@ -131,7 +131,7 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
 
     let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
     this.scenetree = elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
-    elation.events.add(this.scenetree, 'select', (ev) => { console.log('hell yeah', ev.data); this.editObject(ev.data); });
+    elation.events.add(this.scenetree, 'select', (ev) => { this.editObject(ev.data); });
     this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
   }
   initRoomEvents(room) {
@@ -1464,13 +1464,19 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
       selectable: true
     });
     this.tree.attrs = {
-      name: 'id',
-      label: 'id',
+      name: 'js_id',
+      label: 'js_id',
       children: 'children'
     };
     elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
 setTimeout(() => {
-    this.tree.setItems({room: room});
+    this.tree.setItems({
+      room: {
+        js_id: room.url,
+        children: room.objects,
+        getProxyObject: room.getProxyObject.bind(room),
+      }
+    });
 }, 0);
   }
   handleTreeviewSelect(ev) {
