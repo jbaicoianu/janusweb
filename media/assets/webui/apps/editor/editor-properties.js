@@ -61,7 +61,7 @@ elation.elements.registerType('color', {
     }
   },
   write(value) {
-    return value.toArray().join(' ');
+    return (value ? value.toArray().join(' ') : 'null');
   }
 });
 elation.elements.define('janus-ui-editor-property', class extends elation.elements.ui.item {
@@ -363,7 +363,7 @@ elation.elements.define('janus-ui-editor-property-color', class extends elation.
   }
   updateValue(value) {
     this.value = value;
-    if (this.colorpicker) {
+    if (this.colorpicker && value) {
       this.colorpicker.value = '#' + value.getHexString();
       this.inputs[0].value = (value.r * 255) | 0;
       this.inputs[1].value = (value.g * 255) | 0;
