@@ -73,12 +73,16 @@ elation.require(['janusweb.janusbase'], function() {
     this.createObject3D = function() {
       var geo = this.geometry = new THREE.BufferGeometry()
 
-      var texture = null;
+      var texture = null,
+          textureasset = null;
       if (this.image_id) {
-        texture = this.getAsset('image', this.image_id);
-        elation.events.add(texture, 'asset_load', elation.bind(this, this.updateMaterial));
-        elation.events.add(texture, 'update', elation.bind(this, this.refresh));
-        this.imageasset = texture;
+        textureasset = this.getAsset('image', this.image_id);
+        if (textureasset) {
+          elation.events.add(textureasset, 'asset_load', elation.bind(this, this.updateMaterial));
+          elation.events.add(textureasset, 'update', elation.bind(this, this.refresh));
+          this.imageasset = textureasset;
+          texture = textureasset.getInstance();
+        }
       }
       if (this.emitter_id) {
         var asset = this.getAsset('model', this.emitter_id);
@@ -119,7 +123,7 @@ elation.require(['janusweb.janusbase'], function() {
       var mat = new THREE.ShaderMaterial( {
         uniforms: {
           color: { value: new THREE.Color( 0xffffff ) },
-          sprite: { value: texture.getInstance() },
+          sprite: { value: texture },
         },
         defines: shaderdefines,
         vertexShader: shaderdef.vertex,
