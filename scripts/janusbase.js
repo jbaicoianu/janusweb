@@ -159,8 +159,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               let remove = [];
               collider.traverse(n => {
                 // Ignore collider if it's too high-poly
-                if (n instanceof THREE.Mesh && !((n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.position.count <= 16384) ||
-                      (n.geometry instanceof THREE.Geometry && n.geometry.vertices.length <= 16384))) {
+                if (n instanceof THREE.Mesh && !((n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.position.count <= 65536) ||
+                      (n.geometry instanceof THREE.Geometry && n.geometry.vertices.length <= 65536))) {
                   console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
                   elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
                   remove.push(n);
@@ -1088,7 +1088,7 @@ console.log('clone', props);
       }
     }
     this.setRoom = function(newroom, ischild) {
-      if (room._target) room = room._target; // If the proxy object is passed in, use its target instead
+      if (newroom._target) newroom = newroom._target; // If the proxy object is passed in, use its target instead
 
       if (this.room !== newroom) {
         if (!ischild) {
