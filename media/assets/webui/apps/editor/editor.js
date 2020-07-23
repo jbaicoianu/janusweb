@@ -120,6 +120,12 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     janus.engine.systems.controls.activateContext('roomedit_paste');
 
     this.initialized = new Set();
+
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    this.scenetree = elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
+    elation.events.add(this.scenetree, 'select', (ev) => { this.editObject(ev.data); });
+    this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
+
     if (typeof room != 'undefined') {
       this.initRoomEvents(room);
     }
@@ -128,11 +134,6 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     room.addEventListener('wheel', (ev) => this.editObjectMousewheel(ev));
     window.addEventListener('keydown', (ev) => this.editObjectKeydown(ev));
     window.addEventListener('keyup', (ev) => this.editObjectKeyup(ev));
-
-    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
-    this.scenetree = elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
-    elation.events.add(this.scenetree, 'select', (ev) => { this.editObject(ev.data); });
-    this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
   }
   initRoomEvents(room) {
     if (!this.initialized.has(room)) {
@@ -144,6 +145,8 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
       room.addEventListener('dragenter', (ev) => this.handleDragOver(ev));
       room.addEventListener('dragover', (ev) => this.handleDragOver(ev));
       room.addEventListener('drop', (ev) => this.handleDrop(ev));
+      room.addEventListener('thing_add', (ev) => this.handleThingAdd(ev));
+      room.addEventListener('thing_remove', (ev) => this.handleThingRemove(ev));
       this.initialized.add(room);
     }
   }
@@ -1109,6 +1112,16 @@ console.log('change color', obj.col, vec);
       janus.engine.systems.controls.requestPointerLock();
     }
   }
+  handleThingAdd(ev) {
+    setTimeout(() => {
+      this.scenetree.refreshList();
+    }, 0);
+  }
+  handleThingRemove(ev) {
+    setTimeout(() => {
+      this.scenetree.refreshList();
+    }, 0);
+  }
   loadObjectFromURIList(list) {
     var urls = list.split('\n');
 
@@ -1469,7 +1482,11 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
       children: 'children'
     };
     elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
-setTimeout(() => {
+    setTimeout(() => {
+      this.refreshList();
+    }, 0);
+  }
+  refreshList() {
     this.tree.setItems({
       room: {
         js_id: room.url,
@@ -1477,7 +1494,6 @@ setTimeout(() => {
         getProxyObject: room.getProxyObject.bind(room),
       }
     });
-}, 0);
   }
   handleTreeviewSelect(ev) {
 console.log('treeview select', ev);
