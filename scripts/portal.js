@@ -135,6 +135,12 @@ elation.require(['janusweb.janusbase'], function() {
           elation.events.add(thumb, 'asset_update', elation.bind(this, function(ev) { mat.map = ev.data; }));
         }
       }
+
+      // Use polygonoffset to keep portal from z-fighting with walls
+      mat.polygonOffset = true;
+      mat.polygonOffsetFactor = -1;
+      mat.polygonOffsetUnits = -4;
+
       return mat;
     }
     this.adjustAspectRatio = function(image) {
@@ -485,10 +491,11 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.round) {
         box = new THREE.CircleBufferGeometry(.5, 64);
         box.applyMatrix4(new THREE.Matrix4().makeScale(this.size.x, this.size.y, thickness));
+        box.applyMatrix4(new THREE.Matrix4().makeTranslation(0, this.size.y/2, .02));
       } else {
         box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
+        box.applyMatrix4(new THREE.Matrix4().makeTranslation(0, this.size.y/2, thickness + .02));
       }
-      box.applyMatrix4(new THREE.Matrix4().makeTranslation(0,this.size.y/2,thickness));
 
       this.collision_scale = V(this.size.x, this.size.y, thickness);
       this.collision_pos = V(0, this.size.y / 2, 0);
@@ -511,10 +518,10 @@ elation.require(['janusweb.janusbase'], function() {
         return group;
       } else {
         var mat = this.createMaterial();
-
         this.portalgeometry = box;
         //var group = new THREE.Object3D();
         var group = new THREE.Mesh(box, mat);
+        group.renderOrder = 10;
 
         if (this.draw_glow) {
           var framewidth = .05,
