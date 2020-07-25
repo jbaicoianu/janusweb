@@ -1479,7 +1479,8 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     this.tree.attrs = {
       name: 'js_id',
       label: 'js_id',
-      children: 'children'
+      children: 'children',
+      visible: 'persist',
     };
     elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
     setTimeout(() => {
@@ -1491,6 +1492,7 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
       room: {
         js_id: room.url,
         children: room.objects,
+        persist: true,
         getProxyObject: room.getProxyObject.bind(room),
       }
     });
