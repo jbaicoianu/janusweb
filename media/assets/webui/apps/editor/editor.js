@@ -83,7 +83,7 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     janus.engine.systems.controls.addContext('roomedit', {
       //'accept':           [ 'keyboard_enter', (ev) => { if (ev.value) this.editObjectStop(); } ],
       //'cancel':           [ 'keyboard_esc', (ev) => this.editObjectCancel(ev) ],
-      'delete':           [ 'keyboard_delete,keyboard_backspace', (ev) => this.editObjectDelete(ev) ],
+      'delete':           [ 'keyboard_delete', (ev) => this.editObjectDelete(ev) ],
       'mode':             [ 'keyboard_nomod_tab', (ev) => this.editObjectToggleMode(ev) ],
       'mode_reverse':     [ 'keyboard_shift_tab', (ev) => this.editObjectToggleModeReverse(ev) ],
       //'toggle_raycast':   [ 'keyboard_shift',  (ev) => this.editObjectToggleRaycast(ev) ],
