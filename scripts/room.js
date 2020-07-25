@@ -71,6 +71,7 @@ elation.require([
         'selfavatar': { type: 'boolean', default: false },
         'requirescripts': { type: 'string' },
         'onload': { type: 'string' },
+        'sync': { type: 'boolean', default: false },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
@@ -1837,6 +1838,8 @@ elation.require([
           selfavatar:    ['property', 'selfavatar'],
           requirescripts:['property', 'requirescripts'],
           pos:           ['property', 'spawnpoint.position'],
+          sync:          ['property', 'sync'],
+          js_id:         ['property', 'roomid'],
 
           skybox:         ['property', 'skybox'],
           skybox_left_id: ['property', 'skybox_left'],
