@@ -816,11 +816,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           materials.push(this.copyMaterial(oldmat[i]));
         }
         var m = materials;
-      } else if (oldmat instanceof THREE.PointsMaterial || 
+      } else if (oldmat instanceof THREE.PointsMaterial ||
                  oldmat instanceof THREE.LineBasicMaterial ||
                  oldmat instanceof THREE.LineDashedMaterial
                 ) {
-        var m = oldmat.clone(); 
+        var m = oldmat.clone();
       } else {
         var m = this.allocateMaterial();
         m.dithering = true;
