@@ -113,23 +113,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
 
-      this.cursors = {
-        'default': janus.getAsset('image', 'cursor_crosshair'),
-        'crosshair': janus.getAsset('image', 'cursor_crosshair'),
-        'pointer': janus.getAsset('image', 'cursor_hand'),
-        'dot_inactive': janus.getAsset('image', 'cursor_dot_inactive'),
-        'dot_active': janus.getAsset('image', 'cursor_dot_active'),
-      };
       this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
       this.engine.systems.world.scene['world-3d'].add(this.cursor);
 
-      //this.gazecaster = this.createObject('raycaster', {});
-      /*
-      this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
-      elation.events.add(this.gazecaster, 'raycastenter', elation.bind(this, this.handleGazeEnter));
-      elation.events.add(this.gazecaster, 'raycastleave', elation.bind(this, this.handleGazeLeave));
-      elation.events.add(this.gazecaster, 'raycastmove', elation.bind(this, this.handleGazeMove));
-      */
 
       this.getAvatarData().then(avatar => {;
         if (avatar && false) { // FIXME - self avatar is buggy so it's disabled
@@ -419,14 +405,30 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.cursor.visible = this.cursor_visible;
       }
     }
-    this.setRoom = function(room) {
+    this.setRoom = function(newroom) {
       if (this.room) {
         this.room.part();
       }
-      this.room = room;
+      this.room = newroom;
       this.room.join();
-      if (this.gazecaster) {
-        this.gazecaster.room = room;
+      if (!this.gazecaster) {
+        this.gazecaster = newroom.createObject('raycaster', {});
+        this.head.add(this.gazecaster._target);
+        //this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
+        elation.events.add(this.gazecaster._target, 'raycastenter', elation.bind(this, this.handleGazeEnter));
+        elation.events.add(this.gazecaster._target, 'raycastleave', elation.bind(this, this.handleGazeLeave));
+        elation.events.add(this.gazecaster._target, 'raycastmove', elation.bind(this, this.handleGazeMove));
+      } else {
+        this.gazecaster.setRoom(newroom);
+      }
+      if (!this.cursors) {
+        this.cursors = {
+          'default': janus.getAsset('image', 'cursor_crosshair'),
+          'crosshair': janus.getAsset('image', 'cursor_crosshair'),
+          'pointer': janus.getAsset('image', 'cursor_hand'),
+          'dot_inactive': janus.getAsset('image', 'cursor_dot_inactive'),
+          'dot_active': janus.getAsset('image', 'cursor_dot_active'),
+        };
       }
       if (!this.room.selfavatar && this.ghost) {
         this.ghost.die();
@@ -446,7 +448,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.visible = true;
       }
 
-      room.appendChild(this.getProxyObject());
+      newroom.appendChild(this.getProxyObject());
       for (let k in this.children) {
         if (this.children[k].setRoom) {
           this.children[k].setRoom(room);
