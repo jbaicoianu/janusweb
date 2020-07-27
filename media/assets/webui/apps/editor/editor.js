@@ -341,11 +341,7 @@ console.log('set translation snap', ev.data, ev);
       console.log('update bbox', this.roomedit.objectBoundingBox);
     });
 
-    this.roomedit.collision_id = object.collision_id;
-setTimeout(() => {
-    object.collision_id = '';
-    object.collision_radius = null;
-}, 0);
+    object.pickable = false;
 
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
@@ -497,13 +493,10 @@ setTimeout(() => {
       if (wireframe.parent != this.roomedit.parentObject) {
         this.roomedit.parentObject.appendChild(wireframe);
       }
-console.log('show the parent wireframe', wireframe.pos, wireframe.scale, wireframe, wireframe.parent);
-    } else {
     }
   }
   editObjectRemoveParentWireframe() {
     if (this.roomedit.parentwireframe && this.roomedit.parentwireframe.parent) {
-console.log('dont hide the parent wireframe', this.roomedit.parentwireframe);
         //this.roomedit.parentwireframe.parent.removeChild(this.roomedit.parentwireframe);
     }
   }
@@ -533,7 +526,9 @@ console.log('dont hide the parent wireframe', this.roomedit.parentwireframe);
         this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
+    this.roomedit.object.pickable = true;
     this.roomedit.object = false;
+    this.roomedit.raycast = false;
     this.roomedit.parentObject = null;
     this.editObjectRemoveWireframe();
     this.editObjectRemoveParentWireframe();
@@ -1498,7 +1493,6 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     });
   }
   handleTreeviewSelect(ev) {
-console.log('treeview select', ev);
     elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
   }
 });
