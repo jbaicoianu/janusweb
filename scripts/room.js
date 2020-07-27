@@ -2269,24 +2269,26 @@ elation.require([
       return function(dir, pos, classname) {
         _ray.set(pos, dir);
         var intersections = _ray.intersectObject(this.colliders, true);
-        var hits = intersections;
+        var hits = [];
         if (classname) {
-          hits = [];
           for (var i = 0; i < intersections.length; i++) {
             var obj = intersections[i].object,
                 thing = this.getThingForObject(obj);
-            if (thing.hasClass(classname)) {
+            if (obj.pickable && thing.hasClass(classname)) {
               intersections[i].mesh = obj;
               intersections[i].object = thing.getProxyObject();
               hits.push(intersections[i]);
             }
           }
         } else {
-          for (var i = 0; i < hits.length; i++) {
-            var obj = hits[i].object,
+          for (var i = 0; i < intersections.length; i++) {
+            var obj = intersections[i].object,
                   thing = this.getThingForObject(obj);
-            hits[i].mesh = hits[i].object;
-            hits[i].object = thing.getProxyObject();
+            if (thing.pickable) {
+              intersections[i].mesh = intersections[i].object;
+              intersections[i].object = thing.getProxyObject();
+              hits.push(intersections[i]);
+            }
           }
         }
         return hits;
