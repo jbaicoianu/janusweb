@@ -31,6 +31,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'thing_use_focus', elation.bind(this, this.useFocus));
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
       elation.events.add(player, 'player_enable', elation.bind(this, this.disableDebounce));
+      elation.events.add(player, 'player_disable', elation.bind(this, this.enableDebounce));
     }
     this.createObject3D = function() {
       this.objects['3d'] = new THREE.Object3D();
@@ -261,33 +262,33 @@ elation.require(['janusweb.janusbase'], function() {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
       }
-      if (this.external && this.url) {
-        if (!this.debounceclick) {
+      if (!this.debounceclick) {
+        if (this.external && this.url) {
           this.debounceclick = true;
           if (this.target) {
             window.open(this.url, this.target);
           } else {
             document.location = this.url;
           }
-        }
-      } else {
-        if (this.seamless) {
-          if (!this.open) {
-            this.openPortal();
-          } else {
-            this.closePortal();
+        } else {
+          if (this.seamless) {
+            if (!this.open) {
+              this.openPortal();
+            } else {
+              this.closePortal();
+            }
+          } else if (this.url) {
+            this.properties.janus.setActiveRoom(this.url, room.url);
           }
-        } else if (this.url) {
-          this.properties.janus.setActiveRoom(this.url, room.url);
         }
-      }
-      var gamepads = this.engine.systems.controls.gamepads;
-      if (gamepads && gamepads[0] && gamepads[0].hapticActuators) {
-        if (gamepads[0].hapticActuators[0]) {
-          gamepads[0].hapticActuators[0].pulse(1, 300);
+        var gamepads = this.engine.systems.controls.gamepads;
+        if (gamepads && gamepads[0] && gamepads[0].hapticActuators) {
+          if (gamepads[0].hapticActuators[0]) {
+            gamepads[0].hapticActuators[0].pulse(1, 300);
+          }
         }
+        elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
-      elation.events.fire({element: this, type: 'janusweb_portal_click'});
     }
     this.useFocus = function(ev) {
       this.hover();
@@ -580,10 +581,12 @@ elation.require(['janusweb.janusbase'], function() {
         return group;
       }
     }
+    this.enableDebounce = function() {
+      this.debounceclick = true;
+    }
     this.disableDebounce = function() {
       setTimeout(() => {
         this.debounceclick = false;
-        console.log('debounce disabled');
       }, 1000);
     }
     this.getFullURL = function() {
