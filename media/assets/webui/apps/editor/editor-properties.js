@@ -293,9 +293,9 @@ elation.elements.define('janus-ui-editor-property-euler', class extends elation.
   updateValue(value) {
     this.value = value;
     if (this.elements) {
-      this.elements.x.value = this.value.x * THREE.Math.RAD2DEG;
-      this.elements.y.value = this.value.y * THREE.Math.RAD2DEG;
-      this.elements.z.value = this.value.z * THREE.Math.RAD2DEG;
+      this.elements.x.value = this.value.x;
+      this.elements.y.value = this.value.y;
+      this.elements.z.value = this.value.z;
     }
   }
 });
