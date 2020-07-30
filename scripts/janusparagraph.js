@@ -4,12 +4,12 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
       this.defineProperties({
         text: {type: 'string', default: '', set: this.updateTexture},
-        font_size: {type: 'integer', default: 16},
-        text_col: {type: 'color', default: 0x000000},
-        back_col: {type: 'color', default: 0xffffff},
-        back_alpha: {type: 'float', default: 1},
+        font_size: {type: 'integer', default: 16, set: this.updateTexture},
+        text_col: {type: 'color', default: 0x000000, set: this.updateTexture},
+        back_col: {type: 'color', default: 0xffffff, set: this.updateTexture},
+        back_alpha: {type: 'float', default: 1, set: this.updateTexture},
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
-        css: {type: 'string' },
+        css: {type: 'string', set: this.updateTexture },
         depth_write: { type: 'boolean', default: true },
         depth_test: { type: 'boolean', default: true },
       });
@@ -98,15 +98,17 @@ elation.require(['janusweb.janusbase'], function() {
       var url = 'data:image/svg+xml,' + encodeURIComponent(data);
 
       var timer;
-      img.onload = function() {
+      img.onload = () => {
         ctx.drawImage(img, 0, 0);
         if (timer) clearTimeout(timer);
-        timer = setTimeout(function() {
+        timer = setTimeout(() => {
           texture.needsUpdate = true;
           timer = false;
+          this.refresh();
         }, 10);
       }
       img.src = url;
+      this.refresh();
       return texture;
     }
     this.getProxyObject = function(classdef) {
@@ -114,9 +116,10 @@ elation.require(['janusweb.janusbase'], function() {
         this._proxyobject = elation.engine.things.janusparagraph.extendclass.getProxyObject.call(this, classdef);
         this._proxyobject._proxydefs = {
           text:  [ 'property', 'text'],
+          css:  [ 'property', 'css'],
           text_col:  [ 'property', 'text_col'],
           back_col:  [ 'property', 'back_col'],
-          back_opacity:  [ 'property', 'back_opacity'],
+          back_alpha:  [ 'property', 'back_alpha'],
         };
       }
       return this._proxyobject;
