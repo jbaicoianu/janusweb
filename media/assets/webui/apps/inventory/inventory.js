@@ -12,14 +12,14 @@ elation.elements.define('janus.ui.inventory', class extends elation.elements.bas
   addSource(name, collection) {
   }
   handlePrimitiveSelect(ev) {
-    let item = ev.data;
-    elation.events.fire({type: 'assetselect', data: item.url, element: this});
+    let item = ev.target;
+    elation.events.fire({type: 'assetselect', data: item.value.href, element: this});
     ev.preventDefault();
     ev.stopPropagation();
   }
   handleAssetSelect(ev) {
-    let item = ev.data;
-    elation.events.fire({type: 'assetselect', data: item.url, element: this});
+    let item = ev.target;
+    elation.events.fire({type: 'assetselect', data: item.model.root.url, element: this});
     ev.preventDefault();
     ev.stopPropagation();
   }
