@@ -1,10 +1,12 @@
 ui-grid.models {
   height: 20vh;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   grid-template-rows: repeat(auto-fill, minmax(60px, 1fr));
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 ui-grid.models>* {
-  height: auto;
+  height: 60px;
   padding: 0;
   position: relative;
   transition: transform ease-out 100ms;
@@ -47,6 +49,11 @@ ui-grid.models>* a {
   margin: 0;
   padding: 0;
   flex: 1 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: Center;
+  text-decoration: none;
 }
 ui-grid.models>* p {
   display: none;
