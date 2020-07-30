@@ -466,7 +466,6 @@ console.log('set translation snap', ev.data, ev);
   editObjectShowParentWireframe() {
     if (this.roomedit.parentObject) {
       let bbox = this.roomedit.parentObject.getBoundingBox(true);
-      console.log('parent bbox!', bbox);
       if (!this.roomedit.parentwireframe) {
         let root = this.roomedit.parentObject.createObject('object', { });
         let hiddenfaces = root.createObject('object', {
@@ -583,7 +582,7 @@ console.log('set translation snap', ev.data, ev);
 
     var point = this.roomedit.objectPosition || this.roomedit.object.position;
 
-    if (!bbox) {
+    if (!bbox || isNaN(bbox.min.x) || isNaN(bbox.max.x)) {
       bbox = this.roomedit.objectBoundingBox = obj.getBoundingBox(true);
     }
     var headpos = player.head.localToWorld(V(0,0,0));
@@ -633,8 +632,7 @@ console.log('set translation snap', ev.data, ev);
         this.editObjectSnapVector(obj[attrname], this.roomedit.snap);
       } else if (attrtype == 'euler') {
         let rot = new THREE.Euler();
-        let quat = new THREE.Quaternion();
-        let move = (ev.deltaY > 0 ? 1 : -1) * this.roomedit.rotationsnap * THREE.Math.DEG2RAD;
+        let move = (ev.deltaY > 0 ? -1 : 1) * this.roomedit.rotationsnap * THREE.Math.DEG2RAD;
         if (ev.ctrlKey) {
           rot.x += move;
         }
@@ -648,14 +646,15 @@ console.log('set translation snap', ev.data, ev);
           // Default to rotating around Y axis
           rot.y += move;
         }
-        quat.setFromEuler(rot);
-        obj[attrname].multiply(quat);
-        //this.editObjectSnapVector(obj.rotation, this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
+        let quat = new THREE.Quaternion().setFromEuler(obj[attrname].radians);
+        let quat2 = new THREE.Quaternion().setFromEuler(rot);
+        quat.multiply(quat2);
+        obj[attrname].radians.setFromQuaternion(quat);
+        //this.editObjectSnapVector(obj[attrname], this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
       } else if (attrtype == 'color') {
         let move = 4/255 * (ev.deltaY < 0 ? 1 : -1);
 
         let col = obj[mode].clone();
-console.log('opacity before', obj.opacity, obj.col, attrname, mode, col);
         if (ev.altKey) {
           col.r += move;
         }
@@ -701,14 +700,17 @@ obj.opacity = obj.opacity;
         }
         obj[attrname] = THREE.Math.clamp(obj[attrname] + amount, min, max);
 
+      } else if (attrtype == 'boolean' || attrtype == 'bool') {
+        if (ev.deltaY < 1) {
+          obj[attrname] = true;
+        } else {
+          obj[attrname] = false;
+        }
       }
       obj.sync = true;
       obj.refresh();
       this.editObjectShowInfo(obj);
       ev.preventDefault();
-//obj.updateOrientationFromEuler();
-//obj.updateDirvecsFromOrientation();
-      //this.editObjectMousemove(ev);
     }
   }
   editObjectKeydown(ev) {
@@ -959,7 +961,6 @@ console.log('change color', obj.col, vec);
           break;
         case 'string':
           let editor = this.objectinfo.getModeEditor();
-          editor.focus();
         }
       }
     }
@@ -1122,80 +1123,86 @@ console.log('change color', obj.col, vec);
 
     var objects = [];
     for (var i = 0; i < urls.length; i++) {
+      let newobject = false;
       var hashidx = urls[i].indexOf('#');
       let url = urls[i];
-      let id = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
-      let type = 'Object';
+      let trimmedurl = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
+      //let type = 'Object';
       let objargs = {
-        id: id,
-        js_id: player.userid + '-' + id + '-' + window.uniqueId(),
+        //id: id,
+        js_id: player.userid + '-' + trimmedurl + '-' + window.uniqueId(),
         //cull_face: 'none',
         sync: true,
         pos: player.vectors.cursor_pos.clone(),
         persist: true
       }
-      if (id.length > 0) {
-        var schemeidx = id.indexOf(':');
+      if (trimmedurl.length > 0) {
+        var schemeidx = trimmedurl.indexOf(':');
         if (schemeidx != -1) {
           // Handle special schemes which are used for internal primitives
-          var scheme = id.substr(0, schemeidx);
-          if (scheme == 'janus-object') {
-            objargs.id = id.substr(schemeidx+1);
-            objargs.collision_id = objargs.id;
-          } else if (scheme == 'janus-light') {
-            type = 'light';
-            if (id == 'point') {
-              // set up the point light
-              objargs.light_shadow = 'true';
+          var scheme = trimmedurl.substr(0, schemeidx);
+          if (scheme == 'janus') {
+            let newobjargs = trimmedurl.substr(schemeidx+1).split('/'),
+                type = newobjargs.shift();
+            for (let j = 0; j < newobjargs.length; j++) {
+              let parts = newobjargs[j].split('=');
+              objargs[parts[0]] = decodeURIComponent(parts[1]);
+            }
+            newobject = room.createObject(type, objargs);
+            objects.push(newobject);
+            if (objects[0]) {
+              this.editObject(objects[0], true);
             }
           }
         }
-        this.detectMimeTypeForURL(url).then(mimetype => {
-          if (!mimetype) mimetype = 'application/octet-stream';
-          if (id.match(/\.(png|gif|jpg|jpeg)/i) || mimetype.match(/^image\//)) {
-            type = 'image';
-          } else if (mimetype.match(/^audio\//)) {
-            type = 'sound';
-            room.loadNewAsset('sound', {
-              id: objargs.js_id,
-              src: url
-            });
-            objargs.sound_id = objargs.js_id;
-            objargs.id = objargs.js_id;
-            objargs.auto_play = true;
-          } else if (mimetype.match(/^video\//)) {
-            type = 'video';
-            room.loadNewAsset('video', {
-              id: objargs.js_id,
-              src: url,
-              auto_play: true
-            });
-            objargs.video_id = objargs.js_id;
-            objargs.id = objargs.js_id;
-            //objargs.auto_play = true;
-          } else if (mimetype.match(/^text\/html/)) {
-            type = 'object';
-            room.loadNewAsset('websurface', {
-              id: objargs.js_id,
-              src: url
-            });
-            objargs.websurface_id = objargs.js_id;
-            objargs.id = 'plane';
-          }
-          if (typeof EventBridge != 'undefined') {
-            // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
-            EventBridge.emitWebEvent(JSON.stringify({
-              type: 'spawn',
-              data: objargs.id
-            }));
-          } else {
-            var newobject = room.createObject(type, objargs);
-            objects.push(newobject);
-          }
-          if (objects[0]) {
-            this.editObject(objects[0], true);
-          }
-        });
+        if (!newobject) {
+          this.detectMimeTypeForURL(url).then(mimetype => {
+            if (!mimetype) mimetype = 'application/octet-stream';
+            if (id.match(/\.(png|gif|jpg|jpeg)/i) || mimetype.match(/^image\//)) {
+              type = 'image';
+            } else if (mimetype.match(/^audio\//)) {
+              type = 'sound';
+              room.loadNewAsset('sound', {
+                id: objargs.js_id,
+                src: url
+              });
+              objargs.sound_id = objargs.js_id;
+              objargs.id = objargs.js_id;
+              objargs.auto_play = true;
+            } else if (mimetype.match(/^video\//)) {
+              type = 'video';
+              room.loadNewAsset('video', {
+                id: objargs.js_id,
+                src: url,
+                auto_play: true
+              });
+              objargs.video_id = objargs.js_id;
+              objargs.id = objargs.js_id;
+              //objargs.auto_play = true;
+            } else if (mimetype.match(/^text\/html/)) {
+              type = 'object';
+              room.loadNewAsset('websurface', {
+                id: objargs.js_id,
+                src: url
+              });
+              objargs.websurface_id = objargs.js_id;
+              objargs.id = 'plane';
+            }
+            if (typeof EventBridge != 'undefined') {
+              // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
+              EventBridge.emitWebEvent(JSON.stringify({
+                type: 'spawn',
+                data: objargs.id
+              }));
+            } else {
+              newobject = room.createObject(type, objargs);
+              objects.push(newobject);
+            }
+            if (objects[0]) {
+              this.editObject(objects[0], true);
+            }
+          });
+        }
       }
     }
     return objects;
@@ -1322,7 +1329,11 @@ console.log('pastey!', ev.clipboardData.items[0], ev);
     }
   }
   handleInventorySelect(ev) {
-    // TODO - handle select
+    let url = ev.data;
+    this.roomedit.raycast = true;
+    janus.engine.systems.controls.requestPointerLock();
+    this.loadObjectFromURIList(url);
+    ev.preventDefault();
   }
 });
 
