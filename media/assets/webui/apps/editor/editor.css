@@ -53,6 +53,7 @@ janus-ui-editor-property-color>ui-input:first-of-type {
 }
 .janus_editor {
   list-style: none;
+  width: calc(100% - 2px);
 }
 .janus-editor li {
 }
