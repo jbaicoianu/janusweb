@@ -593,13 +593,23 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         if (this.hasScriptChangedDirvecs()) {
           this.updateOrientationFromDirvecs();
           this.updateEulerFromOrientation();
+          this.refresh();
         } else if (this.hasScriptChangedEuler()) {
           this.updateOrientationFromEuler();
           this.updateDirvecsFromOrientation();
+          this.refresh();
         } else if (this.hasPhysicsChangedOrientation()) {
           this.updateEulerFromOrientation();
           this.updateDirvecsFromOrientation();
+          this.refresh();
+        } else if (this.hasChangedPosition()) {
+          this.refresh();
         }
+
+        let pos = this.position;
+        if (isNaN(pos.x)) pos.x = 0;
+        if (isNaN(pos.y)) pos.y = 0;
+        if (isNaN(pos.z)) pos.z = 0;
 
         this.resetFrameUpdates();
         this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
