@@ -181,8 +181,10 @@ elation.elements.define('janus-ui-editor-property-string', class extends elation
     }
   }
   focus() {
-    this.input.focus();
-    this.input.select();
+    if (!this.input.hasFocus()) {
+      this.input.focus();
+      this.input.select();
+    }
   }
   handleInputChange(ev) {
     this.value = this.input.value;
@@ -293,9 +295,9 @@ elation.elements.define('janus-ui-editor-property-euler', class extends elation.
   updateValue(value) {
     this.value = value;
     if (this.elements) {
-      this.elements.x.value = this.value.x;
-      this.elements.y.value = this.value.y;
-      this.elements.z.value = this.value.z;
+      this.elements.x.value = +this.value.x.toFixed(3);
+      this.elements.y.value = +this.value.y.toFixed(3);
+      this.elements.z.value = +this.value.z.toFixed(3);
     }
   }
 });
@@ -375,6 +377,7 @@ elation.elements.define('janus-ui-editor-property-boolean', class extends elatio
   create() {
     this.defineAttributes({
       label: { type: 'string' },
+      propertyname: { type: 'boolean' },
       value: { type: 'boolean' },
     });
     if (this.label) {
