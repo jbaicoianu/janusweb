@@ -34,7 +34,7 @@ elation.require(['janusweb.janusbase'], function() {
         emitter_pos: { type: 'vector3', default: [0, 0, 0] },
         image_id: { type: 'string', set: this.updateMaterial },
         rate: { type: 'float', default: 1 },
-        count: { type: 'int', default: 0 },
+        count: { type: 'integer', default: 100, set: this.resetParticles },
         duration: { type: 'float', default: 1.0 },
         opacity: { type: 'float', default: 1.0, set: this.updateMaterial },
         fade_in: { type: 'float', default: 1.0 },
@@ -48,7 +48,7 @@ elation.require(['janusweb.janusbase'], function() {
         rand_accel: { type: 'vector3', default: [0, 0, 0]},
         rand_col: { type: 'vector3', default: [0, 0, 0]},
         rand_scale: { type: 'vector3', default: [0, 0, 0]},
-        loop: { type: 'bool', default: false },
+        loop: { type: 'bool', default: true, set: this.resetParticles },
         refreshrate: { type: 'int', default: 30 },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
@@ -263,6 +263,7 @@ elation.require(['janusweb.janusbase'], function() {
       //this.updateBoundingSphere();
     }
     this.resetParticles = function() {
+      if (!this.created) return;
       var geo = this.geometry;
       var count = this.count;
       var position = geo.attributes.position;
@@ -504,6 +505,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusparticle.extendclass.getProxyObject.call(this, classdef);
         this._proxyobject._proxydefs = {
+          loop:  [ 'property', 'loop'],
           vel:  [ 'property', 'particle_vel'],
           accel:  [ 'property', 'particle_accel'],
           rand_pos:  [ 'property', 'rand_pos'],
