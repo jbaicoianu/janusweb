@@ -654,7 +654,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       var tmpeuler = new THREE.Euler();
       return function() {
         var rot = this.properties.rotation,
-            scale = Math.PI/180;
+            scale = 1;
         tmpeuler.set(rot.x * scale, rot.y * scale, rot.z * scale);
         this.properties.orientation.setFromEuler(tmpeuler);
       };
