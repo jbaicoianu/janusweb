@@ -687,6 +687,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         return !euler.equals(this.properties.rotation);
       }
     })();
+    this.hasChangedPosition = function() {
+      var changes = this.frameupdates;
+      return (changes['position'] || !this.lastframevalues.position.equals(this.properties.position));
+    }
     this.resetFrameUpdates = function() {
       this.frameupdates['position'] = false;
       this.frameupdates['scale'] = false;
