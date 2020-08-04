@@ -1127,9 +1127,8 @@ console.log('change color', obj.col, vec);
       var hashidx = urls[i].indexOf('#');
       let url = urls[i];
       let trimmedurl = (hashidx == -1 ? urls[i] : urls[i].substring(0, hashidx)).trim();
-      //let type = 'Object';
+      let type = 'Object';
       let objargs = {
-        //id: id,
         js_id: player.userid + '-' + trimmedurl + '-' + window.uniqueId(),
         //cull_face: 'none',
         sync: true,
@@ -1143,12 +1142,12 @@ console.log('change color', obj.col, vec);
           var scheme = trimmedurl.substr(0, schemeidx);
           if (scheme == 'janus') {
             let newobjargs = trimmedurl.substr(schemeidx+1).split('/'),
-                type = newobjargs.shift();
+                objtype = newobjargs.shift();
             for (let j = 0; j < newobjargs.length; j++) {
               let parts = newobjargs[j].split('=');
               objargs[parts[0]] = decodeURIComponent(parts[1]);
             }
-            newobject = room.createObject(type, objargs);
+            newobject = room.createObject(objtype, objargs);
             objects.push(newobject);
             if (objects[0]) {
               this.editObject(objects[0], true);
@@ -1158,7 +1157,7 @@ console.log('change color', obj.col, vec);
         if (!newobject) {
           this.detectMimeTypeForURL(url).then(mimetype => {
             if (!mimetype) mimetype = 'application/octet-stream';
-            if (id.match(/\.(png|gif|jpg|jpeg)/i) || mimetype.match(/^image\//)) {
+            if (trimmedurl.match(/\.(png|gif|jpg|jpeg)/i) || mimetype.match(/^image\//)) {
               type = 'image';
             } else if (mimetype.match(/^audio\//)) {
               type = 'sound';
@@ -1187,6 +1186,8 @@ console.log('change color', obj.col, vec);
               });
               objargs.websurface_id = objargs.js_id;
               objargs.id = 'plane';
+            } else {
+              objargs.id = trimmedurl;
             }
             if (typeof EventBridge != 'undefined') {
               // if EventBridge is defined, we're (probably) running inside of High Fidelity, so just spawn this object
