@@ -1,7 +1,9 @@
 {
   "templates": {
     "janus.ui.inventory": "./inventory.html",
-    "janus.ui.inventory.item.poly": "./inventory-item-poly.html"
+    "janus.ui.inventory.roomassets": "./roomassets.html",
+    "janus.ui.inventory.item.poly": "./inventory-item-poly.html",
+    "janus.ui.inventory.item.roomasset": "./inventory-item-roomasset.html"
   },
   "scripts":  ["./inventory.js"],
   "css":      ["./inventory.css"],

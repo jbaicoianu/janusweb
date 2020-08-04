@@ -34,6 +34,9 @@
           <ui-item><a href="janus:light/light_cone_angle=1">directional light</a></ui-item>
         </ui-grid>
       </ui-tab>
+      <ui-tab label="Room Assets">
+        <janus-ui-inventory-roomassets></janus-ui-inventory-roomassets>
+      </ui-tab>
       <ui-tab label="Google Poly"> 
         <ui-flexpanel id="poly" vertical>
           <ui-input noflex placeholder="Search for Google Poly models" onaccept="let models = document.getElementById('models'); models.apiargs.keywords = this.value; delete models.apiargs.pageToken; document.getElementById('itemlist').clear(); models.load(); pagination.disabled = false;"></ui-input>

@@ -41,9 +41,11 @@ ui-grid.models>* h3 {
 }
 ui-grid.models>* img {
   width: 100%;
+  max-height: 100%;
   border-radius: .5em;
   margin: 0 auto;
   display: block;
+  object-fit: contain;
 }
 ui-grid.models>* a {
   margin: 0;
@@ -96,4 +98,16 @@ janus-ui-inventory ui-flexpanel {
   padding: 0;
   max-height: 20vh;
   width: 100%;
+}
+
+janus-ui-inventory-roomassets {
+  display: block;
+  height: 20vh;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+janus-ui-inventory-roomassets ui-grid.models {
+  height: auto;
+  overflow-x: visible;
+  overflow-y: visible;
 }
