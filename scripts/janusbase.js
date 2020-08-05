@@ -23,7 +23,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         xdir:     { type: 'vector3', default: new THREE.Vector3(1,0,0), set: this.pushFrameUpdate, comment: 'Left vector' },
         ydir:     { type: 'vector3', default: new THREE.Vector3(0,1,0), set: this.pushFrameUpdate, comment: 'Up vector' },
         zdir:     { type: 'vector3', default: new THREE.Vector3(0,0,1), set: this.pushFrameUpdate, comment: 'Forward vector (zdir == fwd)' },
-        rotation: { type: 'euler', default: new THREE.Euler(0,0,0), set: this.pushFrameUpdate, comment: 'Object Euler rotation, in degrees' },
+        rotation: { type: 'euler', default: new EulerDegrees(0,0,0), set: this.pushFrameUpdate, comment: 'Object Euler rotation, in degrees' },
         rotation_order: { type: 'string', default: 'XYZ', set: this.pushFrameUpdate },
         lighting: { type: 'boolean', default: true, comment: 'Object reacts to scene lighting' },
         sync:     { type: 'boolean', default: false, comment: 'Sync object changes over network' },
@@ -62,7 +62,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         ydir: new THREE.Vector3(0,1,0),
         zdir: new THREE.Vector3(0,0,1),
         fwd: new THREE.Vector3(0,0,1),
-        rotation: new THREE.Euler()
+        rotation: new EulerDegrees()
       };
 
       this.eventlistenerproxies = {};
@@ -277,7 +277,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           } else if (val instanceof THREE.Euler) {
             if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
             if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
-              attrs[k] = val.toArray().slice(0, 3).map(n => Math.round((n * THREE.Math.RAD2DEG) * 10000) / 10000).join(' ');
+              attrs[k] = val.toArray().slice(0, 3).map(n => Math.round(n * 10000) / 10000).join(' ');
             }
           } else if (val instanceof THREE.Quaternion) {
             if (defaultval instanceof THREE.Quaternion) defaultval = defaultval.toArray();
@@ -585,7 +585,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           parent.worldToLocal(player.camera.getWorldPosition(playerpos)).sub(this.position);
           dir.copy(playerpos).normalize();
           if (billboard == 'y') {
-            this.rotation.set(0, Math.atan2(dir.x, dir.z) * THREE.Math.RAD2DEG, 0);
+            this.rotation.set(0, Math.atan2(dir.x, dir.z), 0);
             this.frameupdates['rotation'] = true;
           }
         }
@@ -650,17 +650,11 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.properties.zdir.copy(fwd);
       }
     })();
-    this.updateOrientationFromEuler = (function() {
-      var tmpeuler = new THREE.Euler();
-      return function() {
-        var rot = this.properties.rotation,
-            scale = 1;
-        tmpeuler.set(rot.x * scale, rot.y * scale, rot.z * scale);
-        this.properties.orientation.setFromEuler(tmpeuler);
-      };
-    })();
+    this.updateOrientationFromEuler = function() {
+      this.properties.orientation.setFromEuler(this.rotation.radians);
+    }
     this.updateEulerFromOrientation = function() {
-      this.properties.rotation.setFromQuaternion(this.properties.orientation);
+      this.properties.rotation.setFromQuaternion(this.properties.orientation, this.properties.rotation.order);
     }
     this.updateDirvecsFromOrientation = (function() {
       var tmpmat = new THREE.Matrix4();
@@ -1031,9 +1025,11 @@ console.log('its null', k, this[k], prop);
         }
         // Special handling for 'rotation' and 'color'
         if (realkey == 'rotation') {
+/*
           props['rotation'][0] *= THREE.Math.RAD2DEG;
           props['rotation'][1] *= THREE.Math.RAD2DEG;
           props['rotation'][2] *= THREE.Math.RAD2DEG;
+*/
         } else if (realkey == 'color') {
           if (!this.colorIsDefault) {
             props['col'] = this.col.toArray();
