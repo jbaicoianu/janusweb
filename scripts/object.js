@@ -111,7 +111,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.createForces = function() {
       elation.engine.things.janusobject.extendclass.createForces.call(this);
-      if (!this.collidable) return;
+      if (!(this.collidable || this.pickable)) return;
       this.updateCollider();
     }
     this.createObjectDOM = function() {
