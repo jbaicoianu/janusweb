@@ -14,13 +14,20 @@ janus.registerElement('locomotion_teleporter', {
       scale: V(.5,.01,.5),
       collidable: false,
       pickable: false,
+      shadow: false,
+      shadow_cast: false,
+      shadow_receive: false,
     });
     this.cylinder = this.marker.createObject('object', {
       id: 'cylinder',
-      col: V(0,0,155,.2),
+      col: V(0,0,155,.4),
       scale: V(.5,1.5,.5),
       collidable: false,
       pickable: false,
+      shadow: false,
+      shadow_cast: false,
+      shadow_receive: false,
+      renderorder: 10,
     });
     this.pointer = this.marker.createObject('Object', {
       id: 'pyramid',
@@ -30,6 +37,9 @@ janus.registerElement('locomotion_teleporter', {
       pos: V(0,.01,0),
       collidable: false,
       pickable: false,
+      shadow: false,
+      shadow_cast: false,
+      shadow_receive: false,
     });
 /*
     this.light = this.createObject('Light', {
@@ -39,25 +49,39 @@ janus.registerElement('locomotion_teleporter', {
       light_intensity: 8
     });
 */
-    this.particles = this.createObject('Particle', {
-      col: V(0,.2,1,.2),
+    this.particles = room.createObject('Particle', {
+      col: V(0,.2,1,.4),
       pos: V(-.25,.1,-.25),
       scale: V(.05),
       //vel: V(-.5,0,-.5),
-      particle_vel: V(-.4,0,-.4),
+      particle_vel: V(-.4,2,-.4),
       rand_vel: V(.8,2,.8),
       rand_col: V(.5,.5,1),
       rand_pos: V(.5,0,.5),
       accel: V(0,-1,0),
       rand_accel: V(0,2,0),
       rate: 50,
-      count: 50,
-      duration: 1,
+      count: 60,
+      duration: .5,
       collision_id: '',
       collidable: false,
       pickable: false,
       loop: true
     });
+    this.shroud = this.createObject('object', {
+      id: 'sphere',
+      scale: V(2),
+      lighting: false,
+      col: 'black',
+      cull_face: 'none',
+      depth_test: false,
+      depth_write: false,
+      shadow_cast: false,
+      shadow_receive: false,
+      renderorder: 100,
+      visible: false,
+    });
+    player.head.add(this.shroud._target);
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
     this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
 
@@ -93,10 +117,22 @@ janus.registerElement('locomotion_teleporter', {
         let hit = hits[0];
         if (hit.distance < 200) {
           this.pos = player.worldToLocal(hits[0].point);
+          this.localToWorld(this.particles.emitter_pos.set(0,0,0));
           this.updateTeleportAngle();
         }
       }
-      this.pointer.rotation = V(90, 0, -this.teleportangle * 180 / Math.PI);
+      this.pointer.orientation._target.setFromEuler(new THREE.Euler(Math.PI/2, this.teleportangle, 0, "YXZ"));
+    } else {
+      if (this.shroud.visible) {
+        ////this.worldToLocal(player.head.localToWorld(this.shroud.pos.set(0,0,0)));
+        if (this.shroud.opacity > .001) {
+          this.shroud.opacity *= .9;
+          if (this.shroud.opacity <= .001) {
+            this.shroud.visible = false;
+            this.shroud.opacity = 0;
+          }
+        }
+      }
     }
   },
   handleRoomChange(ev) {
@@ -111,6 +147,7 @@ janus.registerElement('locomotion_teleporter', {
       if (len > .8) {
         this.updateTeleportAngle();
       } else if (len < .01) {
+        this.showShroud();
         this.teleport();
         this.teleportactive = false;
         this.disableCursor();
@@ -126,6 +163,7 @@ janus.registerElement('locomotion_teleporter', {
   },
   handleTeleportTurn(ev) {
     if (!this.teleportactive) {
+      this.showShroud();
       let turn = new THREE.Quaternion();
       turn.setFromEuler(new THREE.Euler(0, Math.PI / 4 * (ev.value > 0 ? -1 : 1), 0));
       player.orientation.multiply(turn);
@@ -139,6 +177,7 @@ janus.registerElement('locomotion_teleporter', {
   teleport() {
     let pos = player.localToWorld(this.pos.clone());
     player.pos = pos;
+    player.vel = V(0,0,.01); // "wake up" physics engine
     let playerangle = Math.atan2(this.pos.x, this.pos.z);
     this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
   },
@@ -200,12 +239,18 @@ janus.registerElement('locomotion_teleporter', {
   },
   enableCursor() {
     this.visible = true;
+    this.particles.visible = true;
     this.active = true;
     this.particles.start();
   },
   disableCursor() {
     this.visible = false;
+    this.particles.visible = false;
     this.active = false;
     this.particles.stop();
   },
+  showShroud() {
+    this.shroud.visible = true;
+    this.shroud.opacity = 1;
+  }
 });
