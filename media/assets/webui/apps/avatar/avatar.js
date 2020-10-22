@@ -39,18 +39,31 @@ janus.registerElement('avatar_rigged', {
 elation.elements.define('janus-avatar-picker', class extends elation.elements.base {
   init() {
     this.defineAttribute('src', { type: 'string' });
+    this.defineAttribute('previewpos', { type: 'vector3', default: V(-2, 0, -3) });
+    this.defineAttribute('hidereset', { type: 'boolean', default: false });
     this.selected = false;
   }
   create() {
-    this.elements = elation.elements.fromString(`
+    let tpl = `
       <collection-jsonapi id="avatarlist" endpoint="${this.src}"></collection-jsonapi>
       <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
       <ui-button name="confirm" disabled="1">Confirm</ui-button>
-      <ui-button name="reset">Reset</ui-button>
-    `, this);
+    `;
+    if (!this.hidereset) {
+      tpl += '<ui-button name="reset">Reset</ui-button>';
+    }
+    this.elements = elation.elements.fromString(tpl, this);
+
     elation.events.add(this.elements['avatar'], 'select', (ev) => this.handleAvatarSelect(ev));
     elation.events.add(this.elements['confirm'], 'click', (ev) => this.handleAvatarConfirm(ev));
-    elation.events.add(this.elements['reset'], 'click', (ev) => this.handleAvatarReset(ev));
+    if (this.elements['reset']) {
+      elation.events.add(this.elements['reset'], 'click', (ev) => this.handleAvatarReset(ev));
+    }
+  }
+  selectAvatar(avatar) {
+    let items = this.elements.avatarlist.items,
+        list = this.elements.avatar;
+    console.log('avatar?', items, list, avatar);
   }
   handleAvatarSelect(ev) {
     console.log('selected an avatar', ev.data);
@@ -58,7 +71,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
       this.avatarpreview.die();
     }
     this.selected = ev.data;
-    this.avatarpreview = player.createObject('ghost', { avatar_src: ev.data.url, pos: V(-2, 0, -3) });
+    this.avatarpreview = player.createObject('ghost', { avatar_src: ev.data.url, pos: this.previewpos, rotate_deg_per_sec: 10, });
     this.elements.confirm.disabled = false;
   }
   handleAvatarConfirm(ev) {
@@ -83,7 +96,7 @@ elation.elements.define('janus-avatar-picker-item', class extends elation.elemen
     elation.events.add(this, 'click', (ev) => { console.log('duh', this); this.click(ev) });
     let item = this.value;
     this.elements = elation.elements.fromString(`
-      <img src="${item.thumb}">
+      <img src="${item.thumb}" alt="${item.name || 'Untitled Avatar'}">
     `, this);
   }
 });

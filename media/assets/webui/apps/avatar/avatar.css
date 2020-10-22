@@ -21,14 +21,12 @@ janus-avatar-picker-item {
   cursor: pointer;
 }
 janus-avatar-picker-item:hover {
-  transform: scale(1.1, 1.1);
-  border: 1px solid #9fc;
+  outline: 1px solid #ccc;
   box-shadow: 0 0 5px #9fc;
 }
 janus-avatar-picker-item[selected] {
-  transform: scale(1.1, 1.1);
-  border: 2px solid #0f0;
-  margin: 1px;
+  outline: 3px solid #0f0;
+  xmargin: 1px;
   box-shadow: 0 0 5px #9fc;
 }
 janus-avatar-picker-item img {
