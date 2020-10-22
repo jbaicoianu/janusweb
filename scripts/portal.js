@@ -90,7 +90,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'click', elation.bind(this, this.activate));
       elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
       elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
-      elation.events.add(this, 'collide', (ev) => this.activate());
+      elation.events.add(this, 'collide', (ev) => this.handleCollide());
     }
     this.createMaterial = function() {
       var matargs = {
@@ -606,6 +606,10 @@ elation.require(['janusweb.janusbase'], function() {
           this.refresh();
         }
       }
+    }
+    this.handleCollide = function() {
+      this.activate();
+      player.vel = V(0,0,0);
     }
   }, elation.engine.things.janusbase);
 });
