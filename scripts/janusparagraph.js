@@ -12,14 +12,24 @@ elation.require(['janusweb.janusbase'], function() {
         css: {type: 'string', set: this.updateTexture },
         depth_write: { type: 'boolean', default: true },
         depth_test: { type: 'boolean', default: true },
+        collision_id: { type: 'string', default: 'cube' },
+        collision_scale: { type: 'vector3', default: V(1, 1, .02) },
+        shadow: { type: 'boolean', default: true, set: this.updateMaterial },
+        shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Receive shadows from self and other objects' },
+        shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Cast shadows onto self and other objects' },
       });
     }
     this.createObject3D = function() {
       var material = this.createMaterial();
       var geo = new THREE.PlaneGeometry(2,2);
-      geo.applyMatrix(new THREE.Matrix4().makeTranslation(0,0,.1));
+      geo.applyMatrix4(new THREE.Matrix4().makeTranslation(0,0,.1));
       var mesh = new THREE.Mesh(geo, material);
+      mesh.castShadow = this.shadow && this.shadow_cast;
+      mesh.receiveShadow = this.shadow && this.shadow_receive;
       return mesh;
+    }
+    this.createForces = function() {
+      this.setCollider('box', { min: V(-1, -1, -.01), max: V(1, 1, .01) });
     }
     this.createMaterial = function() {
       var texture = this.createTexture();
@@ -48,6 +58,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.canvas.width = 1024;
       this.canvas.height = 1024;
       this.texture = new THREE.Texture(this.canvas);
+      this.texture.encoding = THREE.sRGBEncoding;
       this.updateTexture();
       return this.texture;
     }
@@ -99,27 +110,40 @@ elation.require(['janusweb.janusbase'], function() {
 
       var timer;
       img.onload = () => {
-        ctx.drawImage(img, 0, 0);
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
+        if (img === this.currentImage) {
+          ctx.drawImage(img, 0, 0);
           texture.needsUpdate = true;
-          timer = false;
           this.refresh();
-        }, 10);
+        }
       }
+      this.currentImage = img;
       img.src = url;
       this.refresh();
       return texture;
+    }
+    this.updateMaterial = function() {
+      if (this.objects['3d']) {
+        this.objects['3d'].castShadow = this.shadow && this.shadow_cast;
+        this.objects['3d'].receiveShadow = this.shadow && this.shadow_receive;
+      }
     }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusparagraph.extendclass.getProxyObject.call(this, classdef);
         this._proxyobject._proxydefs = {
-          text:  [ 'property', 'text'],
-          css:  [ 'property', 'css'],
-          text_col:  [ 'property', 'text_col'],
-          back_col:  [ 'property', 'back_col'],
-          back_alpha:  [ 'property', 'back_alpha'],
+          text:  [ 'property', 'text' ],
+          css:  [ 'property', 'css' ],
+          text_col:  [ 'property', 'text_col' ],
+          back_col:  [ 'property', 'back_col' ],
+          back_alpha:  [ 'property', 'back_alpha' ],
+          cull_face: [ 'property', 'cull_face' ],
+          depth_write: [ 'property', 'depth_write' ],
+          depth_test: [ 'property', 'depth_test' ],
+          collision_id: [ 'property', 'collision_id' ],
+          collision_scale: [ 'property', 'collision_scale' ],
+          shadow: [ 'property', 'shadow' ],
+          shadow_receive: [ 'property', 'shadow_receive' ],
+          shadow_cast: [ 'property', 'shadow_cast' ],
         };
       }
       return this._proxyobject;
