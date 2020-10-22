@@ -3,6 +3,7 @@ janus.registerElement('locomotion_teleporter', {
   longpresstime: 350,
   deadzone: 5,
   xrplayer: null,
+  linesegments: 100,
 
   create() {
     this.marker = this.createObject('Object', {
@@ -81,6 +82,19 @@ janus.registerElement('locomotion_teleporter', {
       renderorder: 100,
       visible: false,
     });
+
+    let linepositions = [];
+    for (let i = 0; i < this.linesegments; i++) {
+      linepositions.push(V(0));
+      linepositions.push(V(0));
+    }
+
+    this.laser = room.createObject('linesegments', {
+      positions: linepositions,
+      opacity: .8,
+      col: 'blue',
+      visible: false,
+    });
     player.head.add(this.shroud._target);
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
     this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
@@ -112,15 +126,51 @@ janus.registerElement('locomotion_teleporter', {
   update() {
     if (this.active) {
       let hand = this.xrplayer.trackedobjects.hand_right; // FIXME - figure out hand based on which controller is triggering the teleporter
-      let hits = hand.raycast(V(0,0,-1));
-      if (hits.length > 0) {
-        let hit = hits[0];
-        if (hit.distance < 200) {
-          this.pos = player.worldToLocal(hits[0].point);
-          this.localToWorld(this.particles.emitter_pos.set(0,0,0));
-          this.updateTeleportAngle();
+      let startpoint = hand.pointer.localToWorld(V(0, 0, 0)),
+          segments = this.linesegments,
+          duration = .25,
+          speed = 4,
+          g = V(0, -1, 0),
+          p0 = startpoint.clone(),
+          p1 = V(),
+          v0 = hand.pointer.localToWorld(V(0, 0, -speed)).sub(p0),
+          v1 = V(),
+          dir = v0.clone().normalize();
+      let i = 0;
+      let laserpoints = this.laser.positions;
+      // Trace our arc in steps, performing a raytrace at each step
+      for (i = 0; i < segments; i++) {
+        let t = (i + 1) * duration / segments
+        dir.copy(v0);
+        speed = dir.length();
+        dir.divideScalar(speed);
+        let hits = room.raycast(dir, p0, null, speed);
+        if (hits.length > 0) {
+          let hit = hits[0];
+          p1.copy(hit.point);
+          if (hit.distance < 200) {
+            this.pos = player.worldToLocal(hit.point);
+            this.localToWorld(this.particles.emitter_pos.set(0,0,0));
+            this.updateTeleportAngle();
+          }
+          laserpoints[i * 2].copy(p0);
+          laserpoints[i * 2 + 1].copy(p1);
+          // Zero out any further line segments
+          for (let k = i+1; k < segments; k++) {
+            laserpoints[k * 2].set(0,0,0);
+            laserpoints[k * 2 + 1].set(0,0,0);
+          }
+          break;
+        } else {
+          p1.copy(g).multiplyScalar(.5 * t * t).add(v0.clone().multiplyScalar(t)).add(p0);;
+          v1.copy(g).multiplyScalar(t).add(v0);
+          laserpoints[i * 2].copy(p0);
+          laserpoints[i * 2 + 1].copy(p1);
+          p0.copy(p1);
+          v0.copy(v1);
         }
       }
+      this.laser.updateLine();
       this.pointer.orientation._target.setFromEuler(new THREE.Euler(Math.PI/2, this.teleportangle, 0, "YXZ"));
     } else {
       if (this.shroud.visible) {
@@ -240,12 +290,14 @@ janus.registerElement('locomotion_teleporter', {
   enableCursor() {
     this.visible = true;
     this.particles.visible = true;
+    this.laser.visible = true;
     this.active = true;
     this.particles.start();
   },
   disableCursor() {
     this.visible = false;
     this.particles.visible = false;
+    this.laser.visible = false;
     this.active = false;
     this.particles.stop();
   },
