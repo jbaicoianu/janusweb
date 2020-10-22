@@ -1,9 +1,9 @@
       <ui-buttonbar>
-        <janus-ui-editor-button>Edit</janus-ui-editor-button>
-        <ui-button onclick="janus.engine.client.shareScreenshot()">Share</ui-button>
-        <ui-button onclick="janus.engine.client.toggleFullscreen()">Expand</ui-button>
-        <janus-button-webvr></janus-button-webvr>
-        <janus-button-webar></janus-button-webar>
-        <janus-ui-settings-button>Config</janus-ui-settings-button>
+        {#showedit}<janus-ui-editor-button>Edit</janus-ui-editor-button>{/showedit}
+        {#showshare}<ui-button name="share" onclick="janus.engine.client.shareScreenshot()">Share</ui-button>{/showshare}
+        {#showfullscreen}<ui-button name="fullscreen" onclick="janus.engine.client.toggleFullscreen()">⛶</ui-button>{/showfullscreen}
+        {#showvr}<janus-button-webvr></janus-button-webvr>{/showvr}
+        {#showar}<janus-button-webar></janus-button-webar>{/showar}
+        {#showsettings}<janus-ui-settings-button>Config</janus-ui-settings-button>{/showsettings}
       </ui-buttonbar>
 
