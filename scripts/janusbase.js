@@ -1155,7 +1155,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.objects['3d'].layers.enable(layernums[i]);
       }
     }
-    this.clone = function() {
+    this.clone = function(cloneChildren, parent) {
       // Create a new copy of this object
       function arrayEquals(a, b) {
         if (a === b) return true;
@@ -1212,10 +1212,17 @@ console.log('its null', k, this[k], prop);
         //if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
       }
 console.log('clone', props);
-      let parent = this.parent || room;
-      if (parent) {
-        return parent.createObject(this.tag, props);
+      if (cloneChildren) {
+        let children = this.children;
+        props.children = [];
+        for (let i = 0; i < children.length; i++) {
+          props.children.push(children[i].clone(true, this));
+        }
       }
+      //let parent = this.parent || room;
+      if (!parent) parent = this.parent || room;
+
+      return parent.createObject(this.tag, props);
 /*
       {
         pos: this.pos.clone(),
