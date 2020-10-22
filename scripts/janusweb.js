@@ -85,6 +85,7 @@ elation.require([
 
       this.engine.systems.controls.addContext('janus', {
         //'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
+        'toggle_menu': [ 'keyboard_esc', elation.bind(this, this.toggleMenu) ],
         'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
         'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
         'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ],
@@ -340,7 +341,7 @@ elation.require([
       this.loading = true;
 
       if (elation.utils.isString(url)) {
-        var roomid = this.roomid = md5(url);
+        var roomid = this.roomid = this.getRoomId(url);
         if (this.rooms[roomid]) {
           room = this.rooms[roomid];
         }
@@ -351,7 +352,7 @@ elation.require([
       var player = this.engine.client.player;
 
       if (room) {
-        var changed = this.properties.url != url;
+        var changed = false;//this.properties.url != url;
         if (!url) {
           url = this.properties.homepage || this.properties.url;
         } else {
@@ -370,11 +371,17 @@ elation.require([
 
           window.room = this.currentroom.getProxyObject();
 
+          let urlhash = this.getRoomHash(url);
+          if (urlhash != room.urlhash) {
+            room.urlhash = urlhash;
+          }
+
           player.setRoom(room);
           this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
           this.loading = false;
+          changed = true;
           elation.events.fire({element: this, type: 'room_change', data: url});
         }
         if (changed && !skipURLUpdate) {
@@ -646,6 +653,32 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
     this.getStartURL = function() {
       var hashargs = elation.url();
       return hashargs['janus.url'] || this.properties.url || this.properties.homepage;
+    }
+    this.getRoomId = function(url) {
+      let idx = url.indexOf('#');
+      if (idx != -1) {
+        return md5(url.substr(0, idx));
+      }
+      return md5(url);
+    }
+    this.getRoomHash = function(url) {
+      let idx = url.indexOf('#');
+      if (idx != -1) {
+        return url.substr(idx + 1);
+      }
+      return false;
+    }
+    this.toggleMenu = function(ev) {
+      if (ev.value != 1) return;
+      let overlay = this.engine.client.overlay;
+      console.log('toggle the menu', overlay, this.parent);
+      if (overlay) {
+        if (overlay.hidden) {
+          overlay.show();
+        } else {
+          overlay.hide();
+        }
+      }
     }
   }, elation.engine.things.generic);
 });
