@@ -367,6 +367,16 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       }
       if (!this.avatarcode || this.avatarcode != avatar) {
         this.avatarcode = avatar;
+
+
+        if (this.ghostchildren) {
+          while (this.ghostchildren.length > 0) {
+            let child = this.ghostchildren.pop();
+            child.die();
+          }
+        }
+        this.ghostchildren = [];
+
         var things = this.janus.parser.parse(avatar);
         if (this.avatar_body) {
           this.remove(this.avatar_body);
@@ -393,6 +403,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               let js_id = ghostdef._children[type][i].js_id;
               delete ghostdef._children[type][i].js_id;
               let childobj = this.createObject(type, ghostdef._children[type][i]);
+              this.ghostchildren.push(childobj);
               if (js_id == 'head') {
                 this.setHead(childobj, headpos, ghostdef.scale);
               } else if (js_id == 'body') {
