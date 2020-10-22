@@ -565,6 +565,29 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (shader) {
           shadermaterial = shader.getInstance();
           shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+          shadermaterial.side = this.sidemap[this.properties.cull_face];
+          shadermaterial.receiveShadow = this.shadow && this.shadow_receive;
+          shadermaterial.castShadow = this.shadow && this.shadow_cast;
+          shadermaterial.renderOrder = this.renderorder;
+          if (blend_src || blend_dest) {
+            if (blend_src) shadermaterial.blendSrc = blend_src;
+            if (blend_dest) shadermaterial.blendDst = blend_dest;
+            shadermaterial.blending = THREE.CustomBlending;
+
+            shadermaterial.blendSrcAlpha = THREE.SrcAlphaFactor;
+            shadermaterial.blendDstAlpha = THREE.OneFactor;
+            if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
+              shadermaterial.transparent = true;
+            }
+          } else {
+            shadermaterial.blending = THREE.NormalBlending;
+          }
+          if (this.depth_write !== null) {
+            shadermaterial.depthWrite = this.depth_write;
+          }
+          if (this.depth_test !== null) {
+            shadermaterial.depthTest = this.depth_test;
+          }
           this.traverseObjects((n) => {
             if (n.material) {
               if (Array.isArray(n.material)) {
