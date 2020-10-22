@@ -386,13 +386,32 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             elation.events.add(textureBump, 'update', elation.bind(this, this.refresh));
           }
           if (bumptextureasset.sbs3d) {
-            textureBump.repeat.x = 0.5;
-          }
-          if (bumptextureasset.ou3d) {
-            textureBump.repeat.y = 0.5;
+            textureBump.repeat.set(0.5, 1);
+          } else if (bumptextureasset.ou3d) {
+            textureBump.repeat.set(1, 0.5);
+          } else {
+            textureBump.repeat.set(1, 1);
           }
           if (textureBump) {
             //this.assignTextureParameters(textureNormal, modelasset, textureasset);
+          }
+        }
+      }
+      if (alpha_image_id) {
+        let alphatextureasset = this.getAsset('image', alpha_image_id, true);
+        if (alphatextureasset) {
+          textureAlpha = alphatextureasset.getInstance();
+          if (!this.assetloadhandlers[alpha_image_id]) {
+            this.assetloadhandlers[alpha_image_id] = true;
+            elation.events.add(alphatextureasset, 'asset_load', elation.bind(this, this.refresh));
+            elation.events.add(textureAlpha, 'update', elation.bind(this, this.refresh));
+          }
+          if (alphatextureasset.sbs3d) {
+            textureAlpha.repeat.set(0.5, 1);
+          } else if (alphatextureasset.ou3d) {
+            textureAlpha.repeat.set(1, 0.5);
+          } else {
+            textureAlpha.repeat.set(1, 1);
           }
         }
       }
