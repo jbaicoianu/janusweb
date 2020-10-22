@@ -511,6 +511,173 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
 
       return asset;
     }
+    this.loadNewAsset = function(type, args) {
+      // FIXME - this is duplicated from room.loadNewAsset.  room should inherit from janusbase, so it would get this without duplication
+      type = type.toLowerCase();
+      args = args || {};
+
+      var assetlist = [];
+      if (type == 'image') {
+        if (args.src) {
+          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          let assetargs = {
+            assettype:'image',
+            name:args.id,
+            src: src,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            reverse3d: args.reverse3d,
+            hasalpha: args.hasalpha,
+            maxsize: args.maxsize,
+            preload: args.preload,
+            baseurl: this.baseurl
+          };
+          assetlist.push(assetargs);
+        } else if (args.canvas) {
+          assetlist.push({
+            assettype: 'image',
+            name: args.id,
+            canvas: args.canvas,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
+        } else if (args.texture) {
+          assetlist.push({
+            assettype:'image',
+            name:args.id,
+            texture: args.texture,
+            tex_linear: args.tex_linear,
+            hasalpha: args.hasalpha,
+            baseurl: this.baseurl
+          });
+        }
+      } else if (type == 'video') {
+        if (args.src) {
+          var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            src: src,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            eac360: args.eac360,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            type: args.type,
+            format: args.format,
+            hls: args.hls,
+            preload: args.preload,
+            baseurl: this.baseurl
+          });
+        } else if (args.video) {
+          assetlist.push({
+            assettype:'video',
+            name:args.id,
+            video: args.video,
+            loop: args.loop,
+            sbs3d: args.sbs3d,
+            ou3d: args.ou3d,
+            hasalpha: args.hasalpha,
+            auto_play: args.auto_play,
+            type: args.type,
+            format: args.format,
+            hls: args.hls,
+            baseurl: this.baseurl
+          });
+        }
+      } else if (type == 'sound') {
+        var src = (args.src && args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'sound',
+          name:args.id,
+          src: src,
+          buffer: args.buffer,
+          rate: args.rate,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'websurface') {
+        if (args.id) {
+          this.websurfaces[args.id] = args;
+        }
+      } else if (type == 'script') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'script',
+          name: src,
+          src: src,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'object' || type == 'model') {
+        var src, mtlsrc, srcparts = [];
+        if (args.src) {
+          src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+          mtlsrc = (args.mtl && args.mtl.match(/^file:/) ? args.mtl.replace(/^file:/, datapath) : args.mtl);
+          if (mtlsrc && !mtlsrc.match(/^(https?:)?\/\//)) mtlsrc = this.baseurl + mtlsrc;
+          srcparts = src.split(' ');
+          src = srcparts[0];
+        }
+        let object = args.object;
+        if (args.mesh_verts) {
+          let geo = new THREE.BufferGeometry();
+          geo.addAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
+          if (args.mesh_faces) {
+            geo.setIndex(args.mesh_faces);
+          }
+          if (args.mesh_normals) {
+            geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
+          }
+          if (args.mesh_uvs) {
+            geo.addAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
+          }
+          object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
+        }
+        assetlist.push({
+          assettype: 'model',
+          name: args.id,
+          src: src,
+          mtl: mtlsrc,
+          object: object,
+          tex_linear: args.tex_linear,
+          tex0: args.tex || args.tex0 || srcparts[1],
+          tex1: args.tex1 || srcparts[2],
+          tex2: args.tex2 || srcparts[3],
+          tex3: args.tex3 || srcparts[4]
+        });
+      } else if (type == 'ghost') {
+        var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
+        assetlist.push({
+          assettype:'ghost',
+          name: args.id,
+          src: src,
+          baseurl: this.baseurl
+        });
+      } else if (type == 'shader') {
+        assetlist.push({
+          assettype: 'shader',
+          name: args.id,
+          fragment_src: args.src,
+          vertex_src: args.vertex_src,
+          uniforms: args.uniforms,
+          hasalpha: args.hasalpha,
+        });
+      } else if (type == 'font') {
+        assetlist.push({
+          assettype: 'font',
+          name: args.id,
+          src: args.src,
+        });
+      }
+
+      if (!this.assetpack) {
+        this.assetpack = new elation.engine.assets.pack({name: this.id + '_assets', baseurl: this.baseurl, json: assetlist});
+      } else {
+        this.assetpack.loadJSON(assetlist);
+      }
+    }
     this.getActiveAssets = function(assetlist) {
       if (assetlist) {
         for (var type in this.assets) {
