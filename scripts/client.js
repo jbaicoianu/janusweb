@@ -157,12 +157,19 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
       this.view.pickingactive = true;
 
+      let overlay = this.container.parentNode.querySelector('janus-overlay');
+      if (overlay) {
+        this.overlay = overlay;
+        elation.events.add(this.player, 'player_enable', ev => { overlay.hide(); });
+        elation.events.add(this.player, 'player_disable', ev => { overlay.show(); });
+      }
+
       elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
     }
     this.createUI = function() {
       if (!this.ui) {
         this.ui = elation.elements.create('janus.ui.main', {
-          append: this,
+          append: this.view,
           client: this,
           config: this.uiconfig
         });
@@ -413,6 +420,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       getTemplate() {
         return '<fireboxroom><assets></assets><room skybox_left_id="black" skybox_right_id="black" skybox_up_id="black" skybox_down_id="black" skybox_front_id="black" skybox_back_id="black" use_local_asset="room_plane zdir="0 0 -1""><ghost id="{userid}" avatar_src="{src}" lighting="true" pos="0 0 1" rotate_deg_per_sec="20" /></room></fireboxroom>';
       }
+    });
+    elation.elements.define('janus.overlay', class extends elation.elements.base {
     });
   }
 });
