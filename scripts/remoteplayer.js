@@ -150,6 +150,11 @@ elation.component.add('engine.things.remoteplayer', function() {
       });
     }
   }
+  this.setVolume = function(volume) {
+    if (this.mouth) {
+      this.mouth.audio.gain.gain.value = volume;
+    }
+  }
 }, elation.engine.things.janusghost);
 
 });
