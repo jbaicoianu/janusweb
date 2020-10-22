@@ -1009,7 +1009,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         event.target = target || event.element;
       }
       var handlerfn = 'on' + event.type;
-      if (this[handlerfn]) {
+      if (handlerfn in this) {
         this.executeCallback(this[handlerfn], event);
       }
       // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
@@ -1017,7 +1017,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       let returnValue = true;
       firedev.forEach(e => returnValue &= e.returnValue);
       if (event.bubbles !== false && returnValue && this.parent && this.parent.dispatchEvent) {
-        this.parent.dispatchEvent(event, event.target);
+        event.element = this.parent;
+        this.parent.dispatchEvent(event);
       }
     }
     this.addEventListenerProxy = function(name, handler, bubble) {
