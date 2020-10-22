@@ -34,6 +34,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         normalmap_id: { type: 'string', set: this.updateMaterial, comment: 'Normal map texture ID' },
         bumpmap_id: { type: 'string', set: this.updateMaterial, comment: 'Bumpmap texture ID' },
         bumpmap_scale: { type: 'float', default: 1.0, set: this.updateMaterial, comment: 'Bumpmap scale' },
+        alphamap_id: { type: 'string', set: this.updateMaterial, comment: 'Alpha map texture ID' },
         displacementmap_id: { type: 'string', set: this.updateMaterial, comment: 'Displacement map texture ID' },
         displacementmap_scale: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Displacement map height scale' },
         texture_offset: { type: 'vector2', default: [0, 0], set: this.updateTextureOffsets },
@@ -46,6 +47,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
         roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
+        usevertexcolors: { type: 'boolean', default: true, set: this.updateMaterial },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
@@ -281,6 +283,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           textureLightmap = null,
           textureNormal = null,
           textureBump = null,
+          textureAlpha = null,
           textureDisplacement = null,
           textureEmissive = null,
           textureRoughness = null,
@@ -296,6 +299,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var image_id = this.image_id,
           normal_image_id = this.normalmap_id,
           bump_image_id = this.bumpmap_id,
+          alpha_image_id = this.alphamap_id,
           displacement_image_id = this.displacementmap_id,
           lightmap_image_id = this.lmap_id,
           emissive_image_id = this.emissive_id,
@@ -559,7 +563,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         n.renderOrder = this.renderorder;
 
         var useSkinning = n instanceof THREE.SkinnedMesh;
-        var useVertexColors = n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.color;
+        var useVertexColors = this.usevertexcolors && (n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.color);
         if (n.material) {
           var materials = [];
           if (elation.utils.isArray(n.material)) {
@@ -714,6 +718,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               }
               m.emissiveIntensity = this.emissive_intensity;
             }
+            if (textureAlpha) {
+              m.alphaMap = textureAlpha;
+              m.transparent = true;
+            }
             if (textureRoughness) {
               m.roughnessMap = textureRoughness;
             } else if (this.roughness !== null) {
@@ -772,6 +780,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             m.skinning = useSkinning;
             if (useVertexColors) {
               m.vertexColors = THREE.VertexColors;
+            } else {
+              m.vertexColors = THREE.NoColors;
             }
             m.fog = this.fog;
             m.wireframe = this.wireframe;
@@ -1143,6 +1153,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           envmap_id:  [ 'property', 'envmap_id'],
           websurface_id:  [ 'property', 'websurface_id'],
           normalmap_id:  [ 'property', 'normalmap_id'],
+          alphamap_id:  [ 'property', 'alphamap_id'],
           displacementmap_id:  [ 'property', 'displacementmap_id'],
           displacementmap_scale:  [ 'property', 'displacementmap_scale'],
           emissive_id:  [ 'property', 'emissive_id'],
@@ -1166,6 +1177,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           emissive_intensity: [ 'property', 'emissive_intensity'],
           roughness: [ 'property', 'roughness'],
           metalness: [ 'property', 'metalness'],
+          usevertexcolors: [ 'property', 'usevertexcolors'],
 
           texture_offset: [ 'property', 'texture_offset'],
           texture_repeat: [ 'property', 'texture_repeat'],
