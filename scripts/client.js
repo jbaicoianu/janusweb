@@ -258,12 +258,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     }
     this.handleRenderViewAdd = function(ev) {
       let view = ev.data;
-      if (view.xrsession) {
+      if (view.xrsession && !this.xrplayer) {
         this.xrplayer = this.player.createObject('xrplayer', {
-          session: view.xrsession
+          session: view.xrsession,
+          xrview: view
         });
-        console.log('Attached XR player to render view', this.xrplayer, view);
-        view.setactivething(this.xrplayer._target);
       }
     }
   }, elation.engine.client);
