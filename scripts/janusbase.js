@@ -1114,6 +1114,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       var children = this.getChildProxies();
       for (var i = 0; i < children.length; i++) {
         var el = children[i];
+        if (!el) continue;
         if (el.tag == tag) {
           elements.push(el);
         }
