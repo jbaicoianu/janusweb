@@ -75,7 +75,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       name: n.id,
       src: src,
       baseurl: baseurl,
-      hasalpha: n.hasalpha,
+      hasalpha: ('hasalpha' in n ? n.hasalpha == "true" || n.hasalpha === true || n.hasalpha === 1 || n.hasalpha === '1' : null),
       proxy: n.proxy,
       sbs3d: n.sbs3d,
       ou3d: n.ou3d,
@@ -128,6 +128,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       shadertype: n.shadertype || 'default',
       fragment_src: n.src || n.fragment_src,
       vertex_src: n.vertex_src,
+      hasalpha: n.hasalpha,
       uniforms: n.uniforms,
       baseurl: baseurl,
     });
