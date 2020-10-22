@@ -67,9 +67,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.object && this.object instanceof THREE.Object3D) {
         this.properties.position.copy(this.object.position);
         this.properties.orientation.copy(this.object.quaternion);
-        return this.object;
-      }
-      if (this.janusid) {
+        object = this.object;
+        setTimeout(() => { this.handleLoad(); this.assignTextures(); }, 100);
+      } else if (this.janusid) {
         var asset = this.getAsset('model', this.janusid, true);
         this.dispatchEvent({type: 'loadstart'});
         if (asset) {
