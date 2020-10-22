@@ -1266,7 +1266,16 @@ console.log('clone', props);
     this.deactivateControlContext = function(name) {
       this.engine.systems.controls.deactivateContext(name);
     }
-    this.traverseObjects = function(callback, root) {
+    this.traverse = function(callback) { // Execute callback on this object and all of its children
+      callback(this);
+      if (this.children && this.children.length > 0) {
+        for (let i = 0; i < this.children.length; i++) {
+          let child = this.children[i];
+          child.traverse(callback);
+        }
+      }
+    }
+    this.traverseObjects = function(callback, root) { // Execute callback on the underlying sub-objects which make up this object, without traversing to children
       if (!root) root = this.objects['3d'];
       callback(root);
       if (root.children) {
