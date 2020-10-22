@@ -757,7 +757,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           parent.worldToLocal(camera.getWorldPosition(playerpos)).sub(this.position);
           dir.copy(playerpos).normalize();
           if (billboard == 'y') {
-            this.rotation.set(0, Math.atan2(dir.x, dir.z), 0);
+            this.rotation.radians.set(0, Math.atan2(dir.x, dir.z), 0);
             this.frameupdates['rotation'] = true;
           }
         }
@@ -826,7 +826,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.properties.orientation.setFromEuler(this.rotation.radians);
     }
     this.updateEulerFromOrientation = function() {
-      this.properties.rotation.setFromQuaternion(this.properties.orientation, this.properties.rotation.order);
+      this.rotation.radians.setFromQuaternion(this.properties.orientation, this.properties.rotation.order);
     }
     this.updateDirvecsFromOrientation = (function() {
       var tmpmat = new THREE.Matrix4();
@@ -850,7 +850,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       var euler = new THREE.Euler();
       return function() {
         euler.setFromQuaternion(this.properties.orientation);
-        return !euler.equals(this.properties.rotation);
+        return !euler.equals(this.properties.rotation.radians);
       }
     })();
     this.hasChangedPosition = function() {
