@@ -53,7 +53,8 @@ elation.require(['janusweb.janusbase'], function() {
     this.createMaterial = function() {
       var matargs = {
         color: this.properties.color,
-        transparent: false,
+        transparent: (this.opacity < 1),
+        opacity: this.opacity,
         alphaTest: 0.2
       };
 
@@ -79,6 +80,7 @@ elation.require(['janusweb.janusbase'], function() {
         map: sidemattex,
         color: this.properties.color,
         transparent: matargs.transparent,
+        opacity: matargs.opacity,
         alphaTest: 0.2
       };
 
