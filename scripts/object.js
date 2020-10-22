@@ -416,9 +416,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
       }
       if (displacement_image_id) {
-        let displacementtextureasset = this.getAsset('image', displacement_image_id, true);
+        let displacementtextureasset = this.getAsset('image', displacement_image_id);
         if (!displacementtextureasset) { // no image found, try video
-          displacementtextureasset = this.getAsset('video', displacement_image_id, true);
+          displacementtextureasset = this.getAsset('video', displacement_image_id);
         }
         if (displacementtextureasset) {
           textureDisplacement = displacementtextureasset.getInstance();
@@ -989,6 +989,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.envmap_id) {
         if (this.envmap) return this.envmap;
         var envmapasset = this.getAsset('image', this.envmap_id);
+        if (!envmapasset) {
+          // try video as a fallback
+          envmapasset = this.getAsset('video', this.envmap_id);
+        }
         if (envmapasset) {
           this.envmap = envmapasset.getInstance();
           this.envmap.mapping = THREE.EquirectangularReflectionMapping;
