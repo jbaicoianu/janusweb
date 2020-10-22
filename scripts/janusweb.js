@@ -295,7 +295,7 @@ elation.require([
       }
       this.refresh();
     }
-    this.load = function(url, makeactive, baseurl) {
+    this.load = function(url, makeactive, baseurl, stripreferrer) {
       var roomname = url;
 
       var room = this.spawn('janusroom', roomname, {
@@ -306,8 +306,10 @@ elation.require([
         deferload: true
       });
 
-      if (this.currentroom) {
+      if (this.currentroom && !stripreferrer) {
         room.referrer = this.currentroom.url;
+      } else {
+        room.referrer = null;
       }
       elation.events.fire({element: this, type: 'room_load_start', data: room});
       room.load();
@@ -322,7 +324,7 @@ elation.require([
       //console.log('made new room', url, room);
       this.loading = false;
       if (room && makeactive) {
-        this.setActiveRoom(url);
+        this.setActiveRoom(url, room.referrer);
       }
       this.initScripting();
       return room;
@@ -357,7 +359,7 @@ elation.require([
         }
         if (oldroom !== room) {
           // Set referrer so we know where this link came from
-          if (referrer) {
+          if (typeof referrer != 'undefined') {
             room.referrer = referrer;
           } else if (oldroom) {
             room.referrer = oldroom.url;
@@ -393,7 +395,7 @@ elation.require([
         }
         //this.enter_room(url);
       } else {
-        this.load(url, true);
+        this.load(url, true, null, referrer === false);
       }
     }
     this.getFixedURL = function(url) {
@@ -521,8 +523,8 @@ elation.require([
     this.navigateBack = function() {
       history.back();
     }
-    this.navigateTo = function(url) {
-      return this.setActiveRoom(url);
+    this.navigateTo = function(url, referrer) {
+      return this.setActiveRoom(url, referrer);
     }
     this.navigateForward = function() {
       history.forward();
