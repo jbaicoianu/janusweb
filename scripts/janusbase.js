@@ -1305,5 +1305,13 @@ console.log('clone', props);
         }
       }
     }
+    this.contains = function(obj) {
+      let ptr = obj;
+      while (ptr.parent) {
+        if (ptr.parent == this) return true;
+        ptr = ptr.parent;
+      }
+      return false;
+    }
   }, elation.engine.things.generic);
 });
