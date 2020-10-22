@@ -177,10 +177,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.videoasset = videoasset;
         texture = videoasset.getInstance();
         if (videoasset.sbs3d) {
-          texture.repeat.x = 0.5;
-        }
-        if (videoasset.ou3d) {
-          texture.repeat.y = 0.5;
+          //texture.repeat.set(0.5, 1);
+          this.texture_repeat.set(0.5, 1);
+        } else if (videoasset.ou3d) {
+          //texture.repeat.set(1, 0.5);
+          this.texture_repeat.set(1, 0.5);
+        } else {
+          this.texture_repeat.set(1, 1);
         }
         if (videoasset.loop || this.properties.loop) {
           texture.image.loop = true;
@@ -339,10 +342,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
             if (textureasset.sbs3d) {
-              texture.repeat.x *= 0.5;
-            }
-            if (textureasset.ou3d) {
-              texture.repeat.y *= 0.5;
+              texture.repeat.set(0.5, 1);
+              this.texture_repeat.set(0.5, 1);
+            } else if (textureasset.ou3d) {
+              texture.repeat.set(1, 0.5);
+              this.texture_repeat.set(1, 0.5);
+            } else {
+              //texture.repeat.set(1, 1);
+              //this.texture_repeat.set(1, 1);
             }
           }
         }
@@ -358,10 +365,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
 
           if (normaltextureasset.sbs3d) {
-            textureNormal.repeat.x = 0.5;
-          }
-          if (normaltextureasset.ou3d) {
-            textureNormal.repeat.y = 0.5;
+            textureNormal.repeat.set(0.5, 1);
+          } else if (normaltextureasset.ou3d) {
+            textureNormal.repeat.set(1, 0.5);
+          } else {
+            textureNormal.repeat.set(1, 1);
           }
           if (textureNormal) {
             //this.assignTextureParameters(textureNormal, modelasset, textureasset);
@@ -401,10 +409,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             elation.events.add(textureDisplacement, 'update', elation.bind(this, this.refresh));
           }
           if (displacementtextureasset.sbs3d) {
-            textureDisplacement.repeat.x = 0.5;
-          }
-          if (displacementtextureasset.ou3d) {
-            textureDisplacement.repeat.y = 0.5;
+            textureDisplacement.repeat.set(0.5, 1);
+          } else if (displacementtextureasset.ou3d) {
+            textureDisplacement.repeat.set(1, 0.5);
+          } else {
+            textureDisplacement.repeat.set(1, 1);
           }
           if (textureDisplacement) {
             this.assignTextureParameters(textureDisplacement, modelasset, textureasset);
@@ -480,10 +489,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (texture) {
           this.assignTextureParameters(texture, modelasset, this.videoasset);
           if (this.videoasset.sbs3d) {
-            texture.repeat.x *= 0.5;
-          }
-          if (this.videoasset.ou3d) {
-            texture.repeat.y *= 0.5;
+            texture.repeat.set(.5, 1);
+          } else if (this.videoasset.ou3d) {
+            texture.repeat.set(1, .5);
+          } else {
+            texture.repeat.set(1, 1);
           }
         }
       }
@@ -617,6 +627,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                     texture.setEye('right');
                   } else {
                     texture.setEye('left');
+                  }
+                }
+              } else if (texture === this.videotexture && this.videoasset.ou3d) {
+                let vrlayer = new THREE.Layers();
+                vrlayer.set(2);
+                n.onBeforeRender = (renderer, scene, camera) => {
+                  if (camera.layers.test(vrlayer)) {
+                    texture.offset.set(0, 0);
+                  } else {
+                    texture.offset.set(0, .5);
                   }
                 }
               }
@@ -1006,15 +1026,36 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.rotation = this.properties.texture_rotation;
         }
         this.objectMeshes.forEach(n => {
-          n.onBeforeRender = () => {
+          n.onBeforeRender = (renderer, scene, camera) => {
             let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             materials.forEach(m => {
               if (m.map) applyTextureOffset(m.map);
               if (m.normalMap) applyTextureOffset(m.normalMap);
+              if (m.bumpMap) applyTextureOffset(m.bumpMap);
               if (m.emissiveMap) applyTextureOffset(m.emissiveMap);
               if (m.roughnessMap) applyTextureOffset(m.roughnessMap);
               if (m.metalnessMap) applyTextureOffset(m.metalnessMap);
               if (m.displacementMap) applyTextureOffset(m.displacementMap);
+
+              if (!this.vrlayer) {
+                this.vrlayer = new THREE.Layers();
+                this.vrlayer.set(2);
+              }
+              if (m.map === this.videotexture) {
+                if (this.videoasset.ou3d) {
+                  if (camera.layers.test(this.vrlayer)) {
+                    m.map.offset.y = (this.videoasset.reverse3d ? .5 : 0);
+                  } else {
+                    m.map.offset.y = (this.videoasset.reverse3d ? 0 : .5);
+                  }
+                } else if (this.videoasset.sbs3d) {
+                  if (camera.layers.test(this.vrlayer)) {
+                    m.map.offset.x = (this.videoasset.reverse3d ? 0 : .5);
+                  } else {
+                    m.map.offset.x = (this.videoasset.reverse3d ? .5 : 0);
+                  }
+                }
+              }
             });
           };
         });
