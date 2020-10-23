@@ -238,6 +238,10 @@ ui-panel[right],
 ui-collapsiblepanel[right] {
   right: 0;
 }
+ui-panel[top]:not([left]):not([right]) {
+  left: 50%;
+  transform: translateX(-50%);
+}
 
 ui-flexpanel {
   display: flex;
@@ -1117,10 +1121,10 @@ ui-treeview ul li.state_selected li {
 }
 
 @keyframes loading-text-opacity {
-  0%  {opacity: 0}
-  20% {opacity: 0}
+  0%  {opacity: .5}
+  20% {opacity: .5}
   50% {opacity: 1}
-  100%{opacity: 0}
+  100%{opacity: .5}
 }
 
 ui-spinner .loading-container,
