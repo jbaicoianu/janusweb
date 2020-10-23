@@ -96,6 +96,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         elation.events.add(this.voip, 'voip_error', elation.bind(this, this.handleVOIPError));
       }
       elation.events.add(this.engine.systems.render.views.main, 'render_view_prerender', elation.bind(this, this.updateCursor));
+      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrame));
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
@@ -274,6 +275,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       }
     })();
+    this.handleFrame = function() {
+      if (this.lookAtLERPtime) {
+        this.updateLookAtLERP();
+      }
+    }
     this.updateCursor = (function() {
       var _tmpvec = new THREE.Vector3();
 
@@ -969,6 +975,53 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.refresh();
         room.refresh();
         this.engine.systems.render.setdirty();
+      }
+    }
+    this.lookAtLERP = function(other, time, up) {
+      if (this.lerptimer) {
+        cancelTimeout(this.lerptimer);
+      }
+      if (time) {
+        let now = performance.now(),
+            elapsed = now - this.starttime,
+            n = Math.min(1, Math.max(0, elapsed / time));
+
+        this.lookAtLERPstart = now;
+        this.lookAtLERPtime = time;
+        this.lookAtLERPq1head = player.head.orientation.clone();
+        this.lookAtLERPq1body = player.orientation.clone();
+
+        let otherpos = false;
+        if (other.properties && other.properties.position) {
+          otherpos = other.localToWorld(new THREE.Vector3());
+        } else if (other instanceof THREE.Vector3) {
+          otherpos = other.clone();
+        }
+        let thispos = this.localToWorld(new THREE.Vector3());
+
+        if (otherpos) {
+          let dir = thispos.clone().sub(otherpos).normalize();
+          this.lookAtLERPq2body = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.atan2(dir.x, dir.z), 0));
+          this.lookAtLERPq2head = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.asin(dir.y), 0, 0));
+          this.refresh();
+          room.refresh();
+          this.engine.systems.render.setdirty();
+        }
+
+        if (this.starttime && elapsed <= time) {
+          //this.lerptimer = setTimeout(() => this.lookAtLERP(other, time, up), 16);
+        }
+      }
+    }
+    this.updateLookAtLERP = function() {
+      let now = performance.now(),
+          elapsed = now - this.lookAtLERPstart,
+          n = Math.min(1, Math.max(0, elapsed / this.lookAtLERPtime));
+
+      THREE.Quaternion.slerp(this.lookAtLERPq1body, this.lookAtLERPq2body, this.orientation, n);
+      THREE.Quaternion.slerp(this.lookAtLERPq1head, this.lookAtLERPq2head, this.head.orientation, n);
+      if (n == 1) {
+        this.lookAtLERPtime = 0;
       }
     }
     this.spawnPortal = function(url) {
