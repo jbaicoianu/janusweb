@@ -1329,10 +1329,13 @@ elation.require([
             loop: args.loop,
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
+            eac360: args.eac360,
             hasalpha: args.hasalpha,
             auto_play: args.auto_play,
             type: args.type,
             format: args.format,
+            hls: args.hls,
+            preload: args.preload,
             baseurl: this.baseurl
           });
         } else if (args.video) {
@@ -1347,6 +1350,7 @@ elation.require([
             auto_play: args.auto_play,
             type: args.type,
             format: args.format,
+            hls: args.hls,
             baseurl: this.baseurl
           });
         }
@@ -1423,6 +1427,7 @@ elation.require([
           fragment_src: args.src,
           vertex_src: args.vertex_src,
           uniforms: args.uniforms,
+          hasalpha: args.hasalpha,
         });
       } else if (type == 'font') {
         assetlist.push({
