@@ -811,7 +811,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.raycast = (function() {
       var _pos = new THREE.Vector3(),
           _dir = new THREE.Vector3(0,0,-1);
-      return function(dir, offset, classname) {
+      return function(dir, offset, classname, maxdist) {
         if (!this.room) return [];
         if (dir) {
           _dir.copy(dir);
@@ -824,7 +824,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
         this.head.localToWorld(_pos);
         this.head.objects.dynamics.localToWorldDir(_dir);
-        return this.room.raycast(_dir, _pos, classname);
+        return this.room.raycast(_dir, _pos, classname, maxdist);
       };
     })();
     this.cancelGaze = function() {
