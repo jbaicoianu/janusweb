@@ -1613,10 +1613,16 @@ elation.require([
     }
 */
     this.onKeyDown = function(ev) { 
-      elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase(), event: ev});
+      if (ev.key) {
+        // Chrome throws keydown/keyup events with no key attribute when autocomplete fills a form element
+        elation.events.fire({type: 'janus_room_keydown', element: this, keyCode: ev.key.toUpperCase(), event: ev});
+      }
     }
     this.onKeyUp = function(ev) { 
-      elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase(), event: ev });
+      if (ev.key) {
+        // Chrome throws keydown/keyup events with no key attribute when autocomplete fills a form element
+        elation.events.fire({type: 'janus_room_keyup', element: this, keyCode: ev.key.toUpperCase(), event: ev });
+      }
     }
     this.onMouseDown = function(ev) { 
       elation.events.fire({type: 'janus_room_mousedown', element: this, event: ev});
