@@ -788,7 +788,8 @@ elation.require([
           }
           if (!hasReciprocalLink) {
             // If no reciprocal link was found, spawn one so we can find our way back
-            let linkrot = this.spawnpoint.rotation.clone();
+            let linkrot = new EulerDegrees();
+            linkrot.radians.copy(this.spawnpoint.rotation);
             //linkrot.x *= THREE.Math.RAD2DEG;
             linkrot.y = linkrot.y + 180;
             //linkrot.z *= THREE.Math.RAD2DEG;
