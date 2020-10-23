@@ -13,6 +13,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         janus: {type: 'object' },
         room: {type: 'object' },
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
+        cursor_opacity: {type: 'float', default: 1.0, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
         collision_radius: {type: 'float', default: .25, set: this.updateCollider},
         party_mode: { type: 'boolean', set: this.updatePartyMode },
@@ -113,7 +114,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
 
-      this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null}));
+      this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null, fog: false}));
       this.engine.systems.world.scene['world-3d'].add(this.cursor);
 
 
@@ -291,7 +292,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           if (useSystemCursor) {
             this.cursor.visible = false;
             var view = this.engine.systems.render.views.main;
-            if (!view.hasclass('cursor_' + this.cursor_style)) {
+            if (this.cursors && !view.hasclass('cursor_' + this.cursor_style)) {
               var cursortypes = Object.keys(this.cursors);
               for (var i = 0; i < cursortypes.length; i++) { 
                 var thistype = cursortypes[i] == this.cursor_style,
@@ -311,9 +312,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             this.cursor.scale.set(size,size,size);
 
             if (this.cursor_object == '') {
-              this.cursor.material.opacity = .5;
+              this.cursor.material.opacity = .5 * this.cursor_opacity;
             } else {
-              this.cursor.material.opacity = 1;
+              this.cursor.material.opacity = this.cursor_opacity;
             }
 
             if (this.cursors[this.cursor_style]) {
@@ -514,6 +515,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         //url:           ['property', 'currenturl'],
         //hmd_enabled:   ['property', 'hmd_enabled'],
         cursor_active: ['property', 'cursor_active'],
+        cursor_visible: ['property', 'cursor_visible'],
+        cursor_opacity: ['property', 'cursor_opacity'],
         cursor_style: ['property', 'cursor_style'],
         cursor_object: ['property', 'cursor_object'],
         lookat_object: ['property', 'lookat_object'],
