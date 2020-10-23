@@ -1139,7 +1139,14 @@ elation.require([
         case 'janusportal':
           // If it's an absolute URL or we have a translator for this URL type, use the url unmodified.  Otherwise, treat it as relative
           if (args.url) {
-            var linkurl = (args.url.match(/^(https?:)?\/\//) || this.getTranslator(args.url) ? args.url : this.baseurl + args.url);
+            var linkurl = args.url;
+            if (!(args.url.match(/^(https?:)?\/\//) || this.getTranslator(args.url))) {
+              if (args.url[0] == '/') {
+                linkurl = this.baseurl.replace(/^(https?:\/\/[^\/]+?)\/.*/, (match, base) => base) + args.url;
+              } else {
+                linkurl = this.baseurl + args.url;
+              }
+            }
             objectargs.url = linkurl;
           }
           let scale = objectargs.scale,
