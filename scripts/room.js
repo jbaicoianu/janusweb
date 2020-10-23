@@ -19,6 +19,7 @@ elation.require([
       this.defineProperties({
         'janus': { type: 'object' },
         'url': { type: 'string', default: false },
+        'urlfragment': { type: 'string', default: false },
         'referrer': { type: 'string' },
         'deferload': { type: 'boolean', default: false },
         'roomid': { type: 'string' },
@@ -126,6 +127,11 @@ elation.require([
       };
 
       if (this.url) {
+        let hashidx = this.url.indexOf('#');
+        if (hashidx != -1) {
+          this.urlhash = this.url.substr(hashidx+1);
+          this.url = this.url.substr(0, hashidx);
+        }
         this.roomid = md5(this.url);
         if (!this.deferload) {
           this.load(this.url, this.baseurl);
@@ -220,8 +226,18 @@ elation.require([
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
       player.cursor_visible = elation.utils.any(this.cursor_visible, true);
+      player.cursor_opacity = 1;
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
       //setTimeout(elation.bind(player, player.reset_position), 0);
+    }
+    this.setHash = function(hash) {
+      this.urlhash = hash;
+      if (document.location.origin + document.location.pathname == this.url) {
+        document.location.hash = hash;
+      }
+      let spawnpoint = this.getSpawnpoint();
+      player.startposition.copy(spawnpoint.position);
+      player.startorientation.copy(spawnpoint.orientation);
     }
     this.getSpawnpoint = function(referrer) {
       let spawnpoint = {
@@ -237,6 +253,12 @@ elation.require([
             spawnpoint.orientation = links[i].orientation.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
             break;
           }
+        }
+      } else if (this.urlhash) {
+        let obj = this.getObjectById(this.urlhash);
+        if (obj) {
+          obj.localToWorld(spawnpoint.position.set(0,0,0));
+          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld);
         }
       }
       return spawnpoint;
