@@ -1881,6 +1881,7 @@ elation.require([
           pos:           ['property', 'spawnpoint.position'],
           sync:          ['property', 'sync'],
           js_id:         ['property', 'roomid'],
+          pickable:      ['property', 'pickable'],
 
           skybox:         ['property', 'skybox'],
           skybox_left_id: ['property', 'skybox_left'],
