@@ -1647,6 +1647,10 @@ elation.require([
         this.firsttouch = true;
         this.enable();
       }
+      let soundsystem = this.engine.systems.sound;
+      if (!soundsystem.canPlaySound) {
+        soundsystem.enableSound();
+      }
     }
     this.onThingChange = function(ev) {
       var thing = ev.target;
