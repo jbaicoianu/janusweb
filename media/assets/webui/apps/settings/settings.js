@@ -105,7 +105,6 @@ elation.elements.define('janus.ui.settings.panels', class extends elation.elemen
     };
     let customlayouts = player.getSetting('ui.layouts');
     if (customlayouts) {
-console.log('custom layouts!', customlayouts);
       for (var k in customlayouts) {
         this.layouts[k] = customlayouts[k];
       }
@@ -114,7 +113,6 @@ console.log('custom layouts!', customlayouts);
     let layoutname = player.getSetting('ui.activelayout', 'default');
     this.layout = layoutname;
     let layout = this.layouts[layoutname] || this.layouts['default'];
-console.log('layoutname:', layoutname, layout);
 
     let elements = elation.elements.fromTemplate('janus.ui.settings.panels', this);
 
@@ -137,26 +135,51 @@ console.log('layoutname:', layoutname, layout);
 elation.elements.define('janus.username.picker', class extends elation.elements.base {
   init() {
     this.defineAttributes({
-      label: { type: 'string', default: 'Change' }
+      label: { type: 'string', default: 'Username' },
+      buttonlabel: { type: 'string', default: 'Change' },
+      confirm: { type: 'boolean', default: false },
+      confirmlabel: { type: 'string', default: 'Confirm' },
     });
   }
   create() {
     this.elements = elation.elements.fromString(`
       <form name="usernameform">
-        <ui-input label="Username" name="username"></ui-input>
-        <input type="submit" value="${this.label}">
+        <ui-input label="${this.label}" name="clientid"></ui-input>
+        <input type="submit" name="submit" value="${this.confirm ? this.confirmlabel : this.buttonlabel}">
       </form>
     `, this);
     this.elements.usernameform.addEventListener('submit', ev => this.handleFormSubmit(ev));
-    this.elements.username.value = player.userid;
+    this.elements.clientid.addEventListener('input', ev => this.handleInputChange(ev));
+    //this.elements.clientid.addEventListener('accept', ev => this.handleFormSubmit(ev));
+    elation.events.add(this.elements.clientid, 'accept', ev => this.handleFormSubmit(ev));
+    this.elements.clientid.value = player.userid;
+    if (!this.confirm) {
+      this.elements.submit.disabled = true;
+    }
   }
   handleFormSubmit(ev) {
-    console.log('submitted');
     ev.preventDefault();
-    let newname = this.elements.username.value;
+    let newname = this.elements.clientid.value;
     if (newname != player.userid) {
       player.setUsername(newname);
-      this.dispatchEvent(new CustomEvent('change', { detail: newname }));
+    }
+    this.elements.submit.disabled = !this.confirm;
+    this.dispatchEvent(new CustomEvent('change', { detail: newname }));
+  }
+  handleInputChange(ev) {
+    let changed = this.elements.clientid.value == player.userid;
+    if (this.confirm && !changed) {
+      this.elements.submit.value = this.confirmlabel;
+    } else {
+      this.elements.submit.value = this.buttonlabel;
+      this.elements.submit.disabled = (changed && !this.confirm);
+    }
+  }
+  setUsername(username) {
+    this.elements.clientid.value = username;
+    if (username != player.userid) {
+      player.setUsername(username);
+      this.dispatchEvent(new CustomEvent('change', { detail: username }));
     }
   }
   handleFormReset() {
