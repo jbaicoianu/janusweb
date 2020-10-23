@@ -579,7 +579,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             fetch(this.avatarsrc).then(res => res.text()).then(txt => {
               this.currentavatar = txt;
               this.avatarNeedsUpdate = true;
-              resolve(t);
+              resolve(txt);
             });
           } else {
             this.currentavatar = this.defaultavatar;
