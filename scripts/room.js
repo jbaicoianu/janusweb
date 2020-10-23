@@ -2469,7 +2469,7 @@ console.log('dispatch to parent', event, this, event.target);
     this.getFullRoomURL = function(url) {
       if (!url) url = this.url;
       if (url[0] == '/') {
-        url = this.baseurl.replace(/^(https?:\/\/[^\/]+\/).*$/, '$1') + url;
+        url = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + url;
       } else if (!url.match(/https?:\/\//i)) {
         url = this.baseurl + url;
       }
