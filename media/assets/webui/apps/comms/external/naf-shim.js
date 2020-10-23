@@ -6,7 +6,10 @@ window.NAF = {
       NAF.adapters.adapters[name] = instance;
     },
     make: function(name) {
-      return new NAF.adapters.adapters[name];
+      if (typeof NAF != 'undefined' && name in NAF.adapters.adapters) {
+        return new NAF.adapters.adapters[name];
+      }
+      return null;
     }
   }
 };
@@ -19,12 +22,16 @@ class JanusNAF extends EventTarget {
   }
   connect(serverURL, appName, roomName) {
     let adapter = NAF.adapters.make('janus');
+    if (!adapter) {
+      console.error('Janus NAF adapter not found');
+      return;
+    }
     adapter.setServerUrl(serverURL);
     adapter.setApp(appName);
     adapter.setRoom(roomName);
     adapter.setClientId(this.clientId);
     adapter.setPeerConnectionConfig(this.getPeerConnectionConfig());
-    console.log('I have an adapter', adapter, this.clientId);
+    //console.log('I have an adapter', adapter, this.clientId);
 
     var webrtcOptions = this.getMediaConstraints();
     adapter.setWebRtcOptions(webrtcOptions);
@@ -96,7 +103,7 @@ console.log('datachannel closed', id);
 console.log('received data', id);
   }
   occupantsReceived(occupantList) {
-console.log('occupants received', occupantList);
+console.log('occupants received', Object.keys(occupantList), Object.keys(this.connectedClients));
     var prevConnectedClients = Object.assign({}, this.connectedClients);
     this.connectedClients = occupantList;
     this.checkForDisconnectingClients(prevConnectedClients, occupantList);
@@ -157,5 +164,8 @@ console.log('occupants received', occupantList);
         this.adapter.reconnect();
       }
     }
+  }
+  setRoom(roomId) {
+    this.adapter.setRoom(roomId);
   }
 }

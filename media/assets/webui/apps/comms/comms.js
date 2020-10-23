@@ -1,5 +1,8 @@
 elation.elements.define('janus-comms-panel', class extends elation.elements.base {
   create() {
+    this.defineAttributes({
+      labelfont: { type: 'string', default: 'monospace' },
+    });
     this.player = player;
     this.client = this.getClient();
     this.janusweb = this.client.janusweb;
@@ -44,6 +47,9 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
 });
 elation.elements.define('janus-comms-userlist', class extends elation.elements.ui.list {
   create() {
+    this.defineAttributes({
+      labelfont: { type: 'string', default: 'monospace' },
+    });
     this.player = player;
     if (typeof room != 'undefined') {
       this.room = room;
@@ -92,27 +98,26 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.userlist_room.setItems(users);
 
     for (let k in remoteplayers) {
-      let p = remoteplayers[k].getProxyObject();
+      let p = remoteplayers[k];
+      if (this.usermarkers[k] && this.usermarkers[k].parent !== p) {
+        this.usermarkers[k].die();
+        delete this.usermarkers[k];
+      }
       if (!this.usermarkers[k]) {
-// FIXME - timeout hacks probably aren't needed
-setTimeout(() => {
-// simple test of a 3d object controlled from the ui
         this.usermarkers[k] = p.createObject('playerlabel', {
           player_name: k,
           pos: V(p.userid_pos),
+          font: this.labelfont,
         });
         this.usermarkers[k].start();
-}, 100);
-      } else if (this.usermarkers[k].parent !== p) {
-if (this.usermarkers[k].parent) {
-  this.usermarkers[k].parent.remove(this.usermarkers[k]);
-}
-setTimeout(() => {
-        p.appendChild(this.usermarkers[k]);
-        this.usermarkers[k].updateCanvas();
-        this.usermarkers[k].start();
-}, 1000);
-      }
+      } 
+
+    }
+  }
+  setFont(fontname) {
+    this.labelfont = fontname;
+    for (let k in this.usermarkers) {
+      this.usermarkers[k].setFont(fontname);
     }
   }
 });
@@ -131,8 +136,11 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     //this.elements.chatinput.addEventListener('accept', (ev) => this.sendMessage(ev.value));
     this.elements.chatinput.onaccept = (ev) => {
       this.sendMessage(this.elements.chatinput.value);
-      if (this.shouldreturnfocus) {
+      if (false && this.shouldreturnfocus) {
         player.enable();
+        this.shouldreturnfocus = false;
+      } else {
+        this.elements.chatinput.focus();
       }
     }
     this.elements.chatinput.onfocus = (ev) => {
@@ -245,6 +253,7 @@ elation.elements.define('janus-comms-voip', class extends elation.elements.base 
 
 janus.registerElement('playerlabel', {
   player_name: '',
+  font: 'monospace',
 
   create() {
     this.currentcolor = V(255,255,255);
@@ -260,7 +269,7 @@ janus.registerElement('playerlabel', {
     });
     this.label = this.createObject('object', {
       id: 'plane',
-      collision_id: 'cube',
+      //collision_id: 'cube',
       collision_scale: V(.85,7,.1),
       collision_pos: V(0,-3,0),
       //collidable: true,
@@ -272,50 +281,62 @@ janus.registerElement('playerlabel', {
       opacity: .9,
       transparent: true,
       renderorder: 10,
+      shadow_cast: false,
     });
     this.updateCanvas();
     this.label.addEventListener('mouseover', ev => this.handleMouseOver(ev));
     this.label.addEventListener('mouseout', ev => this.handleMouseOut(ev));
     this.label.addEventListener('click', ev => this.handleClick(ev));
+
+    console.log('create a player label', this.player_name, this);
   },
   updateCanvas() {
     let ctx = this.canvas.getContext('2d');
 
-    let font = 'bold 60px monospace';
-    ctx.font = font;
-    let measure = ctx.measureText(this.player_name);
+    let font = 'bold 60px "' + this.font + '"';
+    document.fonts.load(font).then(fonts => {
+      ctx.font = font;
+      let measure = ctx.measureText(this.player_name);
 
-    let width = Math.pow(2, Math.ceil(Math.log(measure.width) / Math.log(2)));
-    this.canvas.width = width;
-    if (this.label) {
-      let oldscale = this.label.scale.x;
-      this.label.scale.x = width / this.canvas.height * this.label.scale.y;
-      this.label.collision_scale = V(.85 / this.label.scale.x, 7, .1); // FIXME - shouldn't be hardcoded
-    }
+      let width = Math.pow(2, Math.ceil(Math.log(measure.width) / Math.log(2)));
+      this.canvas.width = width;
+      if (this.label) {
+        let oldscale = this.label.scale.x;
+        this.label.scale.x = width / this.canvas.height * this.label.scale.y;
+        this.label.collision_scale = V(.85 / this.label.scale.x, 7, .1); // FIXME - shouldn't be hardcoded
+      }
 
-    ctx.font = font;
-    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.font = font;
+      ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    let c = this.currentcolor;
-    // background color
-/*
-    ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 0.1)';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-*/
+      let c = this.currentcolor;
+      // background color
+  /*
+      ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 0.1)';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+  */
 
-    // text with shadow
-    ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
-    ctx.shadowBlur = 2;
-    ctx.shadowColor = 'rgba(0,0,0,1)';
-    ctx.fillText(this.player_name, (this.canvas.width - measure.width) / 2, this.canvas.height - 10);
+      // text with shadow
+      ctx.fillStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'rgba(0,0,0,1)';
+      ctx.fillText(this.player_name, (this.canvas.width - measure.width) / 2, this.canvas.height - 10);
 
-/*
-    // outer border
-    ctx.strokeStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
-    ctx.shadowColor = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
-    ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
-*/
-    elation.events.fire({element: this.canvas, type: 'update'});
+  /*
+      // outer border
+      ctx.strokeStyle = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+      ctx.shadowColor = 'rgba(' + c.x + ', ' + c.y + ', ' + c.z + ', 1)';
+      ctx.strokeRect(0, 0, this.canvas.width, this.canvas.height);
+  */
+      elation.events.fire({element: this.canvas, type: 'update'});
+    });
+  },
+  setFont(fontname) {
+    this.font = fontname;
+    this.updateCanvas();
+  },
+  setAudioSource(source) {
+    console.log('got an audio source', source);
   },
   handleMouseOver(ev) {
     this.currentcolor.set(0,255,0);

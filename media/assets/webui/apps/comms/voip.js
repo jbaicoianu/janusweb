@@ -6,8 +6,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     let sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
     this.sfu = sfu;
 
-console.log('new thing', room.id);
-    sfu.connect('wss://voip.janusxr.org/', 'default', room.id, true);
+    sfu.connect('wss://voip.janusxr.org/', 'default', room.url, true);
 
     this.localuser = document.createElement('janus-voip-localuser');
     this.appendChild(this.localuser);
@@ -37,6 +36,33 @@ setTimeout(() => this.removeChild(user), 250);
       sfu.adapter.setLocalMediaStream(localStream);
       sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
     });
+    elation.events.add(janus._target, 'room_change', (ev) => {
+      if (!sfu || !sfu.adapter) return;
+      console.log('change SFU room', room.url, sfu.adapter.publisher, remoteusers, sfu.adapter.room);
+      if (sfu.adapter.publisher) {
+        let handle = sfu.adapter.publisher.handle;
+        sfu.adapter.sendLeave(handle, {
+          notifications: true,
+          data: true
+        });
+        for (let k in remoteusers) {
+          sfu.adapter.sendLeave(handle, {
+            media: k
+          });
+        }
+      }
+      for (let k in remoteusers) {
+        remoteusers[k].destroy();
+        delete remoteusers[k];
+      }
+      sfu.adapter.removeAllOccupants()
+      sfu.adapter.requestedOccupants = null;
+      sfu.adapter.availableOccupants = [];
+      sfu.connectedClients = {};
+      sfu.adapter.setRoom(room.url)
+console.log('room is now', sfu.adapter.room);
+      sfu.adapter.reconnect();
+    });
     // FIXME - player proxy should expose .addEventListener()
     elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
   }
@@ -46,24 +72,43 @@ setTimeout(() => this.removeChild(user), 250);
 });
 
 elation.elements.define('janus-voip-localuser', class extends elation.elements.base {
+  create() {
+    window.addEventListener('keypress', (ev) => {
+      if (ev.key == 'm') {
+        if (player.enabled) {
+          this.toggleMute();
+        }
+      }
+    });
+  }
   setData(data) {
-console.log('set my local data', data);
     this.muted = false;
 
     if (this.video) {
       this.removeChild(this.video);
     }
 
+    if (!this.label) {
+      // label
+      let label = document.createElement('h2');
+      label.innerText = player.getNetworkUsername();
+      this.appendChild(label);
+      this.label = label;
+    }
+
+
     // video
-    let video = document.createElement('video');
-    video.srcObject = data;
-    this.appendChild(video);
-    video.muted = true;
-    video.play();
-    this.video = video;
+    if (data.getVideoTracks().length > 0) {
+      let video = document.createElement('video');
+      video.srcObject = data;
+      this.appendChild(video);
+      video.muted = true;
+      video.play();
+      this.video = video;
+    }
 
     if (!this.mutebutton) {
-      let mute = elation.elements.create('ui-button', {label: 'Mute'});
+      let mute = elation.elements.create('ui-button', {label: 'Mute', name: 'mutebutton'});
       this.appendChild(mute);
       mute.addEventListener('click', (ev) => this.toggleMute());
       this.mutebutton = mute;
@@ -101,15 +146,21 @@ console.log('set my local data', data);
 });
 elation.elements.define('janus-voip-remoteuser', class extends elation.elements.base {
   create() {
+    this.defineAttributes({
+      'muted': { type: 'boolean', default: false },
+      'hasvideo': { type: 'boolean', default: false },
+    });
     setTimeout(() => this.setAttribute('active', true), 100);
   }
   setUserData(data) {
     this.id = data.id;
 
-    let label = document.createElement('h2');
-    label.innerText = this.id;
-    this.appendChild(label);
-    this.label = label;
+    if (!this.label) {
+      let label = document.createElement('h2');
+      label.innerText = this.id;
+      this.appendChild(label);
+      this.label = label;
+    }
 
     if (data.media.video) {
       let track = data.media.video.getVideoTracks()[0];
@@ -123,17 +174,51 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       this.video = video;
       video.addEventListener('resize', (ev) => { console.log('video resized', video); this.updateVideo(); });
       this.updateVideo();
+      this.hasvideo = true;
+    } else {
+      this.hasvideo = false;
     }
 
     // audio
     let audio = document.createElement('audio');
     audio.srcObject = data.media.audio;
     this.audio = audio;
+    this.appendChild(audio);
 
     let remoteuser = janus.network.remoteplayers[this.id];
+
+    if (!this.controlpanel) {
+      this.controlpanel = elation.elements.create('ui-panel', { bottom: 1, append: this });
+      this.mutebutton = elation.elements.create('ui-button', { label: 'Mute', name: "mutebutton", append: this.controlpanel });
+      this.volume = elation.elements.create('ui-slider', { name: "volume", min: 0, max: 2, value: this.video.volume, append: this.controlpanel });
+
+      elation.events.add(this.volume, 'change', (ev) => {
+        remoteuser.setVolume(ev.data);
+        this.muted = (ev.data == 0);
+        if (this.muted && !this.mutebutton.hasclass('muted')) {
+          this.mutebutton.addclass('muted');
+        } else if (!this.muted && this.mutebutton.hasclass('muted')) {
+          this.mutebutton.removeclass('muted');
+        }
+      });
+      elation.events.add(this.mutebutton, 'click', (ev) => {
+/*
+        remoteuser.setVolume(0);
+        this.volume.handles[0].value = 0;
+        this.volume.handles[0].render();
+*/
+        this.toggleMute();
+      });
+    }
+
     if (remoteuser) {
       remoteuser.addVoice(data.media.audio);
       this.audio.muted = true;
+
+      let label = remoteuser.getElementsByTagName('playerlabel')[0];
+      if (label) {
+        label.setAudioSource(audio);
+      }
 
       // FIXME - this is pretty unreliable right now, probably some race conditions about loading the avatar vs when we get the video stream
       //         it also breaks if the avatar changes their avatar after initializing their webcam
@@ -173,22 +258,45 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
   destroy() {
     console.log('stop media', this.id);
     if (this.video) {
-      //this.video.stop();
+      //this.video.pause();
     }
     if (this.audio) {
-      //this.audio.stop();
+      //this.audio.pause();
+      let tracks = this.audio.srcObject.getTracks();
+      tracks.forEach(track => { console.log('stop track', track); track.stop(); });
     }
     this.removeAttribute('active');
+    if (this.parentNode) {
+      this.parentNode.removeChild(this);
+    }
   }
   updateVideo() {
     let video = this.video;
     if (video) {
       let hasclass = elation.html.hasclass(video, 'active');
       if (video.videoWidth > 0 && video.videoHeight > 0 && !hasclass) {
+        this.hasvideo = true;
         elation.html.addclass(video, 'active');
       } else if (hasclass && (video.videoWidth == 0 || video.videoHeight == 0)) {
+        this.hasvideo = false;
         elation.html.removeclass(video, 'active');
       }
+    }
+  }
+  toggleMute() {
+    this.muted = !this.muted;
+    let remoteuser = janus.network.remoteplayers[this.id];
+    if (this.muted) {
+      this.mutebutton.addclass('muted');
+      this.lastvolume = this.volume.handles[0].value;
+      remoteuser.setVolume(0);
+      this.volume.handles[0].value = 0;
+      this.volume.handles[0].render();
+    } else {
+      this.mutebutton.removeclass('muted');
+      remoteuser.setVolume(this.lastvolume);
+      this.volume.handles[0].value = this.lastvolume;
+      this.volume.handles[0].render();
     }
   }
 });
@@ -231,7 +339,7 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
 elation.elements.define('janus-voip-picker-audio', class extends elation.elements.base {
   create() {
     this.elements = elation.elements.fromString(`
-      <div class="permissions">
+      <div class="permissions" name="permissions">
         <ui-spinner></ui-spinner>
         Waiting for permission to be granted
       </div>
@@ -275,6 +383,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
   }
   updateDevices() {
     this.elements.submit.disabled = true;
+    this.elements.permissions.style.display = 'block';
     navigator.mediaDevices.enumerateDevices()
       .then(devices => {
         this.elements.submit.disabled = false;
@@ -316,6 +425,7 @@ console.log(this.elements.videoDevice.select.childNodes);
           this.elements.webcamEnabled.show();
           this.elements.videoDevice.hide();
         }
+        this.elements.permissions.style.display = 'none';
       });
 
   }

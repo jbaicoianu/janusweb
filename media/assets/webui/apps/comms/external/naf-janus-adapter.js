@@ -2235,7 +2235,6 @@ class JanusAdapter {
           _this2.pendingOccupants.delete(occupantId);
           _this2.occupantIds.push(occupantId);
           _this2.occupants[occupantId] = subscriber;
-console.log('ADD THE OCCUPANT', _this2.occupants);
 
           _this2.setMediaStream(occupantId, subscriber.mediaStream);
 
@@ -2554,6 +2553,16 @@ console.log('ADD THE OCCUPANT', _this2.occupants);
   sendJoin(handle, subscribe) {
     return handle.sendMessage({
       kind: "join",
+      room_id: this.room,
+      user_id: this.clientId,
+      subscribe,
+      token: this.joinToken
+    });
+  }
+
+  sendLeave(handle, subscribe) {
+    return handle.sendMessage({
+      kind: "leave",
       room_id: this.room,
       user_id: this.clientId,
       subscribe,
