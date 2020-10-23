@@ -11,7 +11,7 @@ janus-controls-analog {
   cursor: grab;
   z-index: 10;
   transform: translate(-50%, -50%);
-  background: rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1);
 }
 janus-controls-analog[top][left] {
   transform: translate(0,0);

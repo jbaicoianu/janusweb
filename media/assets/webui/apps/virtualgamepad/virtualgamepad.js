@@ -103,7 +103,9 @@ this.debug.style.zIndex = '1000';
   }
   reset() {
     for (let i = 0; i < this.axes.length; i++) {
-      this.sticks[i].resetStickPosition();
+      if (this.sticks[i]) {
+        this.sticks[i].resetStickPosition();
+      }
     }
   }
 });
