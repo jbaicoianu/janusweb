@@ -800,6 +800,7 @@ elation.require([
               url: this.referrer,
               round: true,
               shader_id: 'defaultportal',
+              js_id: 'reciprocal-link',
             });
           }
         }
