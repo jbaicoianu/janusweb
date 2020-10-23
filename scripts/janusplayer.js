@@ -876,7 +876,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       }
       if (!document.fullscreenElement) {
-        this.engine.client.toggleFullscreen({data: 1});
+        //this.engine.client.toggleFullscreen({data: 1});
       }
     }
     this.handleTouchMove = function(ev) {
