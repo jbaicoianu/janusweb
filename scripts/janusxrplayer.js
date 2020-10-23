@@ -3,16 +3,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
     this.postinit = function() {
       elation.engine.things.janusxrplayer.extendclass.postinit.call(this);
       this.defineProperties({
-        session: { type: 'object' }
+        session: { type: 'object' },
+        xrview: { type: 'object' }
       });
-      if (this.session) {
-        console.log('xr player gets a session', this.session);
-        let sess = this.session;
-        sess.addEventListener('inputsourceschange', (ev) => { this.processInputSources(this.session.inputSources);});
-        sess.addEventListener('selectstart', (ev) => { this.handleSelectStart(ev);});
-        sess.addEventListener('selectend', (ev) => { this.handleSelectEnd(ev);});
-        sess.addEventListener('select', (ev) => { this.handleSelect(ev);});
-      }
       this.inputs = {};
       initJanusObjects();
       this.trackedobjects = {
@@ -21,15 +14,39 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       this.camera = this.spawn('camera', this.name + '_camera', { position: [0,0,0] } );
 
       this.teleporter = player.createObject('locomotion_teleporter', { xrplayer: this.getProxyObject() });
+
+      if (this.session) {
+        console.log('xr player got a new session', this.session);
+        this.setSession(this.session, this.xrview);
+      }
     }
-    this.setSession = function(session) {
+    this.setSession = function(session, view) {
       this.session = session;
-      console.log('xr player session changed', this.session);
+      console.log('xr player session changed', this.session, view);
       this.inputs = {};
       if (session) {
         session.addEventListener('inputsourceschange', (ev) => { this.processInputSources(this.session.inputSources);});
+        session.addEventListener('selectstart', (ev) => { this.handleSelectStart(ev);});
+        session.addEventListener('selectend', (ev) => { this.handleSelectEnd(ev);});
+        session.addEventListener('select', (ev) => { this.handleSelect(ev);});
+
+        if (this.session.inputSources && this.session.inputSources.length > 0) {
+          this.processInputSources(this.session.inputSources);
+        }
       } else {
         this.resetOrientation();
+      }
+      this.engine.systems.sound.setActiveListener(this.trackedobjects.head._target.objects['3d']);
+      if (session) {
+        player.cursor_visible = false;
+      } else {
+        player.cursor_visible = room.cursor_visible;
+      }
+      this.xrview = view;
+      if (view && this.camera) {
+        setTimeout(() => {
+          view.setactivething(this);
+        }, 100);
       }
     }
     this.resetOrientation = function() {
@@ -81,12 +98,12 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       //this.position.copy(player.pos);
       //player.orientation.copy(this.orientation);
       player.head.orientation.copy(this.trackedobjects['head'].orientation);
-      player.head.position.copy(this.trackedobjects['head'].position)
+      player.head.position.copy(this.trackedobjects['head'].position).sub(player.neck.position).sub(player.torso.position);
       this.dispatchEvent({type: 'xrframe', data: xrReferenceFrame});
 //this.orientation.copy(player.orientation);
     }
     this.getReferenceFrame = function() {
-      return this.engine.client.xrspace;
+      return this.engine.systems.render.renderer.xr.getReferenceSpace();
     }
     this.handleSelectStart = function(ev) {
       console.log('select started', ev);
@@ -108,6 +125,16 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       if (this.trackedobjects[handid]) {
         this.trackedobjects[handid].handleSelect(ev);
       }
+    }
+    this.getProxyObject = function(classdef) {
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          session:  [ 'property', 'session'],
+          xrview:  [ 'property', 'xrview'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
   elation.component.add('engine.things.janusxrplayer_trackedobject', function() {
@@ -210,12 +237,15 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           janus.engine.systems.controls.addVirtualGamepad(this.device.gamepad);
         }
         this.pointer = this.parent.createObject('trackedplayer_controller_laser', {
-          hand: this
+          hand: this,
         });
+
+        this.riftOrientationHack = new THREE.Quaternion().setFromEuler(new THREE.Euler(-90, 0, 0));
       },
       updateDevice(device) {
         if (device !== this.device) {
           this.device = device;
+          this.pointer.device = device;
           if (this.device.gamepad !== this.gamepad) {
             janus.engine.systems.controls.removeVirtualGamepad(this.gamepad);
             janus.engine.systems.controls.addVirtualGamepad(this.device.gamepad);
@@ -232,9 +262,13 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         const motionController = new elation.janusweb.external.webxrinput.MotionController(xrInputSource, profile, assetPath);
         this.motionController = motionController;
 
+        this.loadNewAsset('object', { id: 'blah-' + this.device.handedness, src: motionController.assetUrl });
+
         this.controller = this.createObject('object', {
-          id: motionController.assetUrl,
+          id: 'blah-' + this.device.handedness,
+          visible: true,
         });
+        this.controller.addEventListener('load', (ev) => { this.controller.visible = true; });
       },
       updateMotionControllerModel(motionController) {
         // Update the 3D model to reflect the button, thumbstick, and touchpad state
@@ -325,6 +359,13 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         if (this.pointer && raypose) {
           this.pointer.pos.copy(raypose.transform.position);
           this.pointer.orientation.copy(raypose.transform.orientation);
+
+          let profiles = this.device.profiles;
+          if (profiles.indexOf('oculus-touch') != -1 && profiles.indexOf('oculus-touch-v2') == -1) {
+            // FIXME - hack to work around flipped Rift raypose (https://bugs.chromium.org/p/chromium/issues/detail?id=1139300&q=webxr%20rift&can=2)
+
+            this.pointer.orientation.multiply(this.riftOrientationHack);
+          }
         }
       },
       createButtons() {
@@ -469,12 +510,14 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
 
     janus.registerElement('trackedplayer_controller_laser', {
       hand: null,
+      device: null,
       create() {
         this.lasercolor = V(1,0,0);
         this.laser = this.createObject('linesegments', {
           positions: [V(0,0,0), V(0,0,-1000)],
-          opacity: .5,
-          col: this.lasercolor
+          opacity: .8,
+          col: this.lasercolor,
+          visible: true,
         });
         this.raycaster = this.createObject('raycaster', {});
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
@@ -488,15 +531,16 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       handleRaycastEnter(ev) {
         let proxyobj = ev.data.object,
             obj = proxyobj._target;
-
+        let oldactiveobject = this.activeobject;
         if (this.activeobject) {
           this.engine.client.view.proxyEvent({
             type: "mouseout",
             element: this.activeobject.objects['3d'],
-            //relatedTarget: oldpickedthing,
+            relatedTarget: this.activeobject,
             data: ev.data.intersection,
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
+            bubbles: true,
           }, this.activeobject.objects['3d']);
         }
         this.activeobject = proxyobj;
@@ -510,12 +554,22 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
               elation.events.hasEventListener(proxyobj, 'mousedown')
             )) {
           this.laser.col.setRGB(0,1,0);
-          this.laser.opacity = .4;
+          this.laser.opacity = .8;
           this.laser.updateColor();
+          //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
+
+/*
+          let gamepad = this.device.gamepad;
+          if ("hapticActuators" in gamepad && gamepad.hapticActuators.length > 0) {
+            gamepad.hapticActuators[0].pulse(1, 100);
+          }
+*/
+
         } else {
           this.laser.col.setRGB(1,0,0);
-          this.laser.opacity = .1;
+          this.laser.opacity = .4;
           this.laser.updateColor();
+          //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
         }
 
         this.updateLaserEndpoint(ev.data.intersection.point);
@@ -523,10 +577,11 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         let evdata = {
           type: "mouseover",
           element: ev.data.intersection.mesh,
-          //relatedTarget: oldpickedthing,
+          relatedTarget: oldactiveobject,
           data: ev.data.intersection,
           clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
           clientY: 0,
+          bubbles: true,
         };
         if (this.hand) {
           evdata.data.gamepad = this.hand.device.gamepad;
@@ -552,6 +607,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
+            bubbles: true,
           }, obj);
         }
       },
@@ -565,6 +621,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
+            bubbles: true,
           }, obj);
         }
       },
@@ -579,6 +636,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
+            bubbles: true,
           }, obj);
         }
       },
