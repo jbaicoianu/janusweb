@@ -11,7 +11,6 @@ elation.elements.define('janus.ui.buttons', class extends elation.elements.base 
     });
   }
   create() {
-console.log('show me?', this.showedit, this.showshare, this.showfullscreen, this.showvr, this.showar, this.showsettings);
     if (this.showedit == 'false') this.showedit = false;
     if (this.showshare == 'false') this.showshare = false;
     if (this.showfullscreen == 'false') this.showfullscreen = false;
