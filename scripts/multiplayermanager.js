@@ -351,6 +351,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
     }
     this.handleServerDisconnect = function(ev) {
       console.log('[MultiplayerManager] disconnected', ev);
+      elation.events.fire({element: this, type: 'janusweb_client_disconnected', data: this.janusweb.userId});
       if (this.janusweb.chat) {
         this.janusweb.chat.addmessage({userId: ' ! ', message: 'Disconnected'});
       }
