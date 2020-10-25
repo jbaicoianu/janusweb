@@ -139,6 +139,8 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
       buttonlabel: { type: 'string', default: 'Change' },
       confirm: { type: 'boolean', default: false },
       confirmlabel: { type: 'string', default: 'Confirm' },
+      onchange: { type: 'callback' },
+      onconfirm: { type: 'callback' },
     });
   }
   create() {
@@ -160,26 +162,34 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
   handleFormSubmit(ev) {
     ev.preventDefault();
     let newname = this.elements.clientid.value;
-    if (newname != player.userid) {
-      player.setUsername(newname);
-    }
+    console.log('Username picker handleFormSubmit', ev.type, newname, player.userid, ev);
     this.elements.submit.disabled = !this.confirm;
-    this.dispatchEvent(new CustomEvent('change', { detail: newname }));
+    this.setUsername(newname);
   }
   handleInputChange(ev) {
-    let changed = this.elements.clientid.value == player.userid;
-    if (this.confirm && !changed) {
-      this.elements.submit.value = this.confirmlabel;
+    let changed = (this.elements.clientid.value != player.userid);
+    if (this.confirm) {
+console.log('it changed', changed, this.elements.clientid.value, player.userid);
+      this.elements.submit.value = (changed ? this.buttonlabel : this.confirmlabel);
+      this.elements.submit.disabled = false;
     } else {
       this.elements.submit.value = this.buttonlabel;
-      this.elements.submit.disabled = (changed && !this.confirm);
+      this.elements.submit.disabled = !changed;
     }
   }
   setUsername(username) {
     this.elements.clientid.value = username;
     if (username != player.userid) {
       player.setUsername(username);
+      if (this.confirm) {
+        this.elements.submit.value = this.confirmlabel;
+        this.elements.submit.disabled = false;
+      } else {
+        this.elements.submit.disabled = true;
+      }
       this.dispatchEvent(new CustomEvent('change', { detail: username }));
+    } else if (this.confirm) {
+      this.dispatchEvent(new CustomEvent('confirm', { detail: username }));
     }
   }
   handleFormReset() {
