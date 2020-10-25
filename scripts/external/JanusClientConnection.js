@@ -314,6 +314,7 @@ var JanusClientConnection = function(opts)
 EventDispatcher.prototype.apply(JanusClientConnection.prototype);
 
 JanusClientConnection.prototype.connect = function() {
+  this.dispatchEvent({type: 'connecting'});
   this.lastattempt = new Date().getTime();
   this.status = 0;
   this.error = '';
@@ -335,6 +336,7 @@ JanusClientConnection.prototype.connect = function() {
   }.bind(this);
 
   this._websocket.onclose = function() {
+    this.status = 0;
     this.dispatchEvent({type: 'disconnect'});
     if (this.pendingReconnect) {
       this.connect();
@@ -357,6 +359,7 @@ JanusClientConnection.prototype.reconnect = function(force) {
   }
 }
 JanusClientConnection.prototype.disconnect = function() {
+  this.dispatchEvent({type: 'disconnecting'});
   this._websocket.close();
 }
 
@@ -387,7 +390,7 @@ JanusClientConnection.prototype.send = function(msg) {
   } else if (this._websocket.readyState == 1) {
     this._websocket.send(JSON.stringify(msg) + '\r\n');
   } else {
-    this.reconnect();
+    //this.reconnect();
   }
 };
 
