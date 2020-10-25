@@ -28,7 +28,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
           user = remoteusers[userid];
       if (user) {
         user.destroy();
-setTimeout(() => this.removeChild(user), 250);
+        setTimeout(() => { if (user.parentNode === this) this.removeChild(user); }, 250);
       }
     });
     document.addEventListener('voip-picker-select', ev => {
@@ -103,7 +103,8 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
       video.srcObject = data;
       this.appendChild(video);
       video.muted = true;
-      video.play();
+console.log('local user call play', video);
+      video.play().then(() => console.log('playing', video));
       this.video = video;
     }
 
@@ -170,9 +171,12 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       video.muted = true;
       video.srcObject = data.media.video;
       this.appendChild(video);
-      video.play();
+      console.log('remote user call play', video);
+      video.play()
+        .then(() => { console.log('remote user video playing', video, this); })
+        .catch(e => { console.log('failed to play remote video', video, e, this); });
       this.video = video;
-      video.addEventListener('resize', (ev) => { console.log('video resized', video); this.updateVideo(); });
+      video.addEventListener('resize', (ev) => { console.log('video resized', video, this); this.updateVideo(); });
       this.updateVideo();
       this.hasvideo = true;
     } else {
@@ -263,7 +267,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
     if (this.audio) {
       //this.audio.pause();
       let tracks = this.audio.srcObject.getTracks();
-      tracks.forEach(track => { console.log('stop track', track); track.stop(); });
+      //tracks.forEach(track => { console.log('stop track', track); track.stop(); });
     }
     this.removeAttribute('active');
     if (this.parentNode) {

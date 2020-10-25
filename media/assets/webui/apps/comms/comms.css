@@ -111,8 +111,20 @@ janus-comms-status .indicator {
   height: 1em;
   border-radius: .5em;
   box-shadow: 0 0 5px black;
-  background: #090;
+  background: #900;
   margin: .2em .4em .2em .2em;
+}
+janus-comms-status .indicator.connecting {
+  background: #990;
+}
+janus-comms-status .indicator.connected {
+  background: #090;
+}
+janus-comms-status .indicator.disconnecting {
+  background: #999;
+}
+janus-comms-status .indicator.private {
+  background: #aaa;
 }
 ui-list[name="userlist_room"] {
   display: grid;
@@ -120,7 +132,8 @@ ui-list[name="userlist_room"] {
   font-size: .75em;
 }
 janus-voip-picker>ul li {
-  display: inline-block;
+  display: flex;
+  flex: 1;
   border: 1px solid black;
   border-radius: 10px;
   background: #666;

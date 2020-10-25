@@ -33,16 +33,52 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
     if (typeof room != 'undefined') {
       this.room = room;
     }
-    if (janus.nework) {
+    if (janus.network) {
       this.server = janus.network.getServerForRoom(room);
+      if (this.server) {
+        this.server.addEventListener('connect', ev => this.handleServerConnect(ev));
+        this.server.addEventListener('connecting', ev => this.handleServerConnecting(ev));
+        this.server.addEventListener('disconnecting', ev => this.handleServerDisconnecting(ev));
+        this.server.addEventListener('disconnect', ev => this.handleServerDisconnect(ev));
+
+        if (this.server.status == 1) {
+          this.state = 'connecting';
+        } else if (this.server.status == 2) {
+          this.state = 'connected';
+        }
+      } else if (room.private) {
+        this.state = 'private';
+      } else {
+        this.state = 'disconnected';
+      }
     }
     this.elements = elation.elements.fromTemplate('janus.comms.status', this);
 
-    elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+    //elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+  }
+  render() {
+    this.innerHTML = '';
+    this.elements = this.fromTemplate('janus.comms.status', this);
   }
   handleUsernameChange(ev) {
     // Update the userid label if player's name changes
     this.elements.useridlabel.innerText = player.userid;
+  }
+  handleServerConnect(ev) {
+    this.state = 'connected';
+    this.refresh();
+  }
+  handleServerConnecting(ev) {
+    this.state = 'connecting';
+    this.refresh();
+  }
+  handleServerDisconnecting(ev) {
+    this.state = 'disconnecting';
+    this.refresh();
+  }
+  handleServerDisconnect(ev) {
+    this.state = 'disconnected';
+    this.refresh();
   }
 });
 elation.elements.define('janus-comms-userlist', class extends elation.elements.ui.list {
