@@ -241,7 +241,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       timestamp: new Date().getTime(),
       type: 'chat',
       userId: data.userId,
-      message: data.message.data
+      message: data.message.data || data.message.message
     });
     this.scrollToBottom();
     this.updateUnread(1);
