@@ -1087,7 +1087,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 this.vrlayer = new THREE.Layers();
                 this.vrlayer.set(2);
               }
-              if (m.map === this.videotexture) {
+              if (m.map === this.videotexture && this.videoasset) {
                 if (this.videoasset.ou3d) {
                   if (camera.layers.test(this.vrlayer)) {
                     m.map.offset.y = (this.videoasset.reverse3d ? .5 : 0);
