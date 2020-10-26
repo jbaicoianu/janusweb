@@ -151,7 +151,8 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
       </form>
     `, this);
     this.elements.usernameform.addEventListener('submit', ev => this.handleFormSubmit(ev));
-    this.elements.clientid.addEventListener('input', ev => this.handleInputChange(ev));
+    this.elements.clientid.addEventListener('input', ev => this.handleInput(ev));
+    this.elements.clientid.addEventListener('change', ev => this.handleInputChange(ev));
     //this.elements.clientid.addEventListener('accept', ev => this.handleFormSubmit(ev));
     elation.events.add(this.elements.clientid, 'accept', ev => this.handleFormSubmit(ev));
     this.elements.clientid.value = player.userid;
@@ -166,16 +167,18 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
     this.elements.submit.disabled = !this.confirm;
     this.setUsername(newname);
   }
-  handleInputChange(ev) {
+  handleInput(ev) {
     let changed = (this.elements.clientid.value != player.userid);
     if (this.confirm) {
-console.log('it changed', changed, this.elements.clientid.value, player.userid);
       this.elements.submit.value = (changed ? this.buttonlabel : this.confirmlabel);
       this.elements.submit.disabled = false;
     } else {
       this.elements.submit.value = this.buttonlabel;
       this.elements.submit.disabled = !changed;
     }
+  }
+  handleInputChange(ev) {
+    ev.stopPropagation();
   }
   setUsername(username) {
     this.elements.clientid.value = username;
