@@ -226,7 +226,7 @@ elation.require([
       //player.reset_position();
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
-      player.cursor_visible = elation.utils.any(this.cursor_visible, true);
+      player.cursor_visible = (!janus.hmd ? elation.utils.any(this.cursor_visible, true) : false);
       player.cursor_opacity = 1;
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
       //setTimeout(elation.bind(player, player.reset_position), 0);
