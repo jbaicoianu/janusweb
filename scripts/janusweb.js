@@ -158,6 +158,8 @@ elation.require([
         avatarlighting:    ['property', 'settings.avatarlighting'],
         ui:                ['property', 'engine.client.ui'],
 
+        hmd:               ['accessor', 'isVRActive'],
+
         currenturl:        ['function', 'getCurrentURL'],
         tricount:          ['function', 'getTriangleCount'],
         locked:            ['function', 'isLocked'],
@@ -679,6 +681,9 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
           overlay.hide();
         }
       }
+    }
+    this.isVRActive = function() {
+      return (this.engine.client.xrsession instanceof XRSession);
     }
   }, elation.engine.things.generic);
 });
