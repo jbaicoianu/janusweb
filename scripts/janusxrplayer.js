@@ -574,14 +574,16 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
 
         this.updateLaserEndpoint(ev.data.intersection.point);
 
+        this.lasthit = ev.data.intersection;
         let evdata = {
           type: "mouseover",
           element: ev.data.intersection.mesh,
           relatedTarget: oldactiveobject,
-          data: ev.data.intersection,
+          data: this.lasthit,
           clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
           clientY: 0,
           bubbles: true,
+          inputSourceObject: this.hand,
         };
         if (this.hand) {
           evdata.data.gamepad = this.hand.device.gamepad;
@@ -591,6 +593,22 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       },
       handleRaycastMove(ev) {
         this.updateLaserEndpoint(ev.data.intersection.point);
+        if (this.activeobject) {
+          let obj = this.activeobject.objects['3d'];
+          this.lasthit = ev.data.intersection;
+
+          this.engine.client.view.proxyEvent({
+            type: "mousemove",
+            element: obj,
+            data: this.lasthit,
+            //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
+            clientY: 0,
+            button: 0,
+            bubbles: true,
+            inputSourceObject: this.hand,
+          }, obj);
+        }
       },
       handleRaycastLeave(ev) {
         this.laser.col.setRGB(0,1,1);
@@ -604,10 +622,12 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             type: "mousedown",
             element: obj,
             //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            data: this.lasthit,
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
             bubbles: true,
+            inputSourceObject: this.hand,
           }, obj);
         }
       },
@@ -615,13 +635,15 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         if (this.activeobject) {
           let obj = this.activeobject.objects['3d'];
           this.engine.client.view.proxyEvent({
-            type: "mousemove",
+            type: "mouseup",
             element: obj,
             //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            data: this.lasthit,
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
             bubbles: true,
+            inputSourceObject: this.hand,
           }, obj);
         }
       },
@@ -633,10 +655,12 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             type: "click",
             element: obj,
             //data: ev.data.intersection, // FIXME - need to store intersection data from raycastmove
+            data: this.lasthit,
             clientX: 0, // FIXME - can we project back to the screen x,y from the intersection point?
             clientY: 0,
             button: 0,
             bubbles: true,
+            inputSourceObject: this.hand,
           }, obj);
         }
       },
