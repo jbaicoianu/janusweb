@@ -699,6 +699,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.children[k].start();
         }
       }
+      this.dispatchEvent({type: 'start', bubbles: false});
     }    
     this.stop = function() {
       for (var k in this.children) {
@@ -709,6 +710,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (this.started) {
         elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
         this.started = false;
+        this.dispatchEvent({type: 'stop', bubbles: false});
       }
     }    
     this.pushFrameUpdate = function(key, value) {
