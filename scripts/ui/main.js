@@ -30,9 +30,7 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
       });
     }
     processJSON(url, json) {
-      var urlparts = url.split('/');
-      urlparts.pop();
-      var baseurl = urlparts.join('/');
+      var baseurl = this.getBaseURL(url);
       return new Promise((resolve, reject) => {
         //console.log('process the json', json);
         this.components = json.components;
@@ -131,6 +129,9 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
       });
     }
     resolveFullURL(url, baseurl) {
+      if (!baseurl) {
+        baseurl = this.getBaseURL(this.src);
+      }
       var baseparts = baseurl.split('/');
       var urlparts = url.split('/');
       if (urlparts[0][0] == '.') {
@@ -144,6 +145,11 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
         return baseparts.join('/') + '/' + urlparts.join('/');
       }
       return url;
+    }
+    getBaseURL(url) {
+      var urlparts = url.split('/');
+      urlparts.pop();
+      return urlparts.join('/');
     }
   });
   elation.elements.define('janus.ui.main', class extends elation.elements.janus.ui.app {
