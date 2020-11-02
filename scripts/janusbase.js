@@ -1153,9 +1153,11 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (!this.objects['3d']) return;
       let layernums = layers.split(' ');
       this.objects['3d'].layers.mask = 0;
-      for (let i = 0; i < layernums.length; i++) {
-        this.objects['3d'].layers.enable(layernums[i]);
-      }
+      this.traverseObjects(n => {
+        for (let i = 0; i < layernums.length; i++) {
+          n.layers.enable(layernums[i]);
+        }
+      });
     }
     this.clone = function(cloneChildren, parent) {
       // Create a new copy of this object
