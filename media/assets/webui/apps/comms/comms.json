@@ -9,7 +9,6 @@
   },
   "scripts": [
     "./external/naf-shim.js",
-    "./external/naf-janus-adapter.js",
     "./comms.js",
     "./voip.js"
   ],

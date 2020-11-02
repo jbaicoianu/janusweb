@@ -646,7 +646,7 @@ JanusSession.prototype.dispose = function() {
     if (this.txns.hasOwnProperty(txId)) {
       var txn = this.txns[txId];
       clearTimeout(txn.timeout);
-      txn.reject(new Error("Janus session was disposed."));
+      txn.reject(); //new Error("Janus session was disposed."));
       delete this.txns[txId];
     }
   }

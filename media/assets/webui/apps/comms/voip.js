@@ -3,6 +3,13 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     this.connect();
   }
   connect() {
+    if (typeof NAF != 'undefined' && !('janus' in NAF.adapters.adapters)) {
+      console.log('NAF adapter not found, load it');
+      elation.file.get('js', janus.ui.apps.default.apps.comms.resolveFullURL('./external/naf-janus-adapter.js'), (ev) => {
+        this.connect();
+      });
+      return;
+    }
     let sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
     this.sfu = sfu;
 
@@ -38,9 +45,10 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     });
     elation.events.add(janus._target, 'room_change', (ev) => {
       if (!sfu || !sfu.adapter) return;
-      console.log('change SFU room', room.url, sfu.adapter.publisher, remoteusers, sfu.adapter.room);
+      console.log('change SFU room', room.url, sfu.adapter.publisher, remoteusers, sfu.adapter.room, room);
       if (sfu.adapter.publisher) {
         let handle = sfu.adapter.publisher.handle;
+console.log('leave room and all occupants', this.room);
         sfu.adapter.sendLeave(handle, {
           notifications: true,
           data: true
@@ -59,12 +67,36 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
       sfu.adapter.requestedOccupants = null;
       sfu.adapter.availableOccupants = [];
       sfu.connectedClients = {};
-      sfu.adapter.setRoom(room.url)
-console.log('room is now', sfu.adapter.room);
-      sfu.adapter.reconnect();
+      if (room.loaded) {
+        this.initRoom(room);
+      } else {
+        room.addEventListener('room_load_processed', (ev) => {
+          this.initRoom(room);
+        });
+      }
     });
     // FIXME - player proxy should expose .addEventListener()
     elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+  }
+  initRoom(room) {
+    let sfu = this.sfu;
+    if (!room.private) {
+      sfu.adapter.setRoom(room.url)
+      console.log('room is now', sfu.adapter.room);
+      sfu.adapter.reconnect();
+/*
+      let handle = sfu.adapter.publisher.handle;
+      sfu.adapter.sendJoin(handle, {
+          notifications: true,
+          data: true
+      });
+*/
+    } else {
+      console.log('new room is private, disconnect');
+      setTimeout(() => {
+        sfu.adapter.disconnect();
+      }, 0);
+    }
   }
   handleUsernameChange(ev) {
     this.sfu.setClientId(ev.data);
