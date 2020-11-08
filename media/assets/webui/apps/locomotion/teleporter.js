@@ -1,6 +1,6 @@
 janus.registerElement('locomotion_teleporter', {
   active: false,
-  longpresstime: 350,
+  longpresstime: 500,
   deadzone: 5,
   xrplayer: null,
   linesegments: 100,
@@ -121,6 +121,8 @@ janus.registerElement('locomotion_teleporter', {
     });
     this.activateControlContext('teleporter');
 
+    room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
+    room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
     elation.events.add(janus._target, 'room_change', (ev) => this.handleRoomChange(ev));
   },
   update() {
@@ -187,6 +189,9 @@ janus.registerElement('locomotion_teleporter', {
   },
   handleRoomChange(ev) {
     this.setRoom(room);
+
+    room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
+    room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
   },
   handleTeleportChange(ev) {
     if (this.teleportactive) {
@@ -228,7 +233,9 @@ janus.registerElement('locomotion_teleporter', {
     let pos = player.localToWorld(this.pos.clone());
     player.pos = pos;
     player.vel = V(0,0,.01); // "wake up" physics engine
+    player.angular.set(0,0,0);
     let playerangle = Math.atan2(this.pos.x, this.pos.z);
+    console.log('Teleport player', pos, playerangle);
     this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
   },
   updateTeleportAngle() {
@@ -238,10 +245,10 @@ janus.registerElement('locomotion_teleporter', {
     this.teleportangle = (controllerangle + playerangle) + Math.PI;
   },
   handleMouseDown(ev) {
-    if (ev.button == 0 && player.enabled) {
-      this.longpresstimer = setTimeout(this.enableCursor, this.longpresstime);
+    if (ev.button == 0 && (player.enabled || janus.hmd)) {
+      this.longpresstimer = setTimeout(() => { this.enableCursor(); }, this.longpresstime);
       this.mousediff = [0,0];
-      this.active = false;
+      //this.active = true;
     }
   },
   handleMouseMove(ev) {
@@ -281,9 +288,13 @@ janus.registerElement('locomotion_teleporter', {
       clearTimeout(this.longpresstimer);
     }
     if (this.active) {
-      player.pos = player.cursor_pos;
-      this.sound.pos = player.pos;
+/*
+      player.pos = this.pos;
+      this.sound.pos = this.pos;
       this.sound.play();
+*/
+      this.showShroud();
+      this.teleport();
     }
     this.disableCursor();
   },
