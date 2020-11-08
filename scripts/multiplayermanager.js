@@ -154,7 +154,8 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       // If we're already in a room, let's leave that one first
       if (this.activeroom) {
         var oldserver = this.getServerForRoom(this.activeroom);
-        oldserver.leave_room(room.url);
+        //oldserver.leave_room(room.url);
+        oldserver.unsubscribe(room.url);
       }
 
       // Tell the server we're now in the new room
@@ -162,6 +163,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       if (!room.private) {
         var server = this.getServerForRoom(room);
         var partymode = this.player.party_mode && room.party_mode;
+        server.subscribe(room.url);
         server.enter_room(room.url, partymode);
       }
     }
@@ -299,6 +301,7 @@ console.log('[MultiplayerManager] join', room.url);
       var server = this.getServerForRoom(room);
       var partymode = this.player.party_mode && room.party_mode;
       if (server) {
+        server.subscribe(room.url);
         server.enter_room(room.url, partymode);
       }
     }
@@ -308,7 +311,7 @@ console.log('[MultiplayerManager] join', room.url);
 console.log('[MultiplayerManager] part', room.url);
       var server = this.getServerForRoom(room);
       if (server) {
-        server.leave_room(room.url);
+        server.unsubscribe(room.url);
       }
     }
     this.spawnRemotePlayer = function(data) {
