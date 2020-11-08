@@ -241,6 +241,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         });
 
         this.riftOrientationHack = new THREE.Quaternion().setFromEuler(new THREE.Euler(-90, 0, 0));
+        this.virtualskeleton = this.createObject('trackedplayer_hand_virtualskeleton', {
+          hand: this.device.hand,
+        });
+        player.setHand(this.device.handedness, this.virtualskeleton);
       },
       updateDevice(device) {
         if (device !== this.device) {
@@ -340,17 +344,23 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           }
 */
           if (this.device.hand) {
-            if (!this.handmodel) {
-              console.log('new hand!', this.device.hand, this.device);
-              this.handmodel = this.createObject('object', {
-                id: 'cube',
-                scale: V(.2, .075, .025),
-                col: 'green'
+            if (!this.skeleton) {
+              console.log('new hand!', this.device.hand, this.device, this);
+              this.skeleton = this.parent.createObject('trackedplayer_hand_skeleton', {
+                hand: this.device.hand,
               });
+              player.setHand(this.device.handedness, this.skeleton);
             }
-            let handpos = xrFrame.getPose(this.device.hand[XRHand.WRIST], xrReferenceFrame);
-            this.handmodel.pos = handpos.transform.position;
-            this.handmodel.orientation.copy(handpos.transform.orientation);
+            this.skeleton.updatePose(xrFrame, xrReferenceFrame);
+            if (this.controller) this.controller.visible = false;
+            if (this.skeleton) this.skeleton.visible = true;
+          } else {
+            if (this.controller) this.controller.visible = true;
+            if (this.skeleton) {
+              this.skeleton.die();
+              this.skeleton = false;
+              player.setHand(this.device.handedness, this.virtualskeleton);
+            }
           }
           if (this.motionController) {
             this.updateMotionControllerModel(this.motionController);
@@ -664,6 +674,101 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           }, obj);
         }
       },
+    });
+    janus.registerElement('trackedplayer_hand_skeleton', {
+      hand: null,
+      fingernames: ['THUMB', 'INDEX', 'MIDDLE', 'RING', 'LITTLE'],
+      phalanxnames: ['METACARPAL', 'PHALANX_PROXIMAL', 'PHALANX_DISTAL', 'PHALANX_TIP'],
+
+      isactive: true,
+      handpos: null,
+      p0: null,
+      p1: null,
+      p2: null,
+      p3: null,
+      p4: null,
+
+      create() {
+        this.handmodel = this.parent.createObject('object', {
+          id: 'cube',
+          scale: V(.075, .025, .075),
+          col: 'green'
+        });
+        this.tmpobj = new THREE.Object3D();
+        this.joints = new THREE.InstancedMesh(new THREE.SphereBufferGeometry(1), new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: .2, roughness: .5}), 26);
+        this.joints.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        this.jointposes = {};
+        this.objects['3d'].add(this.joints);
+        this.handpos = new THREE.Vector3(0, 0, 0);
+        this.p0 = new THREE.Vector3(0, 0, 0);
+        this.p1 = new THREE.Vector3(0, 0, 0);
+        this.p2 = new THREE.Vector3(0, 0, 0);
+        this.p3 = new THREE.Vector3(0, 0, 0);
+        this.p4 = new THREE.Vector3(0, 0, 0);
+      },
+      updatePose(xrFrame, xrReferenceFrame) {
+        if (!this.hand || !this.joints || !this.hand[0]) return;
+
+        let tmpobj = this.tmpobj,
+            i = 0;
+        let poses = this.jointposes;
+        let wristpose = xrFrame.getJointPose(this.hand[XRHand['WRIST']], xrReferenceFrame);
+        this.jointposes['WRIST'] = wristpose;
+        for (let fingernum = 0; fingernum < this.fingernames.length; fingernum++) {
+          let fingername = this.fingernames[fingernum];
+          for (let jointnum = 0; jointnum < this.phalanxnames.length; jointnum++) {
+            i++;
+            let jointname = fingername + '_' + this.phalanxnames[jointnum];
+            let jointpose = xrFrame.getJointPose(this.hand[XRHand[jointname]], xrReferenceFrame);
+            if (jointpose) {
+              let radius = Math.max(.005, jointpose.radius); 
+              tmpobj.position.copy(jointpose.transform.position);
+              tmpobj.quaternion.copy(jointpose.transform.orientation);
+              tmpobj.scale.set(radius, radius, radius);
+              tmpobj.updateMatrix();
+              this.joints.setMatrixAt(i, tmpobj.matrix);
+            }
+            this.jointposes[jointname] = jointpose;
+          }
+        }
+        this.joints.instanceMatrix.needsUpdate = true;
+
+        if (this.jointposes['WRIST']) this.localToWorld(this.handpos.copy(this.jointposes['WRIST'].transform.position));
+        if (this.jointposes['THUMB_PHALANX_TIP']) this.localToWorld(this.p0.copy(this.jointposes['THUMB_PHALANX_TIP'].transform.position));
+        if (this.jointposes['INDEX_PHALANX_TIP']) this.localToWorld(this.p1.copy(this.jointposes['INDEX_PHALANX_TIP'].transform.position));
+        if (this.jointposes['MIDDLE_PHALANX_TIP']) this.localToWorld(this.p2.copy(this.jointposes['MIDDLE_PHALANX_TIP'].transform.position));
+        if (this.jointposes['RING_PHALANX_TIP']) this.localToWorld(this.p3.copy(this.jointposes['RING_PHALANX_TIP'].transform.position));
+        if (this.jointposes['LITTLE_PHALANX_TIP']) this.localToWorld(this.p4.copy(this.jointposes['LITTLE_PHALANX_TIP'].transform.position));
+        this.isactive = true;
+      }
+    });
+    janus.registerElement('trackedplayer_hand_virtualskeleton', {
+      hand: null,
+
+      isactive: true,
+      handpos: null,
+      p0: null,
+      p1: null,
+      p2: null,
+      p3: null,
+      p4: null,
+
+      create() {
+        this.handpos = V();
+        this.p0 = V();
+        this.p1 = V();
+        this.p2 = V();
+        this.p3 = V();
+        this.p4 = V();
+      },
+      update() {
+        this.localToWorld(this.handpos.set(0,0,0));
+        this.localToWorld(this.p0.set(0,0,0));
+        this.localToWorld(this.p1.set(0,0,0));
+        this.localToWorld(this.p2.set(0,0,0));
+        this.localToWorld(this.p3.set(0,0,0));
+        this.localToWorld(this.p4.set(0,0,0));
+      }
     });
   }
 });
