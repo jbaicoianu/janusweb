@@ -660,28 +660,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 this.refresh();
               });
 
-              // Set up per-eye render hooks if we're using a 3D texture
-              if (texture instanceof THREE.SBSTexture || texture instanceof THREE.SBSVideoTexture) {
-                let vrlayer = new THREE.Layers();
-                vrlayer.set(2);
-                n.onBeforeRender = (renderer, scene, camera) => {
-                  if (camera.layers.test(vrlayer)) {
-                    texture.setEye('right');
-                  } else {
-                    texture.setEye('left');
-                  }
-                }
-              } else if (texture === this.videotexture && this.videoasset.ou3d) {
-                let vrlayer = new THREE.Layers();
-                vrlayer.set(2);
-                n.onBeforeRender = (renderer, scene, camera) => {
-                  if (camera.layers.test(vrlayer)) {
-                    texture.offset.set(0, 0);
-                  } else {
-                    texture.offset.set(0, .5);
-                  }
-                }
-              }
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
