@@ -752,7 +752,7 @@ elation.require([
             collision_scale: collisionscale,
             collision_pos: collisionpos,
             col: room.col,
-            fwd: room.fwd,
+            //fwd: room.fwd,
             xdir: room.xdir,
             ydir: room.ydir,
             zdir: room.zdir,
