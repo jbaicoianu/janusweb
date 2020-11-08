@@ -1111,9 +1111,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.videoasset && this.videotexture && !this.image_id) {
           var texture = this.videotexture;
           var video = texture.image;
+          if (video) {
+            video.src = this.videoasset.src;
+            if (this.lastVideoTime) {
+              video.currentTime = this.lastVideoTime;
+            }
+          }
+          this.videoasset.play();
+          //console.log('reload video', video.src, this.videoasset.hls, this.videoasset.auto_play);
           if (!video.playing && this.videoasset.auto_play) {
             video.play();
-            //console.log('start the video!', texture);
           } else if (video.muted) {
             video.muted = false;
             video.play();
@@ -1141,10 +1148,15 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         //texture.image.pause();
         //console.log('stop the video!', texture);
         this.pause();
-        // FIXME - this stops the video from loading any more data, but means we can't easily restart
-        //         so we're hackishly working around that
-        this.video.originalSrc = this.video.src;
-        this.video.src = '';
+        // Stop the video from loading any more data, and store current timestamp so we can resume
+        this.lastVideoTime = this.video.currentTime;
+        this.video.removeAttribute('src');
+        this.video.load();
+        if (this.videoasset && this.videoasset.hls) {
+          // If this is a livestream, shut it down gracefully
+          this.videoasset.hls.destroy();
+          this.videoasset.hls = null;
+        }
       }
       if (this.websurface_id && this.websurface) {
         this.websurface.stop();
