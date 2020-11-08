@@ -215,7 +215,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               if (orient instanceof THREE.Quaternion) orient = orient.toArray();
               //this.localToWorld(this.hands.left.position.fromArray(pos));
               if (pos) {
-                this.hands.left.position.fromArray(pos);
+                this.hands.left.handpos.fromArray(pos);
               }
 
               if (orient) {
@@ -241,7 +241,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               if (orient instanceof THREE.Quaternion) orient = orient.toArray();
               //this.localToWorld(this.hands.right.position.fromArray(pos));
               if (pos) {
-                this.hands.right.position.fromArray(pos);
+                this.hands.right.handpos.fromArray(pos);
               }
 
               if (orient) {
@@ -530,8 +530,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         //lookat_xdir:   ['property', 'properties.lookat_xdir'],
         //lookat_ydir:   ['property', 'properties.lookat_ydir'],
         //lookat_zdir:   ['property', 'properties.lookat_zdir'],
-        hand0_active:  ['property', 'hands.left.active'],
-        hand0_pos:     ['property', 'hands.left.position'],
+        hand0_active:  ['property', 'hands.left.isactive'],
+        hand0_pos:     ['property', 'hands.left.handpos'],
         hand0_xdir:    ['property', 'hands.left.xdir'],
         hand0_ydir:    ['property', 'hands.left.ydir'],
         hand0_zdir:    ['property', 'hands.left.zdir'],
@@ -541,8 +541,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         hand0_p3:      ['property', 'hands.left.p3'],
         hand0_p4:      ['property', 'hands.left.p4'],
 
-        hand1_active:  ['property', 'hands.right.active'],
-        hand1_pos:     ['property', 'hands.right.position'],
+        hand1_active:  ['property', 'hands.right.isactive'],
+        hand1_pos:     ['property', 'hands.right.handpos'],
         hand1_xdir:    ['property', 'hands.right.xdir'],
         hand1_ydir:    ['property', 'hands.right.ydir'],
         hand1_zdir:    ['property', 'hands.right.zdir'],
@@ -651,6 +651,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         animid = 'speak';
       }
       return animid;
+    }
+    this.setHand = function(handedness, handobj) {
+      this.hands[handedness] = handobj;
+      console.log('player has hands', this.hands);
     }
     this.hasHands = function() {
       return (this.tracker && this.tracker.hasHands());
