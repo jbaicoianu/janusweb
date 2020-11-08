@@ -1071,40 +1071,50 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           texture.repeat.copy(this.properties.texture_repeat);
           texture.rotation = this.properties.texture_rotation;
         }
-        this.objectMeshes.forEach(n => {
-          n.onBeforeRender = (renderer, scene, camera) => {
-            let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
-            materials.forEach(m => {
-              if (m.map) applyTextureOffset(m.map);
-              if (m.normalMap) applyTextureOffset(m.normalMap);
-              if (m.bumpMap) applyTextureOffset(m.bumpMap);
-              if (m.emissiveMap) applyTextureOffset(m.emissiveMap);
-              if (m.roughnessMap) applyTextureOffset(m.roughnessMap);
-              if (m.metalnessMap) applyTextureOffset(m.metalnessMap);
-              if (m.displacementMap) applyTextureOffset(m.displacementMap);
+        let texpos = this.properties.texture_offset,
+            texrep = this.properties.texture_repeat,
+            texrot = this.properties.texture_rotation,
+            is3d = (this.videoasset && (this.videoasset.ou3d || this.videoasset.sbs3d));
 
-              if (!this.vrlayer) {
-                this.vrlayer = new THREE.Layers();
-                this.vrlayer.set(2);
-              }
-              if (m.map === this.videotexture && this.videoasset) {
-                if (this.videoasset.ou3d) {
-                  if (camera.layers.test(this.vrlayer)) {
-                    m.map.offset.y = (this.videoasset.reverse3d ? .5 : 0);
-                  } else {
-                    m.map.offset.y = (this.videoasset.reverse3d ? 0 : .5);
-                  }
-                } else if (this.videoasset.sbs3d) {
-                  if (camera.layers.test(this.vrlayer)) {
-                    m.map.offset.x = (this.videoasset.reverse3d ? 0 : .5);
-                  } else {
-                    m.map.offset.x = (this.videoasset.reverse3d ? .5 : 0);
+        if (!(texpos.x == 0 && texpos.y == 0) ||
+            !(texrep.x == 1 && texrep.y == 1) ||
+            !(texrot == 0) ||
+            is3d) {
+          this.objectMeshes.forEach(n => {
+            n.onBeforeRender = (renderer, scene, camera) => {
+              let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+              materials.forEach(m => {
+                if (m.map) applyTextureOffset(m.map);
+                if (m.normalMap) applyTextureOffset(m.normalMap);
+                if (m.bumpMap) applyTextureOffset(m.bumpMap);
+                if (m.emissiveMap) applyTextureOffset(m.emissiveMap);
+                if (m.roughnessMap) applyTextureOffset(m.roughnessMap);
+                if (m.metalnessMap) applyTextureOffset(m.metalnessMap);
+                if (m.displacementMap) applyTextureOffset(m.displacementMap);
+
+                if (!this.vrlayer) {
+                  this.vrlayer = new THREE.Layers();
+                  this.vrlayer.set(2);
+                }
+                if (m.map === this.videotexture && this.videoasset) {
+                  if (this.videoasset.ou3d) {
+                    if (camera.layers.test(this.vrlayer)) {
+                      m.map.offset.y = (this.videoasset.reverse3d ? .5 : 0);
+                    } else {
+                      m.map.offset.y = (this.videoasset.reverse3d ? 0 : .5);
+                    }
+                  } else if (this.videoasset.sbs3d) {
+                    if (camera.layers.test(this.vrlayer)) {
+                      m.map.offset.x = (this.videoasset.reverse3d ? 0 : .5);
+                    } else {
+                      m.map.offset.x = (this.videoasset.reverse3d ? .5 : 0);
+                    }
                   }
                 }
-              }
-            });
-          };
-        });
+              });
+            };
+          });
+        }
       }
     }
     this.start = function() {
