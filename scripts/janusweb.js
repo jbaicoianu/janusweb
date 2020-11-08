@@ -683,7 +683,7 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       }
     }
     this.isVRActive = function() {
-      return (this.engine.client.xrsession instanceof XRSession);
+      return (typeof XRSession != 'undefined' && this.engine.client.xrsession instanceof XRSession);
     }
   }, elation.engine.things.generic);
 });
