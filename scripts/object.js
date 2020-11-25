@@ -670,6 +670,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = this.alphatest;
                 }
                 m.map = asset.getInstance();
+                m.map.encoding = THREE.sRGBEncoding;
                 elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
                   m.map = ev.data;
                   this.updateTextureOffsets();
