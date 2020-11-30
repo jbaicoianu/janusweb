@@ -870,6 +870,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.handleTouchStart = function(ev) {
       let halfscreenwidth = window.innerWidth / 2;
+      this.enabled = true;
       for (let i = 0; i < ev.changedTouches.length; i++) {
         let touch = ev.changedTouches[i];
         this.touchcache.positions[touch.identifier] = [touch.clientX, touch.clientY];
