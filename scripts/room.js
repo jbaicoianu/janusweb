@@ -494,7 +494,7 @@ elation.require([
       if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
       if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
         fullurl = self.location.origin + fullurl;
-      } else if (!fullurl.match(/^https?:\/\/(localhost|127\.0\.0\.1)/)) {
+      } else if (!fullurl.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) && fullurl.indexOf(document.location.origin) != 0) {
         fullurl = proxyurl + fullurl;
       }
 
