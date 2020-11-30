@@ -375,6 +375,7 @@ elation.require([
           // flip skybox 180 degrees
           images = [images[1],images[0],images[2],images[3],images[5],images[4]];
           var texture = new THREE.CubeTexture( images );
+          texture.encoding = THREE.sRGBEncoding;
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
           if (this.janus.currentroom === this) {
