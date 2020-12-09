@@ -57,7 +57,7 @@ have over the whole system.
 
 ### Use our viewer
 Our default viewer is always available at https://web.janusvr.com/.  You can write an HTML
-page with your [JanusVR Markup](http://janusvr.com/guide/markuplanguage/index.html) and host
+page with your [JanusVR Markup](https://janusvr.com/docs/build/introtojml/index.html) and host
 it anywhere you would normally host a static website.  Any regular webhost, AWS S3 static 
 sites, CDNs, or even more exotic locations like [IPFS distributed filesystems](https://ipfs.io) will work.
 You can even put your mark-up onto sites like PasteBin or PiratePad.  Then just load the URL
