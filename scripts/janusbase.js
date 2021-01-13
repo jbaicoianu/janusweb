@@ -1,13 +1,14 @@
 elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], function() {
   elation.component.add('engine.things.janusbase', function() {
-    this.defaultcolor = new THREE.Color(0xffffff);
-    this.colorIsDefault = true;
-
     this.postinit = function() {
       elation.engine.things.janusbase.extendclass.postinit.call(this);
+
       this.frameupdates = {};
       this.jschildren = [];
       this.assets = {};
+
+      this.defaultcolor = new THREE.Color(0xffffff);
+      this.colorIsDefault = true;
 
       this.jsparts = new elation.janusweb.parts(this);
 
@@ -95,15 +96,28 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     this.updateColor = function() {
       if (this.properties.color === this.defaultcolor) {
         if (this.color.r != 1 || this.color.g != 1 || this.color.b != 1) {
-          this.properties.color = this.properties.color.clone();
+          let newcolor = this.properties.color.clone();
           this.defaultcolor.setRGB(1,1,1);
+          this.properties.color = newcolor;
           this.colorIsDefault = false;
-          delete this._proxies['color'];
+          let oldproxy = this._proxies['color'];
+          if (oldproxy) {
+            delete this._proxies['color'];
+            this._proxies['color'] = new elation.proxy(
+              this.properties.color, oldproxy._proxydefs, true
+            );
+          }
         }
       } else {
         this.colorIsDefault = false;
-        delete this._proxies['color'];
+        let oldproxy = this._proxies['color'];
+        if (oldproxy) {
+          this._proxies['color'] = new elation.proxy(
+            this.properties.color, oldproxy._proxydefs, true
+          );
+        }
       }
+      this.refresh();
     }
     this.updateOpacity = function() {
       this.setOpacity(this.opacity);
@@ -784,6 +798,10 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         if (isNaN(pos.x)) pos.x = 0;
         if (isNaN(pos.y)) pos.y = 0;
         if (isNaN(pos.z)) pos.z = 0;
+
+        if (this.properties.color === this.defaultcolor && (this.properties.color.r != 1 || this.properties.color.g != 1 || this.properties.color.b != 1)) {
+          this.updateColor();
+        }
 
         this.resetFrameUpdates();
         this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
