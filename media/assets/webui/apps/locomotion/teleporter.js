@@ -245,6 +245,7 @@ janus.registerElement('locomotion_teleporter', {
     this.teleportangle = (controllerangle + playerangle) + Math.PI;
   },
   handleMouseDown(ev) {
+    if (!room.teleport) return;
     if (ev.button == 0 && (player.enabled || janus.hmd)) {
       this.longpresstimer = setTimeout(() => { this.enableCursor(); }, this.longpresstime);
       this.mousediff = [0,0];
@@ -252,6 +253,7 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleMouseMove(ev) {
+    if (!room.teleport) return;
     if (this.longpresstimer) {
       this.mousediff[0] += ev.movementX;
       this.mousediff[1] += ev.movementY
@@ -262,6 +264,7 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleTouchMove(ev) {
+    if (!room.teleport) return;
     if (this.longpresstimer) {
       var touch = ev.changedTouches[0];
 
@@ -284,6 +287,7 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleMouseUp(ev) {
+    if (!room.teleport) return;
     if (this.longpresstimer) {
       clearTimeout(this.longpresstimer);
     }
