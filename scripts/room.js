@@ -856,6 +856,11 @@ elation.require([
         this.properties.run_speed = room.run_speed || 5.4;
         this.properties.cursor_visible = room.cursor_visible;
 
+        let cookieStorageID = 'cookies.' + this.url;
+        if (cookieStorageID in localStorage) {
+          this.cookies = JSON.parse(localStorage['cookies.' + this.url]);
+        }
+
         if (room.onload) {
           this.properties.onload = room.onload;
           this.addEventListenerProxy('room_load_complete', (ev) => { let func = new Function(room.onload); func();});
@@ -1481,6 +1486,7 @@ elation.require([
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
+      localStorage['cookies.' + this.url] = JSON.stringify(this.cookies);
     }
     this.doScriptOnload = function() {
       if (--this.pendingScripts <= 0) {
