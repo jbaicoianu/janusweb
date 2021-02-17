@@ -59,25 +59,63 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
     if (this.elements['reset']) {
       elation.events.add(this.elements['reset'], 'click', (ev) => this.handleAvatarReset(ev));
     }
+
+    // Observer watches for visibility events and hides the 3d avatar preview when the 2d ui disappears
+    let threshold = [];
+    for (let i = 0; i < 100; i++) threshold.push(i / 100);
+    let observer = new IntersectionObserver(ev => this.handleIntersectionChange(ev), { root: document, rootMargin: '0px', threshold: threshold });
+    observer.observe(this);
+    document.addEventListener('scroll', ev => this.handleScroll(ev));
   }
   selectAvatar(avatar) {
     let items = this.elements.avatarlist.items,
         list = this.elements.avatar;
     console.log('avatar?', items, list, avatar);
   }
-  handleAvatarSelect(ev) {
-    console.log('selected an avatar', ev.data);
+  hidePreview(hidelight=false) {
     if (this.avatarpreview) {
       this.avatarpreview.die();
+      this.avatarpreview = false;
     }
+    if (this.avatarlight && hidelight) {
+      this.avatarlight.die();
+      this.avatarlight = false;
+    }
+  }
+  showPreview(src) {
+    if (!src) {
+      src = 'data:text/plain,' + escape(player.getCurrentAvatarData());
+    }
+    this.hidePreview();
+    this.avatarpreview = player.createObject('ghost', { avatar_src: src, pos: this.previewpos, rotate_deg_per_sec: 10, });
+    if (!this.avatarlight) {
+      this.avatarlight = player.createObject('light', {
+        light_target: this.avatarpreview,
+        light_cone_angle: .5,
+        light_range: 4,
+        light_decay: 1,
+        col: 'white',
+        pos: V(0, 3, 1)
+      });
+    }
+    this.updatePreviewPosition();
+  }
+  updatePreviewPosition() {
+    if (this.avatarpreview) {
+      let rect = this.getBoundingClientRect();
+      let middle = (rect.top + rect.bottom) / 2;
+      let pos = middle / window.innerHeight;
+      this.avatarpreview.pos.y = 0.5 - pos;
+    }
+  }
+  handleAvatarSelect(ev) {
+    console.log('selected an avatar', ev.data);
     this.selected = ev.data;
-    this.avatarpreview = player.createObject('ghost', { avatar_src: ev.data.url, pos: this.previewpos, rotate_deg_per_sec: 10, });
+    this.showPreview(ev.data.url);
     this.elements.confirm.disabled = false;
   }
   handleAvatarConfirm(ev) {
-    if (this.avatarpreview) {
-      this.avatarpreview.die();
-    }
+    this.hidePreview(true);
     if (this.selected) {
       fetch(this.selected.url)
         .then(r => r.text())
@@ -89,6 +127,16 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
   }
   handleAvatarReset(ev) {
     player.setAvatar(player.defaultAvatar);
+  }
+  handleIntersectionChange(intersections) {
+    if (this.avatarpreview && !intersections[0].isIntersecting) {
+      this.hidePreview(true);
+    } else if (!this.avatarpreview && intersections[0].isIntersecting) {
+      this.showPreview();
+    }
+  }
+  handleScroll(ev) {
+    this.updatePreviewPosition();
   }
 });
 elation.elements.define('janus-avatar-picker-item', class extends elation.elements.ui.item {
