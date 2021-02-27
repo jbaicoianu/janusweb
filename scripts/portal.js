@@ -25,6 +25,7 @@ elation.require(['janusweb.janusbase'], function() {
         'external': { type: 'boolean', default: false },
         'target': { type: 'string', default: '' },
         'round': { type: 'boolean', default: false },
+        'cooldown': { type: 'float', default: 1000 },
       });
       this.addTag('usable');
       elation.engine.things.janusportal.extendclass.postinit.call(this);
@@ -32,6 +33,8 @@ elation.require(['janusweb.janusbase'], function() {
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
       elation.events.add(player, 'player_enable', elation.bind(this, this.disableDebounce));
       elation.events.add(player, 'player_disable', elation.bind(this, this.enableDebounce));
+
+      this.lastactivatetime = 0;
     }
     this.createObject3D = function() {
       this.objects['3d'] = new THREE.Object3D();
@@ -258,6 +261,12 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.activate = function(ev) {
       //console.log('activate', ev, this.seamless);
+
+      let now = Date.now();
+      if (now - this.lastactivatetime < this.cooldown) {
+        return;
+      }
+      this.lastactivatetime = now;
       if (this.frame) {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
