@@ -1,6 +1,8 @@
 janus-button-webvr,
 janus-button-webar,
 janus-ui-editor-button,
+janus-button-audio,
+janus-button-voip,
 janus-button-start {
   border: none;
   border-radius: .5em;
@@ -15,21 +17,28 @@ janus-button-start {
   background-image: linear-gradient(#484e55, #3a3f44 60%, #313539);
   background-color: transparent;
   display: inline-block;
+  position: relative;
 }
 janus-button-webvr[hover],
 janus-button-webar[hover],
+janus-button-audio[hover],
+janus-button-voip[hover],
 janus-ui-editor-button[hover],
 janus-button-start[hover] {
   background-image: linear-gradient(#323232, #404142 40%, #393b3d);
 }
 janus-button-webvr:active,
 janus-button-webar:active,
+janus-button-audio:active,
+janus-button-voip:active,
 janus-ui-editor-button:active,
 janus-button-start:active {
   background-image: linear-gradient(#020202, #101112 40%, #191b1d);
 }
 janus-button-webvr[disabled],
 janus-button-webar[disabled],
+janus-button-audio[disabled],
+janus-button-voip[disabled],
 janus-button-start[disabled],
 janus-ui-editor-button[disabled] {
   color: #999;
@@ -42,6 +51,9 @@ janus-ui-buttons>ui-buttonbar>ui-button:first-of-type,
 janus-ui-buttons>ui-buttonbar>ui-button:last-of-type,
 janus-ui-buttons>ui-buttonbar>janus-button-webvr,
 janus-ui-buttons>ui-buttonbar>janus-button-webar,
+janus-ui-buttons>ui-buttonbar>janus-button-audio,
+janus-ui-buttons>ui-buttonbar>janus-button-voip,
+janus-ui-buttons>ui-buttonbar>janus-button-share,
 janus-ui-buttons>ui-buttonbar>janus-ui-settings-button,
 janus-ui-buttons>ui-buttonbar>janus-ui-editor-button {
     width: 60px;
@@ -57,4 +69,32 @@ janus-ui-buttons>ui-buttonbar>janus-ui-editor-button {
 }
 janus-ui-buttons>ui-buttonbar>ui-button[name="fullscreen"] {
   font-size: 1.5em;
+}
+janus-button-audio>ui-window,
+janus-button-voip>ui-window {
+  line-height: normal;
+}
+ui-panel[top] janus-button-audio>ui-window,
+ui-panel[top] janus-button-voip>ui-window {
+  top: 40px;
+  bottom: auto;
+}
+ui-panel[bottom] janus-button-audio>ui-window,
+ui-panel[bottom] janus-button-voip>ui-window {
+  bottom: 40px;
+  top: auto;
+}
+ui-panel[left] janus-button-audio>ui-window,
+ui-panel[left] janus-button-voip>ui-window {
+  left: 0;
+  right: auto;
+}
+ui-panel[right] janus-button-audio>ui-window,
+ui-panel[right] janus-button-voip>ui-window {
+  right: 0;
+  left: auto;
+}
+janus-button-audio:focus>ui-window,
+janus-button-voip:focus>ui-window {
+  display: block;
 }

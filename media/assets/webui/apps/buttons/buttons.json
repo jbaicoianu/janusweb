@@ -6,6 +6,7 @@
     "./buttons.css"
   ],
   "scripts": [
+    "./share-min.js",
     "./buttons.js"
   ]
 }

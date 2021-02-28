@@ -1,9 +1,11 @@
       <ui-buttonbar>
         {#showedit}<janus-ui-editor-button>Edit</janus-ui-editor-button>{/showedit}
-        {#showshare}<ui-button name="share" onclick="janus.engine.client.shareScreenshot()">Share</ui-button>{/showshare}
+        {#showshare}<janus-button-share>Share</janus-button-share>{/showshare}
         {#showfullscreen}<ui-button name="fullscreen" onclick="janus.engine.client.toggleFullscreen()">⛶</ui-button>{/showfullscreen}
         {#showvr}<janus-button-webvr></janus-button-webvr>{/showvr}
         {#showar}<janus-button-webar></janus-button-webar>{/showar}
+        {#showaudio}<janus-button-audio>Audio</janus-button-audio>{/showaudio}
+        {#showvoip}<janus-button-voip>Voice</janus-button-voip>{/showvoip}
         {#showsettings}<janus-ui-settings-button>Config</janus-ui-settings-button>{/showsettings}
       </ui-buttonbar>
 
