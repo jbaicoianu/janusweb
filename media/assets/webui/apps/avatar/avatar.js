@@ -87,7 +87,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
       src = 'data:text/plain,' + escape(player.getCurrentAvatarData());
     }
     this.hidePreview();
-    this.avatarpreview = player.createObject('ghost', { avatar_src: src, pos: this.previewpos, rotate_deg_per_sec: 10, });
+    this.avatarpreview = player.createObject('ghost', { avatar_src: src, pos: V(this.previewpos), rotate_deg_per_sec: 10, });
     if (!this.avatarlight) {
       this.avatarlight = player.createObject('light', {
         light_target: this.avatarpreview,
