@@ -18,6 +18,9 @@ janus.registerElement('locomotion_teleporter', {
       shadow: false,
       shadow_cast: false,
       shadow_receive: false,
+      renderorder: 20,
+      depth_test: false,
+      depth_write: false,
     });
     this.cylinder = this.marker.createObject('object', {
       id: 'cylinder',
@@ -173,6 +176,7 @@ janus.registerElement('locomotion_teleporter', {
         }
       }
       this.laser.updateLine();
+      if (this.laser.room !== room) room.appendChild(this.laser);
       this.pointer.orientation._target.setFromEuler(new THREE.Euler(Math.PI/2, this.teleportangle, 0, "YXZ"));
     } else {
       if (this.shroud.visible) {
@@ -247,7 +251,7 @@ janus.registerElement('locomotion_teleporter', {
   handleMouseDown(ev) {
     if (!room.teleport) return;
     if (ev.button == 0 && (player.enabled || janus.hmd)) {
-      this.longpresstimer = setTimeout(() => { this.enableCursor(); }, this.longpresstime);
+      this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.enableCursor(); }, this.longpresstime);
       this.mousediff = [0,0];
       //this.active = true;
     }
@@ -260,6 +264,7 @@ janus.registerElement('locomotion_teleporter', {
       var distance = Math.sqrt(this.mousediff[0] * this.mousediff[0] + this.mousediff[1] * this.mousediff[1]);
       if (distance > this.deadzone) {
         clearTimeout(this.longpresstimer);
+        this.longpresstimer = false;
       }
     }
   },
@@ -290,6 +295,7 @@ janus.registerElement('locomotion_teleporter', {
     if (!room.teleport) return;
     if (this.longpresstimer) {
       clearTimeout(this.longpresstimer);
+      this.longpresstimer = false;
     }
     if (this.active) {
 /*
@@ -305,6 +311,8 @@ janus.registerElement('locomotion_teleporter', {
   enableCursor() {
     this.visible = true;
     this.particles.visible = true;
+    if (this.laser.room !== room) room.appendChild(this.laser);
+    if (this.particles.room !== room) room.appendChild(this.particles);
     this.laser.visible = true;
     this.active = true;
     this.particles.start();
