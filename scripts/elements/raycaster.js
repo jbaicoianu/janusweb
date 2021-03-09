@@ -1,9 +1,11 @@
 elation.require(['janusweb.janusbase'], function() {
   elation.component.add('janusweb.elements.raycaster', {
+    enabled: true,
     create() {
       this.lasthitobject = null;
     },
     update() {
+      if (!this.enabled) return;
       if (!this.fwdvec) {
         this.fwdvec = V();
         this.lasthitpos = V();
