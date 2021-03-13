@@ -112,7 +112,10 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
     }); 
   });
   var websurfaces = {};
-  websurfaceassets.forEach(function(n) { websurfaces[n.id] = n; });
+  websurfaceassets.forEach(function(n) {
+    websurfaces[n.id] = n;
+    assetlist.push(n);
+  });
   scriptassets.forEach(function(n) { 
     var src = fixURLEncoding(n.src.match(/^file:/) ? n.src.replace(/^file:/, datapath) : n.src);
     assetlist.push({ 
