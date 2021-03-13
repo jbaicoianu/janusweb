@@ -135,7 +135,7 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
 
     for (let k in remoteplayers) {
       let p = remoteplayers[k];
-      if (this.usermarkers[k] && this.usermarkers[k].parent !== p) {
+      if (this.usermarkers[k] && this.usermarkers[k].parent !== p.getProxyObject()) {
         this.usermarkers[k].die();
         delete this.usermarkers[k];
       }
@@ -373,6 +373,18 @@ janus.registerElement('playerlabel', {
   },
   setAudioSource(source) {
     console.log('got an audio source', source);
+  },
+  setAudioVolume(volume) {
+    if (volume > .1) {
+      this.label.col = '#0f0';
+      if (this.colorreset) {
+        clearTimeout(this.colorreset);
+      } 
+      this.colorreset = setTimeout(() => {
+        this.label.col = '#fff';
+        this.colorreset = false;
+      }, 200);
+    }
   },
   handleMouseOver(ev) {
     this.currentcolor.set(0,255,0);

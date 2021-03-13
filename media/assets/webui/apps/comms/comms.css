@@ -133,13 +133,14 @@ ui-list[name="userlist_room"] {
 }
 janus-voip-picker>ul li {
   display: flex;
-  flex: 1;
+  xflex: 1;
   border: 1px solid black;
   border-radius: 10px;
   background: #666;
   box-shadow: 0 0 5px black;
 }
 janus-voip-picker>ul li button,
+janus-voip-picker>ul li ui-togglebutton,
 janus-voip-picker ui-button {
   width: 300px;
   xheight: 100px;
@@ -149,6 +150,7 @@ janus-voip-picker ui-button {
   font-size: 1.5em;
   xcolor: white;
   xtext-shadow: 0 0 5px black;
+  font-weight: normal;
 }
 janus-voip-picker ui-button {
   margin-top: 1em;

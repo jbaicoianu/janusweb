@@ -8,7 +8,7 @@ janus-voip-client {
 janus-voip-localuser {
   display: block;
   bottom: 0px;
-  border: 1px solid black;
+  border: 2px solid black;
   padding: 0px;
   box-shadow: 0 0 5px black;
   z-index: 10;
@@ -21,7 +21,7 @@ janus-voip-localuser video {
 }
 janus-voip-remoteuser {
   display: inline-block;
-  border: 1px solid black;
+  border: 2px solid black;
   position: relative;
   font-family: monospace;
   transition: transform 250ms ease;
@@ -55,26 +55,55 @@ janus-voip-remoteuser h2 {
 }
 janus-voip-remoteuser {
 }
+janus-voip-localuser[speaking],
+janus-voip-remoteuser[speaking] {
+  border: 2px solid #0f0;
+}
 janus-voip-localuser ui-button {
   position: absolute;
   bottom: 1em;
-  right: .2em;
-  font-size: .5em;
+  left: .2em;
   xdisplay: none;
-  opacity: 0;
-  transition: opacity 200ms linear;
+  opacity: .5;
+  font-size: 0;
+  width: auto;
+  transition: opacity 100ms linear;
+}
+janus-voip-remoteuser ui-button {
+  font-size: 0;
+  width: auto;
+  opacity: .5;
+}
+janus-voip-localuser ui-button:before,
+janus-voip-remoteuser ui-button:before {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url(images/mic-enabled.png);
+  background-size: cover;
+  content: ' ';
+  z-index: 10;
 }
 janus-voip-localuser ui-button.muted,
 janus-voip-remoteuser ui-button.muted {
-  background: red;
+  background: rgba(255,0,0,.5);
+  z-index: 10;
 }
-janus-voip-localuser:hover ui-button {
+janus-voip-localuser ui-button.muted:before {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background: url(images/mic-disabled.png);
+  background-size: cover;
+  content: ' ';
+}
+janus-voip-localuser:hover ui-button,
+janus-voip-remoteuser:hover ui-button {
   display: block;
   opacity: 1;
 }
 janus-voip-picker-audio {
   display: block;
-  text-align: center;
 }
 janus-voip-picker-audio ul {
   list-style: none;
@@ -85,6 +114,7 @@ janus-voip-picker-audio ul {
 janus-voip-picker-audio ui-label {
   width: 10em;
   color: white;
+  font-weight: normal;
 }
 janus-voip-picker-audio ui-select>select {
   width: 100%;
@@ -93,24 +123,51 @@ janus-voip-remoteuser ui-panel[bottom] {
   display: flex;
   flex-direction: row;
   width: 100%;
+  align-items: center;
+}
+janus-voip-remoteuser ui-slider {
+  font-size: 1em;
+  flex: 1;
   opacity: 0;
   transition: opacity 200ms linear;
 }
-janus-voip-remoteuser:hover ui-panel[bottom] {
+janus-voip-remoteuser:hover ui-slider {
   opacity: 1;
 }
-janus-voip-remoteuser ui-slider {
-  font-size: .5em;
-  flex: 1;
-}
 janus-voip-remoteuser ui-button {
+/*
   font-size: .5em;
   flex: 0;
   padding: .2em;
+*/
 }
 janus-voip-remoteuser[hasvideo] {
   order: 1;
 }
 janus-voip-remoteuser:not([hasvideo]) {
   order: 2;
+}
+janus-voip-picker {
+  text-align: left;
+}
+janus-voip-picker h3 {
+  font-size: 1em;
+  border-top: 1px solid #666;
+  margin-top: .5em;
+  padding-top: .5em;
+  padding: .5em .5em;
+}
+janus-voip-picker ul {
+  padding: 0 .5em;
+}
+janus-voip-picker-audio li {
+  padding: .2em .5em;
+}
+janus-voip-picker .micselect {
+  display: grid;
+  grid-template-columns: auto 80px;
+  padding: 0;
+}
+janus-voip-picker-mictest {
+  margin-left: 5px;
 }
