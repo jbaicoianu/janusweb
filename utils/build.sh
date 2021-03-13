@@ -52,10 +52,12 @@ else
 fi
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb janusweb.client
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb.assetworker engine.assetworker
-mv janusweb.css janusweb.js janusweb.assetworker.js "$BUILDDIR"
+./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb.physicsworker physics.worker
+mv janusweb.css janusweb.js janusweb.assetworker.js janusweb.physicsworker.js "$BUILDDIR"
 echo -n 'Minifying'
 cat "$BUILDDIR/janusweb.js" |uglifyjs >"$BUILDDIR/janusweb.min.js" && echo -n '.'
 cat "$BUILDDIR/janusweb.assetworker.js" |uglifyjs >"$BUILDDIR/janusweb.assetworker.min.js" && echo -n '.'
+cat "$BUILDDIR/janusweb.physicsworker.js" |uglifyjs >"$BUILDDIR/janusweb.physicsworker.min.js" && echo -n '.'
 echo 'done'
 rm janusweb.assetworker.css
 echo Built new release in \"$BUILDDIR/\"
