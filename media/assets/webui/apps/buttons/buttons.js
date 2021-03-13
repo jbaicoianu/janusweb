@@ -10,6 +10,7 @@ elation.elements.define('janus.ui.buttons', class extends elation.elements.base 
       showsettings: { type: 'boolean', default: true },
       showaudio: { type: 'boolean', default: true },
       showvoip: { type: 'boolean', default: true },
+      showdebug: { type: 'boolean', default: true },
     });
   }
   create() {
@@ -267,7 +268,7 @@ elation.elements.define('janus-button-voip', class extends elation.elements.ui.p
         elation.events.add(voipclient.localuser, 'update', ev => this.updateMuteState());
         this.registeredEvents = true;
       }
-      if (voipclient.localuser && !voipclient.localuser.muted) {
+      if (voipclient.localuser && voipclient.localuser.stream && !voipclient.localuser.muted) {
         muted = false;
       }
     }
