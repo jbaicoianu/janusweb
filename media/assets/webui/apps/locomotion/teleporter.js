@@ -198,6 +198,7 @@ janus.registerElement('locomotion_teleporter', {
     room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
   },
   handleTeleportChange(ev) {
+    //if (!room.teleport) return;
     if (this.teleportactive) {
       let controls = this.activecontrols;
       let xy = new THREE.Vector2(controls.teleport_x, controls.teleport_y),
@@ -214,6 +215,7 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleTeleportStart(ev) {
+    if (!room.teleport) return;
     if (!this.teleportactive && Math.abs(ev.value) > .8) {
       this.teleportactive = true;
       this.enableCursor();
@@ -229,11 +231,13 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleTeleportTrigger(ev) {
+    if (!room.teleport) return;
     if (this.active) {
 
     }
   },
   teleport() {
+    //if (!room.teleport) return;
     let pos = player.localToWorld(this.pos.clone());
     player.pos = pos;
     player.vel = V(0,0,.01); // "wake up" physics engine
@@ -292,7 +296,7 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleMouseUp(ev) {
-    if (!room.teleport) return;
+    //if (!room.teleport) return;
     if (this.longpresstimer) {
       clearTimeout(this.longpresstimer);
       this.longpresstimer = false;
@@ -309,6 +313,7 @@ janus.registerElement('locomotion_teleporter', {
     this.disableCursor();
   },
   enableCursor() {
+    if (!room.teleport) return;
     this.visible = true;
     this.particles.visible = true;
     if (this.laser.room !== room) room.appendChild(this.laser);
