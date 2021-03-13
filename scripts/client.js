@@ -160,8 +160,6 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       let overlay = this.container.parentNode.querySelector('janus-overlay');
       if (overlay) {
         this.overlay = overlay;
-        elation.events.add(this.player, 'player_enable', ev => { overlay.hide(); });
-        elation.events.add(this.player, 'player_disable', ev => { overlay.show(); });
       }
 
       elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
@@ -421,6 +419,19 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
     });
     elation.elements.define('janus.overlay', class extends elation.elements.base {
+      init() {
+        super.init();
+        elation.events.add(this.player, 'player_enable', ev => { this.hide(); });
+        elation.events.add(this.player, 'player_disable', ev => { this.show(); });
+      }
+      show() {
+        super.show();
+        elation.events.fire({type: 'overlay_show', element: this});
+      }
+      hide() {
+        super.hide();
+        elation.events.fire({type: 'overlay_hide', element: this});
+      }
     });
   }
 });
