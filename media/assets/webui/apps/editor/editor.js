@@ -1132,7 +1132,7 @@ console.log('change color', obj.col, vec);
         js_id: player.userid + '-' + trimmedurl + '-' + window.uniqueId(),
         //cull_face: 'none',
         sync: true,
-        pos: player.vectors.cursor_pos.clone(),
+        pos: new elation.physics.vector3().copy(player.vectors.cursor_pos),
         persist: true
       }
       if (trimmedurl.length > 0) {
