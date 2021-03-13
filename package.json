@@ -9,7 +9,8 @@
     "postinstall": "./utils/init.sh",
     "build": "./utils/build.sh",
     "postversion": "git push origin v`npm view janusweb version`",
-    "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run"
+    "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run",
+    "start:dev": "nodemon -w scripts/ -w css/ -w ../engine/scripts/ -w ../engine/css/ -w ../physics/scripts/ -w ../utils/scripts/ -w ../elements/scripts/ -w ../elements/css/ --exec ./utils/build.sh"
   },
   "devDependencies": {
     "karma": "~4.1",
