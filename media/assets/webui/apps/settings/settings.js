@@ -165,7 +165,7 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
     let newname = this.elements.clientid.value;
     console.log('Username picker handleFormSubmit', ev.type, newname, player.userid, ev);
     this.elements.submit.disabled = !this.confirm;
-    this.setUsername(newname);
+    this.setUsername(newname, true);
   }
   handleInput(ev) {
     let changed = (this.elements.clientid.value != player.userid);
@@ -180,19 +180,21 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
   handleInputChange(ev) {
     ev.stopPropagation();
   }
-  setUsername(username) {
+  setUsername(username, updateplayer) {
     this.elements.clientid.value = username;
-    if (username != player.userid) {
-      player.setUsername(username);
-      if (this.confirm) {
-        this.elements.submit.value = this.confirmlabel;
-        this.elements.submit.disabled = false;
-      } else {
-        this.elements.submit.disabled = true;
+    if (updateplayer) {
+      if (username != player.userid) {
+        player.setUsername(username);
+        if (this.confirm) {
+          this.elements.submit.value = this.confirmlabel;
+          this.elements.submit.disabled = false;
+        } else {
+          this.elements.submit.disabled = true;
+        }
+        this.dispatchEvent(new CustomEvent('change', { detail: username }));
+      } else if (this.confirm) {
+        this.dispatchEvent(new CustomEvent('confirm', { detail: username }));
       }
-      this.dispatchEvent(new CustomEvent('change', { detail: username }));
-    } else if (this.confirm) {
-      this.dispatchEvent(new CustomEvent('confirm', { detail: username }));
     }
   }
   handleFormReset() {
