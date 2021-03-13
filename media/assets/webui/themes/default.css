@@ -485,9 +485,10 @@ ui-toggle>div {
   cursor: pointer;
   z-index: 2;
   display: inline-block;
-  width: 3em;
+  width: 2em;
   vertical-align: middle;
   margin: .2em .8em .2em .4em;
+  background: #333;
 }
 ui-toggle[align="left"]>div {
   order: -1;
@@ -501,48 +502,51 @@ ui-toggle span {
 ui-toggle>div::before {
   display: block;
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 50%;
+  top: 2px;
+  left: 4px;
+  bottom: 2px;
+  width: 40%;
   background: #700;
   content: ' ';
   z-index: -1;
-  border-radius: 0 .5em .5em 0;
+  border-radius: 10px;
   box-shadow: 2px 0 5px rgba(0,0,0,.8);
-  content: 'OFF';
-  font-size: 10px;
+  content: '';
+/*
+  font-size: 0px;
   font-weight: bold;
   font-family: Arial, sans-serif;
   text-align: center;
   line-height: 1.8em;
   color: #aaa;
+*/
 }
 ui-toggle>div::after {
-  display: block;
+  display: none;
   position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 50%;
+  top: 2px;
+  right: 4px;
+  bottom: 2px;
+  width: 40%;
   content: ' ';
   z-index: -1;
   border-radius: .5em 0 0 .5em;
   box-shadow: 0px 0px 5px rgba(0,0,0,.8);
 }
 ui-toggle[checked]>div::before {
-  right: auto;
-  left: 0;
+  right: 4px;
+  left: auto;
   background: green;
   box-shadow: -2px 0 5px rgba(0,0,0,.8);
-  border-radius: .5em 0 0 .5em;
-  content: 'ON';
+  border-radius: 10px;
+  content: '';
   color: #fff;
 }
 ui-toggle[checked]>div::after {
-  right: 0;
-  left: auto;
+  right: auto;
+  left: 4px;
   border-radius: 0 .5em .5em 0;
+  display: none;
 }
 ui-toggle[disabled]>div {
   color: #999;
@@ -841,6 +845,7 @@ ui-label {
 }
 ui-select {
   white-space: nowrap;
+  display: flex;
 }
 ui-select>select {
   background: #444;
