@@ -74,6 +74,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       } else {
         // You've lost your head!  Should we do something about it?
       }
+      let hasControllers = false;
       for (let k in this.inputs) {
         let input = this.inputs[k];
         let id = 'hand_' + k;
@@ -91,9 +92,13 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.trackedobjects[id].updatePose(pose, xrFrame, xrReferenceFrame, raypose);
         if (pose) {
           this.trackedobjects[id].visible = true;
+          hasControllers = true;
         } else {
           this.trackedobjects[id].visible = false;
         }
+      }
+      if (player.gazecaster) {
+        player.gazecaster.enabled = !hasControllers;
       }
       //this.position.copy(player.pos);
       //player.orientation.copy(this.orientation);
@@ -111,6 +116,8 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       if (this.trackedobjects[handid]) {
         this.trackedobjects[handid].handleSelectStart(ev);
       }
+      // FIXME - probably need to fake a mouse event instead of passing through a select event
+      elation.events.fire({type: 'janus_room_mousedown', element: room._target, event: ev});
     }
     this.handleSelectEnd = function(ev) {
       console.log('select ended', ev);
@@ -118,6 +125,8 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       if (this.trackedobjects[handid]) {
         this.trackedobjects[handid].handleSelectEnd(ev);
       }
+      // FIXME - probably need to fake a mouse event instead of passing through a select event
+      elation.events.fire({type: 'janus_room_mouseup', element: room._target, event: ev});
     }
     this.handleSelect = function(ev) {
       console.log('selected', ev);
@@ -125,6 +134,11 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       if (this.trackedobjects[handid]) {
         this.trackedobjects[handid].handleSelect(ev);
       }
+      // FIXME - probably need to fake a mouse event instead of passing through a select event
+      if (room.onClick) {
+        room.onClick(ev);
+      }
+      elation.events.fire({type: 'click', element: room._target, event: ev});
     }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
@@ -240,7 +254,6 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           hand: this,
         });
 
-        this.riftOrientationHack = new THREE.Quaternion().setFromEuler(new THREE.Euler(-90, 0, 0));
         this.virtualskeleton = this.createObject('trackedplayer_hand_virtualskeleton', {
           hand: this.device.hand,
         });
@@ -369,13 +382,6 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         if (this.pointer && raypose) {
           this.pointer.pos.copy(raypose.transform.position);
           this.pointer.orientation.copy(raypose.transform.orientation);
-
-          let profiles = this.device.profiles;
-          if (profiles.indexOf('oculus-touch') != -1 && profiles.indexOf('oculus-touch-v2') == -1) {
-            // FIXME - hack to work around flipped Rift raypose (https://bugs.chromium.org/p/chromium/issues/detail?id=1139300&q=webxr%20rift&can=2)
-
-            this.pointer.orientation.multiply(this.riftOrientationHack);
-          }
         }
       },
       createButtons() {
@@ -524,19 +530,45 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       create() {
         this.lasercolor = V(1,0,0);
         this.laser = this.createObject('linesegments', {
-          positions: [V(0,0,0), V(0,0,-1000)],
+          positions: [V(0,0,0), V(0,0,-.5)],
           opacity: .8,
           col: this.lasercolor,
+          visible: false,
+        });
+        this.bonk = this.createObject('object', {
+          id: 'cylinder',
+          col: 'white',
+          lighting: false,
+          scale: V(.005, .5, .005),
+          rotation: V(-90,0,0),
+          opacity: .2,
+        });
+        this.cursor = room.createObject('object', {
+          id: 'plane',
+          scale: V(.75),
+          image_id: 'cursor_dot_inactive',
+          billboard: 'y',
           visible: true,
+          renderorder: 20,
+          depth_test: false,
+          depth_write: false,
+          lighting: false,
+          opacity: .5,
+          cull_face: 'none',
         });
         this.raycaster = this.createObject('raycaster', {});
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
         this.raycaster.addEventListener('raycastmove', (ev) => this.handleRaycastMove(ev));
         this.raycaster.addEventListener('raycastleave', (ev) => this.handleRaycastLeave(ev));
       },
-      updateLaserEndpoint(endpoint) {
+      updateLaserEndpoint(endpoint, normal) {
         this.worldToLocal(this.laser.positions[1].copy(endpoint));
         this.laser.updateLine();
+        this.cursor.pos.copy(endpoint);
+        if (this.cursor.room !== room) room.appendChild(this.cursor);
+        //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
+        //this.cursor.zdir = normal;
+        this.cursor.visible = true;
       },
       handleRaycastEnter(ev) {
         let proxyobj = ev.data.object,
@@ -566,6 +598,8 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.col.setRGB(0,1,0);
           this.laser.opacity = .8;
           this.laser.updateColor();
+          this.cursor.image_id = 'cursor_dot_active';
+          this.cursor.opacity = 1;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
 
 /*
@@ -579,10 +613,12 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.col.setRGB(1,0,0);
           this.laser.opacity = .4;
           this.laser.updateColor();
+          this.cursor.image_id = 'cursor_dot_inactive';
+          this.cursor.opacity = .5;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
         }
 
-        this.updateLaserEndpoint(ev.data.intersection.point);
+        this.updateLaserEndpoint(ev.data.intersection.point, ev.data.intersection.face.normal);
 
         this.lasthit = ev.data.intersection;
         let evdata = {
@@ -602,7 +638,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.engine.client.view.proxyEvent(evdata, evdata.element);
       },
       handleRaycastMove(ev) {
-        this.updateLaserEndpoint(ev.data.intersection.point);
+        this.updateLaserEndpoint(ev.data.intersection.point, ev.data.intersection.face.normal);
         if (this.activeobject) {
           let obj = this.activeobject.objects['3d'];
           this.lasthit = ev.data.intersection;
