@@ -76,6 +76,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
         //loop: true
       });
+/*
       this.mouth.createAudio();
       var context = this.mouth.audio.context;
       this.voip = new JanusVOIPPlayer();
@@ -90,6 +91,7 @@ elation.component.add('engine.things.remoteplayer', function() {
         this.audiobuffer.readyCallbacks[ i ]( this.voip.rawbuffer );
 
       }
+*/
     }
 
     //this.mouth.audio.setBuffer(this.audiobuffer);
@@ -131,27 +133,39 @@ elation.component.add('engine.things.remoteplayer', function() {
       //console.log('already playing');
     }
   }
-  this.addVoice = function(stream) {
-    this.mouth = this.createObject('sound', { pos: V(0, 0, 0), distanceModel: 'exponential' });
+  this.addVoice = async function(stream) {
+    this.mouth = this.createObject('sound', {
+      pos: V(0, 0, 0),
+      distanceModel: 'exponential',
+      dist: 8,
+      rolloff: 0.75,
+    });
     this.head.add(this.mouth._target);
-    this.mouth.createAudio();
 
-    let panner = this.mouth.audio.panner,
-        context = panner.context,
-        source = context.createMediaStreamSource(stream);
 
     if (this.engine.systems.sound.canPlaySound) {
-      source.connect(panner);
-      this.mouth.audio.play();
+      this.createVoiceAudio(stream);
     } else {
-      elation.events.add(this.engine.systems.sound, 'sound_enabled', (ev) => {
-        source.connect(panner);
-        this.mouth.audio.play();
+      elation.events.add(this.engine.systems.sound, 'sound_enabled', async (ev) => {
+        this.createVoiceAudio(stream);
       });
     }
   }
-  this.setVolume = function(volume) {
+  this.createVoiceAudio = async function(stream) {
+    let listener = this.engine.systems.sound.getRealListener();
+    await this.mouth.createAudio(null, {listener});
+    let panner = this.mouth.audio.panner,
+        context = panner.context,
+        source = context.createMediaStreamSource(stream);
+    source.connect(panner);
+    this.audionodes = { listener, panner, context, source };
+    this.mouth.audio.play();
+  }
+  this.setVolume = async function(volume) {
     if (this.mouth) {
+      if (!this.mouth.audio) {
+        await this.mout.createAudio(null, listener);
+      }
       this.mouth.audio.gain.gain.value = volume;
     }
   }
