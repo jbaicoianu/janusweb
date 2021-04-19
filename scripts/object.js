@@ -332,6 +332,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         if (textureasset) {
           texture = textureasset.getInstance();
+          this.textureasset = textureasset;
           if (!this.assetloadhandlers[image_id]) {
             this.assetloadhandlers[image_id] = true;
             elation.events.add(textureasset, 'asset_load', this.refresh);
@@ -956,6 +957,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     this.updateColor = function() {
       elation.engine.things.janusobject.extendclass.updateColor.call(this);
 
+      let textureasset = this.textureasset;
+
       if (this.objects['3d']) {
         this.traverseObjects(n => {
           if (n.material) {
@@ -964,7 +967,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
               m[i].opacity = this.opacity;
-              m[i].transparent = (m[i].opacity < 1);
+              m[i].transparent = (textureasset && textureasset.hasalpha) || m[i].opacity < 1;
               if (m[i].transparent) {
                 m[i].alphaTest = this.alphatest;
               }
