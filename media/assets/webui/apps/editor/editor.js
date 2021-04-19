@@ -1218,7 +1218,7 @@ console.log('change color', obj.col, vec);
 
       // If mime type detection fails, we could also check for known signatures in the first 1k of data, but we don't do that here yet
       let proxiedurl = url;
-      if (elation.engine.assets.corsproxy) {
+      if (elation.engine.assets.corsproxy && !url.match(/^https?:\/\/localhost/) && !url.match(/^data:/)) {
         proxiedurl = elation.engine.assets.corsproxy + url;
       }
       fetch(proxiedurl, { headers: { /*'Range': 'bytes=0-1023'}*/ }}).then(res => resolve(res.headers.get('content-type')))
