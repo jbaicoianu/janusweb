@@ -85,29 +85,29 @@ elation.require(['janusweb.janusbase'], function() {
       }
       this.adjustAspectRatio();
     }
-    this.initSound = function() {
-      var listener = this.engine.systems.sound.getRealListener(),
-          ctx = listener.context;
-      this.audionodes = {
-        listener: listener,
-        ctx: ctx
-      };
+    this.initSound = async function() {
+      return new Promise(async (resolve, reject) => {
+        let roomaudionodes = await this.room.getAudioNodes(),
+            ctx = roomaudionodes.listener.context;
+        this.audionodes = {
+          listener: roomaudionodes.listener,
+          ctx: ctx
+        };
 
-      var source = this.getSoundSource();
+        var source = this.getSoundSource();
 
-      this.soundobj = new THREE.PositionalAudio(listener);
-      this.objects['3d'].add(this.soundobj);
-      this.soundobj.isPlaying = true;
-      //this.panner = this.context.createPanner();
+        this.soundobj = new THREE.PositionalAudio(roomaudionodes.listener);
+        this.objects['3d'].add(this.soundobj);
+        this.soundobj.isPlaying = true;
+        source.connect(this.soundobj.panner);
 
-      //this.panner.connect(ctx.destination);
-      //gainnode.connect(this.panner);
-      source.connect(this.soundobj.panner);
+        this.audionodes.source = source;
+        this.audionodes.gain = this.soundobj.gain;
+        this.audionodes.panner = this.soundobj.panner;
+        this.audionodes.gain.value = this.gain;
 
-      this.audionodes.source = source;
-      this.audionodes.gain = this.soundobj.gain;
-      this.audionodes.panner = this.soundobj.panner;
-      this.audionodes.gain.value = this.gain;
+        this.audionodes.gain.connect(roomaudionodes.gain);
+      });
     }
     this.getSoundSource = function() {
       if (!this.video._audiosource) {
