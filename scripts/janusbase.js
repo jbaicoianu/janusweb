@@ -142,18 +142,19 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.objects.dynamics.mass = this.mass = 1;
           this.objects.dynamics.addForce('static', new THREE.Vector3(0, this.room.gravity, 0));
         }
-
         if (collision_id == 'sphere') {
-          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2, offset: this.collision_pos});
+          this.setCollider('sphere', {radius: Math.max(collision_scale.x, collision_scale.y, collision_scale.z) / 2, offset: this.collision_pos, trigger: this.collision_trigger});
         } else if (collision_id == 'cube') {
           var halfsize = collision_scale.clone().multiplyScalar(.5);
-          this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos)});
+          this.setCollider('box', {min: halfsize.clone().negate().add(this.collision_pos), max: halfsize.add(this.collision_pos), trigger: this.collision_trigger});
         } else if (collision_id == 'plane') {
           var halfsize = collision_scale.clone().multiplyScalar(.5).add(this.collision_pos);
           halfsize.z = .1;
-          this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize});
+          this.setCollider('box', {min: halfsize.clone().negate(), max: halfsize, trigger: this.collision_trigger});
         } else if (collision_id == 'cylinder') {
-          this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0)});
+          this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0), trigger: this.collision_trigger});
+        } else if (collision_id == 'capsule') {
+          this.setCollider('capsule', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0), trigger: this.collision_trigger});
         } else {
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
@@ -196,7 +197,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               if (remove.length > 0) {
                 remove.forEach(n => n.parent.remove(n));
               }
-              this.setCollider('mesh', {mesh: collider, scale: this.properties.scale});
+              this.setCollider('mesh', {mesh: collider, scale: this.properties.scale, trigger: this.collision_trigger});
             });
             var collider = colliderasset.getInstance();
             this.collidermesh = collider;
@@ -343,6 +344,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           accel:    ['property', 'acceleration'],
           mass:     ['property', 'mass'],
           restitution:['property', 'restitution'],
+          dynamicfriction:['property', 'dynamicfriction'],
+          staticfriction:['property', 'staticfriction'],
           opacity:  ['property', 'opacity'],
           alphatest:  ['property', 'alphatest'],
           sync:     ['property', 'sync'],
