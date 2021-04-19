@@ -184,7 +184,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           //texture.repeat.set(1, 0.5);
           this.texture_repeat.set(1, 0.5);
         } else {
-          this.texture_repeat.set(1, 1);
+          //this.texture_repeat.set(1, 1);
         }
         if (videoasset.loop || this.properties.loop) {
           texture.image.loop = true;
