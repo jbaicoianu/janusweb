@@ -130,18 +130,26 @@ janus.registerElement('locomotion_teleporter', {
   },
   update() {
     if (this.active) {
-      let hand = this.xrplayer.trackedobjects.hand_right; // FIXME - figure out hand based on which controller is triggering the teleporter
-      let startpoint = hand.pointer.localToWorld(V(0, 0, 0)),
+      let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+      let startpoint,
           segments = this.linesegments,
           duration = .25,
           speed = 4,
           g = V(0, -1, 0),
-          p0 = startpoint.clone(),
           p1 = V(),
-          v0 = hand.pointer.localToWorld(V(0, 0, -speed)).sub(p0),
           v1 = V(),
+          v0;
+
+      if (hand) {
+        startpoint = hand.pointer.localToWorld(V(0, 0, 0));
+        v0 = hand.pointer.localToWorld(V(0, 0, -speed)).sub(startpoint);
+      } else {
+        startpoint = player.head.localToWorld(V(0,0,0));
+        v0 = player.head.localToWorld(V(0,0,-speed)).sub(startpoint);
+      }
+      let i = 0,
+          p0 = startpoint.clone(),
           dir = v0.clone().normalize();
-      let i = 0;
       let laserpoints = this.laser.positions;
       // Trace our arc in steps, performing a raytrace at each step
       for (i = 0; i < segments; i++) {
@@ -210,14 +218,16 @@ janus.registerElement('locomotion_teleporter', {
         this.showShroud();
         this.teleport();
         this.teleportactive = false;
+        this.teleporthand = false;
         this.disableCursor();
       }
     }
   },
-  handleTeleportStart(ev) {
+  handleTeleportStart(ev, hand) {
     if (!room.teleport) return;
     if (!this.teleportactive && Math.abs(ev.value) > .8) {
       this.teleportactive = true;
+      this.teleporthand = 'right';
       this.enableCursor();
       this.updateTeleportAngle();
     }
@@ -239,6 +249,7 @@ janus.registerElement('locomotion_teleporter', {
   teleport() {
     //if (!room.teleport) return;
     let pos = player.localToWorld(this.pos.clone());
+    pos.y += player.fatness; // FIXME - This accounts for wonky player sphere collider, when we switch to a capsule we won't need it
     player.pos = pos;
     player.vel = V(0,0,.01); // "wake up" physics engine
     player.angular.set(0,0,0);
