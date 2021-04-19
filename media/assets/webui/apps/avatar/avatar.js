@@ -143,8 +143,9 @@ elation.elements.define('janus-avatar-picker-item', class extends elation.elemen
   create() {
     elation.events.add(this, 'click', (ev) => { console.log('duh', this); this.click(ev) });
     let item = this.value;
+    let defaulticon = janus.ui.apps.default.apps.avatar.resolveFullURL('./images/default-avatar.jpg');
     this.elements = elation.elements.fromString(`
-      <img src="${item.thumb}" alt="${item.name || 'Untitled Avatar'}">
+      <img src="${item.thumb || defaulticon}" alt="${item.name || 'Untitled Avatar'}">
     `, this);
   }
 });
