@@ -9,7 +9,8 @@
     "transporter": "./apps/transporter/transporter.json",
     "locomotion": "./apps/locomotion/locomotion.json",
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",
-    "buttons": "./apps/buttons/buttons.json"
+    "buttons": "./apps/buttons/buttons.json",
+    "xrmenu": "./apps/xrmenu/xrmenu.json"
   },
   "includes": [
   ],
