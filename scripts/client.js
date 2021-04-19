@@ -142,10 +142,13 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         janus: this.janusweb,
         position: [0,0,0],
         mass: 10,
+        height: 1.8,
         movespeed: 5000,
         collidable: true,
         usevoip: this.args.usevoip,
         avatarsrc: this.args.avatarsrc,
+        staticfriction: 2,
+        dynamicfriction: 1.9,
       });
       elation.events.add(this.engine.systems.render, 'render_view_add', (ev) => this.handleRenderViewAdd(ev));
 
