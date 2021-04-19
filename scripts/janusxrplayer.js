@@ -257,6 +257,14 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.virtualskeleton = this.createObject('trackedplayer_hand_virtualskeleton', {
           hand: this.device.hand,
         });
+
+        let menupos = (this.device.handedness == 'left' ? V(.01, .1, .1) : V(-.01, 0, .1)),
+            menurot = (this.device.handedness == 'left' ? V(180, 90, 90) : V(180, -90, -90));
+        this.menu = this.createObject('xrmenu', {
+          scale: V(.25),
+          pos: menupos,
+          rotation: menurot,
+        });
         player.setHand(this.device.handedness, this.virtualskeleton);
       },
       updateDevice(device) {
@@ -547,7 +555,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           id: 'plane',
           scale: V(.75),
           image_id: 'cursor_dot_inactive',
-          billboard: 'y',
+          //billboard: 'y',
           visible: true,
           renderorder: 20,
           depth_test: false,
@@ -565,6 +573,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.worldToLocal(this.laser.positions[1].copy(endpoint));
         this.laser.updateLine();
         this.cursor.pos.copy(endpoint);
+        //this.cursor.zdir = normal;
         if (this.cursor.room !== room) room.appendChild(this.cursor);
         //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
         //this.cursor.zdir = normal;
