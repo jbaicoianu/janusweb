@@ -48,6 +48,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
         usevertexcolors: { type: 'boolean', default: true, set: this.updateMaterial },
+        gain: { type: 'float', default: 1.0, set: this.updateAudioNodes },
         onloadstart: { type: 'callback' },
         onloadprogress: { type: 'callback' },
         onload: { type: 'callback' },
@@ -208,6 +209,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         texture.onUpdate = (e) => this.refresh();
 
         this.video = texture.image;
+        this.video.volume = this.gain;
+
         elation.events.add(this, 'click', elation.bind(this, this.handleVideoClick));
         this.room.videos[videoid] = this;
       }
@@ -1224,8 +1227,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.setupOnBeforeRenderListener = function(type, args, arg2, arg3) {
       if (this.onbeforerender) {
-        console.log('set it up!!!!', this.onbeforerender, type, args, arg2, arg3, this);
         this.objects['3d'].onBeforeRender = this.onbeforerender;
+      }
+    }
+    this.updateAudioNodes = function() {
+      if (this.video) {
+        this.video.volume = this.gain;
       }
     }
     this.getProxyObject = function(classdef) {
