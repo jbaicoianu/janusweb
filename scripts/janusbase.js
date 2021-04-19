@@ -944,7 +944,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.jschildren = [];
       var keys = Object.keys(this.children);
       for (var i = 0; i < keys.length; i++) {
-        this.jschildren.push(this.children[keys[i]].getProxyObject());
+        if (typeof this.children[keys[i]].getProxyObject == 'function') {
+          this.jschildren.push(this.children[keys[i]].getProxyObject());
+        }
       }
     }
     this.handleCollision = function(ev) {
