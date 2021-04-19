@@ -10,11 +10,12 @@ elation.require(['janusweb.janusbase'], function() {
         loop: { type: 'boolean', default: false },
         auto_play: { type: 'boolean', default: false },
         play_once: { type: 'boolean', default: false },
-        dist: { type: 'float', default: 1.0 },
+        dist: { type: 'float', default: 1.0, set: this.updateSound },
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
         gain: { type: 'float', default: 1.0, set: this.updateSound },
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
         distanceModel: { type: 'string', set: this.updateSound },
+        rolloff: { type: 'float', default: 1.0, set: this.updateSound },
         rect: { type: 'string', set: this.updateSound }
       });
       this.playing = false;
@@ -34,7 +35,7 @@ elation.require(['janusweb.janusbase'], function() {
         this.play();
       }
     }
-    this.createAudio = function(src) {
+    this.createAudio = async function(src, audionodes) {
       var sound = this.getAsset('sound', this.sound_id);
       if (!src) {
         this.currentsound = this.sound_id;
@@ -48,12 +49,15 @@ elation.require(['janusweb.janusbase'], function() {
         }
         this.objects['3d'].remove(this.audio);
       }
-      let listener = this.listener = this.engine.systems.sound.getRealListener();
-      if (listener) {
+      //let listener = this.listener = this.engine.systems.sound.getRealListener();
+      return new Promise(async (resolve, reject) => {
+        if (!audionodes) {
+          audionodes = await this.room.getAudioNodes();
+        }
         if (!this.hasposition) {
-          this.audio = new THREE.Audio(listener);
+          this.audio = new THREE.Audio(audionodes.listener);
         } else {
-          this.audio = new THREE.PositionalAudio(listener);
+          this.audio = new THREE.PositionalAudio(audionodes.listener);
           if (this.properties.distanceModel) {
             this.audio.panner.distanceModel = this.properties.distanceModel;
           }
@@ -64,6 +68,13 @@ elation.require(['janusweb.janusbase'], function() {
             //this.audio.panner.distanceModel = 'linear';
           }
           this.audio.panner.panningModel = 'HRTF';
+        }
+        if (audionodes.gain) {
+          // Route object's audio through the room's gain element
+          //this.audio.disconnect();
+          this.audio.gain.disconnect(audionodes.listener.getInput());
+          //this.audio.setFilters([this.audio.gain, audionodes.gain]);
+          this.audio.gain.connect(audionodes.gain);
         }
         this.audio.autoplay = this.auto_play || this.singleshot || this.playStarted;
         this.audio.setLoop(this.loop);
@@ -96,8 +107,9 @@ elation.require(['janusweb.janusbase'], function() {
           this.audio.setBuffer(sound.buffer);
         }
         this.objects['3d'].add(this.audio);
-      }
-      this.updateSound();
+        this.updateSound();
+        resolve(this.audio);
+      });
     }
     this.load = function(url) {
       this.src = url;
@@ -106,7 +118,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       this.createAudio(url);
     }
-    this.play = function() {
+    this.play = async function() {
       if (!this.engine.systems.sound.canPlaySound) {
         if (!this.playDelayed) {
           this.playDelayed = true;
@@ -116,7 +128,7 @@ elation.require(['janusweb.janusbase'], function() {
       } else {
         this.playStarted = true;
         if (!this.audio) {
-          this.createAudio();
+          await this.createAudio();
         }
         if (this.audio && this.audio.buffer) { //this.audio.source && this.audio.source.buffer) {
           this.audio.setVolume(this.gain);
@@ -149,15 +161,20 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.stop();
       }
     }
-    this.updateSound = function() {
+    this.updateSound = async function() {
       if (!this.objects['3d']) return;
       if (this.canPlay() && this.currentsound != this.sound_id) {
-        this.createAudio();
+        await this.createAudio();
       }
       if (this.audio) {
         //this.play();
         this.audio.setVolume(this.gain);
         this.audio.setPlaybackRate(this.pitch);
+        if (this.audio instanceof THREE.PositionalAudio) {
+          this.audio.setRolloffFactor(this.rolloff);
+          this.audio.setRefDistance(this.dist);
+          this.audio.setDistanceModel(this.distanceModel);
+        }
       }
       if (this.rect) {
         var parts = this.rect.split(' '),
