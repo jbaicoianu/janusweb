@@ -615,7 +615,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         });
       } else if (type == 'websurface') {
         if (args.id) {
-          this.websurfaces[args.id] = args;
+          this.room.websurfaces[args.id] = args;
         }
       } else if (type == 'script') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
