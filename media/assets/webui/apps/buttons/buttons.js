@@ -143,12 +143,20 @@ elation.elements.define('janus-button-webar', class extends elation.elements.ui.
     super.create();
     this.view = janus.engine.client.view;
 
+    this.disabled = true;
     if ('xr' in navigator) {
       this.label = this.inactivelabel;
       this.xr = true;
       navigator.xr.isSessionSupported('immersive-ar').then(supported => {
         this.enabled = supported;
+        if (supported) {
+          this.disabled = false;
+        } else {
+          this.title = 'WebXR supported, but no AR devices found';
+        }
       });
+    } else {
+      this.title = 'WebXR is not supported in this browser';
     }
   }
   onactivate(ev) {
