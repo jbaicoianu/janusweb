@@ -490,6 +490,9 @@ ui-toggle>div {
   margin: .2em .8em .2em .4em;
   background: #333;
 }
+ui-toggle[hover]>div {
+  background: #444;
+}
 ui-toggle[align="left"]>div {
   order: -1;
 }
@@ -643,6 +646,9 @@ ui-slider>ui-slider-track {
   display: inline-block;
   cursor: pointer;
   position: relative;
+}
+ui-slider>ui-slider-track[hover] {
+  background: #46db76;
 }
 ui-slider-handle {
   display: block;
