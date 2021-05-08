@@ -116,6 +116,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
 
       this.cursor = new THREE.Sprite(new THREE.SpriteMaterial({color: 0xffffff, depthTest: false, depthWrite: false, transparent: true, map: null, fog: false}));
+      this.cursor.renderOrder = 100;
       this.engine.systems.world.scene['world-3d'].add(this.cursor);
 
 
