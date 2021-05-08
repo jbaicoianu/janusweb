@@ -681,6 +681,9 @@ console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
           overlay.hide();
         }
       }
+      if (document.pointerLockElement) {
+        document.exitPointerLock();
+      }
     }
     this.isVRActive = function() {
       return (typeof XRSession != 'undefined' && this.engine.client.xrsession instanceof XRSession);
