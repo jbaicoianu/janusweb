@@ -781,8 +781,9 @@ elation.require([
         // If we have a referrer, check to see if a reciprocal link exists.  If it does, use this as our spawn point.
         if (this.referrer) {
           let hasReciprocalLink = false;
-          if (roomdata.link) {
-            roomdata.link.forEach(link => {
+          let links = this.getObjectsByTagName('link');
+          if (links && links.length > 0) {
+            links.forEach(link => {
               let url = this.getFullRoomURL(link.url);
               if (url == this.referrer) {
                 this.spawnpoint.quaternion.copy(link.orientation.inverse());
