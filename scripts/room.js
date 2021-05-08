@@ -60,6 +60,7 @@ elation.require([
         'teleport': { type: 'bool', default: true, set: this.updateTeleport },
         'locked': { type: 'bool', default: false },
         'cursor_visible': { type: 'bool', default: true },
+        'cursor_opacity': { type: 'float', default: .8 },
         'use_local_asset': { type: 'string', set: this.updateLocalAsset },
         'col': { type: 'color', set: this.updateLocalAsset },
         'private': { type: 'bool', default: false },
@@ -227,7 +228,7 @@ elation.require([
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
       player.cursor_visible = (!janus.hmd ? elation.utils.any(this.cursor_visible, true) : false);
-      player.cursor_opacity = 1;
+      player.cursor_opacity = elation.utils.any(this.cursor_opacity, .8);
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
       //setTimeout(elation.bind(player, player.reset_position), 0);
     }
@@ -855,6 +856,7 @@ elation.require([
         this.properties.walk_speed = room.walk_speed || 1.8;
         this.properties.run_speed = room.run_speed || 5.4;
         this.properties.cursor_visible = room.cursor_visible;
+        this.properties.cursor_opacity = room.cursor_opacity;
 
         let cookieStorageID = 'cookies.' + this.url;
         if (cookieStorageID in localStorage) {
