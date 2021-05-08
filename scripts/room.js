@@ -67,7 +67,10 @@ elation.require([
         'server': { type: 'string' },
         'port': { type: 'int' },
         'rate': { type: 'int', default: 200 },
-        'voipserver': { type: 'string' },
+        'voip': { type: 'string', default: 'janus' },
+        'voipid': { type: 'string' },
+        'voiprange': { type: 'float', default: 1 },
+        'voipserver': { type: 'string', default: 'voip.janusxr.org' },
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
@@ -820,11 +823,14 @@ elation.require([
         if (room.cubemap_radiance_id) this.properties.cubemap_radiance_id = room.cubemap_radiance_id;
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
     
-        //this.setSkybox();
+        this.setSkybox();
 
         if (room.server) this.properties.server = room.server;
         if (room.port) this.properties.port = room.port;
         if (room.rate) this.properties.rate = room.rate;
+        if (room.voip) this.properties.voip = room.voip || 'janus';
+        if (room.voipid) this.properties.voipid = room.voipid;
+        if (room.voiprange) this.properties.voiprange = room.voiprange;
         if (room.voipserver) this.properties.voipserver = room.voipserver;
         if (room.gazetime) this.properties.gazetime = room.gazetime;
         if (typeof room.pbr != 'undefined') this.properties.pbr = room.pbr;
