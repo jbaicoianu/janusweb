@@ -877,6 +877,7 @@ elation.require([
 
         if (assets.scripts) {
           this.pendingScripts = 0;
+          this.pendingScriptMap = {};
           this.loadScripts(assets.scripts);
         }
         if (room.require) {
@@ -893,10 +894,8 @@ elation.require([
       //this.showDebug();
     }
     this.loadScripts = function(scripts) {
-      scripts.forEach(elation.bind(this, function(s) {
-        var scriptasset = this.getAsset('script', s.src);
-        this.pendingScripts++;
-
+      scripts.forEach(s => {
+        let scriptasset = this.getAsset('script', s.src);
         let script = scriptasset.getInstance();
         if (scriptasset.loaded) {
           // If the script is already part of the document, remove it and readd it so it's reevaluated
@@ -904,18 +903,22 @@ elation.require([
             script.parentNode.removeChild(script);
           }
 
-          var oldscript = script;
+          let oldscript = script;
           script = document.createElement('script');
           script.src = oldscript.src;
           document.head.appendChild(script);
         } else {
-          elation.events.add(script, 'asset_load', elation.bind(this, function() {
-            script.onload = elation.bind(this, this.doScriptOnload);
-            document.head.appendChild(script);
-          }));
+          if (!this.pendingScriptMap[s.src]) {
+            this.pendingScripts++;
+            this.pendingScriptMap[s.src] = true;;
+            elation.events.add(script, 'asset_load', () => {
+              script.onload = () => this.doScriptOnload();
+              document.head.appendChild(script);
+            });
+          }
         }
         this.roomscripts.push(script);
-      }));
+      });
     }
     this.getTranslator = function(url) {
       var keys = Object.keys(this.translators);
@@ -2391,7 +2394,7 @@ elation.require([
       let finished = false,
           newdeps = [];
 
-      deps.forEach(d => { if (!(d in foundmap)) { newdeps.push(d); foundmap[d] = false; } }); 
+      deps.forEach(d => { if (!foundmap[d]) { newdeps.push(d); foundmap[d] = false; } }); 
 
       this.pendingCustomElements = countMissing();
 
@@ -2426,7 +2429,7 @@ elation.require([
                   this.loadComponentList().then(components => {
                     if (components[k]) {
                       this.loadNewAsset('script', { src: components[k].url });
-                      this.loadScripts([{src: components[k].url}]);
+                      this._target.loadScripts([{src: components[k].url}]);
                     }
                   });
                 }
@@ -2436,7 +2439,7 @@ elation.require([
               this.loadComponentList().then(components => {
                 if (components[k]) {
                   this.loadNewAsset('script', { src: components[k].url });
-                  this.loadScripts([{src: components[k].url}]);
+                  this._target.loadScripts([{src: components[k].url}]);
                 }
               });
             }
