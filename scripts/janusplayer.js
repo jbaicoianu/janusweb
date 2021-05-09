@@ -357,9 +357,6 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         v.view_zdir.negate();
       }
 
-      if (this.gazecaster) {
-        this.gazecaster.update();
-      }
       if (this.gaze && this.gaze.object) {
         var now = performance.now();
         var gazetime = 1000;
@@ -420,7 +417,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.room = newroom;
       this.room.join();
       if (!this.gazecaster) {
-        this.gazecaster = newroom.createObject('raycaster', {});
+        this.gazecaster = newroom.createObject('raycaster', {persist: false});
         this.head.add(this.gazecaster._target);
         //this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
         elation.events.add(this.gazecaster._target, 'raycastenter', elation.bind(this, this.handleGazeEnter));
