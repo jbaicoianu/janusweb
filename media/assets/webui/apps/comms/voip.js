@@ -43,8 +43,10 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     let roomid = newroom.voipid || newroom.id;
 
     if (this.currentroom) { // && this.rooms[roomid] !== this.currentroom) {
+      if (this.currentroom.disconnect) {
         this.currentroom.disconnect();
-        this.removeChild(this.currentroom);
+      }
+      this.removeChild(this.currentroom);
     }
 
     if (newroom.private) {
@@ -54,7 +56,8 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     }
     // TODO - should pass voip server and range through to the actual VOIP adapter, and pick the right adapter based on our room's voip type
     if (!this.rooms[roomid]) {
-      this.rooms[roomid] = elation.elements.create('janus-voip-client-hifi', {
+      let voiptype = room.voip || 'janus';
+      this.rooms[roomid] = elation.elements.create('janus-voip-client-' + voiptype, {
         append: this,
         roomid: roomid,
       });
@@ -183,6 +186,9 @@ console.log('leave room and remove all occupants', this.room);
   handleUsernameChange(ev) {
     this.sfu.setClientId(ev.data);
   }
+  setInputStream(stream) {
+    this.sfu.adapter.setLocalMediaStream(stream);
+  }
 });
 elation.elements.define('janus-voip-client-hifi', class extends elation.elements.base {
   create() {
@@ -203,7 +209,11 @@ console.log('FIRE HIFI INIT');
     let currentPosition = new HighFidelityAudio.Point3D({ "x": 0, "y": 0, "z": 0 });
     let currentOrientation = new HighFidelityAudio.OrientationQuat3D({ x: 0, y: 0, z: 0, w: 1});
 
-    let initialHiFiAudioAPIData = new HighFidelityAudio.HiFiAudioAPIData({ position: currentPosition, orientationQuat: currentOrientation });
+    let initialHiFiAudioAPIData = new HighFidelityAudio.HiFiAudioAPIData({
+      position: currentPosition,
+      orientationQuat: currentOrientation,
+      providedUserID: player.getNetworkUsername(),
+     });
     let hifiCommunicator = new HighFidelityAudio.HiFiCommunicator({ initialHiFiAudioAPIData });
 /*
     let audioMediaStream = await navigator.mediaDevices.getUserMedia({audio: HighFidelityAudio.getBestAudioConstraints(), video: false});
@@ -260,11 +270,14 @@ console.log('new hifi client has existing input stream?', this.inputstream);
     hifiCommunicator.addUserDataSubscription(newUserDataSubscription);
     hifiCommunicator.onUsersDisconnected = (users) => this.handleUsersDisconnected(users);
 
+/*
     this.userData = {
       position: currentPosition,
       orientationQuat: currentOrientation,
       providedUserID: player.getNetworkUsername(),
-     };
+    };
+*/
+    this.userData = initialHiFiAudioAPIData;
     this.hifiCommunicator = hifiCommunicator;
   }
   async disconnect() {
@@ -300,7 +313,9 @@ console.log('new hifi client has existing input stream?', this.inputstream);
       this.userData.orientationQuat.z = orientation.z;
       this.userData.orientationQuat.w = orientation.w;
 
-      this.hifiCommunicator.updateUserDataAndTransmit(this.userData);
+      if (this.hifiCommunicator._currentHiFiAudioAPIData) {
+        this.hifiCommunicator.updateUserDataAndTransmit(this.userData);
+      }
     }
   }
   handleUserDataSubscription(data) {
@@ -542,7 +557,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
 
         let label = remoteuser.getElementsByTagName('playerlabel')[0];
         if (label) {
-          label.setAudioSource(audio);
+          label.setAudioSource(this.audio);
         }
       }
 
@@ -666,8 +681,8 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
        </ul>
     `, this);
 
-    this.elements.none.addEventListener('click', (ev) => this.handleSelectNone());
-    this.elements.audio.addEventListener('click', (ev) => this.handleSelectAudio(ev));
+    elation.events.add(this.elements.none, 'click', (ev) => this.handleSelectNone());
+    elation.events.add(this.elements.audio, 'click', (ev) => this.handleSelectAudio(ev));
     //this.elements.video.addEventListener('click', (ev) => this.handleSelectVideo());
 
     this.voipconfig = player.getSetting('voip');
@@ -676,7 +691,7 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
       //         We should use a session cookie-based timeout in addition to the localStorage settings
       //this.handleSelectAudio({detail: 1});
     }
-console.log('voip picker loaded config', this.voipconfig);
+    console.log('voip picker loaded config', this.voipconfig);
   }
   handleSelectNone() {
     console.log('selected none');
@@ -688,7 +703,7 @@ console.log('voip picker loaded config', this.voipconfig);
     document.dispatchEvent(new CustomEvent('voip-picker-select', { detail: false }));
     player.setSetting('voip', false);
     this.subpicker.stopUserMedia();
-    //if (!this.elements.none.active) this.elements.none.activate();
+    if (!this.elements.none.active) this.elements.none.activate();
     this.elements.audio.deactivate();
   }
   handleSelectAudio(ev) {
@@ -707,7 +722,7 @@ console.log('SELECTED', ev.detail);
     }
     this.appendChild(this.subpicker);
     this.subpicker.getUserMedia();
-    //if (!this.elements.audio.active) this.elements.audio.activate();
+    if (!this.elements.audio.active) this.elements.audio.activate();
     this.elements.none.deactivate();
   }
   handleSelectVideo() {
@@ -1033,6 +1048,7 @@ elation.elements.define('janus-voip-picker-mictest', class extends elation.eleme
     let barWidth = (canvas.width / bufferLength) * 2.5,
         x = 0;
 
+    ctx.fillStyle = '#4cb96f';
     for (var i = 0; i < bufferLength; i++) {
       let barHeight = dataArray[i];
       
@@ -1042,7 +1058,6 @@ elation.elements.define('janus-voip-picker-mictest', class extends elation.eleme
       var b = 50;
 
       //ctx.fillStyle = "rgb(" + r + "," + g + "," + b + ")";
-      ctx.fillStyle = '#4cb96f';
       ctx.fillRect(x, (canvas.height - barHeight) / 2, barWidth, barHeight);
 
       x += barWidth + 1;
