@@ -104,9 +104,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
 
-      navigator.xr.addEventListener('sessiongranted', (ev) => {
-        this.startXR();
-      });
+      if ('xr' in navigator) {
+        navigator.xr.addEventListener('sessiongranted', (ev) => {
+          this.startXR();
+        });
+      }
     }
     this.initButtons = function() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
