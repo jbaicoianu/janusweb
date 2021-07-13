@@ -233,7 +233,7 @@ elation.require([
       player.cursor_visible = (!janus.hmd ? elation.utils.any(this.cursor_visible, true) : false);
       player.cursor_opacity = elation.utils.any(this.cursor_opacity, .8);
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
-      //setTimeout(elation.bind(player, player.reset_position), 0);
+      setTimeout(elation.bind(player, player.reset_position), 0);
     }
     this.setHash = function(hash) {
       this.urlhash = hash;
@@ -273,6 +273,7 @@ elation.require([
 
       if (!this.skybox) {
         this.engine.systems.render.renderer.setClearAlpha(0);
+        return;
       } else {
         this.engine.systems.render.renderer.setClearAlpha(1);
       }
@@ -958,6 +959,12 @@ elation.require([
         elation.events.add(this, 'thing_think', this.onScriptTick);
 
         elation.events.fire({type: 'room_enable', data: this});
+
+        if (this.audionodes) {
+          this.audionodes.gain.connect(this.audionodes.listener.getInput());
+console.log('connect room audio to graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
+          this.fadeAudioIn(2);
+        }
       }
       if (this.engine.systems.admin) {
         elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
@@ -987,6 +994,27 @@ elation.require([
         elation.events.remove(this, 'dragover', this.handleDragOver);
         elation.events.remove(this, 'dragenter', this.handleDragOver);
         elation.events.remove(this, 'drop', this.handleDrop);
+
+        if (this.intervals) {
+          console.log('stop intervals:', this.intervals);
+          while (this.intervals.length > 0) {
+            clearInterval(this.intervals.pop());
+          }
+        }
+        if (this.timers) {
+          console.log('stop timers:', this.timers);
+          while (this.timers.length > 0) {
+            clearTimeout(this.timers.pop());
+          }
+        }
+
+        if (this.audionodes) {
+          this.fadeAudioOut(1);
+          setTimeout(() => {
+            this.audionodes.gain.disconnect(this.audionodes.listener.getInput());
+            console.log('disconnect room audio from graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
+          }, 1500);
+        }
       }
     }
     this.setTitle = function(title) {
@@ -1672,7 +1700,7 @@ elation.require([
       }
     }
     this.onClick = function(ev) {
-      if (!this.firsttouch) {
+      if (!this.firsttouch && room === this.getProxyObject()) {
         this.firsttouch = true;
         this.enable();
       }
@@ -1920,6 +1948,18 @@ elation.require([
           skybox_front_id:['property', 'skybox_front'],
           skybox_back_id: ['property', 'skybox_back'],
 
+          pendingScripts: ['property', 'pendingScripts'],
+          pendingCustomElements: ['property', 'pendingCustomElements'],
+          pendingCustomElementsMap: ['property', 'pendingCustomElementsMap'],
+          customElements: ['property', 'customElements'],
+
+          loaded: ['property', 'loaded'],
+          teleport: ['property', 'teleport'],
+          voip: ['property', 'voip'],
+          voipid: ['property', 'voipid'],
+          voiprange: ['property', 'voiprange'],
+          voipserver: ['property', 'voipserver'],
+
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
           loadNewAsset:  ['function', 'loadNewAsset'],
@@ -1950,6 +1990,8 @@ elation.require([
           addEventListener:    ['function', 'addEventListenerProxy'],
           removeEventListener: ['function', 'removeEventListenerProxy'],
           dispatchEvent:       ['function', 'dispatchEvent'],
+
+          getAudioNodes:       ['function', 'getAudioNodes'],
 
           onLoad:          ['callback', 'janus_room_scriptload'],
           update:          ['callback', 'janusweb_script_frame', null, this.janus.scriptframeargs],
@@ -2510,6 +2552,187 @@ console.log('dispatch to parent', event, this, event.target);
         ptr = ptr.parent;
       }
       return false;
+    }
+    this.reload = function() {
+      this.unload();
+      this.dispose();
+      this.load(this.url);
+    }
+    this.unload = function() {
+      for (let k in this.jsobjects) {
+        if (this.jsobjects[k].type != 'raycaster') {
+          console.log('destroy object', k, this.jsobjects[k]);
+          let child = this.jsobjects[k];
+          this.removeChild(child);
+          child.die();
+        }
+      }
+    }
+    this.getAudioNodes = function() {
+      return new Promise(async (resolve, reject) => {
+        if (this.audionodes) {
+          resolve(this.audionodes);
+        } else if (this.engine.systems.sound.canPlaySound) {
+          if (!this.audionodes) {
+            await this.createAudioNodes();
+          }
+          resolve(this.audionodes);
+        } else {
+          elation.events.add(this.engine.systems.sound, 'sound_enabled', async ev => {
+            if (!this.audionodes) {
+              await this.createAudioNodes();
+            }
+            resolve(this.audionodes);
+          });
+        }
+      });
+    }
+    this.createAudioNodes = async function() {
+      let listener = this.engine.systems.sound.getRealListener(),
+          gain = listener.context.createGain();
+      gain.gain.value = 0;
+      gain.connect(listener.getInput());
+      this.audionodes = {
+        listener: listener,
+        gain: gain,
+      };
+      this.fadeAudioIn(8);
+      return this.audionodes;
+    }
+    this.fadeAudioIn = function(time=4, value=1) {
+      if (this.audionodes) {
+        let gain = this.audionodes.gain,
+            ctx = this.audionodes.listener.context;
+        //gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.cancelScheduledValues(ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(value, ctx.currentTime + time);
+      }
+    }
+    this.fadeAudioOut = function(time=4, value=0) {
+      if (this.audionodes) {
+        let gain = this.audionodes.gain,
+            ctx = this.audionodes.listener.context;
+            currentgain = gain.gain.value;
+
+        gain.gain.cancelScheduledValues(ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(currentgain, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(value, ctx.currentTime + time);
+      }
+    }
+    this.getDebugStats = function() {
+      let stats = {
+        objects: {
+          empty: 0,
+          mesh: 0,
+          particle: 0,
+          camera: 0,
+        },
+        geometry: {
+          verts: 0,
+          faces: 0,
+          degenerate: 0,
+        },
+        materials: {
+          count: 0,
+          basic: 0,
+          pbr: 0,
+          shader: 0,
+          phong: 0,
+          lambert: 0,
+          particle: 0,
+        },
+        textures: {
+          count: 0,
+          resolutions: {},
+        },
+        lights: {
+          count: 0,
+          point: 0,
+          point_shadow: 0,
+          spot: 0,
+          spot_shadow: 0,
+          directional: 0,
+          directional_shadow: 0,
+        },
+      };
+      let materials = {},
+          textures = {};
+      const types = ['map', 'normalMap', 'emissionMap', 'displacementMap', 'roughnessMap', 'metalnessMap'];
+      this._target.objects['3d'].traverse(n => {
+        if (n instanceof THREE.Mesh) {
+          let geo = n.geometry,
+              mats = n.material;
+          stats.objects.mesh++;
+
+          if (geo.attributes && geo.attributes.position) {
+            stats.geometry.verts += geo.attributes.position.count;
+            stats.geometry.faces += (geo.index ? geo.index.count / 3 : geo.attributes.position.count / 3);
+          } else {
+            stats.geometry.degenerate++;
+            console.log('degenerate geometry?', geo);
+          }
+
+          if (!elation.utils.isArray(mats)) mats = [mats];
+          mats.forEach(mat => {
+            materials[mat.uuid] = mat;
+
+            types.forEach(type => {
+              if (mat[type]) {
+                let tex = mat[type];
+                textures[tex.uuid] = tex;
+              }
+            });
+          });
+        } else if (n instanceof THREE.Light) {
+          stats.lights.count++;
+          if (n instanceof THREE.PointLight) {
+            stats.lights.point++;
+            if (n.castShadow) stats.lights.point_shadow++;
+          } else if (n instanceof THREE.SpotLight) {
+            stats.lights.spot++;
+            if (n.castShadow) stats.lights.spot_shadow++;
+          } else if (n instanceof THREE.DirectionalLight) {
+            stats.lights.directional++;
+            if (n.castShadow) stats.lights.directional_shadow++;
+          }
+        } else if (n instanceof THREE.Camera) {
+          stats.objects.camera++;
+        } else if (n instanceof THREE.Group) {
+          stats.objects.empty++;
+        } else {
+console.log('UNKNOWN', n);
+        }
+      });
+      for (let k in materials) {
+        let mat = materials[k];
+        stats.materials.count++;
+        if (mat instanceof THREE.MeshBasicMaterial) {
+          stats.materials.basic++;
+        } else if (mat instanceof THREE.MeshStandardMaterial) {
+          stats.materials.pbr++;
+        } else if (mat instanceof THREE.ShaderMaterial) {
+          stats.materials.shader++;
+        } else if (mat instanceof THREE.MeshPhongMaterial) {
+          stats.materials.phong++;
+        } else if (mat instanceof THREE.MeshLambertMaterial) {
+          stats.materials.lambert++;
+        } else {
+console.log('unknown material', mat);
+        }
+      }
+      let texlist = Object.keys(textures);
+      if (texlist.length > 0) {
+        stats.textures.count = texlist.length;
+        for (let k in textures) {
+          let tex = textures[k],
+              image = tex.image,
+              res = image.width + 'x' + image.height;
+          if (!(res in stats.textures.resolutions)) stats.textures.resolutions[res] = [];
+          stats.textures.resolutions[res].push(image);
+        }
+      }
+      return stats;
     }
   }, elation.engine.things.generic);
 });
