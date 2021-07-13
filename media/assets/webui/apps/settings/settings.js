@@ -101,6 +101,7 @@ elation.elements.define('janus.ui.settings.panels', class extends elation.elemen
         'left': [],
         'bottomright': ['janus-ui-buttons'],
         'bottomleft': ['janus-comms-panel'],
+        'top': ['janus-voip-client'],
       }
     };
     let customlayouts = player.getSetting('ui.layouts');
