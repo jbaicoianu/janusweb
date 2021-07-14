@@ -457,7 +457,7 @@ elation.require([
         var hashurl = hashargs['janus.url'];
         if (hashurl && hashurl != this.properties.url && !this.loading) {
           this.setActiveRoom(hashurl, this.currentroom.url, true);
-        } else if (!hashurl && this.properties.url != this.homepage) {
+        } else if (!hashurl && this.properties.url != this.homepage && !document.location.hash) {
           this.setActiveRoom(this.homepage);
         }
       }
