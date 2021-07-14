@@ -194,22 +194,22 @@ elation.require([
       window.Vector = function(x, y, z, w) {
         if (x) {
           if (x._target && x._target instanceof THREE.Vector3) return x._target.clone();
-          if (x instanceof THREE.Vector3) return x.clone();
+          if (x instanceof THREE.Vector3) return new elation.physics.vector3().copy(x);
         }
         if (y === undefined) y = x;
         if (z === undefined) z = y;
 
-        return (w === undefined ? new THREE.Vector3(x, y, z) : new THREE.Vector4(x, y, z, w));
+        return (w === undefined ? new elation.physics.vector3(x, y, z) : new THREE.Vector4(x, y, z, w));
       }
       window.V = window.Vector;
       window.translate = function(v1, v2) {
-        return new THREE.Vector3().addVectors(v1, v2);
+        return new elation.physics.vector3().addVectors(v1, v2);
       }
       window.distance = function(v1, v2) {
         return v1.distanceTo(v2);
       }
       window.scalarMultiply = function(v, s) {
-        var ret = new THREE.Vector3().copy(v);
+        var ret = new elation.physics.vector3().copy(v);
         if (s instanceof THREE.Vector3) {
           ret.x *= s.x;
           ret.y *= s.y;
@@ -220,10 +220,10 @@ elation.require([
         return ret;
       }
       window.cross = function(v1, v2) {
-        return new THREE.Vector3().crossVectors(v1, v2);
+        return new elation.physics.vector3().crossVectors(v1, v2);
       }
       window.normalized = function(v) {
-        return new THREE.Vector3().copy(v).normalize();
+        return new elation.physics.vector3().copy(v).normalize();
       }
       window.equals = function(v1, v2) {
         return v1.equals(v2);
