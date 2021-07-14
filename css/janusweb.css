@@ -35,6 +35,7 @@ body.dark .ui_window:after {
   left: 0;
   right: 0;
   width: 100%;
+  height: 100%;
 }
 .janusweb_websurface {
   width: 1000px;
