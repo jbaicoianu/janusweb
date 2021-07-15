@@ -177,6 +177,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (videoasset) {
         this.videoasset = videoasset;
         texture = videoasset.getInstance();
+        if (!texture.image) {
+          videoasset.load();
+        }
         if (videoasset.sbs3d) {
           //texture.repeat.set(0.5, 1);
           this.texture_repeat.set(0.5, 1);
@@ -1118,16 +1121,28 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.videoasset && this.videotexture && !this.image_id) {
           var texture = this.videotexture;
           var video = texture.image;
-          if (video) {
+/*
+          if (video && !video.playing) {
             video.src = this.videoasset.src;
             if (this.lastVideoTime) {
               video.currentTime = this.lastVideoTime;
             }
           }
-          this.videoasset.play();
+*/
+          //this.videoasset.play();
           //console.log('reload video', video.src, this.videoasset.hls, this.videoasset.auto_play);
-          if (!video.playing && this.videoasset.auto_play) {
-            video.play();
+          if (video.paused) {
+            if (this.videoasset.auto_play) {
+              video.play()
+                .then(() => console.log('Video autoplay start', video))
+                .catch(e => {
+                  var strerr = e.toString();
+                  if (strerr.indexOf('NotSupportedError') == 0 && this.hls !== false) {
+                    console.log('Attempting to init hls', this.videoasset)
+                    this.videoasset.initHLS();
+                  }
+                });
+            }
           } else if (video.muted) {
             video.muted = false;
             video.play();
