@@ -617,8 +617,14 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.handleCollide = function() {
-      this.activate();
-      player.vel = V(0,0,0);
+      // Only activate portal if the player is walking towards it
+      let fwd = this.localToWorld(V(0,0,1)).sub(this.localToWorld(V(0,0,0)));
+      let dot = fwd.dot(normalized(player.vel));
+      if (dot < 0) {
+        this.activate();
+        // FIXME - we should be transforming the user's velocity into the new room's coordinate space, but right now a portal isn't aware of what's on the other side
+        //player.vel = V(0,0,0);
+      }
     }
   }, elation.engine.things.janusbase);
 });
