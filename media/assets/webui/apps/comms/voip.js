@@ -163,6 +163,11 @@ console.log('leave room and remove all occupants', this.room);
     elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
     elation.events.fire({type: 'init', element: this});
   }
+  disconnect() {
+    if (this.sfu) {
+      this.sfu.adapter.disconnect();
+    }
+  }
   initRoom(room) {
     let sfu = this.sfu;
     if (!room.private) {
