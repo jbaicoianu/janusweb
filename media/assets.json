@@ -101,7 +101,8 @@
 
   { "assettype":"model", "name":"avatar", "src":"assets/avatar.obj", "tex0": "avatar_tex0" },
   { "assettype":"model", "name":"avatar_head", "src":"assets/avatar_head.obj", "tex0": "avatar_head_tex0" },
-  { "assettype":"model", "name":"avatar_gltf", "src":"assets/Beta.gltf/Beta.gltf" },
+  { "assettype":"model", "name":"avatar_gltf", "src":"assets/janus-avatar-base.glb" },
+  { "assettype":"model", "name":"avatar_animations", "src":"assets/janus-avatar-animations.glb" },
 
   { "assettype":"image", "name":"avatar_tex0", "src":"assets/avatar.png", "preload": false },
   { "assettype":"image", "name":"avatar_head_tex0", "src":"assets/avatar_head.png", "preload": false },
