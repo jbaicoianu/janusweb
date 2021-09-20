@@ -961,6 +961,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             for (let oldchunkname in chunkreplace) {
               let newchunkname = chunkreplace[oldchunkname];
               shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+              shader.fragmentShader = shader.fragmentShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
             }
           }
         }
