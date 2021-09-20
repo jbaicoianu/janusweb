@@ -27,7 +27,7 @@ elation.require(['engine.things.label'], function() {
         'metalness':       { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
         'envmap_id':       { type: 'string', set: this.updateMaterial, comment: 'Environment map texture ID (overrides skybox reflections)' },
       });
-      this.emptygeometry = new THREE.Geometry();
+      this.emptygeometry = new THREE.BufferGeometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
     }
     this.createObject3D = function() {
@@ -195,7 +195,7 @@ elation.require(['engine.things.label'], function() {
    }
    this.setMultilineText = function(text) {
       var lines = text.split('\n');
-      var geometry = new THREE.Geometry();
+      var geometry = new THREE.BufferGeometry();
       var linematrix = new THREE.Matrix4();
       var lineoffset = 0;
       var lineheight = 0;
