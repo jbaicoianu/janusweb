@@ -172,6 +172,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
 
       elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
+      elation.engine.assets.setDracoPath(elation.config.get('janusweb.datapath') + 'lib/draco/');
     }
     this.createUI = function() {
       if (!this.ui) {
