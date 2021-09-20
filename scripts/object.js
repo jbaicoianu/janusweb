@@ -150,6 +150,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }), 0);
         this.jsparts.updateParts();
         this.assetloaded = true;
+        if (this.modelasset) {
+          this.initAnimations(this.modelasset.animations);
+          if (this.animations && this.anim_id && this.animations[this.anim_id]) {
+            console.log('start animation', this);
+            this.animations[this.anim_id].play();
+          }
+        }
         if (this.loadingindicator) {
           this.loadingindicator.die();
         }
@@ -279,6 +286,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           this.refresh();
         }
       }
+      if (this.animationmixer) {
+        //this.animationmixer.setTime(new Date().getTime() / 1000);
+        this.animationmixer.update(ev.data);
+        this.refresh();
+      }
     }
     this.assignTextures = function() {
       //console.log('assign textures', this.name, this.objects['3d']);
@@ -319,6 +331,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (!modelasset || modelasset.name != this.janusid) {
           modelasset = this.getAsset('model', this.janusid, true);
           this.modelasset = modelasset;
+
+          if (modelasset.animations) {
+            this.initAnimations(modelasset.animations);
+          }
+
         }
         if (modelasset.tex) {
           image_id = modelasset.tex;
@@ -559,8 +576,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (srcfactors[this.properties.blend_dest]) {
         blend_dest = srcfactors[this.properties.blend_dest];
       }
-
-      this.extractAnimations(this.objects['3d']);
 
       var scene = this.engine.systems.world.scene['world-3d'];
       if (!this.hasalpha) this.hasalpha = {};
