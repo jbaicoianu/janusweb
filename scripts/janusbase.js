@@ -129,7 +129,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.removeCollider();
       if (!(this.collidable || this.pickable) || !this.objects['dynamics']) return;
       var collision_id = this.collision_id || this.collider_id;
-      var collision_scale = this.scale.clone();
+      var collision_scale = V().copy(this.scale);
       if (this.collision_scale) {
         collision_scale.multiply(this.collision_scale);
       }
