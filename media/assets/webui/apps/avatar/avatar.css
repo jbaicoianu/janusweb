@@ -1,8 +1,6 @@
 janus-avatar-picker {
   display: block;
   width: 100%;
-  max-width: 40em;
-  text-align: center;
 }
 janus-avatar-picker ui-list {
   height: 20vh;
@@ -47,4 +45,9 @@ janus-avatar-picker-item h2 {
 }
 janus-avatar-picker ui-button {
   font-size: 2em;
+}
+janus-avatar-picker ui-tab iframe {
+  width: 100%;
+  height: 38em;
+  border: 0;
 }

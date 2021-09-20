@@ -45,9 +45,16 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
   }
   create() {
     let tpl = `
-      <collection-jsonapi id="avatarlist" endpoint="${this.src}"></collection-jsonapi>
-      <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
-      <ui-button name="confirm" disabled="1">Confirm</ui-button>
+      <ui-tabs>
+        <ui-tab label="Chibis">
+          <collection-jsonapi id="avatarlist" endpoint="${this.src}"></collection-jsonapi>
+          <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
+          <ui-button name="confirm" disabled="1">Confirm</ui-button>
+        </ui-tab>
+        <ui-tab label="Ready Player Me">
+          <iframe src="https://demo.readyplayer.me/avatar">
+        </ui-tab>
+      </ui-tabs>
     `;
     if (!this.hidereset) {
       tpl += '<ui-button name="reset">Reset</ui-button>';
@@ -66,6 +73,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
     let observer = new IntersectionObserver(ev => this.handleIntersectionChange(ev), { root: document, rootMargin: '0px', threshold: threshold });
     observer.observe(this);
     document.addEventListener('scroll', ev => this.handleScroll(ev));
+    window.addEventListener('message', ev => this.handleWindowMessage(ev));
   }
   selectAvatar(avatar) {
     let items = this.elements.avatarlist.items,
@@ -137,6 +145,24 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
   }
   handleScroll(ev) {
     this.updatePreviewPosition();
+  }
+  handleWindowMessage(ev) {
+    if (ev.origin.match(/https:\/\/.*\.readyplayer\.me/)) {
+      let avatarurl = ev.data;
+      let avatarstr = `
+<FireBoxRoom>
+<assets>
+<assetobject id="body" src="${avatarurl}" />
+<assetobject id="avatar_animations" src="https://assets.metacade.com/james/readyplayerme/animations.glb" />
+</assets>
+<room>
+<ghost body_id="body" />
+</room>
+</FireBoxRoom>
+`;
+console.log(avatarstr);
+player.setAvatar(avatarstr);
+    }
   }
 });
 elation.elements.define('janus-avatar-picker-item', class extends elation.elements.ui.item {
