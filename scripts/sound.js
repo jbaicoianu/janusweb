@@ -131,6 +131,9 @@ elation.require(['janusweb.janusbase'], function() {
           await this.createAudio();
         }
         if (this.audio && this.audio.buffer) { //this.audio.source && this.audio.source.buffer) {
+          if (this.audio.source) {
+            this.audio.stop();
+          }
           this.audio.setVolume(this.gain);
           if (this.audio.isPlaying) {
             this.audio.source.currentTime = 0;
