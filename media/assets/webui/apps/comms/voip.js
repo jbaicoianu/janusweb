@@ -371,7 +371,7 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
     this.defineAttribute('userid', { type: 'string', });
     this.defineAttribute('muted', { type: 'boolean', default: true, });
     this.defineAttribute('speaking', { type: 'boolean', default: false });
-
+    this.defineAttribute('threshold', { type: 'float', default: .4 });
   }
   create() {
     this.userid = player.getNetworkUsername();
@@ -433,6 +433,26 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
 */
     this.stream = data;
 
+    let listener = player.engine.systems.sound.getRealListener();
+    let context = listener.context;
+    let analyser = context.createAnalyser();
+    let source = context.createMediaStreamSource(this.stream);
+    source.connect(analyser);
+
+    analyser.fftSize = 32;
+    this.analyser = analyser;
+    this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
+
+    setInterval(() => {
+      analyser.getByteFrequencyData(this.audiobuffer);
+      let sum = 0;
+      for (let i = 0; i < this.audiobuffer.length; i++) {
+        sum += this.audiobuffer[i];
+      }
+      let avg = sum / this.audiobuffer.length;
+      this.updateVolume(avg / 100);
+    }, 20);
+
 /*
     player.createObject('object', {
       id: 'cone',
@@ -462,14 +482,16 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
     this.averagevolume = (percent * .6 + this.averagevolume * .4)
     if (isNaN(this.averagevolume)) this.averagevolume = 0;
     //this.style.opacity = percent;
-    if (this.averagevolume > .1) {
+    if (this.averagevolume > this.threshold) {
       this.speaking = true;
+      player.defaultanimation = 'speak';
       if (this.colorreset) {
         clearTimeout(this.colorreset);
       } 
       this.colorreset = setTimeout(() => {
         this.speaking = false;
         this.colorreset = false;
+        player.defaultanimation = 'idle';
       }, 200);
     }
   }
@@ -484,6 +506,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       'hasvideo': { type: 'boolean', default: false },
       'averagevolume': { type: 'float', default: 0 },
       'speaking': { type: 'boolean', default: false },
+      'threshold': { type: 'float', default: .4 },
     });
     this.lastposition = V();
     setTimeout(() => this.setAttribute('active', true), 100);
@@ -525,6 +548,26 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       this.audio = audio;
       this.appendChild(audio);
       this.hasaudio = true;
+
+      let listener = player.engine.systems.sound.getRealListener();
+      let context = listener.context;
+      let analyser = context.createAnalyser();
+      let source = context.createMediaStreamSource(audio.srcObject);
+      source.connect(analyser);
+
+      analyser.fftSize = 32;
+      this.analyser = analyser;
+      this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
+
+      setInterval(() => {
+        analyser.getByteFrequencyData(this.audiobuffer);
+        let sum = 0;
+        for (let i = 0; i < this.audiobuffer.length; i++) {
+          sum += this.audiobuffer[i];
+        }
+        let avg = sum / this.audiobuffer.length;
+        this.updateVolume(avg / 100);
+      }, 20);
     }
 
     let remoteuser = janus.network.remoteplayers[this.id];
@@ -603,7 +646,9 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
 
       elation.events.add(this.remoteuser, 'update', ev => {
         // Store user's last known position so we know where they were once they leave
-        this.remoteuser.localToWorld(this.lastposition.set(0,0,0));
+        if (this.lastposition) {
+          this.remoteuser.localToWorld(this.lastposition.set(0,0,0));
+        }
       });
     }
 
@@ -658,7 +703,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
     if (isNaN(this.averagevolume)) this.averagevolume = 0;
     //this.style.opacity = percent;
 //console.log('update volume', percent, this);
-    if (this.averagevolume > .1) {
+    if (this.averagevolume > this.threshold) {
       this.speaking = true;
       if (this.colorreset) {
         clearTimeout(this.colorreset);
@@ -669,10 +714,8 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       }, 200);
     }
 
-    let scale = 1 + this.averagevolume / 2.5;
     if (this.label3d) {
       this.label3d.setAudioVolume(this.averagevolume);
-      this.label3d.scale.set(scale, scale, scale);
     }
   }
 });

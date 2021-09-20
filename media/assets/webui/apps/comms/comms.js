@@ -290,6 +290,7 @@ elation.elements.define('janus-comms-voip', class extends elation.elements.base 
 janus.registerElement('playerlabel', {
   player_name: '',
   font: 'monospace',
+  threshold: .4,
 
   create() {
     this.currentcolor = V(255,255,255);
@@ -308,8 +309,8 @@ janus.registerElement('playerlabel', {
       //collision_id: 'cube',
       collision_scale: V(.85,7,.1),
       collision_pos: V(0,-3,0),
-      //collidable: true,
-      //pickable: true,
+      collidable: false,
+      pickable: true,
       scale: V(2,.25,1),
       image_id: imageid,
       billboard: 'y',
@@ -375,7 +376,9 @@ janus.registerElement('playerlabel', {
     console.log('got an audio source', source);
   },
   setAudioVolume(volume) {
-    if (volume > .1) {
+    let scale = 1 + (volume > this.threshold ? volume / 2.5 : 0);
+    this.scale.set(scale, scale, scale);
+    if (volume > this.threshold) {
       this.label.col = '#0f0';
       if (this.colorreset) {
         clearTimeout(this.colorreset);
