@@ -1,4 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.janusxrplayer', 'janusweb.configuration', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
+elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.janusxrplayer', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
 
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
@@ -96,7 +96,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.systems.push("ai");
       this.enginecfg.systems.push("world");
       //if (hashargs.admin == 1) {
-        this.enginecfg.systems.push("admin");
+        //this.enginecfg.systems.push("admin");
       //}
       this.enginecfg.systems.push("render");
       this.enginecfg.systems.push("sound");
