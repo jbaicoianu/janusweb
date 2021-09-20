@@ -1104,9 +1104,11 @@ console.log('change color', obj.col, vec);
       }
     }
     this.history.push({type: 'addobjects', objects: objects});
+    /*
     if (janus.engine.systems.admin.hidden) {
       janus.engine.systems.controls.requestPointerLock();
     }
+    */
   }
   handleThingAdd(ev) {
     setTimeout(() => {
