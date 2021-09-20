@@ -2,7 +2,18 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
   elation.requireCSS('janusweb.janusplayer');
 
   elation.component.add('engine.things.janusplayer', function() {
-    this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusxr.org/media/assets/hoverscreen.obj" mtl="https://web.janusxr.org/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" screen_name="screen_Cube.004">\n      <Object id="screen" js_id="head" />\n    </Ghost>\n  </Room>\n</FireBoxRoom>'
+    //this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusxr.org/media/assets/hoverscreen.obj" mtl="https://web.janusxr.org/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" screen_name="screen_Cube.004">\n      <Object id="screen" js_id="head" />\n    </Ghost>\n  </Room>\n</FireBoxRoom>'
+    this.defaultavatar = `
+    <FireBoxRoom>
+    <assets>
+    <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
+    <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
+    </assets>
+    <room>
+    <ghost js_id="205" id="LivelyMaurita613" scale=".01 .01 .01" col="#e0d5a1" body_id="body" />
+    </room>
+    </FireBoxRoom>
+    `;
 
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
@@ -15,9 +26,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         cursor_visible: {type: 'boolean', default: true, set: this.toggleCursorVisibility},
         cursor_opacity: {type: 'float', default: 1.0, set: this.toggleCursorVisibility},
         usevoip: {type: 'boolean', default: false },
+        defaultanimation: {type: 'string', default: 'idle' },
         collision_radius: {type: 'float', default: .25, set: this.updateCollider},
         party_mode: { type: 'boolean', set: this.updatePartyMode },
         avatarsrc: { type: 'string' },
+        cameraview: { type: 'string', default: 'firstperson' },
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -32,7 +45,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.view.container, 'touchend', elation.bind(this, this.handleTouchEnd));
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
-        'voip_active': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.activateVOIP)],
+        'toggle_view': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
         //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
         //'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
       });
@@ -122,11 +135,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       this.getAvatarData().then(avatar => {;
         if (avatar && false) { // FIXME - self avatar is buggy so it's disabled
+/*
           this.ghost = this.createObject('ghost', {
             ghost_id: this.getUsername(),
             avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
             showlabel: false
           });
+*/
         }
       });
 
@@ -265,6 +280,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           }
         }
         if (this.ghost) {
+          this.ghost.setHeadOrientation(this.head.orientation, true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
             this.ghost.head.orientation.copy(this.head.orientation);
@@ -439,15 +455,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.ghost.die();
         this.ghost = false;
         this.visible = false;
-      } else if (!this.ghost && this.room.selfavatar) {
+      } else if (!this.ghost) { // && this.room.selfavatar) {
         // FIXME - self avatar is buggy so it's disabled
         this.getAvatarData().then(avatar => {
           if (avatar) {
             this.ghost = this.createObject('ghost', {
               ghost_id: this.getUsername(),
               avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
-              showlabel: false
+              showlabel: false,
             });
+            this.ghost.orientation.set(0,1,0,0);
           }
         });
         this.visible = true;
@@ -553,6 +570,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
         collision_radius: ['property', 'collision_radius'],
 
+        currentavatar: ['property', 'currentavatar'],
+        defaultanimation: ['property', 'defaultanimation'],
+
         localToWorld:  ['function', 'localToWorld'],
         worldToLocal:  ['function', 'worldToLocal'],
         appendChild:   ['function', 'appendChild'],
@@ -604,11 +624,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.getAvatarData().then(avatardata => {
         // FIXME - self avatar is broken and weird right now, so it's disabled
         if (avatardata && this.room.selfavatar) {
+/*
           this.ghost = this.createObject('ghost', {
             ghost_id: this.getUsername(),
             avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
             showlabel: false
           });
+*/
         }
       });
 
@@ -632,21 +654,24 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return voipdata;
     }
     this.getAnimationID = function() {
-      var animid = 'idle';
-      if (this.controlstate.run) {
-        animid = 'run';
-      } else if (this.controlstate.move_forward) {
-        animid = 'walk';
-      } else if (this.controlstate.move_left) {
-        animid = 'walk_left';
+      var animid = this.defaultanimation;
+      let running = this.controlstate.run;
+
+      if (this.controlstate.move_left) {
+        animid = (running ? 'run' : 'walk_left');
       } else if (this.controlstate.move_right) {
-        animid = 'walk_right';
+        animid = (running ? 'run' : 'walk_right');
+      } else if (this.controlstate.move_forward) {
+        animid = (running ? 'run' : 'walk');
       } else if (this.controlstate.move_backward) {
-        animid = 'walk_back';
+        animid = (running ? 'run' : 'walk_back');
       } else if (document.activeElement && this.properties.janus.chat && document.activeElement === this.properties.janus.chat.input.inputelement) {
         animid = 'type';
       } else if (this.hasVoipData()) {
         animid = 'speak';
+      }
+      if (this.ghost && this.ghost.body) {
+        this.ghost.body.anim_id = animid;
       }
       return animid;
     }
@@ -795,7 +820,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (this.collision_radius > 0) {
           this.setCollider('sphere', {
             radius: this.collision_radius,
-            offset: V(0, this.collision_radius, 0)
+            length: this.height,
+            //offset: V(0, this.collision_radius, 0)
           });
         } else {
           this.removeCollider();
@@ -1036,6 +1062,21 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         round: true,
         shader_id: 'defaultportal',
       });
+
+      // FIXME - should only set this if we have an active portal animation, and we should use the animation's duration for our timeout
+      this.defaultanimation = 'portal';
+      setTimeout(() => this.defaultanimation = 'idle', 3000);
+    }
+    this.toggleCamera = function(ev) {
+      if (ev.value == 1) {
+        if (this.cameraview == 'firstperson') {
+          this.cameraview = 'thirdperson';
+          this.camera.position.z = 2;
+        } else {
+          this.cameraview = 'firstperson';
+          this.camera.position.z = 0;
+        }
+      }
     }
   }, elation.engine.things.player);
 });
