@@ -319,9 +319,9 @@ console.log('[MultiplayerManager] part', room.url);
       var roomId = data.roomId;
 
       var room = this.rooms[roomId] || this.activeroom;
-console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
       var spawnpos = (data.position && data.position.pos ? data.position.pos.split(" ").map(parseFloat) : [0,0,0]);
+      //console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room, spawnpos);
       this.remoteplayers[userId] = room.spawn('remoteplayer', userId, { position: spawnpos, player_id: userId, player_name: userId, pickable: false, collidable: false, janus: this.janusweb, room: room});
       var remote = this.remoteplayers[userId];
 
@@ -330,6 +330,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
       // If a new player spawned, let's send an avatar update ASAP
       this.updateAvatar();
+      remote.start();
       return remote;
     }
     this.updateAvatar = function() {
@@ -390,6 +391,7 @@ console.log('[MultiplayerManager] spawn remote guy', userId, roomId, room);
 
         if (remote.room !== room) {
           remote.setRoom(room);
+          remote.start();
         }
 
         remote.updateData(movedata);
