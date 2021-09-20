@@ -174,24 +174,25 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               let remove = [];
               collider.traverse(n => {
                 // Ignore collider if it's too high-poly
-                if (n instanceof THREE.Mesh && !((n.geometry instanceof THREE.BufferGeometry && n.geometry.attributes.position.count <= 65536) ||
-                      (n.geometry instanceof THREE.Geometry && n.geometry.vertices.length <= 65536))) {
-                  console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
-                  elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
-                  remove.push(n);
-                } else {
-                  if (n.material) {
-                    n.material = new THREE.MeshPhongMaterial({
-                      color: collidercolor,
-                      opacity: .2,
-                      transparent: true,
-                      emissive: 0x444400,
-                      alphaTest: .01,
-                      depthTest: false,
-                      depthWrite: false
-                    });
+                if (n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry) {
+                  if (n.geometry.attributes.position.count > 65536) {
+                    console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
+                    elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
+                    remove.push(n);
+                  } else {
+                    if (n.material) {
+                      n.material = new THREE.MeshPhongMaterial({
+                        color: collidercolor,
+                        opacity: .2,
+                        transparent: true,
+                        emissive: 0x444400,
+                        alphaTest: .01,
+                        depthTest: false,
+                        depthWrite: false
+                      });
+                    }
+                    n.userData.thing = this;
                   }
-                  n.userData.thing = this;
                 }
               });
               if (remove.length > 0) {
