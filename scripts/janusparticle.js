@@ -461,8 +461,7 @@ elation.require(['janusweb.janusbase'], function() {
         mesh.traverse(function(n) {
           if (n && n.geometry) {
             var geo = n.geometry;
-            if (geo instanceof THREE.Geometry) {
-            } else if (geo instanceof THREE.BufferGeometry) {
+            if (geo instanceof THREE.BufferGeometry) {
               var positions = geo.attributes.position.array;
               for (var i = 0; i < positions.length; i += 3) {
                 vertices.push(new THREE.Vector3(positions[i] * scale.x, positions[i+1] * scale.y, positions[i+2] * scale.z));
