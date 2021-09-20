@@ -80,7 +80,8 @@ elation.require(['engine.things.generic'], function() {
         var websurface = this.room.websurfaces[this.properties.websurface_id];
         if (websurface) {
           var width = websurface.width || 1024,
-              height = websurface.height || 768;
+              height = websurface.height || 768,
+              border = elation.utils.any(websurface.border, true);
 
           var iframe = elation.html.create('iframe');
           iframe.src = this.url;
@@ -92,6 +93,10 @@ elation.require(['engine.things.generic'], function() {
           div.style.height = height + 'px';
           iframe.style.width = width + 'px';
           iframe.style.height = height + 'px';
+
+          if (!border) {
+            iframe.style.border = 0;
+          }
 
           var obj = new THREE.CSS3DObject(div);
           obj.scale.set(1/width, 1/height, 1);
