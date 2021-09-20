@@ -75,9 +75,13 @@ elation.require(['janusweb.janusbase'], function() {
         this.geometry.computeBoundingSphere();
       }
     },
-    setLine(offset, start, end) {
+    setLine(offset, start, end, color) {
       this.positions[offset * 2] = start;
       this.positions[offset * 2 + 1] = end;
+      if (color) {
+        this.colors[offset * 2] = color;
+        this.colors[offset * 2 + 1] = color;
+      }
     },
     getLine(idx) {
       let line = {
