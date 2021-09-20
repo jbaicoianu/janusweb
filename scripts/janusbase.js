@@ -373,6 +373,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           rotate_deg_per_sec:  [ 'property', 'rotate_deg_per_sec'],
           rotate_axis:  [ 'property', 'rotate_axis'],
 
+          anim_id:    ['property', 'anim_id'],
+          anim_transition_time:    ['property', 'anim_transition_time'],
+
           fwd:      ['property', 'zdir'],
           xdir:     ['property', 'xdir'],
           ydir:     ['property', 'ydir'],
@@ -1013,16 +1016,38 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.setAnimation(this.anim_id);
     }
     this.setAnimation = function(anim_id) {
-      if (!this.activeanimation || anim_id != this.anim_id) {
+      if (!this.activeanimation || anim_id != this.activeanimation._clip.name) {
         if (!this.animationmixer) return;
         if (this.activeanimation) {
           //console.log('pause active animation', this.activeanimation);
           // TODO - interpolating between actions would make transitions smoother
-          this.activeanimation.stop();
+          //this.activeanimation.stop();
+          //this.activeanimation.fadeOut(.5);
+          let oldaction = this.activeanimation;
+          if (!this.fadetimers) this.fadetimers = {};
+          let clipname = oldaction._clip.name;
+          if (!this.fadetimers[clipname]) {
+            // FIXME - for some reason, THREE.AnimationAction.fadeIn() / fadeOut() / etc are just causing the animations to stop, so we'll handle fading ourselves
+            this.fadetimers[clipname] = setInterval(() => {
+              oldaction.weight *= .9;
+              if (oldaction.weight <= .001) {
+                oldaction.weight = 0;
+                oldaction.stop();
+                clearTimeout(this.fadetimers[clipname]);
+                this.fadetimers[clipname] = false;
+              }
+            }, 20);
+          }
         }
-        if (this.animationactions && this.animationactions[anim_id]) {
-          var action = this.animationactions[anim_id];
-          //console.log('found action!', anim_id, action);
+        if (this.animations && this.animations[anim_id]) {
+          var action = this.animations[anim_id];
+          let clipname = action._clip.name;
+          if (this.fadetimers && this.fadetimers[clipname]) {
+            clearTimeout(this.fadetimers[clipname]);
+            this.fadetimers[clipname] = false;
+          }
+          action.weight = 1;
+          action.reset();
           action.play();
           this.activeanimation = action;
         }
