@@ -910,6 +910,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.color) {
           m.color.copy(oldmat.color);
         }
+        m.transmission = oldmat.transmission;
+        m.transmissionMap = oldmat.transmissionMap;
         m.transparent = m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
         m.skinning = oldmat.skinning;
@@ -918,8 +920,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
         if (oldmat.roughness !== undefined) m.roughness = oldmat.roughness;
         if (oldmat.roughnessMap !== undefined) m.roughnessMap = oldmat.roughnessMap;
-        if (oldmat.clearCoat !== undefined) m.clearCoat =  oldmat.clearCoar;
-        if (oldmat.clearCoatRoughness !== undefined) m.clearCoatRoughness = oldmat.clearCoatRoughness;
+        if (oldmat.clearcoat !== undefined) m.clearcoat =  oldmat.clearcoat;
+        if (oldmat.clearcoatMap !== undefined) m.clearcoatMap = oldmat.clearcoatMap;
+        if (oldmat.clearcoatRoughness !== undefined) m.clearcoatcoughness = oldmat.clearcoatRoughness;
+        if (oldmat.clearcoatRoughnessMap !== undefined) m.clearcoatRoughnessMap = oldmat.clearcoatRoughnessMap;
+        if (oldmat.clearcoatNormalMap !== undefined) m.clearcoatNormalMap = oldmat.clearcoatNormalMap;
+        if (oldmat.clearcoatNormalScale !== undefined) m.clearcoatNormalScale = oldmat.clearcoatNormalScale;
+        if (oldmat.attenuationTint !== undefined) m.attenuationTint = oldmat.attenuationTint;
+        if (oldmat.attenuationDistance !== undefined) m.attenuationDistance = oldmat.attenuationDistance;
+        if (oldmat.thickness !== undefined) m.thickness = oldmat.thickness;
+        if (oldmat.thicknessMap !== undefined) m.thicknessMap = oldmat.thicknessMap;
 
         m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
