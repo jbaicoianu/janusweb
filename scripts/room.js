@@ -27,6 +27,7 @@ elation.require([
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true },
+        'skybox_hdri': { type: 'string' },
         'skybox_left': { type: 'string' },
         'skybox_right': { type: 'string' },
         'skybox_up': { type: 'string' },
@@ -290,7 +291,16 @@ elation.require([
       }
 
       var hasSkybox = (this.skybox_left || this.skybox_right || this.skybox_top || this.skybox_bottom || this.skybox_left || this.skybox_right) != undefined;
-      if (hasSkybox) {
+      if (this.skybox_hdri) {
+        let hdri = this.getAsset('image', this.skybox_hdri);
+        var assets = [];
+        elation.events.add(hdri, 'asset_load', ev => {
+          this.skyboxtexture = ev.target._texture;
+          if (this.janus.currentroom === this) {
+            this.skyboxobj.setTexture(this.skyboxtexture);
+          }
+        });
+      } else if (hasSkybox) {
         var assets = [
           this.getAsset('image', this.skybox_right || 'black'),
           this.getAsset('image', this.skybox_left || 'black'),
@@ -815,6 +825,7 @@ elation.require([
         setTimeout(() => this.setPlayerPosition(), 0);
 
         if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
+        if (room.skybox_hdri) this.properties.skybox_hdri = room.skybox_hdri;
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
         if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
         if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
@@ -1941,6 +1952,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           pickable:      ['property', 'pickable'],
 
           skybox:         ['property', 'skybox'],
+          skybox_hdri:    ['property', 'skybox_hdri'],
           skybox_left_id: ['property', 'skybox_left'],
           skybox_right_id:['property', 'skybox_right'],
           skybox_up_id:   ['property', 'skybox_up'],
