@@ -169,6 +169,25 @@ elation.component.add('engine.things.remoteplayer', function() {
       this.mouth.audio.gain.gain.value = volume;
     }
   }
+  this.setSpeakingVolume = function(volume) {
+    // FIXME - Quick hack to flap our mouth based on our speaking volume if we have blendshapes
+    // Probably only works with Ready Player Me avatars
+
+    if (this.body) {
+      this.body.setMorphTargetInfluence('mouthOpen', volume);
+    }
+  }
+  this.blink = function() {
+    if (this.body) {
+      this.body.setMorphTargetInfluence('eyesClosed', 1);
+      setTimeout(() => {
+        this.body.setMorphTargetInfluence('eyesClosed', 0);
+      }, 100);
+    }
+    setTimeout(() => {
+      this.blink();
+    }, 2500 + Math.random() * 8500);
+  }
 }, elation.engine.things.janusghost);
 
 });
