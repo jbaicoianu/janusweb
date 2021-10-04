@@ -106,7 +106,7 @@ elation.require(['janusweb.janusbase'], function() {
         //console.log('shader', this.shader_id, shader);
         if (shader) {
           let shadermaterial = shader.getInstance();
-          shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+          //shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
           mat = shadermaterial;
           mat.transparent = true;
           mat.side = THREE.DoubleSide;
@@ -623,7 +623,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (dot < 0) {
         this.activate();
         // FIXME - we should be transforming the user's velocity into the new room's coordinate space, but right now a portal isn't aware of what's on the other side
-        //player.vel = V(0,0,0);
+        player.vel = V(0,0,0);
       }
     }
   }, elation.engine.things.janusbase);
