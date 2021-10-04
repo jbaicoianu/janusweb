@@ -1279,6 +1279,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.video.volume = this.gain;
       }
     }
+    this.extractMorphTargets = function() {
+        this.objects['3d'].traverse(n => {
+          if (n.morphTargetDictionary && n.morphTargetInfluences && n.morphTargetInfluences.length > 0) {
+            this.morphtargets = n.morphTargetDictionary;
+            this.morphtargetInfluences = n.morphTargetInfluences;
+          }
+        });
+      }
+    this.setMorphTargetInfluence = function(name, value) {
+      if (typeof this.morphtargets == 'undefined') {
+        this.extractMorphTargets();
+      }
+
+      if (this.morphtargets && name in this.morphtargets) {
+        this.morphtargetInfluences[this.morphtargets[name]] = value;
+      }
+    }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
