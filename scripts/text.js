@@ -131,7 +131,7 @@ elation.require(['engine.things.label'], function() {
 
       let font = this.fontasset.getInstance();
 
-      var geometry = new THREE.TextBufferGeometry( text, {
+      var geometry = new THREE.TextGeometry( text, {
         size: this.font_size,
         height: this.properties.thickness || this.font_size / 8,
         curveSegments: this.segments,
