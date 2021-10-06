@@ -97,13 +97,15 @@ this.debug.style.zIndex = '1000';
     }
 
     let janus = elation.component.fetch(this.queryParentSelector('[data-elation-component="janusweb.client"]'))
-    janus.engine.systems.controls.addVirtualGamepad(this);
-    this.hide();
-    janus.engine.systems.render.renderer.domElement.addEventListener('touchstart', (ev) => {
-      this.show();
-      this.reset();
-      if (!player.enabled) player.enable();
-    });
+    if (janus) {
+      janus.engine.systems.controls.addVirtualGamepad(this);
+      this.hide();
+      janus.engine.systems.render.renderer.domElement.addEventListener('touchstart', (ev) => {
+        this.show();
+        this.reset();
+        if (!player.enabled) player.enable();
+      });
+    }
   }
   reset() {
     for (let i = 0; i < this.axes.length; i++) {
