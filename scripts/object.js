@@ -946,7 +946,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.thickness !== undefined) m.thickness = oldmat.thickness;
         if (oldmat.thicknessMap !== undefined) m.thicknessMap = oldmat.thicknessMap;
 
-        m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
+        //m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
         if (oldmat.roughnessMap !== undefined) {
           m.roughnessMap = oldmat.roughnessMap;
