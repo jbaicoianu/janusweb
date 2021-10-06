@@ -49,12 +49,12 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
         <ui-tab label="Chibis">
           <collection-jsonapi id="avatarlist" endpoint="${this.src}"></collection-jsonapi>
           <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
-          <ui-button name="confirm" disabled="1">Confirm</ui-button>
         </ui-tab>
         <ui-tab label="Ready Player Me">
-          <iframe src="https://demo.readyplayer.me/avatar">
+          <iframe src="https://demo.readyplayer.me/avatar"></iframe>
         </ui-tab>
       </ui-tabs>
+      <ui-button name="confirm" disabled="1">Confirm</ui-button>
     `;
     if (!this.hidereset) {
       tpl += '<ui-button name="reset">Reset</ui-button>';
@@ -151,17 +151,18 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
       let avatarurl = ev.data;
       let avatarstr = `
 <FireBoxRoom>
-<assets>
-<assetobject id="body" src="${avatarurl}" />
-<assetobject id="avatar_animations" src="https://assets.metacade.com/james/readyplayerme/animations.glb" />
-</assets>
-<room>
-<ghost body_id="body" />
-</room>
+  <assets>
+    <assetobject id="body" src="${avatarurl}" />
+    <assetobject id="avatar_animations" src="https://assets.metacade.com/james/readyplayerme/animations.glb" />
+  </assets>
+  <room>
+    <ghost body_id="body" />
+  </room>
 </FireBoxRoom>
 `;
 console.log(avatarstr);
-player.setAvatar(avatarstr);
+      player.setAvatar(avatarstr);
+      this.handleAvatarSelect({data: { url: 'data:text/plain,' + avatarstr } });
     }
   }
 });
