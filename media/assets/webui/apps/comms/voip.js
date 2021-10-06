@@ -716,6 +716,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
 
     if (this.label3d) {
       this.label3d.setAudioVolume(this.averagevolume);
+      this.remoteuser.setSpeakingVolume(this.averagevolume);
     }
   }
 });
