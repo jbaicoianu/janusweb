@@ -46,8 +46,9 @@ janus-avatar-picker-item h2 {
 janus-avatar-picker ui-button {
   font-size: 2em;
 }
-janus-avatar-picker ui-tab iframe {
+janus-avatar-picker iframe {
   width: 100%;
   height: 38em;
+  max-height: 80%;
   border: 0;
 }
