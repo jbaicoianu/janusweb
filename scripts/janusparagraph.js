@@ -66,15 +66,15 @@ elation.require(['janusweb.janusbase'], function() {
       if (!this.canvas || !this.texture) return;
       var ctx = this.canvas.getContext('2d'),
           texture = this.texture;
-      this.canvas.width = 512;
-      this.canvas.height = 512;
+      this.canvas.width = 1024;
+      this.canvas.height = 1024;
       var text_col = '#' + this.text_col.getHexString(),
           back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + this.back_alpha + ')';
       var basestyle = 'font-family: sans-serif;' +
                       'font-size: ' + this.font_size + 'px;' +
                       'color: ' + text_col + ';' +
                       'background: ' + back_col + ';' +
-                      'max-width: 502px;' +
+                      'max-width: 1014px;' +
                       'padding: 5px;';
 
       // We need to sanitize our HTML in case someone provides us with malformed markup.
