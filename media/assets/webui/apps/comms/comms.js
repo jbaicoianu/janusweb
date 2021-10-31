@@ -298,7 +298,7 @@ janus.registerElement('playerlabel', {
     this.canvas.width = 512;
     this.canvas.height = 64;
     let imageid = this.player_name + '_playerlabel';
-    room.loadNewAsset('image', {
+    this.loadNewAsset('image', {
       id: imageid,
       canvas: this.canvas,
       hasalpha: true,
