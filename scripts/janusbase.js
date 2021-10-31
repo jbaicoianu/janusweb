@@ -743,7 +743,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           dir = new THREE.Vector3(),
           up = new THREE.Vector3();
       return function(ev) {
-        let parent = this.parent;
+        let parent = this.properties.parent;
         let billboard = this.properties.billboard;
         if (billboard && parent) {
           //player.camera.localToWorld(playerpos.set(0,0,0));
