@@ -14,7 +14,7 @@ elation.require(['janusweb.janusbase'], function() {
         pitch: { type: 'float', default: 1.0, set: this.updateSound },
         gain: { type: 'float', default: 1.0, set: this.updateSound },
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
-        distanceModel: { type: 'string', set: this.updateSound },
+        distancemodel: { type: 'string', default: 'inverse', set: this.updateSound },
         rolloff: { type: 'float', default: 1.0, set: this.updateSound },
         rect: { type: 'string', set: this.updateSound }
       });
@@ -58,8 +58,8 @@ elation.require(['janusweb.janusbase'], function() {
           this.audio = new THREE.Audio(audionodes.listener);
         } else {
           this.audio = new THREE.PositionalAudio(audionodes.listener);
-          if (this.properties.distanceModel) {
-            this.audio.panner.distanceModel = this.properties.distanceModel;
+          if (this.properties.distancemodel) {
+            this.audio.panner.distanceModel = this.properties.distancemodel;
           }
           //this.audio.panner.maxDistance = this.properties.distance;
           if (this.dist) {
@@ -176,7 +176,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (this.audio instanceof THREE.PositionalAudio) {
           this.audio.setRolloffFactor(this.rolloff);
           this.audio.setRefDistance(this.dist);
-          this.audio.setDistanceModel(this.distanceModel);
+          this.audio.setDistanceModel(this.distancemodel);
         }
       }
       if (this.rect) {
