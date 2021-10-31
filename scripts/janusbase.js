@@ -900,7 +900,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
 
     this.createObject = function(type, args, skipstart) {
-      return room.createObject(type, args, this, !this.started);
+      return this.room.createObject(type, args, this, !this.started);
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
@@ -938,8 +938,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           realobj.stop();
           this.remove(realobj);
           this.updateScriptChildren();
-          if (room.objects[obj.js_id]) {
-            delete room.objects[obj.js_id];
+          if (this.room.objects[obj.js_id]) {
+            delete this.room.objects[obj.js_id];
           }
         }
       }
