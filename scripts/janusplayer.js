@@ -670,9 +670,6 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       } else if (this.hasVoipData()) {
         animid = 'speak';
       }
-      if (this.ghost && this.ghost.body) {
-        this.ghost.body.anim_id = animid;
-      }
       return animid;
     }
     this.setHand = function(handedness, handobj) {
