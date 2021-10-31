@@ -293,6 +293,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.lookAtLERPtime) {
         this.updateLookAtLERP();
       }
+      if (this.ghost && this.ghost.body) {
+        let animid = this.getAnimationID();
+        this.ghost.body.anim_id = animid;
+      }
     }
     this.updateCursor = (function() {
       var _tmpvec = new THREE.Vector3();
