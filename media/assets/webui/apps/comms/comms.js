@@ -290,7 +290,7 @@ elation.elements.define('janus-comms-voip', class extends elation.elements.base 
 janus.registerElement('playerlabel', {
   player_name: '',
   font: 'monospace',
-  threshold: .4,
+  threshold: .2,
 
   create() {
     this.currentcolor = V(255,255,255);
