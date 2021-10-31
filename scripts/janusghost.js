@@ -17,6 +17,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         ghostassets: { type: 'object' },
         auto_play: { type: 'boolean', default: true },
         screen_name: { type: 'string' },
+        animation_extras: { type: 'string' },
+        bone_head: { type: 'string' },
+        morphtarget_mouth: { type: 'string' },
+        morphtarget_eyes: { type: 'string' },
       });
 
       this.frames = false;
@@ -286,37 +290,60 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.body.start();
         if (scale && this.body) this.body.scale.fromArray(scale);
 
-        setTimeout(() => {
-          // FIXME - there's definitely a better way to do this, but without a timeout this runs before the modelasset is initialized
+        elation.events.add(this, 'load', ev => {
           if (this.body.modelasset) {
             if (this.body.modelasset.loaded) {
               this.loadAnimations();
+              if (this.animation_extras) {
+                this.loadAnimationExtras();
+              }
             } else {
-              elation.events.add(this.body.modelasset, 'asset_load_complete', () => this.loadAnimations());
+              elation.events.add(this.body.modelasset, 'asset_load_complete', () => {
+                this.loadAnimations();
+                if (this.animation_extras) {
+                  this.loadAnimationExtras();
+                }
+              });
             }
           }
-        }, 100);
+          // FIXME - this prevents avatars from being culled, which prevents our default mesh from disappearing but also means we lose out on possible performance optimizations in rooms with lots of avatars
+          this.objects['3d'].traverse(n => {
+            if (n instanceof THREE.Mesh) {
+              n.frustumCulled = false;
+            }
+          });
+        });
       }
     }
-    this.loadAnimations = function() {
-      let animasset = this.getAsset('model', 'avatar_animations');
-      console.log('my anim asset', animasset);
+    this.loadAnimations = function(assetid) {
+      if (!assetid) assetid = 'avatar_animations';
+      let animasset = this.getAsset('model', assetid);
       if (!animasset.loaded) {
-        console.log('load the asset');
+        let animationsLoaded = false;
         elation.events.add(animasset, 'asset_load_complete', ev => {
-          console.log('asset loaded', animasset.animations);
-          this.cloneAnimations(animasset);
+          if (!animationsLoaded) {
+            animationsLoaded = true;
+            if (this.body.animationmixer) {
+              this.cloneAnimations(animasset);
+            }
+            this.body.setAnimation('idle');
+          }
         });
         animasset.load();
       } else {
-        console.log('asset is loaded', animasset.animations);
+        if (this.body.animationmixer) {
+          this.cloneAnimations(animasset);
+        }
+        this.body.setAnimation('idle');
       }
     }
     this.cloneAnimations = function(animasset) {
       let animations = animasset.animations;
       //console.log('clone all the animations', animations, animasset._model);
       if (this.body) {
-        this.initHeadAnimation(animasset);
+        if (this.bone_head) {
+          this.initHeadAnimation(animasset);
+        }
 
         animations.forEach(clip => {
           this.body.animations[clip.name] = this.body.animationmixer.clipAction(this.retargetAnimation(clip, animasset._model));
@@ -421,6 +448,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
     }
     this.rebindAnimations = function() {
       this.body.rebindAnimations();
+    }
+    this.loadAnimationExtras = function() {
+      let animids = this.animation_extras.split(' ');
+      animids.forEach(animid => this.loadAnimations(animid));
     }
 
     this.start = function() {
@@ -600,6 +631,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.screen_name = ghostdef.screen_name;
         }
         this.setGhostAssets(things.assets);
+        this.animation_extras = ghostdef.animation_extras;
+        this.bone_head = ghostdef.bone_head;
+        this.morphtarget_mouth = ghostdef.morphtarget_mouth;
+        this.morphtarget_eyes = ghostdef.morphtarget_eyes;
+        if (ghostdef.morphtarget_eyes) {
+          this.blink();
+        }
         if (ghostdef.head_id) {
           this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
         }
@@ -754,31 +792,60 @@ return;
       if (this.body) this.body.anim_id = anim;
     }
     this.initHeadAnimation = function(animasset) {
-      let body = this.body || this._target.body;
-      if (body && !this.headaction) {
+      let body = this.body || this._target.body,
+          head = this.head || this._target.head;
+      if (body && this.bone_head &&  !this.headaction) {
         if (!body.animationmixer) {
           body.initAnimations([]);
         }
         // Set up our animation mixer with a simple bone mapper for our head.  We'll add more animations to this as other assets load
         // TODO - this is probably also where we'd map any other tracked objects (hands, hips, etc). and set up IK
 
-        let headtrack = new THREE.QuaternionKeyframeTrack('Head.quaternion', [0], [0, 0, 0, 1]),
+        let headtrack = new THREE.QuaternionKeyframeTrack(this.bone_head + '.quaternion', [0], [0, 0, 0, 1]),
             headclip = new THREE.AnimationClip('head_rotation', -1, [headtrack]);
         let headaction = body.animationmixer.clipAction(this.retargetAnimation(headclip, animasset._model));
-        headaction.weight = 2;
+        headaction.weight = 5;
         this.headaction = headaction;
         headaction.play();
       }
     }
     this.setHeadOrientation = function(orientation, invert) {
       let headaction = this.headaction || this._target.headaction;
-      if (headaction) {
+      if (headaction && headaction._clip.tracks[0]) {
         let track = headaction._clip.tracks[0];
         track.values[0] = orientation.x * (invert ? -1 : 1);
         track.values[1] = orientation.y * (invert ? -1 : 1);
         track.values[2] = orientation.z * (invert ? -1 : 1);
         track.values[3] = orientation.w; // * (invert ? -1 : 1);
       }
+    }
+    this.blink = function() {
+      if (!this.blinktimer) {
+        if (this.body && this.morphtarget_eyes) {
+          this.body.setMorphTargetInfluence(this.morphtarget_eyes, 1);
+          setTimeout(() => {
+            this.body.setMorphTargetInfluence(this.morphtarget_eyes, 0);
+          }, 100);
+        }
+        this.blinktimer = setTimeout(() => {
+          this.blinktimer = false;
+          this.blink();
+        }, 2500 + Math.random() * 8500);
+      }
+    }
+    this.setSpeakingVolume = function(volume) {
+      if (this.body && this.morphtarget_mouth) {
+        this.body.setMorphTargetInfluence(this.morphtarget_mouth, volume);
+      }
+    }
+    this.getProxyObject = function(classdef) {
+      if (!this._proxyobject) {
+        this._proxyobject = elation.engine.things.janusghost.extendclass.getProxyObject.call(this, classdef);
+        this._proxyobject._proxydefs = {
+          body: [ 'property', 'body'],
+        };
+      }
+      return this._proxyobject;
     }
   }, elation.engine.things.janusbase);
 });
