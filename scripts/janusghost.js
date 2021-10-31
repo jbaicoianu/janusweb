@@ -370,7 +370,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           THREE.SkeletonUtils.renameBones(bones, rename);
           console.log('bones now', bones);
           */
-          console.log('retarget the clips!', meshes, animations);
           
         }
       }
