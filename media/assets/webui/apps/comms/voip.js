@@ -368,7 +368,7 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
     this.defineAttribute('userid', { type: 'string', });
     this.defineAttribute('muted', { type: 'boolean', default: true, });
     this.defineAttribute('speaking', { type: 'boolean', default: false });
-    this.defineAttribute('threshold', { type: 'float', default: .4 });
+    this.defineAttribute('threshold', { type: 'float', default: .2 });
   }
   create() {
     this.userid = player.getNetworkUsername();
@@ -440,7 +440,11 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
     this.analyser = analyser;
     this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
 
-    setInterval(() => {
+    if (this.updateVolumeInterval) {
+      clearInterval(this.updateVolumeInterval);
+      this.updateVolumeInterval = false;
+    }
+    this.updateVolumeInterval = setInterval(() => {
       analyser.getByteFrequencyData(this.audiobuffer);
       let sum = 0;
       for (let i = 0; i < this.audiobuffer.length; i++) {
@@ -490,6 +494,13 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
         this.colorreset = false;
         player.defaultanimation = 'idle';
       }, 200);
+      if (player.ghost) {
+        player.ghost.setSpeakingVolume(this.averagevolume);
+      }
+    } else {
+      if (player.ghost) {
+        player.ghost.setSpeakingVolume(0);
+      }
     }
   }
   
@@ -503,7 +514,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       'hasvideo': { type: 'boolean', default: false },
       'averagevolume': { type: 'float', default: 0 },
       'speaking': { type: 'boolean', default: false },
-      'threshold': { type: 'float', default: .4 },
+      'threshold': { type: 'float', default: .2 },
     });
     this.lastposition = V();
     setTimeout(() => this.setAttribute('active', true), 100);
@@ -556,7 +567,11 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       this.analyser = analyser;
       this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
 
-      setInterval(() => {
+      if (this.updateVolumeInterval) {
+        clearInterval(this.updateVolumeInterval);
+        this.updateVolumeInterval = false;
+      }
+      this.updateVolumeInterval = setInterval(() => {
         analyser.getByteFrequencyData(this.audiobuffer);
         let sum = 0;
         for (let i = 0; i < this.audiobuffer.length; i++) {
