@@ -929,6 +929,7 @@ elation.require([
     }
     this.loadScripts = function(scripts) {
       scripts.forEach(s => {
+        this.loadNewAsset('script', { src: s.src, override: { room: this.getProxyObject() } });
         let scriptasset = this.getAsset('script', s.src);
         let script = scriptasset.getInstance();
         if (scriptasset.loaded) {
@@ -1458,7 +1459,8 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           assettype:'script',
           name: src,
           src: src,
-          baseurl: this.baseurl
+          baseurl: this.baseurl,
+          override: { room: this.getProxyObject() }
         });
       } else if (type == 'object' || type == 'model') {
         var src, mtlsrc, srcparts = [];
@@ -2497,14 +2499,14 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
                 }
               }
             });
-            if (this.pendingScripts) {
+            if (!this.loaded && this.pendingScripts) {
               // We're still waiting for the room to finish loading, so wait for the room_load_complete event before checking if we need to load anything else
               this.addEventListener('room_load_complete', (ev) => {
                 // Room and all of its assets have finished loading. If our required component still isn't available, check the master package list and autoload if possible
                 if (!finished) {
                   this.loadComponentList().then(components => {
                     if (components[k]) {
-                      this.loadNewAsset('script', { src: components[k].url });
+                      this.loadNewAsset('script', { src: components[k].url, override: { room: this.getProxyObject() } });
                       this._target.loadScripts([{src: components[k].url}]);
                     }
                   });
@@ -2514,7 +2516,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
               // Room is already loaded and scripts are processed - we still don't know about this component, so load it up
               this.loadComponentList().then(components => {
                 if (components[k]) {
-                  this.loadNewAsset('script', { src: components[k].url });
+                  this.loadNewAsset('script', { src: components[k].url, override: { room: this.getProxyObject() } });
                   this._target.loadScripts([{src: components[k].url}]);
                 }
               });
