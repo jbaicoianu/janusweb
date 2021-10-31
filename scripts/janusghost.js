@@ -33,11 +33,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             diffuseColor.rgb *= vColor;
           #endif
           float dist = length(vViewPosition);
-          float mindist = .3;
-          float maxdist = .5;
+          float mindist = .4;
+          float maxdist = .6;
           if (dist < maxdist) {
             diffuseColor.a = clamp(((dist - mindist) / (maxdist - mindist)), 0., 1.);
-            //discard;
           }
         `;
       }
@@ -278,6 +277,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             //rotation: V(0, 180, 0),
             lighting: this.lighting,
             //cull_face: 'none'
+            opacity: 0.9999,
             shader_chunk_replace: {
               'color_fragment': 'color_fragment_discard_close',
             },
