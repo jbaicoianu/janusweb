@@ -170,6 +170,8 @@ elation.require([
         navback:           ['function', 'navigateBack'],
         navforward:        ['function', 'navigateForward'],
         load:              ['function', 'navigateTo'],
+        setActiveRoom:     ['function', 'setActiveRoom'],
+        preload:           ['function', 'preload'],
         navhome:           ['function', 'navigateHome'],
         chatsend:          ['function', 'sendChatMessage'],
         sync:              ['function', 'currentroom.sync'],
@@ -406,6 +408,9 @@ elation.require([
       } else {
         this.load(url, true, null, referrer === false);
       }
+    }
+    this.preload = function(url, stripreferrer) {
+      this.load(url, false, null, stripreferrer);
     }
     this.getFixedURL = function(url) {
       // Our 'clean' client URLs don't contain a : because many services have problems parsing them
