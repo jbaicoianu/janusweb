@@ -72,30 +72,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       billboard: 'y'
     });
 */
-    if (this.engine.client.player.usevoip && this.engine.systems.sound.canPlaySound) {
-      this.mouth = this.head.spawn('sound', this.properties.player_name + '_voice', {
-        //loop: true
-      });
-/*
-      this.mouth.createAudio();
-      var context = this.mouth.audio.context;
-      this.voip = new JanusVOIPPlayer();
-      this.voip.start(context);
-      this.audiobuffer = {readyCallbacks: []};//new THREE.AudioBuffer(this.mouth.audio.context);
-      this.audiobuffer.buffer = this.voip.rawbuffer;
-
-      //elation.events.add(this.voip, 'voip_player_data', elation.bind(this, this.handleVoipData));
-      this.audiobuffer.ready = true;
-      for ( var i = 0; i < this.audiobuffer.readyCallbacks.length; i ++ ) {
-
-        this.audiobuffer.readyCallbacks[ i ]( this.voip.rawbuffer );
-
-      }
-*/
     }
-
-    //this.mouth.audio.setBuffer(this.audiobuffer);
-    elation.events.add(this, 'thing_change', elation.bind(this, this.updateTransparency));
   };
   this.speak = function(noise) {
     this.voip.speak(noise);
@@ -168,25 +145,6 @@ elation.component.add('engine.things.remoteplayer', function() {
       }
       this.mouth.audio.gain.gain.value = volume;
     }
-  }
-  this.setSpeakingVolume = function(volume) {
-    // FIXME - Quick hack to flap our mouth based on our speaking volume if we have blendshapes
-    // Probably only works with Ready Player Me avatars
-
-    if (this.body) {
-      this.body.setMorphTargetInfluence('mouthOpen', volume);
-    }
-  }
-  this.blink = function() {
-    if (this.body) {
-      this.body.setMorphTargetInfluence('eyesClosed', 1);
-      setTimeout(() => {
-        this.body.setMorphTargetInfluence('eyesClosed', 0);
-      }, 100);
-    }
-    setTimeout(() => {
-      this.blink();
-    }, 2500 + Math.random() * 8500);
   }
 }, elation.engine.things.janusghost);
 
