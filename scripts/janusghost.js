@@ -246,6 +246,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             this.head.appendChild(headid);
             this.face.start();
           }
+          this.head.pos = headpos.clone().multiplyScalar(this.scale.y);
+          this.face.applyPosition(headpos.negate());
           if (this.remotevideo) {
             this.updateVideoScreen();
             this.face.addEventListener('load', (ev) => {
@@ -520,8 +522,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               var headpos = this.head.properties.position;
               var facepos = this.face.properties.position;
               var newpos = parser.getVectorValue(movedata.head_pos);
-              headpos.copy(this.head_pos);
-              facepos.fromArray(newpos).sub(headpos);
+              //headpos.copy(this.head_pos);
+              //facepos.fromArray(newpos).sub(headpos);
               if (this.body) {
                 if (this.head.parent != this.body) {
                   this.body.appendChild(this.head);
