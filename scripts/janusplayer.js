@@ -626,17 +626,12 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.ghost) {
         this.ghost.die();
       }
-      this.getAvatarData().then(avatardata => {
-        // FIXME - self avatar is broken and weird right now, so it's disabled
-        if (avatardata && this.room.selfavatar) {
-/*
-          this.ghost = this.createObject('ghost', {
-            ghost_id: this.getUsername(),
-            avatar_src: 'data:text/plain,' + encodeURIComponent(avatardata),
-            showlabel: false
-          });
-*/
-        }
+      this.ghost = this.createObject('ghost', {
+        ghost_id: this.getUsername(),
+        avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
+        showlabel: false,
+        pos: V(0, -this.fatness, 0),
+        rotation: V(0, 180, 0),
       });
 
       return setting;
