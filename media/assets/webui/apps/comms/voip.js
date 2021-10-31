@@ -741,6 +741,9 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
          <!-- li><ui-togglebutton name="video" disabled="1">With my webcam</ui-togglebutton></li -->
        </ul>
     `, this);
+    this.defineAttributes({
+      'showvideo': { type: 'boolean', default: true },
+    });
 
     elation.events.add(this.elements.none, 'click', (ev) => this.handleSelectNone());
     elation.events.add(this.elements.audio, 'click', (ev) => this.handleSelectAudio(ev));
@@ -771,7 +774,7 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
     console.log('selected audio', ev.detail, this.voipconfig);
     //janus.engine.systems.sound.enableSound();
     if (!this.subpicker) {
-      this.subpicker = elation.elements.create('janus-voip-picker-audio', { config: (this.voipconfig ? JSON.stringify(this.voipconfig) : false) });
+      this.subpicker = elation.elements.create('janus-voip-picker-audio', { config: (this.voipconfig ? JSON.stringify(this.voipconfig) : false), showvideo: this.showvideo });
       elation.events.add(this.subpicker, 'select', ev => {
 console.log('SELECTED', ev.detail);
         document.dispatchEvent(new CustomEvent('voip-picker-select', { detail: ev.detail }));
@@ -795,8 +798,9 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
   create() {
     this.defineAttributes({
       'config': { type: 'object', default: false },
+      'showvideo': { type: 'boolean', default: true },
     });
-    this.elements = elation.elements.fromString(`
+    let tplstr = `
       <div class="permissions" name="permissions">
         <ui-spinner></ui-spinner>
         Waiting for permission to be granted
@@ -808,20 +812,27 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
           <janus-voip-picker-mictest name="mictest" width="75" height="25"></janus-voip-picker-mictest>
         </li>
         <!-- li><ui-select name="outputDevice" label="Output"></ui-select></li -->
-        <li><ui-toggle name="echoCancellation" label="Echo Cancellation"></ui-toggle></li>
-        <li><ui-toggle name="noiseSuppression" label="Noise Reduction"></ui-toggle></li>
+        <li><ui-toggle name="echoCancellation" label="Echo Cancellation" checked></ui-toggle></li>
+        <li><ui-toggle name="noiseSuppression" label="Noise Reduction" checked></ui-toggle></li>
       </ul>
-      <h3>Video</h3>
-      <ul>
-        <li><ui-toggle name="webcamEnabled" label="Webcam"></ui-toggle></li>
-        <li>
-          <ui-select name="videoDevice" label="Webcam" hidden="1"></ui-select>
-          <janus-voip-picker-videotest name="videotest" width="150" height="150"></janus-voip-picker-videotest>
-        </li>
-      </ul>
+    `;
+  
+    if (this.showvideo && this.showvideo != 'false') {
+       tplstr += `<h3>Video</h3>
+        <ul>
+          <li><ui-toggle name="webcamEnabled" label="Webcam"></ui-toggle></li>
+          <li>
+            <ui-select name="videoDevice" label="Webcam" hidden="1"></ui-select>
+            <janus-voip-picker-videotest name="videotest" width="150" height="150"></janus-voip-picker-videotest>
+          </li>
+        </ul>
+      `;
+    }
+    tplstr += `
       <ui-label name="error" hidden></ui-label>
       <ui-button name="submit">Continue</ui-button>
-    `, this);
+    `;
+    this.elements = elation.elements.fromString(tplstr, this);
 
     if (this.config) {
       console.log('I have a config!', this.config);
@@ -832,7 +843,9 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     //this.getUserMedia();
 
     this.elements.inputDevice.addEventListener('change', (ev) => this.getUserMedia());
-    this.elements.videoDevice.addEventListener('change', (ev) => this.getUserMedia());
+    if (this.elements.videoDevice) {
+      this.elements.videoDevice.addEventListener('change', (ev) => this.getUserMedia());
+    }
     //this.elements.outputDevice.addEventListener('change', (ev) => this.getUserMedia());
     elation.events.add(this.elements.echoCancellation, 'toggle', (ev) => this.getUserMedia());
     elation.events.add(this.elements.noiseSuppression, 'toggle', (ev) => this.getUserMedia());
@@ -864,11 +877,14 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
 
         // FIXME - I'm not really using these UI elements properly here, I shouldn't be mucking with the HTML elements directly
         inputs.select.innerHTML = '';
-        cameras.select.innerHTML = '';
-        //outputs.select.innerHTML = '';
-
         let hasWebcamPermission = true;
-        let webcamDisabled = elation.elements.create('option', {innerHTML: 'Disabled', value: 'none', append: cameras.select});
+        let webcamDisabled;
+        if (cameras) {
+          cameras.select.innerHTML = '';
+          //outputs.select.innerHTML = '';
+
+          webcamDisabled = elation.elements.create('option', {innerHTML: 'Disabled', value: 'none', append: cameras.select});
+        }
         devices.forEach(d => {
           if (d.kind == 'audioinput') {
             elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: inputs.select});
@@ -882,16 +898,18 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
             elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: outputs.select});
           }
         });        
-        if (hasWebcamPermission && this.elements.videoDevice.hidden ) {
-          this.elements.webcamEnabled.hide();
-          this.elements.videoDevice.show();
-          let option = this.elements.videoDevice.select.childNodes[0];
-          option.selected = true;
-          this.elements.videoDevice.select.value = option.value;
-        } else {
-          console.log('NO WEBCAM PERMISSION');
-          this.elements.webcamEnabled.show();
-          this.elements.videoDevice.hide();
+        if (this.elements.videoDevice) {
+          if (hasWebcamPermission && this.elements.videoDevice.hidden ) {
+            this.elements.webcamEnabled.hide();
+            this.elements.videoDevice.show();
+            let option = this.elements.videoDevice.select.childNodes[0];
+            option.selected = true;
+            this.elements.videoDevice.select.value = option.value;
+          } else {
+            console.log('NO WEBCAM PERMISSION');
+            this.elements.webcamEnabled.show();
+            this.elements.videoDevice.hide();
+          }
         }
         this.elements.permissions.style.display = 'none';
 
@@ -901,7 +919,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
             //this.elements.inputDevice.select.value = this.voipconfig.inputDevice;
             this.elements.inputDevice.setSelected(voipconfig.inputDevice);
           }
-          if (voipconfig.videoDevice) {
+          if (voipconfig.videoDevice && this.elements.videoDevice) {
             this.elements.videoDevice.setSelected(voipconfig.videoDevice);
           }
           //this.dispatchEvent(new CustomEvent('select', {detail: this.stream})); 
@@ -923,7 +941,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
       console.log('input!', this.elements.inputDevice.value);
       constraints.audio.deviceId = { exact: this.elements.inputDevice.value };
     }
-    if (this.elements.videoDevice.value && this.elements.videoDevice.value != 'none') {
+    if (this.elements.videoDevice && this.elements.videoDevice.value && this.elements.videoDevice.value != 'none') {
       console.log('video!', this.elements.videoDevice.value);
       constraints.video = {
         deviceId: { exact: this.elements.videoDevice.value },
@@ -947,7 +965,9 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
       .then(stream => {
         this.elements.submit.disabled = false;
         this.elements.mictest.setStream(stream);
-        this.elements.videotest.setStream(stream);
+        if (this.elements.videotest) {
+          this.elements.videotest.setStream(stream);
+        }
         if (this.stream) {
           let tracks = this.stream.getTracks();
           tracks.forEach(t => {
@@ -984,10 +1004,12 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     ];
     keys.forEach(k => {
       let el = this.elements[k];
-      if (el instanceof elation.elements.ui.toggle) {
-        settings[k] = this.elements[k].checked;
-      } else {
-        settings[k] = this.elements[k].value;
+      if (this.elements[k]) {
+        if (el instanceof elation.elements.ui.toggle) {
+          settings[k] = this.elements[k].checked;
+        } else {
+          settings[k] = this.elements[k].value;
+        }
       }
     });
     return settings;
@@ -1010,8 +1032,8 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
       if ('inputDevice' in settings) this.elements['inputDevice'].setSelected(settings['inputDevice']);
       if ('echoCancellation' in settings) this.elements['echoCancellation'].checked = settings['echoCancellation'];
       if ('noiseSuppression' in settings) this.elements['noiseSuppression'].checked = settings['noiseSuppression'];
-      if ('webcamEnabled' in settings) this.elements['webcamEnabled'].checked = settings['webcamEnabled'];
-      if ('videoDevice' in settings) this.elements['videoDevice'].setSelected(settings['videoDevice']);
+      if ('webcamEnabled' in settings && this.elements['webcamEnabled']) this.elements['webcamEnabled'].checked = settings['webcamEnabled'];
+      if ('videoDevice' in settings && this.elements['videoDevice']) this.elements['videoDevice'].setSelected(settings['videoDevice']);
 
       this.currentsettings = settings;
     }
