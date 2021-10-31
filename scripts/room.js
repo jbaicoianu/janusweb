@@ -26,8 +26,8 @@ elation.require([
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
-        'skybox': { type: 'boolean', default: true },
-        'skybox_hdri': { type: 'string' },
+        'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
+        'skybox_equi': { type: 'string' },
         'skybox_left': { type: 'string' },
         'skybox_right': { type: 'string' },
         'skybox_up': { type: 'string' },
@@ -291,10 +291,10 @@ elation.require([
       }
 
       var hasSkybox = (this.skybox_left || this.skybox_right || this.skybox_top || this.skybox_bottom || this.skybox_left || this.skybox_right) != undefined;
-      if (this.skybox_hdri) {
-        let hdri = this.getAsset('image', this.skybox_hdri);
+      if (this.skybox_equi) {
+        let equi = this.getAsset('image', this.skybox_equi);
         var assets = [];
-        elation.events.add(hdri, 'asset_load', ev => {
+        elation.events.add(equi, 'asset_load', ev => {
           this.skyboxtexture = ev.target._texture;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
@@ -338,6 +338,12 @@ elation.require([
       assets.forEach(elation.bind(this, function(asset) { 
         if (asset) {
           var n = asset.getInstance();
+          if (asset.loaded) {
+            loaded++;
+            if (loaded + errored == 6) {
+              this.processSkybox(assets);
+            }
+          } else {
             elation.events.add(n, 'asset_load,asset_error', elation.bind(this, function(ev) {
               if (ev.type == 'asset_load') loaded++;
               else errored++;
@@ -346,6 +352,7 @@ elation.require([
               }
             }));
           }
+        }
       }));
       return false;
     }
@@ -397,6 +404,21 @@ elation.require([
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
           return true;
+        }
+      }
+    }
+    this.toggleSkybox = function() {
+      if (this.skybox) {
+        this.engine.systems.render.renderer.setClearAlpha(1);
+        if (this.skyboxtexture) {
+          this.skyboxobj.setTexture(this.skyboxtexture);
+        } else {
+          this.setSkybox();
+        }
+      } else {
+        this.engine.systems.render.renderer.setClearAlpha(0);
+        if (this.skyboxobj) {
+          this.skyboxobj.setTexture(null);
         }
       }
     }
@@ -825,7 +847,7 @@ elation.require([
         setTimeout(() => this.setPlayerPosition(), 0);
 
         if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
-        if (room.skybox_hdri) this.properties.skybox_hdri = room.skybox_hdri;
+        if (room.skybox_equi) this.properties.skybox_equi = room.skybox_equi;
         if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
         if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
         if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
@@ -1952,7 +1974,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           pickable:      ['property', 'pickable'],
 
           skybox:         ['property', 'skybox'],
-          skybox_hdri:    ['property', 'skybox_hdri'],
+          skybox_equi:    ['property', 'skybox_equi'],
           skybox_left_id: ['property', 'skybox_left'],
           skybox_right_id:['property', 'skybox_right'],
           skybox_up_id:   ['property', 'skybox_up'],
