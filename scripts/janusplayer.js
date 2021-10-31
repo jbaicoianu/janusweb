@@ -435,6 +435,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
       this.room = newroom;
       this.room.join();
+/*
       if (!this.gazecaster) {
         this.gazecaster = newroom.createObject('raycaster', {persist: false});
         this.head.add(this.gazecaster._target);
@@ -445,6 +446,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       } else {
         this.gazecaster.setRoom(newroom);
       }
+*/
       if (!this.cursors) {
         this.cursors = {
           'default': janus.getAsset('image', 'cursor_crosshair'),
