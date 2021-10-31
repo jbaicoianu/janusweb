@@ -72,7 +72,6 @@ elation.component.add('engine.things.remoteplayer', function() {
       billboard: 'y'
     });
 */
-    }
   };
   this.speak = function(noise) {
     this.voip.speak(noise);
