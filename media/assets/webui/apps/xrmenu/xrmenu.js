@@ -14,6 +14,10 @@ janus.registerElement('xrmenu', {
     });
 */
 
+    this.worldpos = V();
+    this.worlddir = V();
+    this.playervec = V();
+
     let xrmenu = janus.ui.apps.default.apps.xrmenu;
     let asseturl = xrmenu.resolveFullURL('./xrmenu-assets.json');
     fetch(asseturl).then(res => res.json()).then(assetlist => {
@@ -66,10 +70,11 @@ janus.registerElement('xrmenu', {
       button.pos.x = (-width / 2) + (this.buttonwidth * this.buttonmargin * (i + .5)) ;
     }
   },
+/*
   update() {
-    let worldpos = this.localToWorld(V());
-    let worlddir = this.localToWorld(V(0, 0, 1)).sub(worldpos).normalize();
-    let playervec = player.head.localToWorld(V()).sub(worldpos).normalize();
+    let worldpos = this.localToWorld(this.worldpos.set(0,0,0));
+    let worlddir = this.localToWorld(this.worlddir.set(0,0,1)).sub(worldpos).normalize();
+    let playervec = player.head.localToWorld(this.playervec.set(0,0,0)).sub(worldpos).normalize();
     let dot = playervec.dot(worlddir);
     let opacity = Math.max(0, dot);
     for (let k in this.buttons) {
@@ -79,6 +84,7 @@ janus.registerElement('xrmenu', {
     }
     //this.backing.opacity = opacity;
   },
+*/
 });
 janus.registerElement('xrmenu-button', {
   onactivate: null,
@@ -122,6 +128,8 @@ janus.registerElement('xrmenu-popup', {
   element: null,
   width: 512,
   height: 512,
+  depth_test: true,
+  renderorder: 0,
 
   create() {
 
@@ -160,7 +168,6 @@ container.style.opacity = 0;
 this.elementcontainer = container;
 
 setTimeout(() => {
-console.log('my element', element);
     let canvas = element.toCanvas(this.width, this.height, 1);
 /*
 document.body.appendChild(canvas);
@@ -186,6 +193,8 @@ canvas.style.border = '1px solid red';
       lighting: false,
       //image_id: 'xrmenu-element-canvas',
       scale: V(1, this.height / this.width, 1),
+      depth_test: this.depth_test,
+      renderorder: this.renderorder,
     });
     this.element = element;
     this.plane.addEventListener('mousemove', ev => this.handleMouse(ev));
