@@ -36,7 +36,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.createAudio = async function(src, audionodes) {
-      var sound = this.getAsset('sound', this.sound_id);
+      var sound = this.getAsset('sound', this.sound_id, true);
       if (!src) {
         this.currentsound = this.sound_id;
         if (sound && sound.src) {
