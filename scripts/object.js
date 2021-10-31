@@ -334,6 +334,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
           if (modelasset.animations) {
             this.initAnimations(modelasset.animations);
+            if (this.anim_id) {
+              if (modelasset && modelasset.loaded) {
+                this.setAnimation(this.anim_id);
+              } else {
+                elation.events.add(modelasset, 'asset_load', () => this.setAnimation(this.anim_id));
+              }
+            }
           }
 
         }
