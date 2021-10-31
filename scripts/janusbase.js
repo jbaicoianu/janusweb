@@ -1013,11 +1013,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
     this.updateAnimation = function() {
       // Triggered whenever this.anim_id changes
-      this.setAnimation(this.anim_id);
+      if (this.anim_id) {
+        this.setAnimation(this.anim_id);
+      } else if (this.activeanimation) {
+        this.stopAnimation();
+      }
     }
     this.setAnimation = function(anim_id) {
+      if (!this.started) return;
       if (!this.activeanimation || anim_id != this.activeanimation._clip.name) {
-        if (!this.animationmixer) return;
+        if (!this.animationmixer) this.extractAnimations(this.objects['3d']);
         if (this.activeanimation) {
           //console.log('pause active animation', this.activeanimation);
           // TODO - interpolating between actions would make transitions smoother
@@ -1052,6 +1057,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.activeanimation = action;
         }
         this.anim_id = anim_id;
+      }
+    }
+    this.stopAnimation = function() {
+      if (this.activeanimation) {
+        this.activeanimation.stop();
+        this.activeanimation = false;
       }
     }
     this.dispatchEvent = function(event, target) {
