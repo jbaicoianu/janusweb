@@ -202,21 +202,19 @@ elation.elements.define('janus-voip-client-hifi', class extends elation.elements
     let localuser = this.parentNode.localuser;
     this.remoteusers[localuser.userid] = localuser;
 
-console.log('create hifi client', this);
     elation.file.get('js', 'https://hifi-spatial-audio-api.s3.amazonaws.com/releases/latest/HighFidelityAudio-latest.js', (ev) => {
       this.connect();
-console.log('FIRE HIFI INIT');
       elation.events.fire({type: 'init', element: this});
     });
     this.roomid = room.voipid || '2bfa2bd1-9338-46c3-b740-e339303a1225';
   }
   async connect() {
     let currentPosition = new HighFidelityAudio.Point3D({ "x": 0, "y": 0, "z": 0 });
-    let currentOrientation = new HighFidelityAudio.OrientationQuat3D({ x: 0, y: 0, z: 0, w: 1});
+    let currentOrientation = new HighFidelityAudio.Quaternion({ x: 0, y: 0, z: 0, w: 1});
 
     let initialHiFiAudioAPIData = new HighFidelityAudio.HiFiAudioAPIData({
       position: currentPosition,
-      orientationQuat: currentOrientation,
+      orientation: currentOrientation,
       providedUserID: player.getNetworkUsername(),
      });
     let hifiCommunicator = new HighFidelityAudio.HiFiCommunicator({ initialHiFiAudioAPIData });
@@ -236,7 +234,6 @@ console.log('voip picker select?', ev);
     });
 */
 
-console.log('new hifi client has existing input stream?', this.inputstream);
     if (this.inputstream) {
       hifiCommunicator.setInputAudioMediaStream(this.inputstream);
     }
@@ -267,7 +264,7 @@ console.log('new hifi client has existing input stream?', this.inputstream);
     let newUserDataSubscription = new HighFidelityAudio.UserDataSubscription({
       components: [
         HighFidelityAudio.AvailableUserDataSubscriptionComponents.Position,
-        HighFidelityAudio.AvailableUserDataSubscriptionComponents.OrientationQuat,
+        HighFidelityAudio.AvailableUserDataSubscriptionComponents.Orientation,
         HighFidelityAudio.AvailableUserDataSubscriptionComponents.VolumeDecibels
       ],
       callback: audioDataArray => this.handleUserDataSubscription(audioDataArray)
@@ -278,7 +275,7 @@ console.log('new hifi client has existing input stream?', this.inputstream);
 /*
     this.userData = {
       position: currentPosition,
-      orientationQuat: currentOrientation,
+      orientation: currentOrientation,
       providedUserID: player.getNetworkUsername(),
     };
 */
@@ -313,10 +310,10 @@ console.log('new hifi client has existing input stream?', this.inputstream);
       this.userData.position.y = pos.y * scale;
       this.userData.position.z = pos.z * scale;
 
-      this.userData.orientationQuat.x = orientation.x;
-      this.userData.orientationQuat.y = orientation.y;
-      this.userData.orientationQuat.z = orientation.z;
-      this.userData.orientationQuat.w = orientation.w;
+      this.userData.orientation.x = orientation.x;
+      this.userData.orientation.y = orientation.y;
+      this.userData.orientation.z = orientation.z;
+      this.userData.orientation.w = orientation.w;
 
       if (this.hifiCommunicator._currentHiFiAudioAPIData) {
         this.hifiCommunicator.updateUserDataAndTransmit(this.userData);
