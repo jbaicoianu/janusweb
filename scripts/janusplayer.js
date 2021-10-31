@@ -456,10 +456,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           'dot_active': janus.getAsset('image', 'cursor_dot_active'),
         };
       }
-      if (!this.room.selfavatar && this.ghost) {
-        this.ghost.die();
-        this.ghost = false;
-        this.visible = false;
+      newroom.appendChild(this.getProxyObject());
+      if (this.ghost) {
+        this.ghost.setRoom(newroom);
       } else if (!this.ghost) { // && this.room.selfavatar) {
         // FIXME - self avatar is buggy so it's disabled
         this.getAvatarData().then(avatar => {
@@ -468,6 +467,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               ghost_id: this.getUsername(),
               avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
               showlabel: false,
+              //pos: V(0, -this.fatness, 0),
+              rotation: V(0, 180, 0),
             });
             this.ghost.orientation.set(0,1,0,0);
           }
@@ -475,7 +476,6 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.visible = true;
       }
 
-      newroom.appendChild(this.getProxyObject());
       for (let k in this.children) {
         if (this.children[k].setRoom) {
           this.children[k].setRoom(room);
