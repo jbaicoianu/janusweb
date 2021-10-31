@@ -523,6 +523,7 @@ elation.require(['janusweb.janusbase'], function() {
           textureWidth: this.mirror_texturesize,
           textureHeight: this.mirror_texturesize,
         });
+        group.castShadow = true;
         this.group = group;
         if (this.objects['3d']) {
           this.objects['3d'].add(group);
@@ -534,6 +535,7 @@ elation.require(['janusweb.janusbase'], function() {
         //var group = new THREE.Object3D();
         var group = new THREE.Mesh(box, mat);
         group.renderOrder = 10;
+        group.castShadow = true;
 
         if (this.draw_glow) {
           var framewidth = .05,
@@ -559,6 +561,7 @@ elation.require(['janusweb.janusbase'], function() {
           var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
           var frame = new THREE.Mesh(framegeo, framemat);
           this.frame = frame;
+          frame.castShadow = true;
           group.add(frame);
         }
         this.material = mat;
@@ -567,6 +570,7 @@ elation.require(['janusweb.janusbase'], function() {
 
         var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
         var frame = new THREE.Mesh(framegeo, framemat);
+        frame.castShadow = true;
         this.frame = frame;
         group.add(frame);
 
