@@ -1296,6 +1296,24 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         this.morphtargetInfluences[this.morphtargets[name]] = value;
       }
     }
+    this.applyPosition = function(pos) {
+      if (!this.modelasset) this.assignTextures();
+
+      let mat4 = new THREE.Matrix4().makeTranslation(+pos.x, +pos.y, +pos.z);
+      if (this.modelasset && this.modelasset.loaded) {
+        // FIXME - should we handle the case where the object is already loaded and we want to modify its origin?
+        //         Currently we do nothing, so we don't double-apply
+      } else {
+        elation.events.add(this.modelasset, 'asset_load', ev => {
+          this.objects['3d'].traverse(n => {
+            if (n instanceof THREE.Mesh) {
+              n.geometry.applyMatrix4(mat4);
+            }
+          });
+        });
+      }
+
+    }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
