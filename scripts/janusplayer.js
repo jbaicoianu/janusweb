@@ -31,6 +31,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         party_mode: { type: 'boolean', set: this.updatePartyMode },
         avatarsrc: { type: 'string' },
         cameraview: { type: 'string', default: 'firstperson' },
+        decouplehead: { type: 'boolean', default: false },
       });
 
       var controllerconfig = this.getSetting('controls.settings');
@@ -279,15 +280,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
             }
           }
         }
-        if (this.ghost) {
+        if (this.ghost && !this.decouplehead) {
           this.ghost.setHeadOrientation(this.head.orientation, true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            this.ghost.head.orientation.copy(this.head.orientation);
-          }
-          if (this.ghost._target.body) {
-            //this.ghost._target.body.position.copy(this.body.position);
-            //this.ghost._target.body.orientation.copy(this.body.orientation);
+            this.ghost.head.orientation.copy(this.head.orientation).invert();
           }
         }
       }
