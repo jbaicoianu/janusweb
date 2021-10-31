@@ -124,8 +124,8 @@ janus.registerElement('locomotion_teleporter', {
     });
     this.activateControlContext('teleporter');
 
-    room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
-    room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
+    //room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
+    //room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
     elation.events.add(janus._target, 'room_change', (ev) => this.handleRoomChange(ev));
   },
   update() {
