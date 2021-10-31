@@ -727,17 +727,6 @@ return;
         m.visible = (opacity > 0);
       });
     }
-    this.setRoom = function(room) {
-      if (room !== this.room) {
-        if (this.room) {
-          this.room.remove(this);
-        }
-        this.room = room;
-        if (room && this.parent != this.room) {
-          room.add(this);
-        }
-      }
-    }
     this.setRemoteVideo = function(video) {
       if (video) {
         this.remotevideo = video;
