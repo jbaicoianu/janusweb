@@ -971,7 +971,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         */
 
         if (this.shader_chunk_replace) {
-          let chunkreplace = this.shader_chunk_replace;
+          let chunkreplace = (elation.utils.isString(this.shader_chunk_replace) ? JSON.parse(this.shader_chunk_replace) : this.shader_chunk_replace);
           m.onBeforeCompile = function(shader) {
             for (let oldchunkname in chunkreplace) {
               let newchunkname = chunkreplace[oldchunkname];
