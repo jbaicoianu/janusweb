@@ -753,7 +753,7 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
     if (this.voipconfig) {
       // FIXME - starting the audio without explicitly asking the user within this session is bad, but we want to resume across refreshes
       //         We should use a session cookie-based timeout in addition to the localStorage settings
-      //this.handleSelectAudio({detail: 1});
+      this.handleSelectAudio({detail: 1});
     }
     console.log('voip picker loaded config', this.voipconfig);
   }
