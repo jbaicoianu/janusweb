@@ -47,6 +47,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'toggle_view': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
+        'zoom_out': ['mouse_wheel_down', ev => this.zoomView(-1)],
+        'zoom_in': ['mouse_wheel_up', ev => this.zoomView(1)],
         //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
         //'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
       });
@@ -1078,6 +1080,25 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           this.camera.position.z = 0;
         }
       }
+    }
+    this.zoomView = function(amount) {
+      if (this.cameraview == 'thirdperson') {
+        this.camera.position.z -= amount / 10;
+      }
+    }
+    this.setAnimationSequence = function(sequence) {
+      let t = 0;
+      let currentanimation = this.defaultanimation;
+      let body = this.ghost.body;
+      sequence.forEach(clipname => {
+        let anim = body.animations[clipname];
+        if (anim) {
+          let clip = anim.getClip();
+          setTimeout(() => { this.defaultanimation = clipname; }, t * 1000);
+          t += clip.duration;
+        }
+      });
+      setTimeout(() => { this.defaultanimation = currentanimation; }, t * 1000);
     }
   }, elation.engine.things.player);
 });
