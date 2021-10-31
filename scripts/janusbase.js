@@ -287,7 +287,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             }
           } else if (val instanceof THREE.Color) {
             if (defaultval instanceof THREE.Color) defaultval = defaultval.toArray();
-            if (!('default' in propdef) || ('default' in propdef && !(val.r == defaultval[0] && val.g == defaultval[1] && val.b == defaultval[2]))) {
+            if (!('default' in propdef) || defaultval === null || ('default' in propdef && !(val.r == defaultval[0] && val.g == defaultval[1] && val.b == defaultval[2]))) {
               attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
             }
           } else if (val instanceof THREE.Euler) {
