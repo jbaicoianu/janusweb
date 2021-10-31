@@ -1352,9 +1352,10 @@ console.log('clone', props);
       }
     }
     this.setRoom = function(newroom, ischild) {
-      if (newroom._target) newroom = newroom._target; // If the proxy object is passed in, use its target instead
+      if (newroom && newroom._target) newroom = newroom._target; // If the proxy object is passed in, use its target instead
 
       if (this.room !== newroom) {
+        let oldroom = this.room;
         if (!ischild) {
           this.stop();
         }
@@ -1364,7 +1365,13 @@ console.log('clone', props);
             this.children[k].setRoom(newroom, true);
           }
         }
-        if (!ischild) {
+        if (newroom && !ischild) {
+          let roomproxy = (newroom._target ? newroom : newroom.getProxyObject()),
+              objproxy = (this._target ? this : this.getProxyObject());
+          if (!roomproxy.contains(objproxy)) {
+            //newroom.add(this);
+            roomproxy.appendChild(objproxy);
+          }
           this.start();
         }
       }
