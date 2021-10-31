@@ -316,10 +316,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
               const minNode = motionControllerRoot.getObjectByName(visualResponse.minNodeName);
               const maxNode = motionControllerRoot.getObjectByName(visualResponse.maxNodeName);
 
-              THREE.Quaternion.slerp(
+              valueNode.quaternion.slerp(
                 minNode.quaternion,
                 maxNode.quaternion,
-                valueNode.quaternion,
                 visualResponse.value
               );
 
