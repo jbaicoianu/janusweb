@@ -5,13 +5,13 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     //this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusxr.org/media/assets/hoverscreen.obj" mtl="https://web.janusxr.org/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" screen_name="screen_Cube.004">\n      <Object id="screen" js_id="head" />\n    </Ghost>\n  </Room>\n</FireBoxRoom>'
     this.defaultavatar = `
     <FireBoxRoom>
-    <assets>
-    <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
-    <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
-    </assets>
-    <room>
-    <ghost js_id="205" id="LivelyMaurita613" scale=".01 .01 .01" col="#e0d5a1" body_id="body" />
-    </room>
+      <assets>
+        <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
+        <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
+      </assets>
+      <room>
+        <ghost scale=".01 .01 .01" col="#e0d5a1" body_id="body" bone_head="head" />
+      </room>
     </FireBoxRoom>
     `;
 
