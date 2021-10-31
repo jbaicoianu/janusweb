@@ -162,7 +162,7 @@ elation.elements.define('janus-button-webar', class extends elation.elements.ui.
   onactivate(ev) {
     this.label = this.activelabel;
     if (this.xr) {
-      janus.engine.client.startXR('immersive-ar', { requiredFeatures: ['plane-detection'], optionalFeatures: ['local-floor'] });
+      janus.engine.client.startXR('immersive-ar', { requiredFeatures: [], optionalFeatures: ['local-floor', 'plane-detection'] });
     }
   }
   ondeactivate(ev) {
