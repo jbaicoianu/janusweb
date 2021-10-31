@@ -53,7 +53,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.updateTitle = function() {
       if (this.draw_text) {
         var title = this.title;
-        if (!title) {
+        if (!title && this.url) {
           title = this.url.replace(/^https?:\/\//i, '');
           if (title.match(/^[^\/]+\/$/)) {
             title = title.substr(0, title.length - 1);
@@ -90,10 +90,12 @@ elation.require(['janusweb.janusbase'], function() {
     this.createChildren = function() {
         //elation.events.add(this.label, 'mouseover,mousemove,mouseout,click', this);
       this.updateCollider();
-      elation.events.add(this, 'click', elation.bind(this, this.activate));
-      elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
-      elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
-      elation.events.add(this, 'collide', (ev) => this.handleCollide());
+      if (this.url) {
+        elation.events.add(this, 'click', elation.bind(this, this.activate));
+        elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
+        elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
+        elation.events.add(this, 'collide', (ev) => this.handleCollide());
+      }
     }
     this.createMaterial = function() {
       var matargs = {
