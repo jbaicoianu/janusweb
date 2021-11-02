@@ -1802,8 +1802,8 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
       }
     }
     this.onScriptTick = function(ev) {
-      this.engine.systems.world.scene['world-3d'].updateMatrix();
-      this.engine.systems.world.scene['world-3d'].updateMatrixWorld();
+      //this.engine.systems.world.scene['world-3d'].updateMatrix();
+      //this.engine.systems.world.scene['world-3d'].updateMatrixWorld();
 /*
       for (var k in this.jsobjects) {
         var realobj = this.getObjectFromProxy(this.jsobjects[k]);
