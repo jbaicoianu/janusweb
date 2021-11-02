@@ -394,6 +394,21 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           this.gaze.fired = true;
         }
       }
+      if (this.controlstate.jump && !this.jumping) {
+        let jumptime = 1;
+        if (this.ghost && this.ghost.body.animations && this.ghost.body.animations.jump) {
+          let jumpanim = this.ghost.body.animations.jump;
+          let jumpclip = jumpanim.getClip();
+
+          jumpanim.loop = THREE.LoopOnce;
+
+          if (jumpclip) {
+            jumptime = jumpclip.duration;
+          }
+          this.jumping = true;
+          setTimeout(() => this.jumping = false, (jumptime * 1000) * .8);
+        }
+      }
     }
     this.updateMouseStatus = function(ev) {
       if (ev.type == 'mousedown' && ev.button === 0) {
@@ -657,7 +672,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       var animid = this.defaultanimation;
       let running = this.controlstate.run;
 
-      if (this.controlstate.move_left) {
+      if (this.jumping) {
+        animid = 'jump';
+      } else if (this.controlstate.move_left) {
         animid = (running ? 'run' : 'walk_left');
       } else if (this.controlstate.move_right) {
         animid = (running ? 'run' : 'walk_right');
