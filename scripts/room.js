@@ -1763,12 +1763,18 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
       }
     }
     this.onThingChange = function(ev) {
-      var thing = ev.target;
-      if (!this.applyingEdits && thing.js_id && this.jsobjects[thing.js_id]) {
-        var proxy = this.jsobjects[thing.js_id];
+      if (this.applyingEdits) return;
+
+      let thing = ev.target,
+          js_id = thing.js_id;
+
+      if (!js_id) return;
+
+      let proxy = this.jsobjects[js_id];
+      if (proxy) {
         if (proxy.sync) {
-          if (!this.appliedchanges[thing.js_id]) {
-            this.changes[thing.js_id] = proxy;
+          if (!this.appliedchanges[js_id]) {
+            this.changes[js_id] = proxy;
           }
           proxy.sync = proxy.autosync;
         }
