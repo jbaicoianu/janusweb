@@ -227,15 +227,15 @@ elation.require([
         // Reparent player to the room if necessary
         this.appendChild(player.getProxyObject());
       }
+      player.reset_position();
       player.position.copy(pos);
       player.orientation.copy(orientation);
-      //player.reset_position();
       player.properties.movestrength = 80 * this.properties.walk_speed;
       player.properties.runstrength = 80 * this.properties.run_speed;
       player.cursor_visible = (!janus.hmd ? elation.utils.any(this.cursor_visible, true) : false);
       player.cursor_opacity = elation.utils.any(this.cursor_opacity, .8);
       // FIXME - for some reason the above call sometimes orients the player backwards.  Doing it on a delay fixes it...
-      setTimeout(elation.bind(player, player.reset_position), 0);
+      //setTimeout(elation.bind(player, player.reset_position), 0);
     }
     this.setHash = function(hash) {
       this.urlhash = hash;
@@ -853,7 +853,9 @@ elation.require([
             });
           }
         }
-        setTimeout(() => this.setPlayerPosition(), 0);
+        if (this.active) {
+          setTimeout(() => this.setPlayerPosition(), 0);
+        }
 
         if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
         if (room.skybox_equi) this.properties.skybox_equi = room.skybox_equi;
