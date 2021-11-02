@@ -1584,9 +1584,13 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
     }
     this.playSound = function(name, properties) {
       if (!this.sounds[name]) {
-        this.sounds[name] = this.createObject('Sound', {
-          id: name
-        });
+        if (room.objects[name]) {
+          this.sounds[name] = room.objects[name];
+        } else {
+          this.sounds[name] = this.createObject('Sound', {
+            id: name
+          });
+        }
       }
       if (this.sounds[name]) {
         if (properties) {
