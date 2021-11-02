@@ -32,6 +32,6 @@ if [ ! -d elation ]; then
 
   cd ..
   ./elation web init
-  ./elation component enable engine physics share elements janusweb
+  ./elation component enable engine physics share elements janusweb utils
 fi
 echo "done"
