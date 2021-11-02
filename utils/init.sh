@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "Creating directory tree..."
-DEPENDENCYPATHS=$(npm ls -parseable)
+DEPENDENCYPATHS=$(npm ls --all -parseable)
 
 declare -A dependencies
 
