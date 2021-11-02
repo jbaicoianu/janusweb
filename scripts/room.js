@@ -256,7 +256,15 @@ elation.require([
           if (links[i].url == referrer) {
             //spawnpoint.position = links[i].position;
             spawnpoint.position = links[i].localToWorld(V(0,0,player.fatness*2));
-            spawnpoint.orientation = links[i].orientation.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
+            spawnpoint.orientation = links[i].orientation.clone();
+            let node = links[i];
+            let roomproxy = this.getProxyObject();
+            while (node.parent && node.parent != roomproxy) {
+              node = node.parent;
+              node.handleFrameUpdates({});
+              spawnpoint.orientation.multiply(node.orientation);
+            }
+            spawnpoint.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
             break;
           }
         }
@@ -819,8 +827,8 @@ elation.require([
             links.forEach(link => {
               let url = this.getFullRoomURL(link.url);
               if (url == this.referrer) {
-                this.spawnpoint.quaternion.copy(link.orientation.inverse());
-                this.spawnpoint.position.fromArray(link.pos);
+                this.spawnpoint.quaternion.copy(link.orientation).invert();
+                this.spawnpoint.position.copy(link.pos);
                 this.spawnpoint.position.add(this.spawnpoint.localToWorld(V(0,0,-player.fatness)));
                 hasReciprocalLink = true;
               }
