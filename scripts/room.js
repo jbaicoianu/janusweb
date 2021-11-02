@@ -2606,9 +2606,12 @@ console.log('dispatch to parent', event, this, event.target);
       this.loaded = false;
     }
     this.contains = function(obj) {
+      if (obj._target) obj = obj._target;
+      let room = this;
+      if (this._target) room = this._target;
       let ptr = obj;
       while (ptr.parent) {
-        if (ptr.parent == this) return true;
+        if (ptr.parent == room) return true;
         ptr = ptr.parent;
       }
       return false;
