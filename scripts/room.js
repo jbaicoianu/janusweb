@@ -79,6 +79,7 @@ elation.require([
         'requirescripts': { type: 'string' },
         'onload': { type: 'string' },
         'sync': { type: 'boolean', default: false },
+        'pointerlock': { type: 'boolean', default: true },
       });
       this.translators = {
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
@@ -900,6 +901,7 @@ elation.require([
         this.gravity = elation.utils.any(room.gravity, 0);
         this.flying = elation.utils.any(room.flying, true);
         this.teleport = elation.utils.any(room.teleport, true);
+        this.pointerlock = elation.utils.any(room.pointerlock, true);
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
@@ -1007,9 +1009,10 @@ elation.require([
 console.log('connect room audio to graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
           this.fadeAudioIn(2);
         }
-      }
-      if (this.engine.systems.admin) {
-        elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
+        this.engine.systems.controls.pointerLockEnabled = this.pointerlock;
+        if (this.engine.systems.admin) {
+          elation.events.add(this.engine.systems.admin, 'admin_edit_change', elation.bind(this, this.onRoomEdit));
+        }
       }
       //this.showDebug();
     }
@@ -1057,6 +1060,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
             console.log('disconnect room audio from graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
           }, 1500);
         }
+        //this.engine.systems.controls.pointerLockEnabled = this.pointerlock;
       }
     }
     this.setTitle = function(title) {
