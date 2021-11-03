@@ -727,6 +727,8 @@ elation.require([
         var assetlist = roomdata.assets.assetlist;
         if (roomdata.assets.websurfaces) {
           elation.utils.merge(roomdata.assets.websurfaces, this.websurfaces);
+          if (!this.roomassets.websurface) this.roomassets.websurface = {};
+          elation.utils.merge(roomdata.assets.websurfaces, this.roomassets.websurface);
         }
 
         if (roomdata.assets.ghosts) {
@@ -1466,6 +1468,8 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
       } else if (type == 'websurface') {
         if (args.id) {
           this.websurfaces[args.id] = args;
+          if (!this.roomassets.websurface) this.roomassets.websurface = {};
+          this.roomassets.websurface[args.id] = args;
         }
       } else if (type == 'script') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
