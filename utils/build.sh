@@ -42,6 +42,9 @@ fi
 if [ ! -f "$BUILDDIR/manifest.json" ] || [ ! "$BUILDDIR/media/manifest.json" -ef "$BUILDDIR/manifest.json" ]; then
   mv "$BUILDDIR/media/manifest.json" "$BUILDDIR/"
 fi
+if [ ! -f "$BUILDDIR/service-worker.js" ] || [ ! "$BUILDDIR/media/service-worker.js" -ef "$BUILDDIR/service-worker.js" ]; then
+  mv "$BUILDDIR/media/service-worker.js" "$BUILDDIR/"
+fi
 
 if [ -e elation ] && [ -e elation/components/janusweb ]; then
   echo 'Building from project-local elation directory'
