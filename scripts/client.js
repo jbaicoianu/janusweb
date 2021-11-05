@@ -104,6 +104,11 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
 
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js');
+      }
+
+
       if ('xr' in navigator) {
         navigator.xr.addEventListener('sessiongranted', (ev) => {
           this.startXR();
