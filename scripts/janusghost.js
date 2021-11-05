@@ -280,9 +280,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             lighting: this.lighting,
             //cull_face: 'none'
             opacity: 0.9999,
-            shader_chunk_replace: {
+            renderorder: this.renderorder || 100,
+            shader_chunk_replace: (this.lighting ? {
               'color_fragment': 'color_fragment_discard_close',
-            },
+            } : {}),
           });
         } else {
           this.body = bodyid;
@@ -636,6 +637,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.bone_head = ghostdef.bone_head;
         this.morphtarget_mouth = ghostdef.morphtarget_mouth;
         this.morphtarget_eyes = ghostdef.morphtarget_eyes;
+        this.lighting = elation.utils.any(ghostdef.lighting, true);
         if (ghostdef.morphtarget_eyes) {
           this.blink();
         }
