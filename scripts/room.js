@@ -960,6 +960,10 @@ elation.require([
           if (!this.pendingScriptMap[s.src]) {
             this.pendingScripts++;
             this.pendingScriptMap[s.src] = true;;
+            elation.events.add(scriptasset, 'asset_error', (ev) => {
+              console.error('Failed to load Janus room script', scriptasset);
+              this.doScriptOnload();
+            });
             elation.events.add(script, 'asset_load', () => {
               script.onload = () => this.doScriptOnload();
               document.head.appendChild(script);
