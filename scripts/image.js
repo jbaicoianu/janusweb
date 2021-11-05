@@ -55,7 +55,7 @@ elation.require(['janusweb.janusbase'], function() {
         color: this.properties.color,
         transparent: (this.opacity < 1),
         opacity: this.opacity,
-        alphaTest: 0.2
+        alphaTest: this.alphatest
       };
 
       this.asset = this.getAsset('image', this.image_id);
@@ -68,6 +68,9 @@ elation.require(['janusweb.janusbase'], function() {
           elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
 
           matargs.transparent = this.asset.hasalpha;
+          elation.events.add(this.asset, 'asset_load', ev => {
+            matargs.transparent = this.asset.hasalpha;
+          });
         } 
       }
       if (this.texture) {
@@ -155,6 +158,9 @@ elation.require(['janusweb.janusbase'], function() {
       }, 0);
       this.sidetex.image = this.texture.image;
       this.sidetex.needsUpdate = true;
+
+      this.frontmaterial.transparent = this.asset.hasalpha;
+      this.sidematerial.transparent = this.asset.hasalpha;
 
       if (this.properties.sbs3d || this.asset.sbs3d) {
         // TODO - to really support 3d video, we need to set offset based on which eye is being rendered
