@@ -484,6 +484,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               showlabel: false,
               //pos: V(0, -this.fatness, 0),
               rotation: V(0, 180, 0),
+              renderorder: 101,
             });
             this.ghost.orientation.set(0,1,0,0);
           }
@@ -647,6 +648,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         showlabel: false,
         pos: V(0, -this.fatness, 0),
         rotation: V(0, 180, 0),
+        renderorder: 101,
       });
 
       return setting;
