@@ -412,6 +412,7 @@ elation.require([
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
+          elation.events.fire({element: this, type: 'skybox_update'});
           return true;
         }
       }

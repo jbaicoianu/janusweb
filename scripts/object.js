@@ -111,6 +111,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       //this.properties.collidable = false;
 
       //this.updateColliderFromGeometry(new THREE.BoxGeometry(1,1,1));
+
+      elation.events.add(this.room, 'skybox_update', ev => this.updateSkybox());
     }
     this.createForces = function() {
       elation.engine.things.janusobject.extendclass.createForces.call(this);
@@ -989,6 +991,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
       }
       return m;
+    }
+    this.updateSkybox = function() {
+      let envMap = (this.isUsingPBR() ? this.getEnvmap() : null);
+      this.traverseObjects(n => {
+        if (n.material) {
+          let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
+          materials.forEach(m => {
+            m.envMap = envMap;
+          });
+        }
+      });
     }
     this.updateColor = function() {
       elation.engine.things.janusobject.extendclass.updateColor.call(this);
