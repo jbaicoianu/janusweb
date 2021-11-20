@@ -185,7 +185,7 @@ janus.registerElement('locomotion_teleporter', {
         }
       }
       this.laser.updateLine();
-      if (this.laser.room !== room) room.appendChild(this.laser);
+      if (this.laser.room !== room._target) room.appendChild(this.laser);
       this.pointer.orientation._target.setFromEuler(new THREE.Euler(Math.PI/2, this.teleportangle, 0, "YXZ"));
     } else {
       if (this.shroud.visible) {
@@ -328,8 +328,8 @@ janus.registerElement('locomotion_teleporter', {
     if (!room.teleport) return;
     this.visible = true;
     this.particles.visible = true;
-    if (this.laser.room !== room) room.appendChild(this.laser);
-    if (this.particles.room !== room) room.appendChild(this.particles);
+    if (this.laser.room !== room._target) room.appendChild(this.laser);
+    if (this.particles.room !== room._target) room.appendChild(this.particles);
     this.laser.visible = true;
     this.active = true;
     this.particles.start();
