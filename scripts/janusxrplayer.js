@@ -573,7 +573,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.laser.updateLine();
         this.cursor.pos.copy(endpoint);
         //this.cursor.zdir = normal;
-        if (this.cursor.room !== room) room.appendChild(this.cursor);
+        if (this.cursor.room !== room._target) room.appendChild(this.cursor);
         //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
         //this.cursor.zdir = normal;
         this.cursor.visible = true;
