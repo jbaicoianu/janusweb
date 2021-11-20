@@ -705,6 +705,7 @@ elation.require([
       this.fullsource = data;
       var titlere = /<title>([\s\S]*?)<\/title>/mi;
       var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi;
+      var re2 = /<janus-viewer>[\s\S]*?<\/janus-viewer>/mi;
       var mtitle = data.match(titlere);
       var parsed = {
         title: 'Untitled Room',
@@ -719,6 +720,11 @@ elation.require([
       var m = data.match(re);
       if (m) { 
         parsed.source = m[0];
+      } else {
+        let m2 = data.match(re2);
+        if (m2) {
+          parsed.source = m2[0].replaceAll('janus-viewer', 'fireboxroom');
+        }
       }
       return parsed;
     }
