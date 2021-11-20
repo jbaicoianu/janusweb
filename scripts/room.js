@@ -2307,7 +2307,9 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           var asset = this.roomassets[type][assetname];
 
           let defaultasset = (janus.assetpack.assetmap[type] ? janus.assetpack.assetmap[type][assetname] : undefined);
-          if (assetname != asset.src && asset !== defaultasset) {
+          if (type == 'script') {
+            assetsrc += '    <assetscript src="' + asset.src + '" />\n';
+          } else if (assetname != asset.src && asset !== defaultasset) {
             assetsrc += '    <asset' + (assettypemap[type] || type) + ' id="' + assetname + '" src="' + asset.src + '" />\n';
           }
         }
