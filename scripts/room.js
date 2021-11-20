@@ -1781,17 +1781,17 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
       if (this.applyingEdits) return;
 
       let thing = ev.target,
-          js_id = thing.js_id;
+          js_id = thing.properties.js_id;
 
       if (!js_id) return;
 
       let proxy = this.jsobjects[js_id];
       if (proxy) {
-        if (proxy.sync) {
+        if (thing.properties.sync) {
           if (!this.appliedchanges[js_id]) {
             this.changes[js_id] = proxy;
           }
-          proxy.sync = proxy.autosync;
+          thing.properties.sync = proxy.autosync;
         }
       }
     }
