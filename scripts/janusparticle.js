@@ -67,6 +67,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.collidable = false;
       this.boundingRadiusSq = 0;
       this.boundingSphereWorld = new THREE.Sphere();
+      this.furthestPoint = new THREE.Vector3();
       this.lastrefresh = 0;
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
@@ -324,11 +325,19 @@ elation.require(['janusweb.janusbase'], function() {
       // We also rate limit here, so if nothing else in the scene is changing, we
       // render at a lower fps
       this.localToWorld(this.boundingSphereWorld.center.set(0,0,0));
-      if (!this.objects['3d'].geometry.boundingSphere) {
-        this.objects['3d'].geometry.computeBoundingSphere();
+      let geo = this.objects['3d'].geometry;
+      if (!geo.boundingSphere) {
+        geo.computeBoundingSphere();
+      } else {
+        let currentBoundingRadius = geo.boundingSphere.radius
+        if (this.boundingRadiusSq > currentBoundingRadius * currentBoundingRadius) {
+           geo.boundingSphere.radius = Math.sqrt(this.boundingRadiusSq) + .1;
+        }
       }
-      this.boundingSphereWorld.radius = this.objects['3d'].geometry.boundingSphere.radius;
+
+      this.boundingSphereWorld.radius = geo.boundingSphere.radius;
       if (player.viewfrustum.intersectsSphere(this.boundingSphereWorld) && now - this.lastrefresh > (1000 / this.refreshrate)) {
+
         this.refresh();
         this.lastrefresh = now;
       }
@@ -341,11 +350,14 @@ elation.require(['janusweb.janusbase'], function() {
         var lengthSq = vec.lengthSq();
         if (lengthSq > this.boundingRadiusSq) {
           this.boundingRadiusSq = lengthSq;
+          this.furthestPoint.copy(vec);
+/*
           var geo = this.objects['3d'].geometry;
           if (!geo.boundingSphere) {
             geo.boundingSphere = new THREE.Sphere();
           }
           geo.boundingSphere.radius = Math.sqrt(lengthSq);
+*/
         }
       }
     }
