@@ -6,7 +6,7 @@ elation.elements.define('janus.ui.inventory', class extends elation.elements.bas
     console.log('INVENTORY ELEMENTS', elements);
     if (elements.primitives) {
       elation.events.add(elements.primitives, 'select', (ev) => this.handlePrimitiveSelect(ev));
-      elation.events.add(elements.polyobjects, 'select', (ev) => this.handleAssetSelect(ev));
+      //elation.events.add(elements.polyobjects, 'select', (ev) => this.handleAssetSelect(ev));
     }
   }
   addSource(name, collection) {
