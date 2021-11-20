@@ -1006,9 +1006,9 @@ elation.require([
         elation.events.add(window, 'click', this.onClick);
         elation.events.add(window, 'keydown', this.onKeyDown);
         elation.events.add(window, 'keyup', this.onKeyUp);
-        elation.events.add(this.engine.client.container, 'mousedown,touchstart', this.onMouseDown);
-        elation.events.add(this.engine.client.container, 'mouseup,touchend', this.onMouseUp);
-        elation.events.add(this.engine.client.container, 'mousemove', this.onMouseMove);
+        //elation.events.add(this, 'mousedown,touchstart', this.onMouseDown);
+        //elation.events.add(this, 'mouseup,touchend', this.onMouseUp);
+        //elation.events.add(this, 'mousemove', this.onMouseMove);
         elation.events.add(this, 'click', this.onObjectClick);
 /*
         elation.events.add(this, 'dragenter', this.handleDragOver);
@@ -2075,10 +2075,10 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           onColliderEnter: ['callback', 'janus_room_collider_enter'],
           onColliderExit:  ['callback', 'janus_room_collider_exit'],
           onClick:         ['callback', 'click,touchstart', 'engine.client.container'],
-          onMouseDown:     ['callback', 'janus_room_mousedown'],
-          onMouseUp:       ['callback', 'janus_room_mouseup'],
-          onMouseMove:     ['callback', 'janus_room_mousemove'],
-          onMouseDrag:     ['callback', 'janus_room_mousedrag'],
+          onMouseDown:     ['callback', 'mousedown'],
+          onMouseUp:       ['callback', 'mouseup'],
+          onMouseMove:     ['callback', 'mousemove'],
+          onMouseDrag:     ['callback', 'mousedrag'],
           onKeyDown:       ['callback', 'janus_room_keydown'],
           onKeyUp:         ['callback', 'janus_room_keyup']
         });
