@@ -207,8 +207,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               //this.colliders.add(collider);
               processMeshCollider(collider);
             } else {
+              let meshColliderLoaded = false;
               elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {
-                processMeshCollider(collider);
+                if (!meshColliderLoaded) {
+                  processMeshCollider(collider);
+                }
+                meshColliderLoaded = true;
               }) );
             }
           }
