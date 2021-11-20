@@ -96,7 +96,7 @@ elation.require(['janusweb.janusbase'], function() {
         elation.events.add(this, 'click', elation.bind(this, this.activate));
         elation.events.add(this, 'mouseover', elation.bind(this, this.hover));
         elation.events.add(this, 'mouseout', elation.bind(this, this.unhover));
-        elation.events.add(this, 'collide', (ev) => this.handleCollide());
+        elation.events.add(this, 'collide', (ev) => this.handleCollide(ev));
       }
     }
     this.createMaterial = function() {
@@ -624,7 +624,9 @@ elation.require(['janusweb.janusbase'], function() {
         }
       }
     }
-    this.handleCollide = function() {
+    this.handleCollide = function(ev) {
+      // TODO - we could potentially handle sending other physical objects through portals here, but for now we only care about the player
+      if (ev.data.other !== player._target) return;
       // Only activate portal if the player is walking towards it
       let fwd = this.localToWorld(V(0,0,1)).sub(this.localToWorld(V(0,0,0)));
       let dot = fwd.dot(normalized(player.vel));
