@@ -26,6 +26,8 @@ elation.require(['janusweb.janusbase'], function() {
         'target': { type: 'string', default: '' },
         'round': { type: 'boolean', default: false },
         'cooldown': { type: 'float', default: 1000 },
+        'font': { type: 'string', default: 'impact' },
+        'font_weight': { type: 'string', default: 'bold' },
       });
       this.addTag('usable');
       elation.engine.things.janusportal.extendclass.postinit.call(this);
@@ -75,8 +77,8 @@ elation.require(['janusweb.janusbase'], function() {
               collidable: false,
               pickable: false,
               background: 'rgba(255,255,255,.4)',
-              font: 'impact',
-              fontWeight: 'bold',
+              font: this.font,
+              fontWeight: this.font_weight,
               textShadowBlur: 5,
               textShadowColor: 'black',
               height: .1,
