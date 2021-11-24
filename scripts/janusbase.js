@@ -155,7 +155,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         } else if (collision_id == 'cylinder') {
           this.setCollider('cylinder', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0), trigger: this.collision_trigger});
         } else if (collision_id == 'capsule') {
-          this.setCollider('capsule', {height: 1, radius: .5, offset: new THREE.Vector3(0, 0.5, 0), trigger: this.collision_trigger});
+          this.setCollider('capsule', {length: 1, radius: .5, offset: new THREE.Vector3(0, 0, 0), trigger: this.collision_trigger});
         } else {
           var colliderasset = this.getAsset('model', collision_id);
           if (colliderasset) {
