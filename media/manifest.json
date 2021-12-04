@@ -5,9 +5,9 @@
   "theme_color": "#2f363b",
   "lang": "en-US",
   "orientation": "any",
-  "start_url": "index.html",
-  
+  "start_url": "https://web.janusxr.org/",
   "description": "Webpages become 3D spaces interconnected by portals.  Explore, collaborate and build, with or without a headset.",
+  "ovr_package_name": "web.JanusXR.org",
   "icons": [
     {
       "src": "media/images/icons/janusweb-512x512.png",
