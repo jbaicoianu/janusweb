@@ -617,7 +617,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.handleFrameUpdates = function(ev) {
       elation.engine.things.janusportal.extendclass.handleFrameUpdates.call(this, ev);
-      if (this.shader) {
+      if (this.shader && this.shader.uniforms) {
         if (this.shader.uniforms.time) {
           this.shader.uniforms.time.value = performance.now() / 1000;
           this.refresh();
