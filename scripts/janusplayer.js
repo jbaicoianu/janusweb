@@ -116,7 +116,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.container, 'mousedown', elation.bind(this, this.updateMouseStatus));
       elation.events.add(this.engine.client.container, 'mouseup', elation.bind(this, this.updateMouseStatus));
 
-      elation.events.add(this.room, 'mouseover,mouseout', elation.bind(this, this.updateCursorStyle));
+      this.updateCursorStyle = elation.bind(this, this.updateCursorStyle);
 
       this.touchcache = {
         positions: []
@@ -446,10 +446,14 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.setRoom = function(newroom) {
       if (this.room) {
+        let oldroomproxy = this.room.getProxyObject();
+        oldroomproxy.removeEventListener('mouseover', this.updateCursorStyle);
+        oldroomproxy.removeEventListener('mouseout', this.updateCursorStyle);
         this.room.part();
       }
       this.room = newroom;
       this.room.join();
+
 /*
       if (!this.gazecaster) {
         this.gazecaster = newroom.createObject('raycaster', {persist: false});
@@ -462,6 +466,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         this.gazecaster.setRoom(newroom);
       }
 */
+      let newroomproxy = newroom.getProxyObject();
+      newroomproxy.addEventListener('mouseover', this.updateCursorStyle);
+      newroomproxy.addEventListener('mouseout', this.updateCursorStyle);
+
       if (!this.cursors) {
         this.cursors = {
           'default': janus.getAsset('image', 'cursor_crosshair'),
@@ -778,9 +786,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     }
     this.updateCursorStyle = function(ev) {
       var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
-      var obj = ev.target || ev.element;
+      var obj = ev.element;
       var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
-
 
       if (obj && proxyobj && (ev.type == 'mouseover' || ev.type == 'mousemove') && (
             obj.onclick ||
