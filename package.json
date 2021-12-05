@@ -13,7 +13,7 @@
     "start:dev": "nodemon -w scripts/ -w css/ -w ../engine/scripts/ -w ../engine/css/ -w ../physics/scripts/ -w ../utils/scripts/ -w ../elements/scripts/ -w ../elements/css/ --exec ./utils/build.sh"
   },
   "devDependencies": {
-    "karma": "~4.1",
+    "karma": "*",
     "karma-cli": "*",
     "jasmine": ">=2.0",
     "jasmine-core": "*",
