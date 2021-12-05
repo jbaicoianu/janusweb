@@ -1,3 +1,42 @@
+JanusWeb 1.5
+============
+- Threejs upgrade to r133
+- Skeletal and morphtarget animation support
+- Lighting and material improvements
+  - Transmission
+  - Clearcoat
+  - HDRI envmaps (EXR)
+  - Improved shadow mapping
+  - light_style parameter for Quake-style light patterns
+  - DRACO glTF compression
+- Avatar improvements
+  - Ready Player Me
+  - Animation packs
+  - Morph targets for speaking, blinking, etc
+  - Smarter fading
+  - Third person camera option
+- WebXR improvements
+  - Stripped out all legacy WebVR and draft WebXR code
+  - Optimized performance
+  - WebXR Layers for equi video playback
+  - WebXR Navigation
+  - In-VR UI
+- Collision improvements
+  - New collision combos: sphere/mesh, capsule/mesh, capsule/capsule
+- Audio Improvements
+  - Room audio graph support
+  - HiFi VOIP backend support
+  - Configurable VOIP backend per room
+- Experimental / future Stuff
+  - AR with plane detection and lighting estimation
+  - Swappable physics backends
+  - NVIDIA PhysX / multi-threaded physics
+  - TensorFlow.js integration - BlazePose full-body tracking, FacePose, HandPose
+  - Hybrid standalone XR HMD + desktop processing using local network WebRTC
+  - Continued performance improvements
+  - iOS support
+  - Patreon and Gitcoin donation pages
+
 JanusWeb 1.3
 ============
 - Engine improvements
