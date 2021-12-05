@@ -410,7 +410,7 @@ elation.require([
       }
     }
     this.preload = function(url, stripreferrer) {
-      this.load(url, false, null, stripreferrer);
+      return this.load(url, false, null, stripreferrer);
     }
     this.getFixedURL = function(url) {
       // Our 'clean' client URLs don't contain a : because many services have problems parsing them
