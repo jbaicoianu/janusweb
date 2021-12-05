@@ -654,7 +654,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         ghost_id: this.getUsername(),
         avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
         showlabel: false,
-        pos: V(0, -this.fatness, 0),
+        //pos: V(0, -this.fatness, 0),
         rotation: V(0, 180, 0),
         renderorder: 101,
       });
@@ -841,10 +841,16 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.updateCollider = function() {
       if (this.objects['dynamics']) {
         if (this.collision_radius > 0) {
+/*
           this.setCollider('sphere', {
             radius: this.collision_radius,
-            length: this.height,
-            //offset: V(0, this.collision_radius, 0)
+          });
+*/
+          this.pickable = false;
+          this.setCollider('capsule', {
+            radius: this.collision_radius,
+            length: 1,
+            offset: V(0, this.collision_radius, 0)
           });
         } else {
           this.removeCollider();
