@@ -15,7 +15,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var fullsize = (container == document.body);
 
     if (elation.config.get('serviceworker.enabled') && 'serviceWorker' in navigator) {
-      var workerscript = elation.config.get('serviceworker.script', 'serviceworker.js');
+      var workerscript = elation.config.get('serviceworker.script', 'service-worker.js');
       navigator.serviceWorker.register(workerscript)
       .then(function(reg) {
         // registration worked
@@ -103,11 +103,6 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.crosshair = false;
       this.enginecfg.picking = true;
       this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
-
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js');
-      }
-
 
       if ('xr' in navigator) {
         navigator.xr.addEventListener('sessiongranted', (ev) => {
