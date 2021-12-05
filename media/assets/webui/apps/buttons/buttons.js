@@ -3,14 +3,14 @@ elation.elements.define('janus.ui.buttons', class extends elation.elements.base 
     super.init();
     this.defineAttributes({
       showedit: { type: 'boolean', default: true },
-      showshare: { type: 'boolean', default: true },
+      showshare: { type: 'boolean', default: false },
       showfullscreen: { type: 'boolean', default: true },
       showvr: { type: 'boolean', default: true },
       showar: { type: 'boolean', default: true },
       showsettings: { type: 'boolean', default: true },
       showaudio: { type: 'boolean', default: true },
       showvoip: { type: 'boolean', default: true },
-      showdebug: { type: 'boolean', default: true },
+      showdebug: { type: 'boolean', default: false },
     });
   }
   create() {
