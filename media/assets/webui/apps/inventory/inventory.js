@@ -68,7 +68,7 @@ elation.elements.define('janus.ui.inventory.roomassets.list', class extends elat
     this.list.setItems(this.getAssetList());
   }
   getAssetList() {
-    if (room.assetpack.assetmap[this.assettype]) {
+    if (room.assetpack && room.assetpack.assetmap[this.assettype]) {
       return room.assetpack.assetmap[this.assettype];
     }
     return {};
