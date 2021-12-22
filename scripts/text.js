@@ -219,7 +219,6 @@ elation.require(['engine.things.label'], function() {
           text:  [ 'property', 'text'],
           col:   [ 'property', 'color'],
           emissive:  [ 'property', 'emissive'],
-          font:  [ 'property', 'font'],
           bevel:  [ 'property', 'bevel'],
           bevel_thickness:  [ 'property', 'bevel_thickness'],
           bevel_size:  [ 'property', 'bevel_size'],
@@ -228,6 +227,12 @@ elation.require(['engine.things.label'], function() {
           roughness:  [ 'property', 'roughness'],
           metalness:  [ 'property', 'metalness'],
           envmap_id:  [ 'property', 'envmap_id'],
+          font:       [ 'property', 'font'],
+          font_size:  [ 'property', 'font_size'],
+          font_scale: [ 'property', 'font_scale'],
+          align:       [ 'property', 'align'],
+          verticalalign:  [ 'property', 'verticalalign'],
+          zalign: [ 'property', 'zalign'],
         };
       }
       return this._proxyobject;
