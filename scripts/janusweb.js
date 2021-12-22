@@ -172,6 +172,7 @@ elation.require([
         load:              ['function', 'navigateTo'],
         setActiveRoom:     ['function', 'setActiveRoom'],
         preload:           ['function', 'preload'],
+        createRoom:        ['function', 'createRoom'],
         navhome:           ['function', 'navigateHome'],
         chatsend:          ['function', 'sendChatMessage'],
         sync:              ['function', 'currentroom.sync'],
@@ -411,6 +412,23 @@ elation.require([
     }
     this.preload = function(url, stripreferrer) {
       return this.load(url, false, null, stripreferrer);
+    }
+    this.createRoom = function(url, makeactive=true) {
+      let newroom = this.spawn('janusroom', url, {
+        url: url,
+        janus: this,
+        corsproxy: this.corsproxy,
+        deferload: true
+      });
+
+      this.rooms[newroom.roomid] = newroom;
+      //console.log('made new room', url, room);
+      this.loading = false;
+      if (newroom && makeactive) {
+        this.setActiveRoom(newroom);
+      }
+      this.initScripting();
+      return newroom.getProxyObject();
     }
     this.getFixedURL = function(url) {
       // Our 'clean' client URLs don't contain a : because many services have problems parsing them
