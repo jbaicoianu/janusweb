@@ -5,6 +5,36 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       'front': THREE.BackSide,
       'none': THREE.DoubleSide
     };
+    this.depthFuncMap = {
+      'never': THREE.NeverDepth,
+      'always': THREE.AlwaysDepth,
+      'equal': THREE.EqualDepth,
+      'less': THREE.LessDepth,
+      'lessequal': THREE.LessEqualDepth,
+      'greaterequal': THREE.GreaterEqualDepth,
+      'greater': THREE.GreaterDepth,
+      'notequal': THREE.NotEqualDepth,
+    };
+    this.blendModeMap = {
+      'normal': THREE.NormalBlending,
+      'no': THREE.NoBlending,
+      'additive': THREE.AdditiveBlending,
+      'subtractive': THREE.SubtractiveBlending,
+      'multiply': THREE.MultiplyBlending,
+      'custom': THREE.CustomBlending,
+    };
+    this.blendFactorsMap = {
+      'zero': THREE.ZeroFactor,
+      'one': THREE.OneFactor,
+      'src_color': THREE.SrcColorFactor,
+      'dst_color': THREE.DstColorFactor,
+      'src_alpha': THREE.SrcAlphaFactor,
+      'dst_alpha': THREE.DstAlphaFactor,
+      'one_minus_src_color': THREE.OneMinusSrcColorFactor,
+      'one_minus_src_alpha': THREE.OneMinusSrcAlphaFactor,
+      'one_minus_dst_color': THREE.OneMinusDstColorFactor,
+      'one_minus_dst_alpha': THREE.OneMinusDstAlphaFactor,
+    };
     this.postinit = function() {
       elation.engine.things.janusobject.extendclass.postinit.call(this);
       this.defineProperties({
@@ -26,10 +56,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lights: { type: 'boolean', default: false, comment: 'Load lights from model' },
         lighting: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Object reacts to scene lighting' },
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial, comment: 'Hide face sides (back, front, or none)' },
-        blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial, comment: 'Blend mode (source)' },
-        blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial, comment: 'Blend mode (destination)' },
+        blend_src: { type: 'string', set: this.updateMaterial, comment: 'Blend mode (source)' },
+        blend_dest: { type: 'string', set: this.updateMaterial, comment: 'Blend mode (destination)' },
+        blend_mode: { type: 'string', default: 'normal', set: this.updateMaterial, comment: 'Blend mode' },
         depth_write: { type: 'boolean', default: null, set: this.updateMaterial },
         depth_test: { type: 'boolean', default: null, set: this.updateMaterial },
+        depth_offset: { type: 'float', default: null, set: this.updateMaterial },
+        depth_func: { type: 'string', default: null, set: this.updateMaterial },
+        color_write: { type: 'boolean', default: null, set: this.updateMaterial },
         envmap_id: { type: 'string', set: this.updateMaterial, comment: 'Environment map texture ID (overrides skybox reflections)' },
         normalmap_id: { type: 'string', set: this.updateMaterial, comment: 'Normal map texture ID' },
         bumpmap_id: { type: 'string', set: this.updateMaterial, comment: 'Bumpmap texture ID' },
@@ -574,18 +608,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         //color.setRGB(col.x, col.y, col.z);
       }
 */
-      var srcfactors = {
-        'zero': THREE.ZeroFactor,
-        'one': THREE.OneFactor,
-        'src_color': THREE.SrcColorFactor,
-        'dst_color': THREE.DstColorFactor,
-        'src_alpha': THREE.SrcAlphaFactor,
-        'dst_alpha': THREE.DstAlphaFactor,
-        'one_minus_src_color': THREE.OneMinusSrcColorFactor,
-        'one_minus_src_alpha': THREE.OneMinusSrcAlphaFactor,
-        'one_minus_dst_color': THREE.OneMinusDstColorFactor,
-        'one_minus_dst_alpha': THREE.OneMinusDstAlphaFactor,
-      }
+      let srcfactors = this.blendFactorsMap;
       if (srcfactors[this.properties.blend_src]) {
         blend_src = srcfactors[this.properties.blend_src];
       }
@@ -625,6 +648,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           }
           if (this.depth_test !== null) {
             shadermaterial.depthTest = this.depth_test;
+          }
+          if (this.color_write !== null) {
+            shadermaterial.colorWrite = this.color_write;
           }
           this.traverseObjects((n) => {
             if (n.material) {
@@ -837,6 +863,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (this.depth_test !== null) {
               m.depthTest = this.depth_test;
+            }
+            if (this.depth_func !== null) {
+              m.depthFunc = this.depthFuncMap[this.depth_func];
+            } else {
+              m.depthFunc = this.depthFuncMap['lessequal'];
+            }
+            if (this.depth_offset !== null) {
+              m.polygonOffset = true;
+              m.polygonOffsetUnits = 1;
+              m.polygonOffsetFactor = -this.depth_offset;
+            } else {
+              m.polygonOffset = false;
+            }
+            if (this.color_write !== null) {
+              m.colorWrite = this.color_write;
             }
             // If our diffuse texture has an alpha channel, set up a customDepthMaterial / customDistanceMaterial to allow shadows to work
             if (m.map) { //this.shadow && m.transparent && m.map) {
@@ -1368,8 +1409,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           cull_face: [ 'property', 'cull_face' ],
           blend_src: [ 'property', 'blend_src' ],
           blend_dest: [ 'property', 'blend_dest' ],
+          blend_mode: [ 'property', 'blend_mode' ],
           depth_write: [ 'property', 'depth_write' ],
           depth_test: [ 'property', 'depth_test' ],
+          depth_offset: [ 'property', 'depth_offset' ],
+          depth_func: [ 'property', 'depth_func' ],
+          color_write: [ 'property', 'color_write' ],
 
           wireframe: [ 'property', 'wireframe'],
           fog: [ 'property', 'fog'],
