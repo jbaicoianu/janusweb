@@ -1,3 +1,4 @@
+/*
 janus.registerElement('avatar_simple', {
   headsrc: 'media/assets/hoverscreen.obj',
   bodysrc: '',
@@ -35,7 +36,7 @@ janus.registerElement('avatar_rigged', {
   updateXR(pose, referenceSpace) {
   }
 });
-
+*/
 elation.elements.define('janus-avatar-picker', class extends elation.elements.base {
   init() {
     this.defineAttribute('src', { type: 'string' });
