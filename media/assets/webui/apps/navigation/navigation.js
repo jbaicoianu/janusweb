@@ -16,12 +16,12 @@ elation.elements.define('janus.ui.navigation', class extends elation.elements.ui
   getClient() {
     var node = this;
     while (node && node !== document) {
-      if (node.dataset['elationComponent'] == 'janusweb.client') {
-        return elation.component.fetch(node);
+      if (node instanceof elation.elements.janusweb.client) {
+        return node;
       }
-      node = node.parentNode
+      node = node.parentNode;
     }
-    return elation.component.fetch(document.querySelector('[data-elation-component="janusweb.client"]'));
+    return document.querySelector('janusweb-client');
   }
   updateCurrentURL() {
     var room = this.janusweb.currentroom;
@@ -86,12 +86,12 @@ elation.elements.define('janus.ui.statusindicator', class extends elation.elemen
   getClient() {
     var node = this;
     while (node && node !== document) {
-      if (node.dataset['elationComponent'] == 'janusweb.client') {
-        return elation.component.fetch(node);
+      if (node instanceof elation.elements.janusweb.client) {
+        return node;
       }
-      node = node.parentNode
+      node = node.parentNode;
     }
-    return elation.component.fetch(document.querySelector('[data-elation-component="janusweb.client"]'));
+    return document.querySelector('janusweb-client');
   }
   updateCurrentURL(room) {
     if (!room && this.janusweb.currentroom) {
@@ -334,12 +334,12 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
   getClient() {
     var node = this;
     while (node && node !== document) {
-      if (node.dataset['elationComponent'] == 'janusweb.client') {
-        return elation.component.fetch(node);
+      if (node instanceof elation.elements.janusweb.client) {
+        return node;
       }
-      node = node.parentNode
+      node = node.parentNode;
     }
-    return elation.component.fetch(document.querySelector('[data-elation-component="janusweb.client"]'));
+    return document.querySelector('janusweb-client');
   }
   updateRoom() {
     // Remove listeners from previous room
