@@ -6,6 +6,7 @@ elation.require(['janusweb.janusbase'], function() {
     linewidth: 1,
     depth_write: true,
     depth_test: true,
+    fog: true,
 
     create() {
       
@@ -33,16 +34,18 @@ elation.require(['janusweb.janusbase'], function() {
           let lineobj = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
             vertexColors: THREE.VertexColors,
             opacity: this.opacity,
-            transparent: (this.opacity < 1),
+            transparent: (this.transparent !== null ? this.transparent : this.opacity < 1),
             depthWrite: this.depth_write,
             depthTest: this.depth_test,
             linewidth: this.linewidth,
+            fog: this.fog,
           }));
+          lineobj.renderOrder = this.renderorder;
           this.objects['3d'].add(lineobj);
           if (this.pickable || this.collidable) {
             //this.colliders.add(lineobj.clone());
           }
-          lineobj.userData.thing = this;
+          lineobj.userData.thing = this._target || this;
           this.geometry = geo;
           this.lineobj = lineobj;
         }
