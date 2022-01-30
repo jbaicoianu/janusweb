@@ -19,6 +19,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         js_id:    { type: 'string' },
         color:    { type: 'color', default: this.defaultcolor, set: this.updateColor, comment: 'Object color' },
         opacity:  { type: 'float', default: 1.0, set: this.updateOpacity, min: 0, max: 1, comment: 'Object translucency, from 0..1' },
+        transparent: { type: 'bool', default: null, set: this.updateOpacity, comment: 'Override object transparency autodetection' },
         alphatest:  { type: 'float', default: 0.05, set: this.updateAlphaTest, min: 0, max: 1 },
         fwd:      { type: 'vector3', default: new THREE.Vector3(0,0,1), set: this.pushFrameUpdate, comment: 'Forward vector (zdir == fwd)' },
         xdir:     { type: 'vector3', default: new THREE.Vector3(1,0,0), set: this.pushFrameUpdate, comment: 'Left vector' },
@@ -121,7 +122,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.refresh();
     }
     this.updateOpacity = function() {
-      this.setOpacity(this.opacity);
+      this.setOpacity(this.opacity, this.transparent);
     },
     this.updateAlphaTest = function() {
       this.setAlphaTest(this.alphatest);
@@ -353,6 +354,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           dynamicfriction:['property', 'dynamicfriction'],
           staticfriction:['property', 'staticfriction'],
           opacity:  ['property', 'opacity'],
+          transparent:  ['property', 'transparent'],
           alphatest:  ['property', 'alphatest'],
           sync:     ['property', 'sync'],
           autosync: ['property', 'autosync'],
@@ -983,15 +985,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         }
       }
     }
-    this.setOpacity = function(opacity) {
-      if (this.objects['3d'] && this.currentopacity != opacity) {
+    this.setOpacity = function(opacity, transparent) {
+      if (this.objects['3d'] && (this.currentopacity != opacity || this.currenttransparent !== transparent)) {
         this.currentopacity = opacity;
-        this.traverseObjects(function(n) {
+        this.currenttransparent = transparent;
+        this.traverseObjects((n) => {
           if (n.material) {
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
               m[i].opacity = opacity;
-              m[i].transparent = (opacity < 1);
+              m[i].transparent = (transparent !== null ? transparent : opacity < 1);
               if (m[i].transparent) {
                 m[i].alphaTest = this.alphatest;
               }
