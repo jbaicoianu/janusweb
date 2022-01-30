@@ -368,10 +368,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         if (typeof playerpos.z == 'undefined' || isNaN(playerpos.z)) playerpos.z = 0;
         this.objects['3d'].updateMatrix();
         this.objects['3d'].updateMatrixWorld();
-        this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir)
+        this.objects['3d'].matrixWorld.extractBasis(v.xdir, v.ydir, v.zdir);
       }
       if (this.head) {
-        this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir)
+        this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir);
         v.head_pos.setFromMatrixPosition(this.head.objects['3d'].matrixWorld);
         v.view_zdir.negate();
       }
