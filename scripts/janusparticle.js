@@ -39,7 +39,6 @@ elation.require(['janusweb.janusbase'], function() {
         opacity: { type: 'float', default: 1.0, set: this.updateMaterial },
         fade_in: { type: 'float', default: 1.0 },
         fade_out: { type: 'float', default: 1.0 },
-        duration: { type: 'float', default: 1.0 },
         particle_scale: { type: 'vector3', default: [1, 1, 1], set: this.updateMaterial},
         particle_vel: { type: 'vector3', default: [0, 0, 0]},
         particle_accel: { type: 'vector3', default: [0, 0, 0]},
@@ -52,8 +51,8 @@ elation.require(['janusweb.janusbase'], function() {
         refreshrate: { type: 'int', default: 30 },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
         blend_dest: { type: 'string', default: 'one_minus_src_alpha', set: this.updateMaterial },
-        depthwrite: { type: 'bool', default: false },
-        depthtest: { type: 'bool', default: true },
+        depth_write: { type: 'bool', default: false },
+        depth_test: { type: 'bool', default: true },
       });
       this.particles = [];
       this.emitted = 0;
@@ -72,7 +71,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.updateParticles = elation.bind(this, this.updateParticles); // FIXME - hack, this should happen at the lower level of all components
     }
     this.createObject3D = function() {
-      var geo = this.geometry = new THREE.BufferGeometry()
+      var geo = this.geometry = new THREE.BufferGeometry();
 
       var texture = null,
           textureasset = null;
@@ -132,8 +131,8 @@ elation.require(['janusweb.janusbase'], function() {
         //blending: THREE.AdditiveBlending,
         transparent: true,
         alphaTest: .001,
-        depthWrite: this.depthwrite,
-        depthTest: this.depthtest,
+        depthWrite: this.depth_write,
+        depthTest: this.depth_test,
       } );
 
       this.material = mat;
@@ -290,8 +289,8 @@ elation.require(['janusweb.janusbase'], function() {
           elapsed = now - this.lasttime,
           endtime = now + this.duration * 1000,
           emitted = 0,
-          startpoint = this.currentpoint;
-          spawncount = this.rate * elapsed / 1000;
+          startpoint = this.currentpoint,
+          spawncount = this.rate * elapsed / 1000,
           count = this.count,
           loop = this.loop;
 
@@ -329,7 +328,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (!geo.boundingSphere) {
         geo.computeBoundingSphere();
       } else {
-        let currentBoundingRadius = geo.boundingSphere.radius
+        let currentBoundingRadius = geo.boundingSphere.radius;
         if (this.boundingRadiusSq > currentBoundingRadius * currentBoundingRadius) {
            geo.boundingSphere.radius = Math.sqrt(this.boundingRadiusSq) + .1;
         }
@@ -408,7 +407,7 @@ elation.require(['janusweb.janusbase'], function() {
       var randomInRange = function(range) {
         //return (Math.random() - .5) * range;
         return Math.random() * range;
-      }
+      };
       let pointpos = point.pos;
       pointpos.set(randomInRange(rand_pos.x), randomInRange(rand_pos.y), randomInRange(rand_pos.z));
       if (this.emitpoints) {
@@ -532,8 +531,8 @@ elation.require(['janusweb.janusbase'], function() {
           count:  [ 'property', 'count'],
           duration:  [ 'property', 'duration'],
           opacity:  [ 'property', 'opacity'],
-          depthwrite:  [ 'property', 'depthwrite'],
-          depthtest:  [ 'property', 'depthtest'],
+          depth_write:  [ 'property', 'depth_write'],
+          depth_test:  [ 'property', 'depth_test'],
           play:  [ 'function', 'start'],
         };
       }
