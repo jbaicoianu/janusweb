@@ -562,6 +562,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           lighting: false,
           opacity: .5,
           cull_face: 'none',
+          billboard: 'y',
         });
         this.raycaster = this.createObject('raycaster', {});
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
@@ -572,6 +573,8 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.worldToLocal(this.laser.positions[1].copy(endpoint));
         this.laser.updateLine();
         this.cursor.pos.copy(endpoint);
+        let cursorscale = player.head.distanceTo(endpoint) / 12;
+        this.cursor.scale.set(cursorscale, cursorscale, cursorscale);
         //this.cursor.zdir = normal;
         if (this.cursor.room !== room._target) room.appendChild(this.cursor);
         //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
