@@ -1325,7 +1325,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           objectargs.ghost_id = args.id;
           //objectargs.ghost_scale = args.scale;
           //objectargs.scale = new THREE.Vector3(1,1,1);
-          objectargs.orientation = new THREE.Quaternion()
+          objectargs.orientation = new THREE.Quaternion();
           break;
       }
       //console.log('spawn it', realtype, args, objectargs);
@@ -2150,7 +2150,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           var real = this.getObjectFromProxy(change);
           if (real) {
             var xmltype = typemap[real.type] || 'Object';
-            xmlnode = xmldoc.createElement(xmltype);
+            let xmlnode = xmldoc.createElement(xmltype);
             
             var attrs = Object.keys(change);
             for (var i = 0; i < attrs.length; i++) {
@@ -2730,7 +2730,7 @@ console.log('dispatch to parent', event, this, event.target);
     this.fadeAudioOut = function(time=4, value=0) {
       if (this.audionodes) {
         let gain = this.audionodes.gain,
-            ctx = this.audionodes.listener.context;
+            ctx = this.audionodes.listener.context,
             currentgain = gain.gain.value;
 
         gain.gain.cancelScheduledValues(ctx.currentTime);
