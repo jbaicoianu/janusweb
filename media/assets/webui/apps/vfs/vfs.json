@@ -1,0 +1,10 @@
+{
+  "templates": {
+  },
+  "scripts":  ["./vfs.js", "./browserfs/browserfs.js"],
+  "css":      ["./vfs.css"],
+  "components": [
+    "janus-ui-vfs-browser"
+  ]
+}
+

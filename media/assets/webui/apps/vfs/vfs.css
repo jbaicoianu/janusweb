@@ -1,0 +1,52 @@
+janus-ui-vfs-browser ui-flexpanel>ui-treeview {
+  flex: 0;
+  border-right: 1px solid #333;
+  margin-right: 1em;
+  padding-right: 1em;
+}
+janus-ui-vfs-browser-directorylist {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 90px);
+  width: 40em;
+  height: 15em;
+  overflow: auto;
+  outline: 0;
+}
+janus-ui-vfs-browser-directorylist.dragactive {
+  border: 2px solid lime;
+  border-radius: 10px;
+  background: rgba(0,255,0,.2);
+  margin: -2px;
+}
+janus-ui-vfs-browser-file.dragactive {
+  border: 2px solid lime;
+  background: rgba(0,255,0,.2);
+}
+janus-ui-vfs-browser-file {
+  width: 80px;
+  height: 80px;
+  border: 1px solid black;
+  border-radius: 10px;
+  margin: 5px;
+  display: flex;
+  text-align: center;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(0,0,0,.2);
+}
+janus-ui-vfs-browser-file[selected] {
+  background: rgba(255,255,255,.2);
+}
+janus-ui-vfs-browser-file:hover {
+  background: rgba(0,255,0,.2);
+}
+janus-ui-vfs-browser-file[selected]:hover {
+  background: rgba(255,255,255,.4);
+}
+janus-ui-vfs-browser-file ui-label {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
