@@ -157,6 +157,7 @@ elation.require([
         userid:            ['property', 'userId'],
         avatarlighting:    ['property', 'settings.avatarlighting'],
         ui:                ['property', 'engine.client.ui'],
+        currentroom:       ['property', 'currentroom'],
 
         hmd:               ['accessor', 'isVRActive'],
 
