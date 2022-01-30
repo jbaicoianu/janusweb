@@ -154,7 +154,7 @@ janus.registerElement('locomotion_teleporter', {
       let laserpoints = this.laser.positions;
       // Trace our arc in steps, performing a raytrace at each step
       for (i = 0; i < segments; i++) {
-        let t = (i + 1) * duration / segments
+        let t = (i + 1) * duration / segments;
         dir.copy(v0);
         speed = dir.length();
         dir.divideScalar(speed);
