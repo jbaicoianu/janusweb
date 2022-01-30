@@ -51,6 +51,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         billboard: { type: 'string', default: '' },
         hasposition: { type: 'boolean', default: true },
         gazetime: { type: 'float' },
+        static: { type: 'boolean', default: false },
         ongazeenter: { type: 'callback' },
         ongazeleave: { type: 'callback' },
         ongazeprogress: { type: 'callback' },
@@ -719,7 +720,11 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
     this.start = function() {
       if (!this.started) {
-        elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        if (!this.static) {
+          elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        } else {
+          this.handleFrameUpdates({data: {dt: 0}});
+        }
         this.started = true;
       }
       for (var k in this.children) {
@@ -736,7 +741,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         }
       }
       if (this.started) {
-        elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        if (!this.static) {
+          elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        }
         this.started = false;
         this.dispatchEvent({type: 'stop', bubbles: false});
       }
