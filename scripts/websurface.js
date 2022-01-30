@@ -5,6 +5,7 @@ elation.require(['engine.things.generic'], function() {
       this.defineProperties({
         websurface_id: { type: 'string' },
         image_id: { type: 'string' },
+        url: { type: 'string', set: this.updateURL },
         color: { type: 'color', default: 0xffffff },
         hovercolor: { type: 'color', default: 0x009900 },
         activecolor: { type: 'color', default: 0x00ff00 }
@@ -27,6 +28,8 @@ elation.require(['engine.things.generic'], function() {
         // and hope that most sites are running both.
 
         this.url = url.replace(/^http:/, 'https:');
+      } else {
+        this.url = this.websurface_id;
       }
 
       // FIXME - binding of member functions should happen at object creation
@@ -78,7 +81,9 @@ elation.require(['engine.things.generic'], function() {
     }
     this.createObjectDOM = function() {
         var websurface = this.room.websurfaces[this.properties.websurface_id];
-        if (websurface) {
+        if (!websurface) {
+          websurface = {};
+        }
           var width = websurface.width || 1024,
               height = websurface.height || 768,
               border = elation.utils.any(websurface.border, true);
@@ -103,7 +108,6 @@ elation.require(['engine.things.generic'], function() {
 
           this.iframe = iframe;
           this.domobj = obj;
-        }
     }
     this.activate = function() {
       if (!this.active) {
@@ -165,6 +169,11 @@ setTimeout(elation.bind(this, function() {
       if (this.started) {
         this.started = false;
         this.objects['3d'].remove(this.domobj);
+      }
+    }
+    this.updateURL = function() {
+      if (this.iframe) {
+        this.iframe.src = this.url;
       }
     }
   }, elation.engine.things.janusbase);
