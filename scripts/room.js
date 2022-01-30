@@ -76,7 +76,7 @@ elation.require([
         'className': { type: 'string', default: '', set: this.setClassName },
         'gazetime': { type: 'float', default: 1000 },
         'selfavatar': { type: 'boolean', default: false },
-        'requirescripts': { type: 'string' },
+        'requires': { type: 'string' },
         'onload': { type: 'string' },
         'sync': { type: 'boolean', default: false },
         'pointerlock': { type: 'boolean', default: true },
@@ -937,10 +937,12 @@ elation.require([
           this.pendingScriptMap = {};
           this.loadScripts(assets.scripts);
         }
-        if (room.require) {
+
+        let requires = room.requires || room.require;
+        if (requires) {
           let roomproxy = this.getProxyObject();
-          roomproxy.require(room.require);
-          this.requirescripts = room.require;
+          roomproxy.require(requires);
+          this.requires = requires;
         }
       }
       this.applyingEdits = false;
@@ -2010,7 +2012,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           locked:        ['property', 'locked'],
           private:       ['property', 'private'],
           selfavatar:    ['property', 'selfavatar'],
-          requirescripts:['property', 'requirescripts'],
+          requires:      ['property', 'requires'],
           pos:           ['property', 'spawnpoint.position'],
           sync:          ['property', 'sync'],
           js_id:         ['property', 'roomid'],
@@ -2328,7 +2330,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
               val = elation.utils.arrayget(this.properties, def[1]);
 
           if (k == 'url' || !propdef) continue;
-          if (k == 'requirescripts') k = 'require';
+          if (k == 'requires') k = 'require';
 
           let defaultval = propdef.default;
           if (val instanceof THREE.Vector2) {
