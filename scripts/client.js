@@ -1,5 +1,4 @@
-elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.janusxrplayer', 'janusweb.external.document-register-element', 'janusweb.ui.main'], function() {
-
+elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.assets', 'engine.things.light_ambient', 'engine.things.light_directional', 'engine.things.light_point', 'janusweb.janusweb', 'janusweb.chat', 'janusweb.janusplayer', 'janusweb.janusxrplayer', 'janusweb.external.document-register-element', 'janusweb.ui.main', 'elements.elements'], function() {
   // If getCurrentScript returns non-null here, then it means we're in release mode
   var clientScript = elation.utils.getCurrentScript();
 
@@ -12,7 +11,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
     var corsproxy = elation.utils.any(args.corsproxy, elation.config.get('engine.assets.corsproxy'), document.location.href);
     var container = elation.utils.any(args.container, document.body);
-    var fullsize = (container == document.body);
+    var fullsize = elation.utils.any(args.fullsize, container == document.body);
 
     if (elation.config.get('serviceworker.enabled') && 'serviceWorker' in navigator) {
       var workerscript = elation.config.get('serviceworker.script', 'service-worker.js');
@@ -58,7 +57,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
     document.head.appendChild(link);
     elation.html.addclass(document.body, 'dark');
     elation.html.addclass(document.body, 'janusweb');
-    var janusweb = elation.janusweb.client({
+    var janusweb = elation.elements.create('janusweb.client', {
       append: container, 
       homepage: homepage, 
       corsproxy: corsproxy, 
@@ -67,6 +66,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       showchat: elation.utils.any(args.showchat, true),
       usevoip: elation.utils.any(args.usevoip, false),
       resolution: args.resolution, 
+      fullsize: fullsize,
       url: args.url,
       networking: args.networking,
       autoload: args.autoload,
@@ -82,13 +82,31 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
     });
   });
-  elation.component.add('janusweb.client', function() {
-    this.initEngine = function() {
+  elation.elements.define('janusweb.client', class extends elation.elements.engine.client {
+    init() {
+      super.init();
+      this.defineAttributes({
+        corsproxy: { type: 'string' },
+        homepage: { type: 'string' },
+        url: { type: 'string' },
+        uiconfig: { type: 'string' },
+        shownavigation: { type: 'boolean', default: true },
+        showchat: { type: 'boolean', default: true },
+        networking: { type: 'boolean', default: true },
+        usevoip: { type: 'boolean', default: false },
+        autoload: { type: 'boolean', default: true },
+        urltemplate: { type: 'string' },
+        server: { type: 'string' },
+        avatarsrc: { type: 'string' },
+        muted: { type: 'boolean', default: false },
+      });
+    }
+    initEngine() {
       this.initLoader();
 
       var hashargs = elation.url();
        
-      this.enginecfg.stats = this.args.stats;
+      //this.enginecfg.stats = this.args.stats;
 
       this.enginecfg.systems = [];
       this.enginecfg.systems.push("controls");
@@ -102,7 +120,8 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       this.enginecfg.systems.push("sound");
       this.enginecfg.crosshair = false;
       this.enginecfg.picking = true;
-      this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
+      this.enginecfg.fullsize = this.fullsize && this.fullsize != 'false'; // FIXME - type coersion should be doing this
+      //this.enginecfg.useWebVRPolyfill = elation.utils.any(this.args.useWebVRPolyfill, true);
 
       if ('xr' in navigator) {
         navigator.xr.addEventListener('sessiongranted', (ev) => {
@@ -110,7 +129,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         });
       }
     }
-    this.initButtons = function() {
+    initButtons() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
       this.sharedialog = elation.engine.sharing({append: document.body, client: this, anchor: this.sharebutton});
       elation.events.add(this.sharebutton, 'ui_button_click', elation.bind(this.sharedialog, this.sharedialog.showShareDialog));
@@ -126,21 +145,21 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
 
       elation.events.add(document, 'pointerlockchange', elation.bind(this, function() { this.setUIActive(document.pointerLockElement === null); }));
     }
-    this.initWorld = function() {
+    initWorld() {
       var things = this.world.load({
         name: 'janusweb',
         type: 'janusweb',
         properties: {
-          corsproxy: elation.utils.any(this.args.corsproxy, elation.config.get('engine.assets.corsproxy')),
+          corsproxy: elation.utils.any(this.corsproxy, elation.config.get('engine.assets.corsproxy')),
           datapath: elation.config.get('janusweb.datapath'),
-          homepage: this.args.homepage,
-          url: this.args.url,
-          showchat: this.args.showchat,
-          networking: this.args.networking,
-          autoload: this.args.autoload,
-          urltemplate: this.args.urltemplate,
-          server: this.args.server,
-          muted: this.args.muted,
+          homepage: this.homepage,
+          url: this.url,
+          showchat: this.showchat,
+          networking: this.networking,
+          autoload: this.autoload,
+          //urltemplate: this.urltemplate,
+          server: this.server,
+          muted: this.muted,
         }
       });
       this.janusweb = things.children.janusweb;
@@ -151,22 +170,21 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         height: 1.8,
         movespeed: 5000,
         collidable: true,
-        usevoip: this.args.usevoip,
-        avatarsrc: this.args.avatarsrc,
+        usevoip: this.usevoip,
+        avatarsrc: this.avatarsrc,
         staticfriction: 2,
         dynamicfriction: 1.9,
       });
       elation.events.add(this.engine.systems.render, 'render_view_add', (ev) => this.handleRenderViewAdd(ev));
 
-      this.shownavigation = elation.utils.any(this.args.shownavigation, true);
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.args.uiconfig, datapath + (datapath[datapath.length-1] != '/' ? '/' : '') + 'assets/webui/default.json');
+      this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.uiconfig, datapath + (datapath[datapath.length-1] != '/' ? '/' : '') + 'assets/webui/default.json');
       if (this.shownavigation) {
         this.createUI();
       }
       this.view.pickingactive = true;
 
-      let overlay = this.container.parentNode.querySelector('janus-overlay');
+      let overlay = this.parentNode.querySelector('janus-overlay');
       if (overlay) {
         this.overlay = overlay;
       }
@@ -174,16 +192,16 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
       elation.engine.assets.setDracoPath(elation.config.get('janusweb.datapath') + 'lib/draco/');
     }
-    this.createUI = function() {
+    createUI() {
       if (!this.ui) {
         this.ui = elation.elements.create('janus.ui.main', {
-          append: this.view,
+          append: this,
           client: this,
           config: this.uiconfig
         });
       }
     }
-    this.initLoader = function() {
+    initLoader() {
       var loader = document.getElementsByClassName('engine_loading')[0];
       if (loader) {
         var logo = loader.getElementsByTagName('svg')[0];
@@ -197,12 +215,12 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         elation.events.add(this.engine, 'engine_start', elation.bind(this, this.handleEngineStart));
       }
     }
-    this.handleEngineStart = function(ev) {
+    handleEngineStart(ev) {
       if (this.loadingscreen) {
         this.loadingscreen.container.parentNode.removeChild(this.loadingscreen.container);
       }
     }
-    this.handleEngineError = function(ev) {
+    handleEngineError(ev) {
       console.log('omg error!', ev);
       if (this.loadingscreen) {
         this.loadingscreen.label.innerHTML = 'Error!';
@@ -213,9 +231,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         var errordiv = elation.html.create({tag: 'pre', append: this.loadingscreen.container, content: msg, classname: 'janusweb_error'});
       }
     }
-    this.showMenu = function() {
+    showMenu() {
     }
-    this.setUIActive = function(active) {
+    setUIActive(active) {
       if (active) {
         if (this.ui) this.ui.enable();
         if (this.buttons) this.buttons.enable();
@@ -224,12 +242,12 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         if (this.buttons) this.buttons.disable();
       }
     }
-    this.showAbout = function() {
+    showAbout() {
       var aboutwin = elation.ui.window({append: document.body, center: true, title: 'About JanusWeb'});
       var frame = elation.ui.iframe({src: 'http://github.com/jbaicoianu/janusweb/', classname: 'janusweb_about'});
       aboutwin.setcontent(frame);
     }
-    this.toggleFullscreen = function(ev, updateOnly) {
+    toggleFullscreen(ev, updateOnly) {
       var view = this.view;
       if (!updateOnly && view && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
         view.toggleFullscreen();
@@ -244,7 +262,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         }
       }
     }
-    this.configureOptions = function() {
+    configureOptions() {
       if (!this.configmenu) {
         var configpanel = elation.janusweb.configuration({client: this});
         this.configmenu = elation.ui.window({
@@ -261,10 +279,10 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       }
       this.configmenu.show();
     }
-    this.registerElement = function(tagname, classobj, extendclass) {
+    registerElement(tagname, classobj, extendclass) {
       this.janusweb.registerElement(tagname, classobj, extendclass);
     }
-    this.handleRenderViewAdd = function(ev) {
+    handleRenderViewAdd(ev) {
       let view = ev.data;
       if (view.xrsession && !this.xrplayer) {
         this.xrplayer = this.player.createObject('xrplayer', {
@@ -273,14 +291,14 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
         });
       }
     }
-  }, elation.engine.client);
+  });
 
   if (typeof customElements != 'undefined') {
     elation.elements.define('janus.viewer', class extends elation.elements.base {
       init() {
         super.init();
         this.defineAttributes({
-          fullscreen: { type: 'boolean', default: true },
+          fullsize: { type: 'boolean', default: true },
           autostart: { type: 'boolean', default: true },
           src: { type: 'string' },
           corsproxy: { type: 'string' },
@@ -305,11 +323,12 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           }
           document.body.addEventListener('click', start);
         }
+        this.style.overflow = 'hidden';
       }
       getClientArgs() {
-        var fullscreen = this.fullscreen,
-            width = (this.fullscreen ? window.innerWidth : this.width),
-            height = (this.fullscreen ? window.innerHeight : this.height);
+        var fullsize = this.fullsize,
+            width = (this.fullsize ? window.innerWidth : this.width),
+            height = (this.fullsize ? window.innerHeight : this.height);
         var args = {
           url: this.getRoomURL(),
           homepage: this.homepage || this.src,
@@ -321,6 +340,7 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
           avatarsrc: this.avatarsrc,
           uiconfig: this.uiconfig,
           container: this,
+          fullsize: this.fullsize,
         };
         return args;
       }
@@ -338,9 +358,9 @@ elation.require(['engine.engine', 'engine.assets', 'engine.things.light_ambient'
       create() {
         if (this.iframe) return;
         var iframe = document.createElement('iframe');
-        var fullscreen = this.fullscreen;
-        iframe.width = (this.fullscreen ? window.innerWidth : this.width);
-        iframe.height = (this.fullscreen ? window.innerHeight : this.height);
+        var fullsize = this.fullsize;
+        iframe.width = (this.fullsize ? window.innerWidth : this.width);
+        iframe.height = (this.fullsize ? window.innerHeight : this.height);
         iframe.setAttribute('allowvr', 'yes');
         iframe.setAttribute('allowfullscreen', true);
         iframe.setAttribute('allow', 'vr');
