@@ -10,7 +10,8 @@
     "locomotion": "./apps/locomotion/locomotion.json",
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",
     "buttons": "./apps/buttons/buttons.json",
-    "xrmenu": "./apps/xrmenu/xrmenu.json"
+    "xrmenu": "./apps/xrmenu/xrmenu.json",
+    "vfs": "./apps/vfs/vfs.json"
   },
   "includes": [
   ],
