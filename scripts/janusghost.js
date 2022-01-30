@@ -97,7 +97,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           size: .1,
           thickness: .03,
           align: 'center',
-          collidable: false,
           text: name,
           pos: this.userid_pos,
           pickable: false,
