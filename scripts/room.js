@@ -2653,7 +2653,7 @@ console.log('dispatch to parent', event, this, event.target);
       if (!url) url = this.url;
       if (url[0] == '/') {
         url = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + url;
-      } else if (!url.match(/https?:\/\//i)) {
+      } else if (!url.match(/:\/\//i)) {
         url = this.baseurl + url;
       }
       return url;
