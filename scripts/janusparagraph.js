@@ -13,7 +13,7 @@ elation.require(['janusweb.janusbase'], function() {
         depth_write: { type: 'boolean', default: true },
         depth_test: { type: 'boolean', default: true },
         collision_id: { type: 'string', default: 'cube' },
-        collision_scale: { type: 'vector3', default: V(1, 1, .02) },
+        collision_scale: { type: 'vector3', default: V(.5, .5, .02) },
         shadow: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Receive shadows from self and other objects' },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Cast shadows onto self and other objects' },
@@ -29,8 +29,10 @@ elation.require(['janusweb.janusbase'], function() {
       return mesh;
     }
     this.createForces = function() {
-      this.setCollider('box', { min: V(-1, -1, -.01), max: V(1, 1, .01) });
+      this.setCollider('box', { min: V(-.8, -.8, -.01), max: V(.8, .8, .01) });
+      //this.collision_id = 'cube';
     }
+    this.updateColliderFromGeometry = function() { }
     this.createMaterial = function() {
       var texture = this.createTexture();
       var sidemap = {
@@ -115,7 +117,7 @@ elation.require(['janusweb.janusbase'], function() {
           texture.needsUpdate = true;
           this.refresh();
         }
-      }
+      };
       this.currentImage = img;
       img.src = url;
       this.refresh();
