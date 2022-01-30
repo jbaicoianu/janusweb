@@ -707,12 +707,12 @@ elation.require([
       this.fullsource = data;
       var titlere = /<title>([\s\S]*?)<\/title>/mi;
       var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi;
-      var re2 = /<janus-viewer>[\s\S]*?<\/janus-viewer>/mi;
+      var re2 = /<janus-viewer[^>]*>[\s\S]*?<\/janus-viewer>/mi;
       var mtitle = data.match(titlere);
       var parsed = {
         title: 'Untitled Room',
         source: false 
-      }
+      };
       if (mtitle) {
         parsed.title = mtitle[1];
         this.setTitle(mtitle[1]);
