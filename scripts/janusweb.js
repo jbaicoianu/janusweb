@@ -101,7 +101,7 @@ elation.require([
       if (this.urltemplate) {
         dust.filters.stripunsafe = function(s) {
           return s.replace(/:\//g, '');
-        }
+        };
         elation.template.add('janusweb.url', this.urltemplate);
       }
       this.initScripting();
@@ -529,7 +529,7 @@ elation.require([
     }
     this.handleRoomEditOther = function(data) {
       var roomId = data.roomId,
-          movedata = data.position;
+          movedata = data.position,
           edit = movedata.room_edit,
           del = movedata.room_delete;
 
