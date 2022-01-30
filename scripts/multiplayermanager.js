@@ -180,7 +180,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
           dir: (-tmpVecZ.x) + ' ' + (-tmpVecZ.y) + ' ' + (-tmpVecZ.z),
           up_dir: '0 1 0',
           //view_dir: this.tmpVecZ.toArray().join(' ')
-        }
+        };
         if (head) {
           //this.tmpMat.makeRotationFromQuaternion(head.properties.orientation);
           tmpMat.copy(head.objects['3d'].matrixWorld);
@@ -230,8 +230,8 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
       //console.log('[MultiplayerManager] player update', moveData);
       if (this.avatarNeedsUpdate || player.avatarNeedsUpdate) {
         moveData.avatar = player.getCurrentAvatarData().replace(/"/g, "^");
-        this.avatarNeedsUpdate = false
-        player.avatarNeedsUpdate = false
+        this.avatarNeedsUpdate = false;
+        player.avatarNeedsUpdate = false;
       } else if (moveData.avatar) {
         delete moveData.avatar;
       }
