@@ -3,7 +3,7 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs'
   ], function() {
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
@@ -82,6 +82,7 @@ elation.require([
         'pointerlock': { type: 'boolean', default: true },
       });
       this.translators = {
+        '^janus-vfs:': elation.janusweb.translators.janusvfs({janus: this.janus}),
         '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
         '^bookmarks$': elation.janusweb.translators.bookmarks({janus: this.janus}),
         '^dat:': elation.janusweb.translators.dat({janus: this.janus}),
