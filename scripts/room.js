@@ -730,6 +730,40 @@ elation.require([
       }
       return parsed;
     }
+    this.updateSource = function(source) {
+      var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
+      try {
+        var roomdata = this.janus.parser.parse(source, this.baseurl, datapath);
+      } catch (e) {
+      }
+      console.log('updated roomdata!', roomdata);
+      if (roomdata && roomdata.room) {
+        for (let k in roomdata.room) {
+          let val = roomdata.room[k];
+          if (val !== null && room[k] != val) {
+            console.log('update room value', k, room[k], val);
+            room[k] = val;
+          }
+        }
+        if (roomdata.object) {
+          for (let i = 0; i < roomdata.object.length; i++) {
+            let objdata = roomdata.object[i];
+            let roomobj = room.objects[objdata.js_id];
+            if (roomobj) {
+              for (let k in objdata) {
+                let val = objdata[k];
+                if (roomobj[k] != objdata[k] && val !== null) {
+                  roomobj[k] = val;
+                }
+              }
+            } else {
+              objdata.persist = true;
+              this.createObject('object', objdata);
+            }
+          }
+        }
+      }
+    }
 
     this.loadRoomAssets = function(roomdata) {
       if (roomdata && roomdata.assets && roomdata.assets.assetlist && roomdata.assets.assetlist.length > 0) {
