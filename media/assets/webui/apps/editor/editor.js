@@ -155,13 +155,13 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     if (typeof room == 'undefined') return;
     if (!this.manipulator) {
       let view = janus.engine.client.view;
-      this.manipulator = new THREE.TransformControls(view.actualcamera, view.container);
+      this.manipulator = new THREE.TransformControls(view.actualcamera, view.canvas);
 
       elation.events.add(this.manipulator, 'mouseDown', (ev) => {
         this.roomedit.transforming = true;
         this.editObjectShowInfo(this.roomedit.object);
         if (this.manipulator.object && this.manipulator.object.userData.thing) {
-          //elation.events.fire({type: 'admin_edit_start', element: this, data: this.manipulator.object.userData.thing}); 
+          //elation.events.fire({type: 'admin_edit_start', element: this, data: this.manipulator.object.userData.thing});
           //player.disable();
         }
       });
@@ -271,7 +271,16 @@ console.log('set translation snap', ev.data, ev);
     janus.engine.systems.render.setdirty();
   }
   handleViewSourceClick(ev) {
-    room.showDebug();
+    if (!this.sourcewindow) {
+      let win = elation.elements.create('ui-window', { append: document.body, center: true });
+      let editor = elation.elements.create('janus-ui-editor-source', { room: room });
+
+      win.setcontent(editor);
+      setTimeout(() => { win.center = false; }, 1500);
+      this.sourcewindow = win;
+    } else {
+      this.sourcewindow.show();
+    }
   }
   handleExportClick(ev) {
     let exporter = new THREE.GLTFExporter();
@@ -281,7 +290,7 @@ console.log('set translation snap', ev.data, ev);
       var url = window.URL.createObjectURL(filedata);
 
       let d = new Date(),
-          ts = d.getFullYear() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDate().toString().padStart(2, '0') + d.getHours().toString().padStart(2, '0') + d.getMinutes().toString().padStart(2, '0') + d.getSeconds().toString().padStart(2, '0')
+          ts = d.getFullYear() + (d.getMonth() + 1).toString().padStart(2, '0') + d.getDate().toString().padStart(2, '0') + d.getHours().toString().padStart(2, '0') + d.getMinutes().toString().padStart(2, '0') + d.getSeconds().toString().padStart(2, '0');
 
       var a = document.createElement('A');
       a.style.display = 'none';
@@ -433,7 +442,7 @@ console.log('set translation snap', ev.data, ev);
   editObjectCloneWireframe(obj, parent, material, constrain) {
     let newobj = null;
     if (obj instanceof THREE.Mesh) {
-      newobj = new THREE.Mesh(obj.geometry, material)
+      newobj = new THREE.Mesh(obj.geometry, material);
       newobj.matrixAutoUpdate = false;
       newobj.matrix.copy(obj.matrix);
       //newobj.matrixWorld.copy(obj.matrix);
@@ -694,7 +703,7 @@ obj.opacity = obj.opacity;
         if ('min' in attrdef && 'max' in attrdef) {
           min = attrdef.min;
           max = attrdef.max;
-          amount *= (max - min) / divisor; 
+          amount *= (max - min) / divisor;
         } else {
           amount /= divisor;
         }
@@ -1111,6 +1120,7 @@ console.log('change color', obj.col, vec);
     */
   }
   handleThingAdd(ev) {
+console.log('[editor] scene added a thing', ev);
     setTimeout(() => {
       this.scenetree.refreshList();
     }, 0);
@@ -1136,7 +1146,7 @@ console.log('change color', obj.col, vec);
         sync: true,
         pos: new elation.physics.vector3().copy(player.vectors.cursor_pos),
         persist: true
-      }
+      };
       if (trimmedurl.length > 0) {
         var schemeidx = trimmedurl.indexOf(':');
         if (schemeidx != -1) {
@@ -1219,14 +1229,26 @@ console.log('change color', obj.col, vec);
       // handle them (eg, video).  However, CORS is a nightmare, and most servers don't whitelist Range headers.
 
       // If mime type detection fails, we could also check for known signatures in the first 1k of data, but we don't do that here yet
+if (false) {
       let proxiedurl = url;
-      if (elation.engine.assets.corsproxy && !url.match(/^https?:\/\/localhost/) && !url.match(/^data:/)) {
+      if (elation.engine.assets.corsproxy && !url.match(/^https?:\/\/localhost/) && !url.match(/^data:/) && !url.match(/^janus-vfs:/)) {
         proxiedurl = elation.engine.assets.corsproxy + url;
       }
       fetch(proxiedurl, { headers: { /*'Range': 'bytes=0-1023'}*/ }}).then(res => resolve(res.headers.get('content-type')))
                 .catch((e) => {
                   reject();
                 });
+} else {
+      elation.engine.assetdownloader.fetchURL(url).then(ev => {
+        let res = ev.target;
+        if (res.headers) {
+          resolve(res.headers.get('content-type'));
+        } else {
+          // FIXME - no headers, unknown type
+          resolve();
+        }
+      });
+}
     });
   }
   loadObjectFromJML(jml) {
@@ -1241,7 +1263,8 @@ console.log('change color', obj.col, vec);
         args = {
           id: name,
           pos: player.vectors.cursor_pos.clone(),
-          sync: true
+          sync: true,
+          persist: true,
         },
         assetargs = {
           id: name,
@@ -1508,6 +1531,381 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
   }
   handleTreeviewSelect(ev) {
     elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
+  }
+});
+elation.elements.define('janus.ui.editor.source', class extends elation.elements.base {
+  async create() {
+    await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
+      './codemirror/addon/hint/show-hint.js',
+      './codemirror/addon/hint/xml-hint.js',
+      './codemirror/addon/hint/javascript-hint.js',
+      './codemirror/keymap/vim.js',
+    ], [
+      './codemirror/addon/hint/show-hint.css',
+    ]);
+    await room.loadComponentList();
+    this.jmlhints = this.buildJMLMap();
+
+    this.tabs = elation.elements.create('ui-tabs', { append: this });
+    //let roomtab = elation.elements.create('ui-tab', { append: this.tabs, label: 'Room Markup' });
+    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: room.getRoomSource(), hints: this.jmlhints });
+
+    if (room.roomassets.script) {
+      for (let k in room.roomassets.script) {
+        let scriptasset = room.roomassets.script[k];
+        //let scripttab = elation.elements.create('ui-tab', { append: this.tabs, label: k });
+        let scriptedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: k, source: scriptasset.code, mode: 'javascript' });
+      }
+    }
+  }
+  buildJMLMap() {
+    let tagMap = {};
+    for (let tag in janus.customElements) tagMap[tag] = janus.customElements[tag];
+    for (let tag in room.customElements) tagMap[tag] = room.customElements[tag];
+    let allTags = Object.keys(tagMap).sort();
+
+    let hints = {
+      "!top": ["janus-viewer"],
+      "fireboxroom": {
+        children: ['assets', 'room'],
+      },
+      "janus-viewer": {
+        children: ['assets', 'room'],
+      },
+      'assets': {
+        children: ['assetimage', 'assetobject', 'assetfont', 'assetwebsurface', 'assetscript', 'assetsound', 'assetvideo', 'assetshader', 'assetghost'],
+      },
+      'room': {
+        attrs: {},
+        children: allTags,
+      },
+      'assetimage': {
+        attrs: this.getAssetAttributes('image'),
+      },
+      'assetobject': {
+        attrs: this.getAssetAttributes('model'),
+      },
+      'assetfont': {
+        attrs: this.getAssetAttributes('font'),
+      },
+      'assetwebsurface': {
+        attrs: {
+          id: null,
+          src: null,
+        },
+      },
+      'assetscript': {
+        attrs: this.getAssetAttributes('script'),
+      },
+      'assetsound': {
+        attrs: this.getAssetAttributes('sound'),
+      },
+      'assetvideo': {
+        attrs: this.getAssetAttributes('video'),
+      },
+      'assetshader': {
+        attrs: this.getAssetAttributes('shader'),
+      },
+      'assetghost': {
+        attrs: {
+          id: null,
+          src: null,
+        },
+      }
+    };
+    hints.Room = hints.room;
+    hints.FireBoxRoom = hints.fireboxroom;
+    hints.Assets = hints.assets;
+    hints.AssetImage = hints.assetimage;
+    hints.AssetObject = hints.assetobject;
+    hints.AssetFont = hints.assetfont;
+    hints.AssetWebsurface = hints.assetwebsurface;
+    hints.AssetScript = hints.assetscript;
+    hints.AssetSound = hints.assetsound;
+    hints.AssetVideo = hints.assetvideo;
+    hints.AssetShader = hints.assetshader;
+    hints.AssetGhost = hints.assetghost;
+
+    let roomattrs = this.getAttributes({classname: 'janusroom'}, room);
+    let roomattrkeys = Object.keys(roomattrs).sort();
+    roomattrkeys.forEach(attrname => {
+      if (attrname != 'requires') { // We'll handle <room require="..."> as a special case, partly because of the name mismatch and partly so we can autosuggest components from the repository
+        let attr = roomattrs[attrname];
+        hints['room'].attrs[attrname] = (attr.type == 'boolean' || attr.types == 'bool' ? ['true', 'false'] : null);
+      } else {
+        hints['room'].attrs.require = Object.keys(room.componentrepository).sort();;
+      }
+    });
+
+    hints['room'].attrDelims = { require: ' ' };
+
+    for (let i = 0; i < allTags.length; i++) {
+      let tag = allTags[i],
+          tagdef = tagMap[tag];
+      let attrs = this.getAttributes(tagdef);
+      
+      hints[tag] = {
+        attrs: {},
+        children: allTags,
+      };
+      hints[elation.utils.camelize('.' + tag)] = hints[tag]; // capitalize first letter of tag, mapped to the all-lowercase tag definition
+
+      let attrkeys = Object.keys(attrs).sort();
+      attrkeys.forEach(attrname => {
+        let attr = attrs[attrname];
+        hints[tag].attrs[attrname] = (attr.type == 'boolean' || attr.types == 'bool' ? ['true', 'false'] : null);
+      });
+    }
+
+    // Autocomplete asset ids of various types
+    hints.object.attrs.id =
+      hints.object.attrs.collision_id =
+      hints.particle.attrs.emitter_id =
+         cm => this.getAssetSuggestions('model');
+
+    hints.object.attrs.image_id =
+      hints.object.attrs.normalmap_id =
+      hints.object.attrs.roughness_id =
+      hints.object.attrs.metalness_id =
+      hints.object.attrs.displacementmap_id =
+      hints.object.attrs.emissive_id =
+      hints.object.attrs.alphamap_id =
+      hints.object.attrs.envmap_id =
+      hints.object.attrs.lmap_id =
+      hints.object.attrs.lmap_id =
+      hints.image.attrs.id =
+      hints.image3d.attrs.id =
+      hints.particle.attrs.image_id =
+      hints.link.attrs.thumb_id =
+      hints.room.attrs.skybox_up_id =
+      hints.room.attrs.skybox_down_id =
+      hints.room.attrs.skybox_left_id =
+      hints.room.attrs.skybox_right_id =
+      hints.room.attrs.skybox_front_id =
+      hints.room.attrs.skybox_back_id =
+      hints.room.attrs.skybox_equi =
+        cm => this.getAssetSuggestions('image');
+
+    hints.object.attrs.video_id =
+      hints.video.attrs.video_id =
+        cm => this.getAssetSuggestions('video');
+
+    hints.object.attrs.shader_id =
+      hints.link.attrs.shader_id =
+        cm => this.getAssetSuggestions('shader');
+
+    hints.text.attrs.font = cm => this.getAssetSuggestions('font');
+    hints.sound.attrs.id = cm => this.getAssetSuggestions('sound');
+
+    hints.object.attrs.cull_face =
+      hints.paragraph.attrs.cull_face =
+        ['back', 'front', 'none'];
+
+    hints.object.blend_src =
+      hints.object.blend_dest =
+        ['zero', 'one', 'src_color', 'dst_color', 'src_alpha', 'dst_alpha', 'one_minus_src_color', 'one_minus_src_alpha', 'one_minus_dst_color', 'one_minus_dst_alpha'];
+
+    hints.room.attrs.fog_mode = ['linear', 'exp', 'exp2'];
+    hints.room.attrs.tonemapping_type = Object.keys(room.toneMappingTypes);
+
+    return hints;
+  }
+  getAssetSuggestions(assettype) {
+    let hints = [];
+    if (janus.assetpack.assetmap[assettype]) Array.prototype.push.apply(hints, Object.keys(janus.assetpack.assetmap[assettype]));
+    if (room.assetpack && room.assetpack.assetmap[assettype]) Array.prototype.push.apply(hints, Object.keys(room.assetpack.assetmap[assettype]));
+
+    return hints.sort();
+  }
+  getAttributes(objdef, bindobj) {
+    console.log('parse the object', objdef);
+    let elationThing = elation.engine.things[objdef.classname];
+    let allProperties = this.parseThingProperties(elationThing, null, bindobj);
+
+    if (!(objdef.class instanceof Function)) {
+      for (let attrname in objdef.class) {
+        let attr = objdef.class[attrname];
+        let attrtype = (attr === true || attr === false ? 'boolean' : 'whatever');
+        allProperties.properties[attrname] = { type: attrtype };
+        allProperties.proxies[attrname] = ['property', attrname];
+      }
+    }
+
+    let attrs = {};
+    if (allProperties) {
+      for (let k in allProperties.proxies) {
+        let p = allProperties.proxies[k];
+        if (p[0] == 'property' && allProperties.properties[p[1]]) {
+          let attr = allProperties.properties[p[1]];
+          if (attr.type != 'object') { // Skip object types, since they're generally only used internally
+            attrs[k] = attr;
+          }
+        } else if (p[0] == 'callback') {
+          attrs[k] = { type: 'callback' };
+        }
+      }
+    }
+    return attrs;
+  }
+  getAssetAttributes(assetname) {
+    let attrs = {},
+        props = this.parseAssetProperties(assetname);
+    let propkeys = Object.keys(props).sort();
+    for (let i = 0; i < propkeys.length; i++) {
+      attrs[propkeys[i]] = (props[propkeys[i]].type == 'boolean' ? ['true', 'false'] : null);
+    }
+    return attrs;
+  }
+  parseAssetProperties(assetname) {
+    let props = {};
+    if (elation.engine.assets[assetname]) {
+      let prot = elation.engine.assets[assetname].prototype;
+      let exclude = ['assettype', 'assetpack', 'instances', 'baseurl', 'preview', 'loaded', 'size', 'proxy', 'sourceurl', 'author', 'license', 'description', 'frames', 'canvas', 'rawimage', 'texture', 'video'];
+      for (let k in prot) {
+        if (typeof prot[k] != 'function' && exclude.indexOf(k) == -1) {
+          let attrtype = (prot[k] === true || prot[k] === false ? 'boolean' : 'whatever');
+          let propname = (k == 'name' ? 'id' : k);
+          props[propname] = { type: attrtype };
+        }
+      }
+    }
+    return props;
+  }
+  parseThingProperties(thing, props, bindobj) {
+    if (!props) props = {
+      properties: {},
+      proxies: {}
+    };
+
+    if (thing.extendclassdef) {
+      let parentThing = thing.extendclassdef;
+      this.parseThingProperties(parentThing, props);
+    }
+
+    let mProps = thing.classdef.toString().match(/defineProperties\(({.*?})\)/ms);
+    let mProxies = thing.classdef.toString().match(/(new elation\.proxy\(this, |_proxydefs = )({.*?})[;|\)]/ms);
+    (elation.bind(bindobj || this, function() {
+      if (mProps) {
+        let propmap;
+        eval('propmap = ' + mProps[1]);
+        for (let k in propmap) props.properties[k] = propmap[k];
+      }
+      if (mProxies) {
+        let proxymap;
+        eval('proxymap = ' + mProxies[2]);
+        for (let k in proxymap) props.proxies[k] = proxymap[k];
+      }
+    }))();
+    return props;
+  }
+});
+elation.elements.define('janus.ui.editor.source.file', class extends elation.elements.ui.tab {
+  init() {
+    super.init();
+    this.defineAttributes({
+      source: { type: 'string' },
+      filename: { type: 'string', default: 'New File' },
+      mode: { type: 'string', default: 'xml' },
+      hints: { type: 'object' },
+    });
+  }
+  create() {
+    this.filename = this.label;
+
+    this.initCodemirror();
+    elation.events.add(this.parentNode, 'tabselect', ev => { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); });
+  }
+  async initCodemirror() {
+    if (!CodeMirror.modes[this.mode]) {
+      await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([`./codemirror/mode/${this.mode}/${this.mode}.js`]);
+    }
+
+    this.codemirror = CodeMirror(this, {
+      value: this.source,
+      mode: this.mode,
+      lineNumbers: true,
+      extraKeys: {
+        'Ctrl-S': () => this.handleSave(),
+        'Ctrl-Space':(cm) => {  CodeMirror.showHint(cm, CodeMirror.hint[this.mode]); }, 
+        'Ctrl-Alt-V':(cm) => {
+          if (cm.state.keyMaps.indexOf(CodeMirror.keyMap.vim) != -1) {
+            // FIXME - removing the keymap doesn't actually work, the bindings stay active
+            cm.removeKeyMap(CodeMirror.keyMap.vim);
+          } else {
+            cm.addKeyMap(CodeMirror.keyMap.vim);
+          }
+          cm.refresh();
+        }, 
+      },
+      hintOptions: {
+        autohint: true,
+        schemaInfo: this.hints,
+        matchInMiddle: true,
+      },
+    });
+console.log('editor hints', this.hints);
+    this.codemirror.on('change', (ev) => this.handleEditContentChange(ev));
+    this.codemirror.on('change', (ev) => this.handleEditContentChange(ev));
+
+    let skipKeyCodes = [
+      8, // backspace
+      9, // tab
+      13, // enter
+      16, // shift
+      17, // ctrl
+      18, // alt
+      27, // esc
+      //32, // space
+      33, // pgup
+      34, // pgdn
+      35, // home
+      36, // end
+      37, // left
+      38, // up
+      39, // right
+      40, // down
+      46, // delete
+
+      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // 0-9
+      186, // ;
+      189, // -
+      219, // {
+      221, // }
+    ];
+    if (this.mode == 'javascript') {
+      skipKeyCodes.push(32); // space
+      skipKeyCodes.push(187); // =
+    } else if (this.mode == 'xml') {
+      skipKeyCodes.push(190); // . and  >
+    }
+    this.codemirror.on("keyup", function (cm, event) {
+      if ((!cm.state.completionActive && /*Enables keyboard navigation in autocomplete list*/
+          !event.ctrlKey && !event.altKey &&
+          skipKeyCodes.indexOf(event.keyCode) == -1)) {        /*Enter - do not open autocomplete list just after item has been selected in it*/ 
+        CodeMirror.commands.autocomplete(cm, null, {completeSingle: false});
+      }
+    });
+  }
+  handleSave() {
+    this.source = this.codemirror.getValue();
+    this.label = this.filename;
+  }
+  handleEditContentChange(ev) {
+    //console.log('it changed', ev);
+    let newsource = this.codemirror.getValue();
+    this.dirty = (newsource != this.source);
+    if (this.dirty) {
+      this.label = '*' + this.filename;
+    } else {
+      this.label = this.filename;
+    }
+    if (this.updatetimer) {
+      clearTimeout(this.updatetimer);
+    }
+    this.updatetimer = setTimeout(() => {
+      room.updateSource(newsource);
+      this.updatetimer = false;
+    }, 500);
   }
 });
 

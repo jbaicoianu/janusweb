@@ -160,3 +160,6 @@ janus-ui-editor-property-vector3.selected[constraint="none"] ui-input input {
   border: 2px solid #0a0;
   box-shadow: 0 0 4px #090;
 }
+janus-ui-editor-source .CodeMirror {
+  max-width: 80em;
+}

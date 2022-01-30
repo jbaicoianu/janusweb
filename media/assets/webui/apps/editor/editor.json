@@ -3,10 +3,13 @@
     "janus.ui.editor.panel": "./editor-panel.html",
     "janus.ui.editor.object.info": "./editor-object-info.html"
   },
-  "scripts":  ["./editor.js", "./editor-properties.js"],
-  "css":      ["./editor.css"],
+  "scripts":  ["./editor.js", "./editor-properties.js", "./codemirror/lib/codemirror.js"],
+  "css":      ["./editor.css", "./codemirror/lib/codemirror.css", "./codemirror/lib/jmldark.css"],
   "components": [
-    "janus-ui-editor-panel"
+    "janus-ui-editor-panel",
+    "janus-ui-editor-objectinfo",
+    "janus-ui-editor-scenetree",
+    "janus-ui-editor-source"
   ]
 }
 
