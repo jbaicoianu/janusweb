@@ -219,7 +219,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       var videoasset = this.getAsset('video', videoid);
       if (videoasset) {
         this.videoasset = videoasset;
-        texture = videoasset.getInstance();
+        let texture = videoasset.getInstance();
         if (!texture.image) {
           videoasset.load();
         }
@@ -356,7 +356,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           blend_src = false,
           blend_dest = false,
           side = this.sidemap[this.properties.cull_face],
-          textureasset;
+          textureasset,
+          lightmaptextureasset,
+          emissivetextureasset,
+          roughnesstextureasset,
+          metalnesstextureasset;
 
       this.textureNeedsUpdate = false;
 
@@ -403,10 +407,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (textureasset) {
           texture = textureasset.getInstance();
           this.textureasset = textureasset;
-          if (!this.assetloadhandlers[image_id]) {
-            this.assetloadhandlers[image_id] = true;
+          if (!this.assetloadhandlers[texture.uuid]) {
+            this.assetloadhandlers[texture.uuid] = true;
             elation.events.add(textureasset, 'asset_load', this.refresh);
-            elation.events.add(texture, 'update', this.refresh);
+            elation.events.add(texture, 'asset_update', this.refresh);
           }
 
           //texture.offset.copy(this.texture_offset);
@@ -432,10 +436,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let normaltextureasset = this.getAsset('image', normal_image_id, true);
         if (normaltextureasset) {
           textureNormal = normaltextureasset.getInstance();
-          if (!this.assetloadhandlers[normal_image_id]) {
-            this.assetloadhandlers[normal_image_id] = true;
+          if (!this.assetloadhandlers[textureNormal.uuid]) {
+            this.assetloadhandlers[textureNormal.uuid] = true;
             elation.events.add(textureNormal, 'asset_load', elation.bind(this, this.refresh));
-            elation.events.add(textureNormal, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureNormal, 'asset_update', elation.bind(this, this.refresh));
           }
 
           if (normaltextureasset.sbs3d) {
@@ -454,10 +458,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let bumptextureasset = this.getAsset('image', bump_image_id, true);
         if (bumptextureasset) {
           textureBump = bumptextureasset.getInstance();
-          if (!this.assetloadhandlers[bump_image_id]) {
-            this.assetloadhandlers[bump_image_id] = true;
+          if (!this.assetloadhandlers[textureBump.uuid]) {
+            this.assetloadhandlers[textureBump.uuid] = true;
             elation.events.add(bumptextureasset, 'asset_load', elation.bind(this, this.refresh));
-            elation.events.add(textureBump, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureBump, 'asset_update', elation.bind(this, this.refresh));
           }
           if (bumptextureasset.sbs3d) {
             textureBump.repeat.set(0.5, 1);
@@ -475,10 +479,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let alphatextureasset = this.getAsset('image', alpha_image_id, true);
         if (alphatextureasset) {
           textureAlpha = alphatextureasset.getInstance();
-          if (!this.assetloadhandlers[alpha_image_id]) {
-            this.assetloadhandlers[alpha_image_id] = true;
+          if (!this.assetloadhandlers[textureAlpha.uuid]) {
+            this.assetloadhandlers[textureAlpha.uuid] = true;
             elation.events.add(alphatextureasset, 'asset_load', elation.bind(this, this.refresh));
-            elation.events.add(textureAlpha, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureAlpha, 'asset_update', elation.bind(this, this.refresh));
           }
           if (alphatextureasset.sbs3d) {
             textureAlpha.repeat.set(0.5, 1);
@@ -496,10 +500,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         if (displacementtextureasset) {
           textureDisplacement = displacementtextureasset.getInstance();
-          if (!this.assetloadhandlers[displacement_image_id]) {
-            this.assetloadhandlers[displacement_image_id] = true;
+          if (!this.assetloadhandlers[textureDisplacement.uuid]) {
+            this.assetloadhandlers[textureDisplacement.uuid] = true;
             elation.events.add(displacementtextureasset, 'asset_load', elation.bind(this, this.refresh));
-            elation.events.add(textureDisplacement, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureDisplacement, 'asset_update', elation.bind(this, this.refresh));
           }
           if (displacementtextureasset.sbs3d) {
             textureDisplacement.repeat.set(0.5, 1);
@@ -517,10 +521,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lightmaptextureasset = this.getAsset('image', lightmap_image_id);
         if (lightmaptextureasset) {
           textureLightmap = lightmaptextureasset.getInstance();
-          if (!this.assetloadhandlers[lightmap_image_id]) {
-            this.assetloadhandlers[lightmap_image_id] = true;
+          if (!this.assetloadhandlers[textureLightmap.uuid]) {
+            this.assetloadhandlers[textureLightmap.uuid] = true;
             elation.events.add(lightmaptextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
-            elation.events.add(textureLightmap, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureLightmap, 'asset_update', elation.bind(this, this.refresh));
           }
 
           if (textureLightmap) {
@@ -535,10 +539,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         if (emissivetextureasset) {
           textureEmissive = emissivetextureasset.getInstance();
-          if (!this.assetloadhandlers[emissive_image_id]) {
-            this.assetloadhandlers[emissive_image_id] = true;
+          if (!this.assetloadhandlers[textureEmissive.uuid]) {
+            this.assetloadhandlers[textureEmissive.uuid] = true;
             elation.events.add(emissivetextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
-            elation.events.add(textureEmissive, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureEmissive, 'asset_update', elation.bind(this, this.refresh));
           }
 
           if (textureEmissive) {
@@ -550,10 +554,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         roughnesstextureasset = this.getAsset('image', roughness_image_id);
         if (roughnesstextureasset) {
           textureRoughness = roughnesstextureasset.getInstance();
-          if (!this.assetloadhandlers[roughness_image_id]) {
-            this.assetloadhandlers[roughness_image_id] = true;
+          if (!this.assetloadhandlers[textureRoughness.uuid]) {
+            this.assetloadhandlers[textureRoughness.uuid] = true;
             elation.events.add(roughnesstextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
-            elation.events.add(textureRoughness, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureRoughness, 'asset_update', elation.bind(this, this.refresh));
           }
 
           if (textureRoughness) {
@@ -565,10 +569,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         metalnesstextureasset = this.getAsset('image', metalness_image_id);
         if (metalnesstextureasset) {
           textureMetalness = metalnesstextureasset.getInstance();
-          if (!this.assetloadhandlers[metalness_image_id]) {
-            this.assetloadhandlers[metalness_image_id] = true;
+          if (!this.assetloadhandlers[textureMetalness.uuid]) {
+            this.assetloadhandlers[textureMetalness.uuid] = true;
             elation.events.add(metalnesstextureasset, 'asset_load', elation.bind(this, this.setTextureDirty));
-            elation.events.add(textureMetalness, 'update', elation.bind(this, this.refresh));
+            elation.events.add(textureMetalness, 'asset_update', elation.bind(this, this.refresh));
           }
 
           if (textureMetalness) {
@@ -718,11 +722,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               //if (!color) m.color.setHex(0xffffff);
               m.map = texture;
               texture.encoding = THREE.sRGBEncoding;
-              elation.events.add(texture, 'asset_update', (ev) => {
-                m.map = ev.data;
-                this.updateTextureOffsets();
-                this.refresh();
-              });
+              if (false && !this.assetloadhandlers[texture.uuid]) {
+                this.assetloadhandlers[texture.uuid] = true;
+                elation.events.add(texture, 'asset_update', (ev) => {
+                  m.map = ev.data;
+                  this.updateTextureOffsets();
+                  this.refresh();
+                });
+              }
 
               m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
             } else if (m.map && m.map.sourceFile) {
@@ -735,18 +742,21 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 }
                 m.map = asset.getInstance();
                 m.map.encoding = THREE.sRGBEncoding;
-                elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
-                  m.map = ev.data;
-                  this.updateTextureOffsets();
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(m, asset, ev) {
-                  if (asset.hasalpha && !m.transparent) {
-                    m.transparent = true;
-                    m.alphaTest = this.alphatest;
-                    //m.needsUpdate = true;
-                  }
-                  this.refresh();
-                }, m, asset));
+                if (!this.assetloadhandlers[m.map.uuid]) {
+                  this.assetloadhandlers[m.map.uuid] = true;
+                  elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
+                    m.map = ev.data;
+                    this.updateTextureOffsets();
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(m, asset, ev) {
+                    if (asset.hasalpha && !m.transparent) {
+                      m.transparent = true;
+                      m.alphaTest = this.alphatest;
+                      //m.needsUpdate = true;
+                    }
+                    this.refresh();
+                  }, m, asset));
+                }
               }
               if (m.map) {
                 this.assignTextureParameters(m.map, modelasset, asset);
@@ -758,11 +768,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (asset) {
                 m.normalMap = asset.getInstance();
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) {
-                  m.normalMap = ev.data; this.refresh();
-                  this.updateTextureOffsets();
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                if (!this.assetloadhandlers[m.normalMap.uuid]) {
+                  this.assetloadhandlers[m.normalMap.uuid] = true;
+                  elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) {
+                    m.normalMap = ev.data; this.refresh();
+                    this.updateTextureOffsets();
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
               }
             } else if (textureBump) {
               m.bumpMap = textureBump;
@@ -773,13 +786,16 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (asset) {
                 m.normalMap = asset.getInstance();
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
-                  m.normalMap = ev.data; this.refresh();
-                  m.normalMap.offset.copy(this.texture_offset);
-                  m.normalMap.repeat.copy(this.texture_repeat);
-                  m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
-                }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                if (!this.assetloadhandlers[m.normalMap.uuid]) {
+                  this.assetloadhandlers[m.normalMap.uuid] = true;
+                  elation.events.add(m.bumpMap, 'asset_update', elation.bind(this, function(ev) {
+                    m.normalMap = ev.data; this.refresh();
+                    m.normalMap.offset.copy(this.texture_offset);
+                    m.normalMap.repeat.copy(this.texture_repeat);
+                    m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                  }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
               }
             }
             if (textureNormal) {
@@ -789,8 +805,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
-                elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                if (!this.assetloadhandlers[m.normalMap.uuid]) {
+                  this.assetloadhandlers[m.normalMap.uuid] = true;
+                  elation.events.add(m.normalMap, 'asset_update', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
+                }
               }
             }
 
@@ -799,14 +818,20 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.lightMap = textureLightmap; 
               } else {
               }
-              elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+              if (!this.assetloadhandlers[m.lightMap.uuid]) {
+                this.assetloadhandlers[m.lightMap.uuid] = true;
+                elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+              }
             } else if (m.lightMap) {
               var imagesrc = m.lightMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
-              if (asset) {
-                m.lightMap = asset.getInstance();
-                elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
-                elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+              if (!this.assetloadhandlers[m.lightMap.uuid]) {
+                this.assetloadhandlers[m.lightMap.uuid] = true;
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                if (asset) {
+                  m.lightMap = asset.getInstance();
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
+                  elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                }
               }
             }
             if (textureDisplacement) {
