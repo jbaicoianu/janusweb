@@ -26,6 +26,7 @@ elation.require(['engine.things.label'], function() {
         'roughness':       { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         'metalness':       { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
         'envmap_id':       { type: 'string', set: this.updateMaterial, comment: 'Environment map texture ID (overrides skybox reflections)' },
+        'wireframe':       { type: 'boolean', default: false, set: this.updateMaterial, comment: 'Wireframe rendering' },
       });
       this.emptygeometry = new THREE.BufferGeometry();
       elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
@@ -91,7 +92,8 @@ elation.require(['engine.things.label'], function() {
         emissive: this.properties.emissive, 
         flatShading: false,
         depthTest: this.properties.depthTest,
-        reflectivity: .5
+        reflectivity: .5,
+        wireframe: this.wireframe,
       };
       if (this.room.pbr) {
         matargs.roughness = this.roughness;
@@ -233,6 +235,7 @@ elation.require(['engine.things.label'], function() {
           align:       [ 'property', 'align'],
           verticalalign:  [ 'property', 'verticalalign'],
           zalign: [ 'property', 'zalign'],
+          wireframe: [ 'property', 'wireframe'],
         };
       }
       return this._proxyobject;
