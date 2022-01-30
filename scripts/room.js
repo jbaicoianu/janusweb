@@ -27,13 +27,13 @@ elation.require([
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
-        'skybox_equi': { type: 'string' },
-        'skybox_left': { type: 'string' },
-        'skybox_right': { type: 'string' },
-        'skybox_up': { type: 'string' },
-        'skybox_down': { type: 'string' },
-        'skybox_front': { type: 'string' },
-        'skybox_back': { type: 'string' },
+        'skybox_equi': { type: 'string', set: this.setSkybox },
+        'skybox_left_id': { type: 'string', set: this.setSkybox },
+        'skybox_right_id': { type: 'string', set: this.setSkybox },
+        'skybox_up_id': { type: 'string', set: this.setSkybox },
+        'skybox_down_id': { type: 'string', set: this.setSkybox },
+        'skybox_front_id': { type: 'string', set: this.setSkybox },
+        'skybox_back_id': { type: 'string', set: this.setSkybox },
         'cubemap_irradiance_id': { type: 'string' },
         'cubemap_radiance_id': { type: 'string' },
         'fog': { type: 'boolean', default: false, set: this.setFog },
@@ -297,31 +297,32 @@ elation.require([
       }
       if (this.skyboxtexture) {
         this.skyboxobj.setTexture(this.skyboxtexture);
-        return;
+        //return;
       }
 
-      var hasSkybox = (this.skybox_left || this.skybox_right || this.skybox_top || this.skybox_bottom || this.skybox_left || this.skybox_right) != undefined;
+      var hasSkybox = (this.skybox_left_id || this.skybox_right_id || this.skybox_top_id || this.skybox_bottom_id || this.skybox_left_id || this.skybox_right_id) != undefined;
+      var assets = [];
       if (this.skybox_equi) {
         let equi = this.getAsset('image', this.skybox_equi);
-        var assets = [];
         elation.events.add(equi, 'asset_load', ev => {
           this.skyboxtexture = ev.target._texture;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
         });
+        equi.getInstance();
       } else if (hasSkybox) {
-        var assets = [
-          this.getAsset('image', this.skybox_right || 'black'),
-          this.getAsset('image', this.skybox_left || 'black'),
-          this.getAsset('image', this.skybox_up || 'black'),
-          this.getAsset('image', this.skybox_down || 'black'),
-          this.getAsset('image', this.skybox_front || 'black'),
-          this.getAsset('image', this.skybox_back || 'black')
+        assets = [
+          this.getAsset('image', this.skybox_right_id || 'black'),
+          this.getAsset('image', this.skybox_left_id || 'black'),
+          this.getAsset('image', this.skybox_up_id || 'black'),
+          this.getAsset('image', this.skybox_down_id || 'black'),
+          this.getAsset('image', this.skybox_front_id || 'black'),
+          this.getAsset('image', this.skybox_back_id || 'black')
         ];
       } else {
         var skyboxname = 'dayskybox';
-        var assets = [
+        assets = [
           this.getAsset('image', skyboxname + '_right'),
           this.getAsset('image', skyboxname + '_left'),
           this.getAsset('image', skyboxname + '_up'),
@@ -869,12 +870,12 @@ elation.require([
 
         if (typeof room.skybox != 'undefined') this.properties.skybox = room.skybox;
         if (room.skybox_equi) this.properties.skybox_equi = room.skybox_equi;
-        if (room.skybox_left_id) this.properties.skybox_left = room.skybox_left_id;
-        if (room.skybox_right_id) this.properties.skybox_right = room.skybox_right_id;
-        if (room.skybox_up_id) this.properties.skybox_up = room.skybox_up_id;
-        if (room.skybox_down_id) this.properties.skybox_down = room.skybox_down_id;
-        if (room.skybox_front_id) this.properties.skybox_front = room.skybox_front_id;
-        if (room.skybox_back_id) this.properties.skybox_back = room.skybox_back_id;
+        if (room.skybox_left_id) this.properties.skybox_left_id = room.skybox_left_id;
+        if (room.skybox_right_id) this.properties.skybox_right_id = room.skybox_right_id;
+        if (room.skybox_up_id) this.properties.skybox_up_id = room.skybox_up_id;
+        if (room.skybox_down_id) this.properties.skybox_down_id = room.skybox_down_id;
+        if (room.skybox_front_id) this.properties.skybox_front_id = room.skybox_front_id;
+        if (room.skybox_back_id) this.properties.skybox_back_id = room.skybox_back_id;
 
         if (room.cubemap_radiance_id) this.properties.cubemap_radiance_id = room.cubemap_radiance_id;
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
@@ -2017,12 +2018,12 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
 
           skybox:         ['property', 'skybox'],
           skybox_equi:    ['property', 'skybox_equi'],
-          skybox_left_id: ['property', 'skybox_left'],
-          skybox_right_id:['property', 'skybox_right'],
-          skybox_up_id:   ['property', 'skybox_up'],
-          skybox_down_id: ['property', 'skybox_down'],
-          skybox_front_id:['property', 'skybox_front'],
-          skybox_back_id: ['property', 'skybox_back'],
+          skybox_left_id: ['property', 'skybox_left_id'],
+          skybox_right_id:['property', 'skybox_right_id'],
+          skybox_up_id:   ['property', 'skybox_up_id'],
+          skybox_down_id: ['property', 'skybox_down_id'],
+          skybox_front_id:['property', 'skybox_front_id'],
+          skybox_back_id: ['property', 'skybox_back_id'],
 
           pendingScripts: ['property', 'pendingScripts'],
           pendingCustomElements: ['property', 'pendingCustomElements'],
