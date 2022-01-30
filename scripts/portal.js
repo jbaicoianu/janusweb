@@ -2,13 +2,12 @@ elation.require(['janusweb.janusbase'], function() {
   elation.component.add('engine.things.janusportal', function() {
     this.postinit = function() {
       this.defineProperties({
-        'url': { type: 'string' },
+        'url': { type: 'string', set: this.updateTitle },
         'title': { type: 'string' },
         'janus': { type: 'object' },
         'room': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
         'size': { type: 'vector3', default: new THREE.Vector3(1.4,2.2,1), set: this.updateGeometry },
-        'url': { type: 'string', set: this.updateTitle },
         'open': { type: 'boolean', default: false },
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
         'collision_scale': { type: 'vector3', set: this.updateCollider },
@@ -333,7 +332,7 @@ elation.require(['janusweb.janusbase'], function() {
         console.log('load that room', this.portalroom);
 
         var scene = new THREE.Scene();
-        scene.background = this.portalroom.skyboxtexture
+        scene.background = this.portalroom.skyboxtexture;
         scene.add(this.portalroom.objects['3d']);
         this.scene = scene;
         this.scene.updateMatrixWorld(true);
