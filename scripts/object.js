@@ -731,7 +731,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 });
               }
 
-              m.transparent = (textureasset && textureasset.hasalpha) || m.opacity < 1;
+              m.transparent = (this.transparent !== null ? this.transparent : (textureasset && textureasset.hasalpha) || m.opacity < 1);
             } else if (m.map && m.map.sourceFile) {
               var imagesrc = m.map.sourceFile;
               var asset = this.getAsset('image', imagesrc, true);
