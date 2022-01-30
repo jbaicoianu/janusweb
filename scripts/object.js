@@ -15,7 +15,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         video_id: { type: 'string', set: this.updateVideo, comment: 'Video texture ID' },
         shader_id: { type: 'string', set: this.updateMaterial, comment: 'Shader ID' },
         shader_chunk_replace: { type: 'object' },
-        url: { type: 'string' },
+        url: { type: 'string', set: this.updateWebsurfaceURL },
         loop: { type: 'boolean' },
         websurface_id: { type: 'string', set: this.updateWebsurface, comment: 'WebSurface ID' },
         shadow: { type: 'boolean', default: true, set: this.updateMaterial },
@@ -237,6 +237,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             url = this.room.baseurl + url;
           }
           this.url = url;
+        } else {
+          this.url = this.websurface_id;
         }
 /*
         this.pickable = false;
@@ -273,6 +275,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.traverseObjects(function(n) {
         if (n.material) n.material = blankmaterial;
       });
+    }
+    this.updateWebsurfaceURL = function() {
+      if (this.websurface) {
+        this.websurface.url = this.url;
+      }
     }
     this.setTextureDirty = function() {
       this.textureNeedsUpdate = true;
