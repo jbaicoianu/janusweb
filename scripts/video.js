@@ -32,7 +32,7 @@ elation.require(['janusweb.janusbase'], function() {
             if (camera.name) {
               texture.setEye(camera.name);
             }
-          }
+          };
         }
         return mesh;
       } else {
