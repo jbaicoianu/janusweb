@@ -231,7 +231,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       }
     }
     this.createForces = function() {
-      elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
+      if (this.collidable && !this.collision_trigger) {
+        elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
+      }
       this.updateRotationSpeed();
     }
     this.updateRotationSpeed = function() {
