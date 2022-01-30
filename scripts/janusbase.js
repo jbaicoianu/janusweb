@@ -83,7 +83,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.properties.orientation.copy(this.object.quaternion);
         return this.object;
       }
-      if (this.renderorder) this.object.renderOrder = this.renderorder;
+      if (this.renderorder && this.object) this.object.renderOrder = this.renderorder;
       return new THREE.Object3D();
     }
     this.createChildren = function() {
