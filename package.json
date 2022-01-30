@@ -1,7 +1,7 @@
 {
   "name": "janusweb",
   "description": "Web client for JanusVR worlds",
-  "version": "1.5.33",
+  "version": "1.5.34",
   "main": "scripts/janusweb.js",
   "author": "James Baicoianu",
   "license": "MIT",
@@ -12,8 +12,7 @@
     "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run",
     "start:dev": "nodemon -w scripts/ -w css/ -w ../engine/scripts/ -w ../engine/css/ -w ../physics/scripts/ -w ../utils/scripts/ -w ../elements/scripts/ -w ../elements/css/ --exec ./utils/build.sh"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "https://github.com/jbaicoianu/janusweb"
