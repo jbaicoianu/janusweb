@@ -259,7 +259,7 @@ console.log('voip picker select?', ev);
       }
     });
 
-    elation.events.add(janus.engine, 'engine_frame', ev => this.handleFrameUpdate(ev))
+    elation.events.add(janus.engine, 'engine_frame', ev => this.handleFrameUpdate(ev));
 
     let newUserDataSubscription = new HighFidelityAudio.UserDataSubscription({
       components: [
@@ -510,7 +510,6 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
     this.defineAttributes({
       'muted': { type: 'boolean', default: false },
       'hasaudio': { type: 'boolean', default: false },
-      'hasvideo': { type: 'boolean', default: false },
       'hasvideo': { type: 'boolean', default: false },
       'averagevolume': { type: 'float', default: 0 },
       'speaking': { type: 'boolean', default: false },
@@ -878,12 +877,11 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
         // FIXME - I'm not really using these UI elements properly here, I shouldn't be mucking with the HTML elements directly
         inputs.select.innerHTML = '';
         let hasWebcamPermission = true;
-        let webcamDisabled;
         if (cameras) {
           cameras.select.innerHTML = '';
           //outputs.select.innerHTML = '';
 
-          webcamDisabled = elation.elements.create('option', {innerHTML: 'Disabled', value: 'none', append: cameras.select});
+          this.webcamDisabledElement = elation.elements.create('option', {innerHTML: 'Disabled', value: 'none', append: cameras.select});
         }
         devices.forEach(d => {
           if (d.kind == 'audioinput') {
