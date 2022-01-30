@@ -1444,6 +1444,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
             hasalpha: args.hasalpha,
             maxsize: args.maxsize,
             preload: args.preload,
+            proxy: args.proxy,
             baseurl: this.baseurl
           };
           assetlist.push(assetargs);
@@ -1484,6 +1485,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
             format: args.format,
             hls: args.hls,
             preload: args.preload,
+            proxy: args.proxy,
             baseurl: this.baseurl
           });
         } else if (args.video) {
@@ -1512,6 +1514,7 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           src: src,
           buffer: args.buffer,
           rate: args.rate,
+          proxy: args.proxy,
           baseurl: this.baseurl
         });
       } else if (type == 'websurface') {
@@ -1563,7 +1566,8 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
           tex0: args.tex || args.tex0 || srcparts[1],
           tex1: args.tex1 || srcparts[2],
           tex2: args.tex2 || srcparts[3],
-          tex3: args.tex3 || srcparts[4]
+          tex3: args.tex3 || srcparts[4],
+          proxy: args.proxy,
         });
       } else if (type == 'ghost') {
         var src = (args.src.match(/^file:/) ? args.src.replace(/^file:/, datapath) : args.src);
