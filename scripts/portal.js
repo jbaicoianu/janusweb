@@ -3,7 +3,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       this.defineProperties({
         'url': { type: 'string', set: this.updateTitle },
-        'title': { type: 'string' },
+        'title': { type: 'string', set: this.updateTitle },
         'janus': { type: 'object' },
         'room': { type: 'object' },
         //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
@@ -11,7 +11,6 @@ elation.require(['janusweb.janusbase'], function() {
         'open': { type: 'boolean', default: false },
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
         'collision_scale': { type: 'vector3', set: this.updateCollider },
-        'title': { type: 'string', set: this.updateTitle },
         'seamless': { type: 'boolean', default: false },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
