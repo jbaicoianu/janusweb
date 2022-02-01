@@ -283,10 +283,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           }
         }
         if (this.ghost && !this.decouplehead) {
-          this.ghost.setHeadOrientation(this.head.orientation);
+          this.ghost.setHeadOrientation(this.head.orientation, true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            this.ghost.head.orientation.copy(this.head.orientation);
+            this.ghost.head.orientation.copy(this.head.orientation).invert();
           }
         }
       }
@@ -490,7 +490,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
               avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
               showlabel: false,
               //pos: V(0, -this.fatness, 0),
-              //rotation: V(0, 180, 0),
+              rotation: V(0, 180, 0),
               renderorder: 101,
             });
             this.ghost.orientation.set(0,1,0,0);
@@ -654,7 +654,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
         showlabel: false,
         //pos: V(0, -this.fatness, 0),
-        //rotation: V(0, 180, 0),
+        rotation: V(0, 180, 0),
         renderorder: 101,
       });
 

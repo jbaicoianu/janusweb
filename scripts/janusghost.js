@@ -238,15 +238,34 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               //rotation: V(0, 180, 0),
               lighting: this.lighting,
               //cull_face: 'none'
+              opacity: 0.9999,
+              renderorder: this.renderorder || 100,
+              shader_chunk_replace: (this.lighting ? {
+                'color_fragment': 'color_fragment_discard_close',
+              } : {}),
             });
             this.face.start();
           } else {
             this.face = headid;
+            this.face.lighting = this.lighting;
+            this.face.opacity = 0.9999;
+            this.face.renderorder = this.renderorder || 100;
+            this.face.shader_chunk_replace = (this.lighting ? {
+              'color_fragment': 'color_fragment_discard_close',
+            } : {});
             this.head.appendChild(headid);
             this.face.start();
           }
-          this.head.pos = headpos.clone().multiplyScalar(this.scale.y);
+          if (scale) {
+            this.face.scale.fromArray(scale);
+            if (this.label) {
+              this.label.scale.fromArray(scale);
+              this.label.pos.multiply(this.label.scale);
+            }
+          }
+          this.head.pos = headpos.clone().multiply(this.face.scale);
           this.face.applyPosition(headpos.negate());
+
           if (this.remotevideo) {
             this.updateVideoScreen();
             this.face.addEventListener('load', (ev) => {
@@ -256,13 +275,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           }
         }
         //this.head.properties.position.copy(headpos);
-        if (scale) {
-          this.face.scale.fromArray(scale);
-          if (this.label) {
-            this.label.scale.fromArray(scale);
-            this.label.pos.multiply(this.label.scale);
-          }
-        }
+
       }
     }
     this.setBody = function(bodyid, scale, pos) {
@@ -328,7 +341,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             if (this.body.animationmixer) {
               this.cloneAnimations(animasset);
             }
-            this.body.setAnimation('idle');
+            //this.body.setAnimation('idle');
           }
         });
         animasset.load();
@@ -336,7 +349,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (this.body.animationmixer) {
           this.cloneAnimations(animasset);
         }
-        this.body.setAnimation('idle');
+        //this.body.setAnimation('idle');
       }
     }
     this.cloneAnimations = function(animasset) {
