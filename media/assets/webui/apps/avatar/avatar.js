@@ -42,15 +42,14 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
     this.defineAttribute('src', { type: 'string' });
     this.defineAttribute('sources', { type: 'object' });
     this.defineAttribute('previewpos', { type: 'vector3', default: V(-2, 0, -3) });
-    this.defineAttribute('hideconfirm', { type: 'boolean', default: false });
-    this.defineAttribute('hidereset', { type: 'boolean', default: false });
+    this.defineAttribute('hideconfirm', { type: 'boolean', default: true });
+    this.defineAttribute('hidereset', { type: 'boolean', default: true });
     this.selected = false;
   }
   create() {
     let tpl = '';
     if (this.sources) {
       let sources = (elation.utils.isString(this.sources) ? JSON.parse(this.sources) : this.sources);
-      console.log('HI YES', sources);
       if (sources.length > 1) {
         tpl += '<ui-tabs>';
         sources.forEach(source => {
@@ -178,9 +177,11 @@ this.appendChild(this.previewwindow);
   handleAvatarSelect(ev) {
     console.log('selected an avatar', ev.data);
     this.selected = ev.data;
-    this.showPreview(ev.data.url);
     if (this.elements.confirm) {
+      this.showPreview(ev.data.url);
       this.elements.confirm.disabled = false;
+    } else {
+      this.handleAvatarConfirm();
     }
     this.dispatchEvent(new CustomEvent("select", { detail: this.selected }));
   }
@@ -229,7 +230,8 @@ this.appendChild(this.previewwindow);
 });
 elation.elements.define('janus-avatar-picker-item', class extends elation.elements.ui.item {
   create() {
-    elation.events.add(this, 'click', (ev) => { console.log('duh', this); this.click(ev) });
+    super.create();
+    //elation.events.add(this, 'click', (ev) => { console.log('duh', this); this.click(ev) });
     let item = this.value;
     let defaulticon = janus.ui.apps.default.apps.avatar.resolveFullURL('./images/default-avatar.jpg');
     this.elements = elation.elements.fromString(`
