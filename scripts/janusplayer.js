@@ -286,7 +286,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           this.ghost.setHeadOrientation(this.head.orientation, true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            this.ghost.head.orientation.copy(this.head.orientation).invert();
+            this.ghost.head.orientation.copy(this.head.orientation);
           }
         }
       }
@@ -373,7 +373,6 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (this.head) {
         this.head.objects['3d'].matrixWorld.extractBasis(v.view_xdir, v.view_ydir, v.view_zdir);
         v.head_pos.setFromMatrixPosition(this.head.objects['3d'].matrixWorld);
-        v.view_zdir.negate();
       }
 
       if (this.gaze && this.gaze.object) {
