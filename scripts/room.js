@@ -306,6 +306,7 @@ elation.require([
         let equi = this.getAsset('image', this.skybox_equi);
         elation.events.add(equi, 'asset_load', ev => {
           this.skyboxtexture = ev.target._texture;
+          this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
