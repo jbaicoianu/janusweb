@@ -96,7 +96,7 @@ this.debug.style.zIndex = '1000';
       this.style.top = (this.position[1] * 100) + '%';
     }
 
-    let janus = elation.component.fetch(this.queryParentSelector('[data-elation-component="janusweb.client"]'))
+    let janus = this.queryParentSelector('janusweb-client');
     if (janus) {
       janus.engine.systems.controls.addVirtualGamepad(this);
       this.hide();
