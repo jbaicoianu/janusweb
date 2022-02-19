@@ -1,9 +1,11 @@
-<details open>
-   <summary>Online Users (<ui-indicator name="roomusers" value="0"></ui-indicator>)</summary>
-      {?room.private}
-        <h3>Private Room</h3>
+{?room.private}
+<details name="userlist_details">
+        <summary>No online users</summary>
         <p>This room is marked as private.  You are not broadcasting your location while here - others can't see you, and you can't see them.</p>
-      {/room.private}
+</details>
+{:else}
+<details open name="userlist_details">
+   <summary>Online Users (<ui-indicator name="roomusers" value="0"></ui-indicator>)</summary>
       <ui-list name="userlist_room" emptycontent="No other users in this room"></ui-list>
       <!-- ui-tabs showcounts="true">
         <ui-tab name="roomusers" label="Room">
@@ -17,3 +19,4 @@
         </ui-tab>
       </ui-tabs -->
 </details>
+{/room.private}

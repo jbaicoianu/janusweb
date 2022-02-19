@@ -93,16 +93,17 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.elements = elation.elements.fromTemplate('janus.comms.userlist', this);
     this.client = this.getClient();
     this.janusweb = this.client.janusweb;
+
     this.userlist_room = this.elements.userlist_room;
     this.userlist_online = this.elements.userlist_online;
     this.userlist_friends = this.elements.userlist_friends;
-
     this.usermarkers = {};
 
     elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data); });
     elation.events.add(this.janusweb.network, 'janusweb_user_joined,janusweb_user_left,janusweb_user_disconnected', (ev) => this.updateUsers());
     setTimeout(() => {
       this.updateUsers();
+      this.updateRoom(room);
     }, 100);
   }
   getClient() {
@@ -121,6 +122,13 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.userlist_room = this.userlist_room;
     this.userlist_online = this.userlist_online;
     this.userlist_friends = this.userlist_friends;
+    if (room.private) {
+      this.parentNode.elements.chat.open = false;
+      this.elements.userlist_details.open = false;
+    } else {
+      this.parentNode.elements.chat.open = true;
+      this.elements.userlist_details.open = true;
+    }
     this.updateUsers();
   }
   updateUsers() {
@@ -129,10 +137,12 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     var users = Object.keys(remoteplayers);
     users.unshift(player.userid);
 
-    this.elements.roomusers.value = users.length;
-    
-    this.userlist_room.setItems(users);
-
+    if (this.elements.roomusers) {
+      this.elements.roomusers.value = users.length;
+    }
+    if (this.userlist_room) {
+      this.userlist_room.setItems(users);
+    }
     for (let k in remoteplayers) {
       let p = remoteplayers[k];
       if (this.usermarkers[k] && this.usermarkers[k].parent !== p.getProxyObject()) {
@@ -147,7 +157,6 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
         });
         this.usermarkers[k].start();
       } 
-
     }
   }
   setFont(fontname) {
@@ -207,6 +216,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   }
   handleUserJoined(ev) {
     var data = ev.data;
+if (!this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'join',
@@ -217,6 +227,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   }
   handleUserLeft(ev) {
     var data = ev.data;
+if (!this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'part',
@@ -227,6 +238,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   }
   handleUserDisconnected(ev) {
     var data = ev.data;
+if (!this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'disconnect',
@@ -237,6 +249,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   }
   handleUserChat(ev) {
     var data = ev.data;
+if (!this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'chat',
@@ -249,6 +262,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   sendMessage(msg) {
     if (msg && msg.length > 0) {
       janus.network.send({'method': 'chat', data: msg});
+if (!this.elements.chatmessages) return;
       this.elements.chatmessages.add({
         timestamp: new Date().getTime(),
         type: 'selfchat',
@@ -260,6 +274,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     }
   }
   handleClientPrint(msg) {
+if (!this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'print',
