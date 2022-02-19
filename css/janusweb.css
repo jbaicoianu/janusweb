@@ -301,3 +301,6 @@ janus-overlay[hidden] {
   pointer-events: none;
   display: block !important;
 }
+fireboxroom {
+  display: none;
+}
