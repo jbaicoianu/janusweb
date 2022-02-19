@@ -67,7 +67,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
             <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
           </ui-tab>
           <ui-tab label="Ready Player Me">
-            <iframe src="https://demo.readyplayer.me/avatar" allow="camera"></iframe>
+            <iframe data-src="https://demo.readyplayer.me/avatar" allow="camera"></iframe>
           </ui-tab>
         </ui-tabs>
       `;
@@ -92,7 +92,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
 
     // Observer watches for visibility events and hides the 3d avatar preview when the 2d ui disappears
     let threshold = [];
-    for (let i = 0; i < 100; i++) threshold.push(i / 100);
+    for (let i = 0; i < 100; i += 10) threshold.push(i / 100);
     let observer = new IntersectionObserver(ev => this.handleIntersectionChange(ev), { root: document, rootMargin: '0px', threshold: threshold });
     observer.observe(this);
     document.addEventListener('scroll', ev => this.handleScroll(ev));
@@ -106,7 +106,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
           <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
       `;
     } else if (source.type == 'iframe') {
-      tpl = `<iframe src="${source.src}" allow="camera"></iframe>`;
+      tpl = `<iframe data-src="${source.src}" allow="camera"></iframe>`;
     }
     return tpl;
   }
@@ -204,6 +204,21 @@ this.appendChild(this.previewwindow);
       this.hidePreview(true);
     } else if (!this.avatarpreview && intersections[0].isIntersecting) {
       this.showPreview();
+    }
+    // If our iframe hasn't been loaded yet, set a timer to load it. Clear the time out if the element becomes hidden before it fires.
+    if (intersections[0].intersectionRatio > 0) {
+      if (this.iframevistimer) {
+        clearTimeout(this.iframevistimer);
+      }
+      this.iframevistimer = setTimeout(() => {
+        let iframe = this.querySelector('iframe[data-src]');
+        if (iframe && iframe.src != iframe.dataset.src) {
+          iframe.src = iframe.dataset.src;
+          delete iframe.dataset.src;
+        }
+      }, 50);
+    } else if (this.iframevistimer) {
+      clearTimeout(this.iframevistimer);
     }
   }
   handleScroll(ev) {
