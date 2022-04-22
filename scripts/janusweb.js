@@ -74,7 +74,11 @@ elation.require([
       });
       elation.events.add(window, 'popstate', elation.bind(this, this.handlePopstate));
 
-      this.bookmarks = elation.collection.localindexed({index: 'url', storagekey: 'janusweb.bookmarks'});
+      try {
+        this.bookmarks = elation.collection.localindexed({index: 'url', storagekey: 'janusweb.bookmarks'});
+      } catch (e) {
+        this.bookmarks = elation.collection.indexed({index: 'url', storagekey: 'janusweb.bookmarks'});
+      }
 
       if (this.corsproxy != '') {
         elation.engine.assets.setCORSProxy(this.corsproxy);
