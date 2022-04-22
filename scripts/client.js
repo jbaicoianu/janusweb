@@ -47,8 +47,12 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
     }
     elation.config.set('dependencies.path', fullpath);
 
-    var usetracking = elation.utils.any(args.tracking, elation.config.get('janusweb.tracking.enabled'), false);
+    var usetracking = elation.utils.any(args.tracking, elation.config.get('janusweb.tracking.enabled'), false),
+        trackingid = elation.utils.any(args.trackingid, elation.config.get('janusweb.tracking.clientid'), '');
     if (usetracking && usetracking != 'false') {
+      elation.config.set('janusweb.tracking.enabled', true);
+      elation.config.set('janusweb.tracking.clientid', trackingid);
+
       var tracking = elation.janusweb.tracking({});
     }
     var link = document.createElement('link');
@@ -76,6 +80,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       useWebVRPolyfill: args.useWebVRPolyfill,
       server: args.server,
       tracking: usetracking,
+      trackingid: trackingid,
       avatarsrc: args.avatarsrc,
     });
     return new Promise(function(resolve, reject) {
@@ -305,7 +310,8 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           homepage: { type: 'string' },
           width: { type: 'integer', default: 640 },
           height: { type: 'integer', default: 480 },
-          tracking: { type: 'boolean', default: true },
+          tracking: { type: 'boolean', default: false },
+          trackingid: { type: 'string'  },
           networking: { type: 'boolean', default: true },
           avatarsrc: { type: 'string', default: false },
           uiconfig: { type: 'string', default: false },
@@ -333,6 +339,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           url: this.getRoomURL(),
           homepage: this.homepage || this.src,
           tracking: this.tracking,
+          trackingid: this.trackingid,
           networking: this.networking,
           corsproxy: this.corsproxy,
           //resolution: width + 'x' + height,
