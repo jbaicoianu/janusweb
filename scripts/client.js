@@ -463,11 +463,20 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       }
       show() {
         super.show();
+        if (this.oldparent && !this.parentNode) {
+          this.oldparent.appendChild(this);
+        }
         elation.events.fire({type: 'overlay_show', element: this});
       }
       hide() {
         super.hide();
         elation.events.fire({type: 'overlay_hide', element: this});
+        setTimeout(() => {
+          if (this.parentNode) {
+            this.oldparent = this.parentNode;
+            this.parentNode.removeChild(this);
+          }
+        }, 1000);
       }
     });
   }
