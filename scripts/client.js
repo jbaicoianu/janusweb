@@ -196,6 +196,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
 
       elation.engine.assets.initTextureLoaders(this.engine.systems.render, elation.config.get('janusweb.datapath') + 'lib/basis/');
       elation.engine.assets.setDracoPath(elation.config.get('janusweb.datapath') + 'lib/draco/');
+      elation.engine.assets.icosapath = elation.config.get('janusweb.datapath') + 'lib/three-icosa/brushes/';
     }
     createUI() {
       if (!this.ui) {
