@@ -9,7 +9,7 @@ elation.require([], function() {
         })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
         ga('create', elation.config.get('janusweb.tracking.clientid'), 'auto');
-        ga('set', 'page', "/");
+        ga('set', 'page', document.location.pathname || "/");
         //ga('send', 'pageview');
 
         elation.events.add(null, 'room_change', function(ev) {
