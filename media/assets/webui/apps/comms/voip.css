@@ -171,3 +171,23 @@ janus-voip-picker .micselect {
 janus-voip-picker-mictest {
   margin-left: 5px;
 }
+janus-voip-client-incomingcall ui-flexpanel {
+  height: auto;
+}
+janus-voip-client-incomingcall janus-button-voip[action="accept"] {
+  background: #0a0;
+  border: 1px solid black;
+}
+janus-voip-client-incomingcall janus-button-voip[action="accept"]:hover {
+  background: #0d0;
+}
+janus-voip-client-incomingcall janus-button-voip[action="accept"][disabled] {
+  opacity: .3;
+}
+janus-voip-client-incomingcall ui-button[action="reject"] {
+  background: #800;
+  border: 1px solid black;
+}
+janus-voip-client-incomingcall ui-button[action="reject"]:hover {
+  background: #a00;
+}
