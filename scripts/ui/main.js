@@ -167,8 +167,12 @@ elation.require(['utils.template', 'elements.elements', 'elements.ui.all', 'elem
     create() {
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var configurl = this.config || datapath + (datapath[datapath.length - 1] != '/' ? '/' : '') + 'assets/webui/default.json';
-      this.installedapps = elation.elements.create('collection.localindexed', {index: 'name', storagekey: 'janusweb.ui.installedapps'});
-      this.installedapps.load();
+      try {
+        this.installedapps = elation.elements.create('collection.localindexed', {index: 'name', storagekey: 'janusweb.ui.installedapps'});
+        this.installedapps.load();
+      } catch (e) {
+        this.installedapps = elation.elements.create('collection.indexed', {index: 'name', storagekey: 'janusweb.ui.installedapps'});
+      }
       this.container = elation.elements.create('div', {
         append: this,
         class: 'janus-ui-container'
