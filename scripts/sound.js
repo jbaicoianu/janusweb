@@ -7,6 +7,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.defineProperties({
         sound_id: { type: 'string', set: this.updateSound },
         singleshot: { type: 'boolean', default: false },
+        positional: { type: 'boolean', default: null },
         loop: { type: 'boolean', default: false },
         auto_play: { type: 'boolean', default: false },
         play_once: { type: 'boolean', default: false },
@@ -54,7 +55,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (!audionodes) {
           audionodes = await this.room.getAudioNodes();
         }
-        if (!this.hasposition) {
+        if (!this.hasposition && this.positional !== true) {
           this.audio = new THREE.Audio(audionodes.listener);
         } else {
           this.audio = new THREE.PositionalAudio(audionodes.listener);
@@ -223,6 +224,7 @@ elation.require(['janusweb.janusbase'], function() {
           playing:      [ 'property', 'playing', 'sound.isPlaying'],
           pitch:        [ 'property', 'pitch'],
           auto_play:    [ 'property', 'auto_play'],
+          positional:   [ 'property', 'positional'],
           play:         [ 'function', 'play'],
           pause:        [ 'function', 'pause'],
           stop:         [ 'function', 'stop'],
