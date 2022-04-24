@@ -210,8 +210,11 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.updatePlaying = function(ev) {
       this.playing = (this.audio ? this.audio.isPlaying : false);
-      if (ev.type == 'ended' && this.singleshot)  {
-        this.die(); 
+      if (ev.type == 'ended') {
+        this.dispatchEvent({type: 'sound_ended'});
+        if (this.singleshot)  {
+          this.die();
+        }
       }
       return this.playing;
     }
