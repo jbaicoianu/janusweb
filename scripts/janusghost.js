@@ -611,6 +611,15 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           if (isNaN(this.head.orientation.x) || isNaN(this.head.orientation.y) || isNaN(this.head.orientation.z) || isNaN(this.head.orientation.w)) this.head.orientation.set(0,0,0,1);
         }
 
+        if (movedata.morphtargets) {
+          if (this.body) {
+            let morphtargets = movedata.morphtargets;
+            for (let target in morphtargets) {
+              this.body.setMorphTargetInfluence(target, morphtargets[target]);
+            }
+          }
+        }
+
         this.objects.dynamics.updateState();
         this.refresh();
       }
