@@ -882,7 +882,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.transparent = true;
               }
             } else {
-              m.blending = THREE.NormalBlending;
+              //m.blending = THREE.NormalBlending;
             }
             if (this.depth_write !== null) {
               m.depthWrite = this.depth_write;
