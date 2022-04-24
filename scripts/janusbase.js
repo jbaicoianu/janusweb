@@ -383,8 +383,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           rotate_deg_per_sec:  [ 'property', 'rotate_deg_per_sec'],
           rotate_axis:  [ 'property', 'rotate_axis'],
 
-          anim_id:    ['property', 'anim_id'],
-          anim_transition_time:    ['property', 'anim_transition_time'],
+          anim_id:              ['property', 'anim_id'],
+          anim_transition_time: ['property', 'anim_transition_time'],
+          activeanimation:      ['property', 'activeanimation'],
 
           fwd:      ['property', 'zdir'],
           xdir:     ['property', 'xdir'],
