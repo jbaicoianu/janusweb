@@ -131,6 +131,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.party_mode = this.getSetting('partymode.enabled', false);
       this.currentavatar = '';
       this.getAvatarData().then(d => this.currentavatar = d);
+      this.morphtargetchanges = {};
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -728,6 +729,29 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         }
       } 
       return handData;
+    }
+    this.hasMorphTargetData = function() {
+      return Object.keys(this.morphtargetchanges).length > 0;
+    }
+    this.setMorphTargetInfluence = function(morphtarget, value) {
+      if (this.ghost && this.ghost.body) {
+        this.ghost.body.setMorphTargetInfluence(morphtarget, value);
+        //if (this.morphtargetchanges.indexOf(morphtarget) == -1) {
+        this.morphtargetchanges[morphtarget] = value;
+        //}
+      }
+    }
+    this.getMorphTargetData = function() {
+      if (this.hasMorphTargetData()) {
+        let data = {};
+        let body = this.ghost.body;
+        for (let morphtarget in this.morphtargetchanges) {
+          data[morphtarget] = this.morphtargetchanges[morphtarget];
+          delete this.morphtargetchanges[morphtarget];
+        }
+        return data;
+      }
+      return false;
     }
     this.getRandomUsername = function() {
       var adjectives = [
