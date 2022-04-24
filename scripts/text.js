@@ -219,6 +219,8 @@ elation.require(['engine.things.label'], function() {
 
         this._proxyobject._proxydefs = {
           text:  [ 'property', 'text'],
+          thickness:  [ 'property', 'thickness'],
+          segments:  [ 'property', 'segments'],
           col:   [ 'property', 'color'],
           emissive:  [ 'property', 'emissive'],
           bevel:  [ 'property', 'bevel'],
