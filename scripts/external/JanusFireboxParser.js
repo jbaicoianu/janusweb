@@ -305,7 +305,7 @@ JanusFireboxParser.prototype.parseXML = function(imgxml, leaf, forceLower) {
       } else if (child.nodeName) {
         if (child.nodeName == "#text" || child.nodeName == "#cdata-section") {
           // this gets confused if you have multiple text/cdata nodes...
-          if (!child.nodeValue.match(/^[\s\n]*$/m)) {
+          if (!child.nodeValue.match(/^[\s\n]*$/s)) {
             parent._content = child.nodeValue;
           }
         } else {
