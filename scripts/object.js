@@ -1011,7 +1011,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         m.transmission = oldmat.transmission;
         m.transmissionMap = oldmat.transmissionMap;
-        m.transparent = m.opacity < 1;
+        m.transparent = oldmat.transparent || m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
         m.skinning = oldmat.skinning;
 
