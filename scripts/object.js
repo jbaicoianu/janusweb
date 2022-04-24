@@ -1409,6 +1409,14 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
 
     }
+    this.cloneAnimations = function(object) {
+      if (object.animations && this.animationmixer) {
+        for (let k in object.animations) {
+          let action = this.animationmixer.clipAction(object.animations[k]._clip);
+          this.animations[k] = action;
+        }
+      }
+    }
     this.getProxyObject = function(classdef) {
       if (!this._proxyobject) {
         this._proxyobject = elation.engine.things.janusobject.extendclass.getProxyObject.call(this, classdef);
