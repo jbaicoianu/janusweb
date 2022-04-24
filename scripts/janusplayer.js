@@ -1029,16 +1029,23 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       return function(newscale, scaletime, scalecurve) {
         if (newscale != this.scale) {
           startscale.copy(this.properties.scale);
-          let start = performance.now();
-          let timer = setInterval(() => {
-            let n = (performance.now() - start) / scaletime;
+          if (scaletime) {
+            let start = performance.now();
+            let timer = setInterval(() => {
+              let n = (performance.now() - start) / scaletime;
 
-            this.scale = tmpvec.set(newscale, newscale, newscale).sub(startscale).multiplyScalar(n).add(startscale);
+              this.scale = tmpvec.set(newscale, newscale, newscale).sub(startscale).multiplyScalar(n).add(startscale);
+              this.camera.scale = camscale.set(1 / this.scale.x, 1 / this.scale.y, 1 / this.scale.z);
+              if (n >= 1) {
+                clearInterval(timer);
+                this.scale.set(newscale, newscale, newscale);
+                this.camera.scale = camscale.set(1 / this.scale.x, 1 / this.scale.y, 1 / this.scale.z);
+              }
+            }, 16);
+          } else {
+            this.scale.set(newscale, newscale, newscale);
             this.camera.scale = camscale.set(1 / this.scale.x, 1 / this.scale.y, 1 / this.scale.z);
-            if (n >= 1) {
-              clearInterval(timer);
-            }
-          }, 16);
+          }
         }
       };
     })();
