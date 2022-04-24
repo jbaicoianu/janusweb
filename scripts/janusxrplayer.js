@@ -282,7 +282,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         janus.engine.systems.controls.removeVirtualGamepad(this.device.gamepad);
       },
       async createMotionController(xrInputSource) {
-        let uri = 'https://baicoianu.com/~bai/webxr-input-profiles/packages/assets/dist/profiles';
+        let uri = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets@latest/dist/profiles';
         const { profile, assetPath } = await elation.janusweb.external.webxrinput.fetchProfile(xrInputSource, uri);
         const motionController = new elation.janusweb.external.webxrinput.MotionController(xrInputSource, profile, assetPath);
         this.motionController = motionController;
@@ -291,6 +291,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
 
         this.controller = this.createObject('object', {
           id: 'blah-' + this.device.handedness,
+          cull_face: 'back',
           visible: true,
         });
         this.controller.addEventListener('load', (ev) => { this.controller.visible = true; });
@@ -375,7 +376,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             if (this.controller) this.controller.visible = false;
             if (this.skeleton) this.skeleton.visible = true;
           } else {
-            if (this.controller) this.controller.visible = true;
+            if (this.controller) {
+              this.controller.visible = true;
+              this.controller.opacity = player.cursor_opacity;
+            }
             if (this.skeleton) {
               this.skeleton.die();
               this.skeleton = false;
@@ -389,6 +393,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         if (this.pointer && raypose) {
           this.pointer.pos.copy(raypose.transform.position);
           this.pointer.orientation.copy(raypose.transform.orientation);
+          this.pointer.updateCursorOpacity();
         }
       },
       createButtons() {
@@ -541,6 +546,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           opacity: .8,
           col: this.lasercolor,
           visible: false,
+          transparent: true,
         });
         this.bonk = this.createObject('object', {
           id: 'cylinder',
@@ -563,6 +569,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           opacity: .5,
           cull_face: 'none',
           billboard: 'y',
+          transparent: true,
         });
         this.raycaster = this.createObject('raycaster', {});
         this.raycaster.addEventListener('raycastenter', (ev) => this.handleRaycastEnter(ev));
@@ -580,6 +587,41 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
         //this.cursor.zdir = normal;
         this.cursor.visible = true;
+      },
+      updateCursorOpacity() {
+        if (!this.activeobject) return;
+        let proxyobj = this.activeobject,
+            obj = proxyobj._target;
+        if (obj && proxyobj && (
+              obj.onclick ||
+              elation.events.hasEventListener(obj, 'click') ||
+              elation.events.hasEventListener(proxyobj, 'click') ||
+              obj.onmousedown ||
+              elation.events.hasEventListener(obj, 'mousedown') ||
+              elation.events.hasEventListener(proxyobj, 'mousedown')
+            )) {
+          this.laser.col.setRGB(0,255,0);
+          this.laser.opacity = player.cursor_opacity * .8;
+          this.laser.updateColor();
+          this.cursor.image_id = 'cursor_dot_active';
+          this.cursor.opacity = player.cursor_opacity;
+          //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
+
+/*
+          let gamepad = this.device.gamepad;
+          if ("hapticActuators" in gamepad && gamepad.hapticActuators.length > 0) {
+            gamepad.hapticActuators[0].pulse(1, 100);
+          }
+*/
+
+        } else {
+          this.laser.col.setRGB(255,0,0);
+          this.laser.opacity = player.cursor_opacity * .4;
+          this.laser.updateColor();
+          this.cursor.image_id = 'cursor_dot_inactive';
+          this.cursor.opacity = player.cursor_opacity / 2;
+          //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
+        }
       },
       handleRaycastEnter(ev) {
         let proxyobj = ev.data.object,
@@ -607,10 +649,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
               elation.events.hasEventListener(proxyobj, 'mousedown')
             )) {
           this.laser.col.setRGB(0,1,0);
-          this.laser.opacity = .8;
+          this.laser.opacity = player.cursor_opacity * .8;
           this.laser.updateColor();
           this.cursor.image_id = 'cursor_dot_active';
-          this.cursor.opacity = 1;
+          this.cursor.opacity = player.cursor_opacity;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
 
 /*
@@ -622,10 +664,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
 
         } else {
           this.laser.col.setRGB(1,0,0);
-          this.laser.opacity = .4;
+          this.laser.opacity = player.cursor_opacity * .4;
           this.laser.updateColor();
           this.cursor.image_id = 'cursor_dot_inactive';
-          this.cursor.opacity = .5;
+          this.cursor.opacity = player.cursor_opacity / 2;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
         }
 
@@ -669,7 +711,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       },
       handleRaycastLeave(ev) {
         this.laser.col.setRGB(0,1,1);
-        this.laser.opacity = .2;
+        this.laser.opacity = player.cursor_opacity * .2;
         this.laser.updateColor();
       },
       handleSelectStart(ev) {
