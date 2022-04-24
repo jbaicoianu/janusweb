@@ -974,9 +974,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         var m = materials;
       } else if (oldmat instanceof THREE.PointsMaterial ||
                  oldmat instanceof THREE.LineBasicMaterial ||
-                 oldmat instanceof THREE.LineDashedMaterial
+                 oldmat instanceof THREE.LineDashedMaterial ||
+                 oldmat instanceof THREE.ShaderMaterial
                 ) {
-        var m = oldmat.clone();
+        var m = oldmat;
       } else {
         var m = this.allocateMaterial();
         m.dithering = true;
