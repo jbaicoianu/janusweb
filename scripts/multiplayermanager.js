@@ -272,6 +272,10 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
           };
         }
       } 
+      let morphtargetdata = player.getMorphTargetData();
+      if (morphtargetdata) {
+        moveData.morphtargets = morphtargetdata
+      }
 
 //console.log(moveData, server, room);
       server.send({'method': 'move', 'data': moveData});
