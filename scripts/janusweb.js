@@ -624,7 +624,7 @@ elation.require([
     this.registerElement = function(tagname, classobj, extendclass) {
       if (!extendclass || !elation.engine.things[extendclass]) extendclass = 'janusbase';
       tagname = tagname.toLowerCase();
-console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
+      //console.log('Register new SYSTEM tag type:', tagname, classobj, extendclass);
       elation.component.add('engine.things.' + tagname, classobj, elation.engine.things[extendclass]);
 /*
       this.typemap[tagname] = tagname;
