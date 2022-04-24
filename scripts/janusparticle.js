@@ -256,7 +256,7 @@ elation.require(['janusweb.janusbase'], function() {
       geo.setAttribute('size', new THREE.BufferAttribute(size, 1));
 
       this.created = true;
-      this.emitted = 0;
+      this.spawncount = 0;
       this.currentpoint = 0;
       this.lasttime = performance.now();
 
@@ -282,6 +282,7 @@ elation.require(['janusweb.janusbase'], function() {
         color[i*4+2] = point.color.b;
         color[i*4+3] = point.opacity;
       }
+      this.emitted = 0;
     }
     this.updateParticles = function(ev) {
       if (!this.loaded || !this.started || !this.parent) return;
@@ -290,7 +291,7 @@ elation.require(['janusweb.janusbase'], function() {
           endtime = now + this.duration * 1000,
           emitted = 0,
           startpoint = this.currentpoint,
-          spawncount = this.rate * elapsed / 1000,
+          spawncount = this.spawncount + this.rate * elapsed / 1000,
           count = this.count,
           loop = this.loop;
 
@@ -315,10 +316,12 @@ elation.require(['janusweb.janusbase'], function() {
             p.endtime = (this.duration > 0 ? endtime : Infinity);
             p.active = 1;
             emitted++;
+            spawncount--;
             this.currentpoint = (this.currentpoint + 1) % count;
           }
         } 
       }
+      this.spawncount = spawncount;
       this.lasttime = now;
       // Notify the renderer of our changes, but only if we're visible to the player
       // We also rate limit here, so if nothing else in the scene is changing, we
