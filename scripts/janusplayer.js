@@ -18,7 +18,11 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.postinit = function() {
       elation.engine.things.janusplayer.extendclass.postinit.call(this);
 
-      this.settings = elation.collection.localindexed({storagekey: 'janusweb.player.settings', index: 'key'});
+      try {
+        this.settings = elation.collection.localindexed({storagekey: 'janusweb.player.settings', index: 'key'});
+      } catch (e) {
+        this.settings = elation.collection.indexed({storagekey: 'janusweb.player.settings', index: 'key'});
+      }
 
       this.defineProperties({
         janus: {type: 'object' },
