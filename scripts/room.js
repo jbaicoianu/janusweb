@@ -53,8 +53,8 @@ elation.require([
         'defaultlights': { type: 'bool', default: true, set: this.updateLights },
         'shadows': { type: 'bool', default: false, set: this.updateShadows },
         'party_mode': { type: 'bool', default: true },
-        'walk_speed': { type: 'float', default: 1.8 },
-        'run_speed': { type: 'float', default:  5.4 },
+        'walk_speed': { type: 'float', default: 1.8, set: this.updatePlayerSpeed },
+        'run_speed': { type: 'float', default:  5.4, set: this.updatePlayerSpeed },
         'jump_velocity': { type: 'float', default: 5.0 },
         'flying': { type: 'boolean', default: true, set: this.updateFlying },
         'gravity': { type: 'float', default: 0, set: this.updateGravity },
@@ -1972,11 +1972,17 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
     this.updateFlying = function() {
       if (typeof player != 'undefined') {
         player.flying = this.flying;
-        console.log('Toggle player flying', this.flying);
+        //console.log('Toggle player flying', this.flying);
+      }
+    }
+    this.updatePlayerSpeed = function() {
+      if (typeof player != 'undefined') {
+        player.properties.movestrength = 80 * this.properties.walk_speed;
+        player.properties.runstrength = 80 * this.properties.run_speed;
       }
     }
     this.updateTeleport = function() {
-      console.log('Toggle player teleport', this.teleport);
+      //console.log('Toggle player teleport', this.teleport);
     }
     this.updateGravity = function() {
       if (this.loaded) {
