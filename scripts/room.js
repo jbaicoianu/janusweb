@@ -958,8 +958,12 @@ elation.require([
         this.properties.cursor_opacity = room.cursor_opacity;
 
         let cookieStorageID = 'cookies.' + this.url;
-        if (cookieStorageID in localStorage) {
-          this.cookies = JSON.parse(localStorage['cookies.' + this.url]);
+        try {
+          if (cookieStorageID in localStorage) {
+            this.cookies = JSON.parse(localStorage['cookies.' + this.url]);
+          }
+        } catch (e) {
+          this.cookies = [];
         }
 
         if (room.onload) {
@@ -1633,7 +1637,10 @@ console.log('connect room audio to graph', this.audionodes.gain, this.audionodes
     }
     this.addCookie = function(name, value) {
       this.cookies[name] = value;
-      localStorage['cookies.' + this.url] = JSON.stringify(this.cookies);
+      try {
+        localStorage['cookies.' + this.url] = JSON.stringify(this.cookies);
+      } catch (e) {
+      }
     }
     this.doScriptOnload = function() {
       if (--this.pendingScripts <= 0) {
