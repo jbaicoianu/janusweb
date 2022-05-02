@@ -706,9 +706,9 @@ elation.require([
     }
     this.parseSource = function(data) { 
       this.fullsource = data;
-      var titlere = /<title>([\s\S]*?)<\/title>/mi;
-      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/mi;
-      var re2 = /<janus-viewer[^>]*>[\s\S]*?<\/janus-viewer>/mi;
+      var titlere = /<title>([\s\S]*?)<\/title>/si;
+      var re = /<fireboxroom>[\s\S]*?<\/fireboxroom>/si;
+      var re2 = /<janus-viewer[^>]*>[\s\S]*?<\/janus-viewer>/si;
       var mtitle = data.match(titlere);
       var parsed = {
         title: 'Untitled Room',
