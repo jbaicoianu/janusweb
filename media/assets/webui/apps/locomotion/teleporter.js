@@ -113,11 +113,18 @@ janus.registerElement('locomotion_teleporter', {
         onchange: ev => this.handleTeleportChange(ev),
         onactivate: ev => this.handleTeleportTurn(ev),
       },
-      'teleport_y': {
+      'teleport_y_right': {
         defaultbindings: 'gamepad_any_axis_1,gamepad_any_axis_3',
-        onchange: ev => this.handleTeleportChange(ev),
-        onactivate: ev => this.handleTeleportStart(ev),
+        onchange: ev => this.handleTeleportChange(ev, 'right'),
+        onactivate: ev => this.handleTeleportStart(ev, 'right'),
       },
+/*
+      'teleport_y_left': {
+        defaultbindings: 'gamepad_6_axis_1,gamepad_6_axis_3',
+        onchange: ev => this.handleTeleportChange(ev, 'left'),
+        onactivate: ev => this.handleTeleportStart(ev, 'left'),
+      },
+*/
       'teleport_trigger': {
         defaultbindings: 'gamepad_any_button_0',
         onactivate: ev => this.handleTeleportTrigger(ev),
@@ -147,6 +154,7 @@ janus.registerElement('locomotion_teleporter', {
       } else {
         startpoint = player.head.localToWorld(V(0,0,0));
         v0 = player.head.localToWorld(V(0,0,-speed)).sub(startpoint);
+        return; // Head-locked teleporter is awkward, do we really still support this?
       }
       let i = 0,
           p0 = startpoint.clone(),
@@ -210,7 +218,7 @@ janus.registerElement('locomotion_teleporter', {
     //if (!room.teleport) return;
     if (this.teleportactive) {
       let controls = this.activecontrols;
-      let xy = new THREE.Vector2(controls.teleport_x, controls.teleport_y),
+      let xy = new THREE.Vector2(controls.teleport_x, controls['teleport_y_' + this.teleporthand]),
           len = xy.length();
 
       if (len > .8) {
@@ -228,7 +236,7 @@ janus.registerElement('locomotion_teleporter', {
     if (!room.teleport) return;
     if (!this.teleportactive && Math.abs(ev.value) > .8) {
       this.teleportactive = true;
-      this.teleporthand = 'right';
+      this.teleporthand = hand || 'right';
       this.enableCursor();
       this.updateTeleportAngle();
     }
@@ -260,15 +268,17 @@ janus.registerElement('locomotion_teleporter', {
   },
   updateTeleportAngle() {
     let controls = this.activecontrols;
-    let controllerangle = Math.atan2(controls.teleport_x, controls.teleport_y);
+    let controllerangle = Math.atan2(controls.teleport_x, controls['teleport_y_' + this.teleporthand]);
     let playerangle = Math.atan2(this.pos.x, this.pos.z);
     this.teleportangle = (controllerangle + playerangle) + Math.PI;
   },
   handleMouseDown(ev) {
     if (!room.teleport) return;
     if (ev.button == 0 && (player.enabled || janus.hmd)) {
-      this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.enableCursor(); }, this.longpresstime);
-      this.mousediff = [0,0];
+      if (!this.longpresstimer) {
+        //this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.enableCursor(); }, this.longpresstime);
+        this.mousediff = [0,0];
+      }
       //this.active = true;
     }
   },
