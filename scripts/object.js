@@ -844,8 +844,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.emissiveMap = textureEmissive;
                 textureEmissive.encoding = THREE.sRGBEncoding;
                 m.emissive = new THREE.Color(0xffffff);
-              } else {
+              } else if (this.emissive) {
                 //m.emissive = this.emissive.clone();
+                m.emissive.copy(this.emissive)
               }
               m.emissiveIntensity = this.emissive_intensity;
             }
@@ -864,7 +865,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.metalness = this.metalness;
             }
 
-            if (this.isUsingPBR()) {
+            if (this.isUsingPBR() && !this.isUsingToonShader()) {
               m.envMap = this.getEnvmap();
             }
 
@@ -1021,11 +1022,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.roughnessMap !== undefined) m.roughnessMap = oldmat.roughnessMap;
         if (oldmat.clearcoat !== undefined) m.clearcoat =  oldmat.clearcoat;
         if (oldmat.clearcoatMap !== undefined) m.clearcoatMap = oldmat.clearcoatMap;
-        if (oldmat.clearcoatRoughness !== undefined) m.clearcoatcoughness = oldmat.clearcoatRoughness;
+        if (oldmat.clearcoatRoughness !== undefined) m.clearcoatRoughness = oldmat.clearcoatRoughness;
         if (oldmat.clearcoatRoughnessMap !== undefined) m.clearcoatRoughnessMap = oldmat.clearcoatRoughnessMap;
         if (oldmat.clearcoatNormalMap !== undefined) m.clearcoatNormalMap = oldmat.clearcoatNormalMap;
         if (oldmat.clearcoatNormalScale !== undefined) m.clearcoatNormalScale = oldmat.clearcoatNormalScale;
         if (oldmat.attenuationTint !== undefined) m.attenuationTint = oldmat.attenuationTint;
+        if (oldmat.attenuationColor !== undefined) m.attenuationColor = oldmat.attenuationColor;
         if (oldmat.attenuationDistance !== undefined) m.attenuationDistance = oldmat.attenuationDistance;
         if (oldmat.thickness !== undefined) m.thickness = oldmat.thickness;
         if (oldmat.thicknessMap !== undefined) m.thicknessMap = oldmat.thicknessMap;
@@ -1110,10 +1112,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.shader_id) {
       } else if (!this.lighting) {
         return new THREE.MeshBasicMaterial();
-      } else if (this.isUsingPBR()) {
-        return new THREE.MeshPhysicalMaterial();
       } else if (this.isUsingToonShader()) {
         return new THREE.MeshToonMaterial();
+      } else if (this.isUsingPBR()) {
+        return new THREE.MeshPhysicalMaterial();
       }
       return new THREE.MeshPhongMaterial();
     }
