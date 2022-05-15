@@ -38,6 +38,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
       this.inputstream = localStream;
     });
 
+    elation.events.add(janus.network, 'janusweb_user_chat', (ev) => this.handleUserChat(ev));
   }
   setRoom(newroom) {
     let roomid = newroom.voipid || newroom.id;
@@ -75,6 +76,28 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
       this.rooms[roomid].connect();
     }
     this.currentroom = this.rooms[roomid];
+  }
+  disconnect() {
+    if (this.currentroom) {
+      this.currentroom.disconnect();
+      this.currentroom = null;
+    }
+    this.localuser.setData(null);
+  }
+  handleUserChat(ev) {
+    console.log('got a chat', ev.data);
+    let msg = ev.data.message;
+    let m = msg.data.match(/📞 (.*$)/);
+    if (m) {
+      let chatmessages = document.querySelector('janus-comms-chat').elements.chatmessages,
+          chatlist = document.querySelector('janus-comms-chat').elements.chatlist;
+      if (chatmessages) {
+        let item = chatmessages.items[chatmessages.items.length - 1];
+        item.raw = true;
+        item.message = '<janus-voip-client-incomingcall>' + msg.data + '</janus-voip-client-incomingcall>';
+        chatlist.refresh();
+      }
+    }
   }
 });
 elation.elements.define('janus-voip-client-janus', class extends elation.elements.base {
@@ -125,6 +148,9 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
       sfu.adapter.setLocalMediaStream(localStream);
       sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
     });
+    if (this.inputstream) {
+      sfu.adapter.setLocalMediaStream(this.inputstream);
+    }
 /*
     elation.events.add(janus._target, 'room_change', (ev) => {
       if (!sfu || !sfu.adapter) return;
@@ -192,7 +218,12 @@ console.log('leave room and remove all occupants', this.room);
     this.sfu.setClientId(ev.data);
   }
   setInputStream(stream) {
-    this.sfu.adapter.setLocalMediaStream(stream);
+    if (this.sfu) {
+      this.inputstream = stream;
+      this.sfu.adapter.setLocalMediaStream(stream);
+    } else {
+      this.connect();
+    }
   }
 });
 elation.elements.define('janus-voip-client-hifi', class extends elation.elements.base {
@@ -390,6 +421,10 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
     if (!data) {
       this.stream = false;
       elation.events.fire({type: 'update', element: this});
+      if (this.updateVolumeInterval) {
+        clearInterval(this.updateVolumeInterval);
+        this.updateVolumeInterval = false;
+      }
       return;
     }
 
@@ -410,7 +445,7 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
       video.srcObject = data;
       this.appendChild(video);
       video.muted = true;
-      video.play().then(() => console.log('playing', video));
+      video.play().then(() => console.log('playing', video)).catch(e => console.log('Failed to start video', e, video));
       this.video = video;
     }
 
@@ -883,6 +918,10 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
 
           this.webcamDisabledElement = elation.elements.create('option', {innerHTML: 'Disabled', value: 'none', append: cameras.select});
         }
+        let vidtrack = false;
+        if (this.stream) {
+          vidtrack = this.stream.getVideoTracks()[0]
+        }
         devices.forEach(d => {
           if (d.kind == 'audioinput') {
             elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: inputs.select});
@@ -890,7 +929,11 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
             if (d.deviceId == '') {
               hasWebcamPermission = false;
             } else {
-              elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: cameras.select});
+              let option = elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: cameras.select});
+              if (vidtrack && d.label == vidtrack.label) {
+                option.selected = true;
+                cameras.select.value = option.value;
+              }
             }
           } else if (outputs && d.kind == 'audiooutput') {
             elation.elements.create('option', {innerHTML: d.label, value: d.deviceId, append: outputs.select});
@@ -900,9 +943,6 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
           if (hasWebcamPermission && this.elements.videoDevice.hidden ) {
             this.elements.webcamEnabled.hide();
             this.elements.videoDevice.show();
-            let option = this.elements.videoDevice.select.childNodes[0];
-            option.selected = true;
-            this.elements.videoDevice.select.value = option.value;
           } else {
             console.log('NO WEBCAM PERMISSION');
             this.elements.webcamEnabled.show();
@@ -1121,6 +1161,7 @@ elation.elements.define('janus-voip-picker-mictest', class extends elation.eleme
         bufferLength = dataArray.length,
         analyser = this.analyser;;
 
+    if (!this.offsetParent) return;
     analyser.getByteFrequencyData(this.dataArray);
 
     ctx.fillStyle = "#000";
@@ -1172,6 +1213,134 @@ elation.elements.define('janus-voip-picker-videotest', class extends elation.ele
       video.play().then(() => console.log('playing', video));
     } else if (video && video.parentNode) {
       video.parentNode.removeChild(video);
+    }
+  }
+});
+elation.elements.define('janus-button-voip', class extends elation.elements.ui.popupbutton {
+  init() {
+    super.init();
+    this.defineAttribute('active', { type: 'boolean' });
+    this.defineAttribute('muted', { type: 'boolean' });
+  }
+  create() {
+    this.popupcontent = `<janus-voip-picker name="voipsettings"></janus-voip-picker>`;
+    super.create();
+    //this.createPopup();
+    this.hidePopup();
+    this.updateMuteState();
+//setInterval(() => this.updateMuteState(), 1000);
+  }
+  updateMuteState() {
+    //let muted = !(soundsystem.canPlaySound && soundsystem.enabled);
+    let voipclient = this.voipclient;
+    if (!this.voipclient) {
+      voipclient = document.querySelector('janus-voip-client');
+      this.voipclient = voipclient;
+      if (this.voipclient) {
+        elation.events.add(this.voipclient, 'init', ev => this.updateMuteState());
+      }
+    }
+    let muted = true;
+    if (voipclient) {
+      if (voipclient.localuser && !this.registeredEvents) {
+        elation.events.add(voipclient.localuser, 'mute', () => this.updateMuteState());
+        elation.events.add(voipclient.localuser, 'unmute', () => this.updateMuteState());
+        elation.events.add(voipclient.localuser, 'update', ev => this.updateMuteState());
+        this.registeredEvents = true;
+      }
+      if (voipclient.localuser && voipclient.localuser.stream && !voipclient.localuser.muted) {
+        muted = false;
+      }
+    }
+    if (this.muted != muted) this.muted = muted;
+  }
+  createPopup() {
+    super.createPopup();
+    setTimeout(() => {
+      //elation.events.add(this.popup.content.querySelector('janus-voip-picker'), 'voip-picker-select', (ev) => this.hidePopup());
+      document.addEventListener('voip-picker-select', (ev) => { this.hidePopup(); });
+    }, 100);
+  }
+});
+elation.elements.define('janus-voip-client-callbutton', class extends elation.elements.janus.button.voip {
+  create() {
+    this.detached = true;
+    this.button = elation.elements.create('ui-button', {
+      append: this,
+      label: '📞',
+    });
+    this.button.addEventListener('click', ev => this.handleClick(ev));
+super.create();
+  }
+  isVoipActive(client) {
+    if (!client) client = document.querySelector('janus-voip-client');
+    return (client && client.localuser && client.localuser.stream);
+  }
+  handleClick(ev) {
+    if (!this.isVoipActive()) {
+      this.showPopup();
+    } else {
+/*
+      if (this.popup.parentNode === this) {
+        if (!elation.utils.isin(this.popup, ev.target)) {
+          this.hidePopup();
+        }
+      } else {
+        this.showPopup();
+      }
+*/
+    }
+    let chat = document.querySelector('janus-comms-chat');
+    chat.sendMessage('📞 ring ring');
+    if (!this.isVoipActive()) {
+    }
+  }
+});
+elation.elements.define('janus-voip-client-incomingcall', class extends elation.elements.base {
+  create() {
+    this.actions = elation.elements.create('ui-flexpanel', { append: this });
+    let active = this.isVoipActive();
+    this.acceptbutton = elation.elements.create('janus-button-voip', {
+      label: (active ? 'Call in Progress' : 'Accept'),
+      action: 'accept',
+      detached: true,
+      disabled: active,
+      append: this.actions
+    });
+    this.rejectbutton = elation.elements.create('ui-button', {
+      label: (active ? 'Hang Up' : 'Decline'),
+      action: 'reject',
+      append: this.actions
+    });
+
+    this.acceptbutton.addEventListener('click', ev => this.handleAccept(ev));
+    this.rejectbutton.addEventListener('click', ev => this.handleReject(ev));
+  }
+  isVoipActive(client) {
+    if (!client) client = document.querySelector('janus-voip-client');
+    return (client && client.localuser && client.localuser.stream);
+  }
+  handleAccept(ev) {
+    this.acceptbutton.disabled = true;
+    this.acceptbutton.label = 'Call in Progress';
+    this.rejectbutton.disabled = false;
+    this.rejectbutton.label = 'Hang Up';
+  }
+  handleReject(ev) {
+    let chat = document.querySelector('janus-comms-chat');
+    this.removeChild(this.actions);
+    //this.removeChild(this.rejectbutton);
+
+    let client = document.querySelector('janus-voip-client');
+    if (this.isVoipActive(client)) {
+      chat.sendMessage('👋 hanging up');
+      client.disconnect();
+      this.acceptbutton.disabled = false;
+      this.acceptbutton.label = 'Reconnect';
+      this.rejectbutton.label = 'Decline';
+      this.rejectbutton.disabled = true;
+    } else {
+      chat.sendMessage('❌ request declined');
     }
   }
 });

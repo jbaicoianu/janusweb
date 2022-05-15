@@ -222,6 +222,7 @@ if (!this.elements.chatmessages) return;
       type: 'join',
       userId: data.id,
       message: 'has joined ' + (data.room.title || data.room.url),
+      raw: false,
     });
     this.scrollToBottom();
   }
@@ -232,7 +233,8 @@ if (!this.elements.chatmessages) return;
       timestamp: new Date().getTime(),
       type: 'part',
       userId: data.id,
-      message: 'has left the room'
+      message: 'has left the room',
+      raw: false,
     });
     this.scrollToBottom();
   }
@@ -243,7 +245,8 @@ if (!this.elements.chatmessages) return;
       timestamp: new Date().getTime(),
       type: 'disconnect',
       userId: data.id,
-      message: 'has disconnected'
+      message: 'has disconnected',
+      raw: false,
     });
     this.scrollToBottom();
   }
@@ -254,8 +257,10 @@ if (!this.elements.chatmessages) return;
       timestamp: new Date().getTime(),
       type: 'chat',
       userId: data.userId,
-      message: data.message.data || data.message.message
+      message: data.message.data || data.message.message,
+      raw: false,
     });
+
     this.scrollToBottom();
     this.updateUnread(1);
   }
@@ -263,11 +268,12 @@ if (!this.elements.chatmessages) return;
     if (msg && msg.length > 0) {
       janus.network.send({'method': 'chat', data: msg});
 if (!this.elements.chatmessages) return;
-      this.elements.chatmessages.add({
+      let newmsg = this.elements.chatmessages.add({
         timestamp: new Date().getTime(),
         type: 'selfchat',
         userId: player.userid,
-        message: msg
+        message: msg,
+        raw: false,
       });
       this.elements.chatinput.value = '';
       this.scrollToBottom();
@@ -279,7 +285,8 @@ if (!this.elements.chatmessages) return;
       timestamp: new Date().getTime(),
       type: 'print',
       userId: 'room',
-      message: msg[0]
+      message: msg[0],
+      raw: false,
     });
     this.scrollToBottom();
   }

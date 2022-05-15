@@ -150,7 +150,7 @@ console.log('occupants received', Object.keys(occupantList), Object.keys(this.co
           'credential': 'turn',
           'realm': 'turn',
           'urls': [
-            'turns:voip.janusxr.org:3478',
+            'turns:stream.janusxr.org:3478',
           ]
         },
       ]

@@ -243,46 +243,6 @@ elation.elements.define('janus-button-audio', class extends elation.elements.ui.
     this.muted = muted;
   }
 });
-elation.elements.define('janus-button-voip', class extends elation.elements.ui.popupbutton {
-  init() {
-    super.init();
-    this.defineAttribute('active', { type: 'boolean' });
-    this.defineAttribute('muted', { type: 'boolean' });
-  }
-  create() {
-    this.popupcontent = `<janus-voip-picker name="voipsettings"></janus-voip-picker>`;
-    super.create();
-    this.createPopup();
-    this.hidePopup();
-    elation.events.add(this.popup.content.elements['picker'], 'voip-picker-select', (ev) => this.hidePopup());
-    this.updateMuteState();
-//setInterval(() => this.updateMuteState(), 1000);
-  }
-  updateMuteState() {
-    //let muted = !(soundsystem.canPlaySound && soundsystem.enabled);
-    let voipclient = this.voipclient;
-    if (!this.voipclient) {
-      voipclient = document.querySelector('janus-voip-client');
-      this.voipclient = voipclient;
-      if (this.voipclient) {
-        elation.events.add(this.voipclient, 'init', ev => this.updateMuteState());
-      }
-    }
-    let muted = true;
-    if (voipclient) {
-      if (voipclient.localuser && !this.registeredEvents) {
-        elation.events.add(voipclient.localuser, 'mute', () => this.updateMuteState());
-        elation.events.add(voipclient.localuser, 'unmute', () => this.updateMuteState());
-        elation.events.add(voipclient.localuser, 'update', ev => this.updateMuteState());
-        this.registeredEvents = true;
-      }
-      if (voipclient.localuser && voipclient.localuser.stream && !voipclient.localuser.muted) {
-        muted = false;
-      }
-    }
-    if (this.muted != muted) this.muted = muted;
-  }
-});
 elation.elements.define('janus-button-share', class extends elation.elements.ui.button {
   init() {
     super.init();
