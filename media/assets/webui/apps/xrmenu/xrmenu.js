@@ -28,33 +28,38 @@ janus.registerElement('xrmenu', {
           pos: V(.08, 0, 0),
           label: 'Home',
           image_id: 'xrmenu-button-home',
-          onactivate: (ev) => janus.navigateHome(),
+          //onactivate: (ev) => janus.navigateHome(),
         }),
         back: this.createObject('xrmenu-button', {
           pos: V(.20, 0, 0),
           label: 'Back',
           image_id: 'xrmenu-button-back',
-          onactivate: (ev) => janus.navigateBack(),
+          //onactivate: (ev) => janus.navigateBack(),
         }),
         reset: this.createObject('xrmenu-button', {
           pos: V(.32, 0, 0),
           label: 'Reset',
           image_id: 'xrmenu-button-reset',
-          onactivate: (ev) => player.reset_position(),
+          //onactivate: (ev) => player.reset_position(),
         }),
         reload: this.createObject('xrmenu-button', {
           pos: V(.44, 0, 0),
           label: 'Reload',
           image_id: 'xrmenu-button-reload',
-          onactivate: (ev) => location.reload(),
+          //onactivate: (ev) => location.reload(),
         }),
         exitvr: this.createObject('xrmenu-button', {
           pos: V(.56, 0, 0),
           label: 'Exit VR',
           //image_id: 'xrmenu-button-exitvr',
-          onactivate: (ev) => this.engine.client.stopXR(),
+          //onactivate: (ev) => this.engine.client.stopXR(),
         }),
       };
+      this.buttons.home.addEventListener('activate', ev => janus.navigateHome());
+      this.buttons.back.addEventListener('activate', ev => janus.navigateBack());
+      this.buttons.reset.addEventListener('activate', ev => player.reset_position());
+      this.buttons.reload.addEventListener('activate', ev => location.reload());
+      this.buttons.exitvr.addEventListener('activate', ev => this.engine.client.stopXR());
       this.reflow();
     });
   },
