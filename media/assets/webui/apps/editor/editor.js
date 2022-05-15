@@ -115,7 +115,8 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
       'manipulate_out':   [ 'keyboard_e',  (ev) => this.editObjectManipulateOut(ev) ],
     });
     janus.engine.systems.controls.addContext('roomedit_paste', {
-      'paste':     [ 'keyboard_ctrl_v', (ev) => { if (ev.value == 1) this.editObjectPaste(ev); } ],
+      'add':     [ 'keyboard_ctrl_a', (ev) => { if (ev.value == 1) this.showCreateDialog(ev); } ],
+      'paste':     [ 'keyboard_ctrl_v', (ev) => { if (ev.value == 1) this.editObjectPaste(ev);} ],
     });
     janus.engine.systems.controls.activateContext('roomedit_paste');
 
@@ -134,6 +135,7 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     room.addEventListener('wheel', (ev) => this.editObjectMousewheel(ev));
     window.addEventListener('keydown', (ev) => this.editObjectKeydown(ev));
     window.addEventListener('keyup', (ev) => this.editObjectKeyup(ev));
+
   }
   initRoomEvents(room) {
     if (!this.initialized.has(room)) {
@@ -148,6 +150,33 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
       room.addEventListener('thing_add', (ev) => this.handleThingAdd(ev));
       room.addEventListener('thing_remove', (ev) => this.handleThingRemove(ev));
       this.initialized.add(room);
+    }
+
+    if (!this.outliner_selected) {
+      this.outliner_selected = room.createObject('outliner', {
+        col: 'lime',
+        opacity: .4,
+        outline: 3,
+      });
+      this.outliner_hover = room.createObject('outliner', {
+        col: 'gray',
+        opacity: .4,
+        outline: 1,
+      });
+setTimeout(() => {
+      this.outliner_selected.col = 'lime';
+      this.outliner_hover.col = 'gray';
+}, 0);
+      this.outliner_hover.update = function() {
+        let rc = player.raycast();
+        if (rc.length > 0 && rc[0].object !== room) {
+          this.select(rc[0].object);
+        } else {
+          this.deselect();
+        }
+      }
+    } else if (this.outliner_selected.room !== room) {
+      room.appendChild(this.outliner_selected);
     }
   }
 
@@ -329,6 +358,7 @@ console.log('set translation snap', ev.data, ev);
     return locked;
   }
   editObject(object, isnew) {
+    if (this.roomedit.object) this.editObjectStop()
     this.roomedit.object = object;
     this.roomedit.parentObject = null;
     this.roomedit.objectBoundingBox = false;
@@ -346,11 +376,13 @@ console.log('set translation snap', ev.data, ev);
     object.addEventListener('load', (ev) => {
       this.roomedit.objectBoundingBox = object.getBoundingBox(true);
       this.editObjectUpdate();
-      this.editObjectShowWireframe();
+      //this.editObjectShowWireframe();
+      this.editObjectShowOutline();
       console.log('update bbox', this.roomedit.objectBoundingBox);
     });
 
-    object.pickable = false;
+    //object.pickable = false;
+    //console.log('set object unpickable', object);
 
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
@@ -374,7 +406,8 @@ console.log('set translation snap', ev.data, ev);
     // activate context
     janus.engine.systems.controls.activateContext('roomedit', this);
 
-    this.editObjectShowWireframe();
+    //this.editObjectShowWireframe();
+    this.editObjectShowOutline();
     this.editObjectShowInfo(object);
     let manipulator = this.getManipulator();
     manipulator.attach(object.objects['3d']);
@@ -393,6 +426,18 @@ console.log('set translation snap', ev.data, ev);
     inventorypanel.refresh();
   }
 
+  editObjectShowOutline() {
+    if (this.roomedit.object === room) {
+      this.outliner_selected.deselect();
+    } else {
+      this.outliner_selected.select(this.roomedit.object);
+    }
+  }
+  editObjectRemoveOutline() {
+    if (this.outliner_selected) {
+      this.outliner_selected.deselect();
+    }
+  }
   editObjectShowWireframe() {
     if (this.roomedit.wireframe) {
       this.editObjectRemoveWireframe();
@@ -518,7 +563,7 @@ console.log('set translation snap', ev.data, ev);
           // restore collider
           this.roomedit.object.collision_id = this.roomedit.collision_id;
           this.roomedit.collision_id = false;
-        } else {
+        } else if (false) {
           this.roomedit.object.collision_id = 'cube';
           this.roomedit.object.collision_trigger = true;
           this.roomedit.object.collision_scale = this.roomedit.objectBoundingBox.max.clone().sub(this.roomedit.objectBoundingBox.min);
@@ -534,11 +579,13 @@ console.log('set translation snap', ev.data, ev);
         this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
-    this.roomedit.object.pickable = true;
+    //this.roomedit.object.pickable = true;
+    this.roomedit.object.sync = true;
     this.roomedit.object = false;
     this.roomedit.raycast = false;
     this.roomedit.parentObject = null;
-    this.editObjectRemoveWireframe();
+    //this.editObjectRemoveWireframe();
+    this.editObjectRemoveOutline();
     this.editObjectRemoveParentWireframe();
     let manipulator = this.getManipulator();
     manipulator.detach();
@@ -573,7 +620,22 @@ console.log('set translation snap', ev.data, ev);
     if (this.roomedit.object) {
       var obj = this.roomedit.object;
       if (this.roomedit.moving && this.roomedit.raycast && ev.element.getProxyObject() !== obj) {
-        this.roomedit.objectPosition = ev.data.point;
+        let raycast = player.raycast(V(0, 0, -1));
+        if (raycast) {
+          let hit;
+          for (let i = 0; i < raycast.length; i++) {
+            if (raycast[i].object !== obj) {
+              hit = raycast[i];
+              break;
+            }
+          }
+    
+          if (hit) {
+            this.roomedit.objectPosition = hit.point;
+          }
+        } else {
+          this.roomedit.objectPosition = ev.data.point;
+        }
         let manipulator = this.getManipulator();
         manipulator.enabled = false;
         this.editObjectUpdate();
@@ -1042,6 +1104,7 @@ console.log('change color', obj.col, vec);
     if (obj) {
       this.roomedit.pastebuffer = obj;
 
+/*
       let data = new DataTransfer();
       data.items.add('text/plain', 'blublub');
       //data.items.add('x-janus/x-' + obj.tag, 'cool huh');
@@ -1050,6 +1113,7 @@ console.log('change color', obj.col, vec);
       }, (e) => {
         console.log('FAILED!', e);
       });
+*/
     }
   }
   editObjectCut(ev) {
@@ -1158,6 +1222,9 @@ console.log('[editor] scene added a thing', ev);
             for (let j = 0; j < newobjargs.length; j++) {
               let parts = newobjargs[j].split('=');
               objargs[parts[0]] = decodeURIComponent(parts[1]);
+            }
+            if (objargs.id) {
+              objargs.collision_id = objargs.id;
             }
             newobject = room.createObject(objtype, objargs);
             objects.push(newobject);
@@ -1360,6 +1427,9 @@ console.log('pastey!', ev.clipboardData.items[0], ev);
     janus.engine.systems.controls.requestPointerLock();
     this.loadObjectFromURIList(url);
     ev.preventDefault();
+  }
+  showCreateDialog(ev) {
+    console.log('create thing?');
   }
 });
 
