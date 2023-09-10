@@ -113,8 +113,9 @@ elation.component.add('engine.things.remoteplayer', function() {
     this.mouth = this.createObject('sound', {
       pos: V(0, 0, 0),
       distancemodel: 'exponential',
-      dist: 8,
-      rolloff: 0.75,
+      dist: 1,
+      gain: 2,
+      rolloff: .8,
     });
     this.head.add(this.mouth._target);
 
