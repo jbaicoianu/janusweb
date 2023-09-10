@@ -402,7 +402,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
       if (this.controlstate.jump && !this.jumping) {
         let jumptime = 1;
-        if (this.ghost && this.ghost.body.animations && this.ghost.body.animations.jump) {
+        if (this.ghost && this.ghost.body && this.ghost.body.animations && this.ghost.body.animations.jump) {
           let jumpanim = this.ghost.body.animations.jump;
           let jumpclip = jumpanim.getClip();
 
