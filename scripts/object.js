@@ -59,7 +59,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial, comment: 'Hide face sides (back, front, or none)' },
         blend_src: { type: 'string', set: this.updateMaterial, comment: 'Blend mode (source)' },
         blend_dest: { type: 'string', set: this.updateMaterial, comment: 'Blend mode (destination)' },
-        blend_mode: { type: 'string', default: 'normal', set: this.updateMaterial, comment: 'Blend mode' },
+        blend_mode: { type: 'string', default: null, set: this.updateMaterial, comment: 'Blend mode' },
         depth_write: { type: 'boolean', default: null, set: this.updateMaterial },
         depth_test: { type: 'boolean', default: null, set: this.updateMaterial },
         depth_offset: { type: 'float', default: null, set: this.updateMaterial },
@@ -890,8 +890,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (!(this.blend_src == 'src_alpha' && this.blend_dest == 'one_minus_src_alpha')) {
                 m.transparent = true;
               }
-            } else {
-              //m.blending = THREE.NormalBlending;
+            } else if (this.blend_mode) {
+              m.blending = this.blendModeMap[this.blend_mode];
             }
             if (this.depth_write !== null) {
               m.depthWrite = this.depth_write;
