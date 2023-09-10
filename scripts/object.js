@@ -824,11 +824,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (textureLightmap && textureLightmap.image) {
               if (lightmaptextureasset.loaded) {
                 m.lightMap = textureLightmap; 
-              } else {
-              }
-              if (!this.assetloadhandlers[m.lightMap.uuid]) {
-                this.assetloadhandlers[m.lightMap.uuid] = true;
-                elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                if (!this.assetloadhandlers[m.lightMap.uuid]) {
+                  this.assetloadhandlers[m.lightMap.uuid] = true;
+                  elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                }
               }
             } else if (m.lightMap) {
               var imagesrc = m.lightMap.sourceFile;
@@ -1015,6 +1014,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.emissive.copy(this.emissive);
             }
           }
+          if (oldmat.emissiveIntensity !== undefined) m.emissiveIntensity = oldmat.emissiveIntensity;
         }
 
         m.lightMap = oldmat.lightMap;
@@ -1042,6 +1042,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (oldmat.attenuationDistance !== undefined) m.attenuationDistance = oldmat.attenuationDistance;
         if (oldmat.thickness !== undefined) m.thickness = oldmat.thickness;
         if (oldmat.thicknessMap !== undefined) m.thicknessMap = oldmat.thicknessMap;
+        if (oldmat.transmission !== undefined) m.transmission = oldmat.transmission;
+        if (oldmat.transmissionMap !== undefined) m.transmissionMap = oldmat.transmissionMap;
 
         //m.reflectivity = (oldmat.reflectivity !== undefined ? oldmat.reflectivity : .5);
 
@@ -1075,7 +1077,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
               shader.fragmentShader = shader.fragmentShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
             }
-          }
+          };
         }
       }
       return m;
@@ -1274,6 +1276,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   if (strerr.indexOf('NotSupportedError') == 0 && this.hls !== false) {
                     console.log('Attempting to init hls', this.videoasset)
                     this.videoasset.initHLS();
+                  } else {
+                    console.error(e);
                   }
                 });
             }
