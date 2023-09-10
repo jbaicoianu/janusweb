@@ -2513,10 +2513,11 @@ elation.require([
           _ray = new THREE.Raycaster();
       _ray.params.Line.threshold = 3;
       _ray.params.Points.threshold = 3;
-      return function(dir, pos, classname, maxdist) {
+      return function(dir, pos, classname, maxdist, colliderroot=null) {
         _ray.set(pos, dir);
         _ray.far = maxdist || Infinity;
-        var intersections = _ray.intersectObject(this.colliders, true);
+        if (!colliderroot) colliderroot = this.colliders; 
+        var intersections = _ray.intersectObject(colliderroot, true);
         var hits = [];
         if (classname) {
           for (var i = 0; i < intersections.length; i++) {
