@@ -426,12 +426,21 @@ ui-tooltip {
 ui-input {
   display: flex;
 }
+ui-input>ui-label {
+  min-width: 5em;
+}
 ui-input>input {
   flex: 1 1;
+  background: #999;
+  border: 1px solid black;
+  border-radius: 4px;
 }
+ui-input>input:hover,
 ui-input>input[hover] {
+  background: #aaa;
 }
 ui-input>input:focus {
+  background: #bbb;
 }
 ui-input>input:active {
 }
@@ -675,6 +684,18 @@ ui-slider-handle {
   cursor: pointer;
   box-shadow: 0 0 5px rgba(0,0,0,.8);
 }
+ui-slider-handle>ui-label {
+  pointer-events: none;
+  position: absolute;
+  left: 20px;
+  z-index: 100;
+  background: rgba(0,0,0,.5);
+  border-radius: 20px;
+  padding: 0 .4em;
+}
+ui-slider-track[hover] ui-slider-handle>ui-label {
+  display: block !important;
+}
 
 
 /***********
@@ -881,6 +902,10 @@ ui-select>select {
 ui-select:hover>select {
   background: #555;
 }
+ui-select>ui-label {
+  min-width: 5em;
+}
+
 
 ui-formgroup {
   position: relative;
@@ -1241,4 +1266,21 @@ ui-spinner[full] {
   left: 0;
   right: 0;
   background: rgba(0,0,0,.1);
+}
+ui-image-picker {
+  display: block;
+}
+ui-image-picker ui-label {
+  vertical-align: top;
+  min-width: 5em;
+  display: inline-block;
+}
+ui-image-picker canvas {
+  width: 30px;
+  height: 30px;
+  border: 1px solid black;
+  border-radius: 2px;
+  padding: 2px;
+  display: inline-block;
+  vertical-align: top;
 }
