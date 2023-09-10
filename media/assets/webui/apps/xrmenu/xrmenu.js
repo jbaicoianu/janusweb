@@ -18,10 +18,31 @@ janus.registerElement('xrmenu', {
     this.worlddir = V();
     this.playervec = V();
 
+    this.panels = {};
+
     let xrmenu = janus.ui.apps.default.apps.xrmenu;
     let asseturl = xrmenu.resolveFullURL('./xrmenu-assets.json');
     fetch(asseturl).then(res => res.json()).then(assetlist => {
       this.assetpack = elation.engine.assets.loadJSON(assetlist, xrmenu.resolveFullURL('./'));
+
+/*
+  * Navigation
+    * Home
+    * Respawn
+    * Exit VR
+    * Refresh
+  * Sound
+    * Output
+      * Output Select
+      * Volume Levels
+        * Environment
+        * Media
+        * Voices
+    * Input
+      * Input Select
+      * Volume Levels
+  * Settings
+*/
 
       this.buttons = {
         home: this.createObject('xrmenu-button', {
@@ -54,12 +75,31 @@ janus.registerElement('xrmenu', {
           //image_id: 'xrmenu-button-exitvr',
           //onactivate: (ev) => this.engine.client.stopXR(),
         }),
+        sound: this.createObject('xrmenu-button', {
+          pos: V(.56, 0, 0),
+          label: 'Exit VR',
+          image_id: 'xrmenu-button-sound',
+          //onactivate: (ev) => this.engine.client.stopXR(),
+        }),
       };
       this.buttons.home.addEventListener('activate', ev => janus.navigateHome());
       this.buttons.back.addEventListener('activate', ev => janus.navigateBack());
       this.buttons.reset.addEventListener('activate', ev => player.reset_position());
       this.buttons.reload.addEventListener('activate', ev => location.reload());
       this.buttons.exitvr.addEventListener('activate', ev => this.engine.client.stopXR());
+      this.buttons.sound.addEventListener('activate', ev => {
+        if (!this.panels['sound']) {
+          this.panels['sound'] = this.buttons.sound.createObject('xrmenu-popup', {
+            content: 'janus-voip-picker'
+          });
+        } else {
+          if (this.panels['sound'].parent === this.buttons.sound) {
+            this.buttons.sound.removeChild(this.panels['sound']);
+          } else {
+            this.buttons.sound.appendChild(this.panels['sound']);
+          }
+        }
+      });
       this.reflow();
     });
   },
@@ -138,7 +178,7 @@ janus.registerElement('xrmenu-popup', {
 
   create() {
 
-    let element = elation.elements.create(this.content);
+    let element = elation.elements.create(this.content, { deferred: false });
     //document.body.appendChild(element);
     //this.shadowdom.appendChild(element);
 
@@ -147,14 +187,9 @@ janus.registerElement('xrmenu-popup', {
     //container.appendChild(element);
 
 setTimeout(() => {
-    for (let i = 0; i < document.styleSheets.length; i++) {
-      let styleel = document.createElement('link');
-      styleel.rel = 'stylesheet';
-      styleel.href = document.styleSheets[i].href;
-      this.shadowdom.appendChild(styleel);
-    }
-}, 1000);
-
+console.log('LOADED????', janus.ui, janus.ui.apps.default);
+    this.initShadowStylesheets();
+}, 0);
     this.shadowdom.appendChild(element);
     document.body.appendChild(container);
 
@@ -172,24 +207,7 @@ container.style.opacity = 0;
 
 this.elementcontainer = container;
 
-setTimeout(() => {
-    let canvas = element.toCanvas(this.width, this.height, 1);
-/*
-document.body.appendChild(canvas);
-canvas.style.position = 'absolute';
-canvas.style.top = '0';
-canvas.style.left = '0';
-canvas.style.zIndex = 1000;
-canvas.style.border = '1px solid red';
-*/
-    this.loadNewAsset('image', {
-      id: 'xrmenu-element-canvas',
-      canvas: canvas,
-    });
-    this.plane.image_id = 'xrmenu-element-canvas';
-    this.canvas = canvas;
-    elation.events.add(canvas, 'update', ev => this.refresh());
-}, 1000);
+  this.initElementCanvas();
 
     this.plane = this.createObject('object', {
       id: 'plane',
@@ -209,6 +227,59 @@ canvas.style.border = '1px solid red';
     this.plane.addEventListener('click', ev => this.handleMouse(ev));
     this.plane.addEventListener('mouseover', ev => this.handleMouseOver(ev));
     this.plane.addEventListener('mouseout', ev => this.handleMouseOut(ev));
+  },
+  initElementCanvas() {
+    let element = this.element;
+
+    if (!(element && element.isConnected && element.toCanvas)) {
+      setTimeout(() => this.initElementCanvas(), 100);
+      return;
+    }
+
+    console.log(element.isConnected, element);
+    let canvas = element.toCanvas(this.width, this.height, 1);
+/*
+document.body.appendChild(canvas);
+canvas.style.position = 'absolute';
+canvas.style.top = '0';
+canvas.style.left = '0';
+canvas.style.zIndex = 1000;
+canvas.style.border = '1px solid red';
+*/
+    this.loadNewAsset('image', {
+      id: 'xrmenu-element-canvas',
+      canvas: canvas,
+    });
+    this.plane.image_id = 'xrmenu-element-canvas';
+    this.canvas = canvas;
+    elation.events.add(canvas, 'asset_update', ev => this.refresh());
+
+    element.updateStylesheets(elation.engine.assets.corsproxy).then(d => {
+      element.updateCanvas();
+      this.refresh();
+    });
+
+  },
+  initShadowStylesheets() {
+    let promises = [];
+    for (let i = 0; i < document.styleSheets.length; i++) {
+      //promises.push(new Promise(accept => {
+        let styleel = document.createElement('link');
+        styleel.rel = 'stylesheet';
+        styleel.href = elation.engine.assets.corsproxy + document.styleSheets[i].href;
+        //styleel.onload = accept;
+        this.shadowdom.appendChild(styleel);
+console.log('add link', document.styleSheets[i].href);
+      //}));
+    }
+/*
+    Promise.all(promises).then(() => {
+console.log('stylesheets loaded!');
+setTimeout(() => {
+      this.element.updateCanvas().then(() => this.refresh());
+}, 400);
+    });
+*/
   },
   handleMouse(ev) {
     if (this.element && this.canvas) {
@@ -245,6 +316,16 @@ canvas.style.border = '1px solid red';
             this.currenttarget.dispatchEvent(mouseout);
           }
           this.currenttarget = target;
+          let mousemove = new EventClass('mousemove', {
+            bubbles: true,
+            cancelable: true,
+            screenX: mousexy[0],
+            screenY: mousexy[1],
+            clientX: mousexy[0],
+            clientY: mousexy[1],
+            view: window,
+          });
+          this.currenttarget.dispatchEvent(mousemove);
           //let mouseover = elation.events.clone(fakeev, { type: 'mouseover' });
           let mouseover = new EventClass('mouseover', {
             bubbles: true,
@@ -255,6 +336,7 @@ canvas.style.border = '1px solid red';
             clientY: mousexy[1],
             view: window,
           });
+console.log(mouseover);
           target.dispatchEvent(mouseover);
         }
       }
