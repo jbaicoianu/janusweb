@@ -51,6 +51,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         shadow: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Receive shadows from self and other objects' },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Cast shadows onto self and other objects' },
+        shadow_side: { type: 'string', default: '', set: this.updateMaterial, comment: 'Cast shadows onto front, back, both, or auto (empty)' },
         wireframe: { type: 'boolean', default: false, set: this.updateMaterial, comment: 'Wireframe rendering' },
         fog: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Object is affected by fog' },
         lights: { type: 'boolean', default: false, comment: 'Load lights from model' },
@@ -81,6 +82,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
         roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
+        transmission: { type: 'float', default: 0, set: this.updateMaterial, comment: 'Material transmission value' },
         usevertexcolors: { type: 'boolean', default: true, set: this.updateMaterial },
         gain: { type: 'float', default: 1.0, set: this.updateAudioNodes },
         onloadstart: { type: 'callback' },
@@ -357,6 +359,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           blend_src = false,
           blend_dest = false,
           side = this.sidemap[this.properties.cull_face],
+          shadowside = this.sidemap[this.properties.shadow_side || this.properties.cull_face],
           textureasset,
           lightmaptextureasset,
           emissivetextureasset,
@@ -632,6 +635,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           shadermaterial = shader.getInstance();
           shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
           shadermaterial.side = this.sidemap[this.properties.cull_face];
+          shadermaterial.shadowSide = shadowside
           shadermaterial.receiveShadow = this.shadow && this.shadow_receive;
           shadermaterial.castShadow = this.shadow && this.shadow_cast;
           shadermaterial.renderOrder = this.renderorder;
@@ -864,6 +868,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else if (this.metalness !== null) {
               m.metalness = this.metalness;
             }
+            if (this.transmission !== null) {
+              m.transmission = this.transmission;
+            }
 
             if (this.isUsingPBR() && !this.isUsingToonShader()) {
               m.envMap = this.getEnvmap();
@@ -871,6 +878,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
             //m.roughness = 0.75;
             m.side = side;
+            m.shadowSide = shadowside;
 
             if (blend_src || blend_dest) {
               if (blend_src) m.blendSrc = blend_src;
@@ -1443,6 +1451,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           shadow: [ 'property', 'shadow' ],
           shadow_receive: [ 'property', 'shadow_receive' ],
           shadow_cast: [ 'property', 'shadow_cast' ],
+          shadow_side: [ 'property', 'shadow_side' ],
           cull_face: [ 'property', 'cull_face' ],
           blend_src: [ 'property', 'blend_src' ],
           blend_dest: [ 'property', 'blend_dest' ],
@@ -1460,6 +1469,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           emissive_intensity: [ 'property', 'emissive_intensity'],
           roughness: [ 'property', 'roughness'],
           metalness: [ 'property', 'metalness'],
+          transmission: [ 'property', 'transmission'],
           usevertexcolors: [ 'property', 'usevertexcolors'],
 
           texture_offset: [ 'property', 'texture_offset'],
