@@ -848,11 +848,18 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (proxyobj) {
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         if (proxyobj.parent) {
-          proxyobj.parent.removeChild(proxyobj);
+          if (typeof proxyobj.parent.removeChild == 'function') {
+            proxyobj.parent.removeChild(proxyobj);
+          } else if (typeof proxyobj.parent.remove == 'function') {
+            proxyobj.parent.remove(proxyobj._target);
+          }
         }
         var realobj = proxyobj._target;
         if (realobj) {
           this.add(realobj);
+          if (typeof realobj.start == 'function') {
+            realobj.start();
+          }
         }
       }
     }
@@ -865,6 +872,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         //var realobj = this.room.getObjectFromProxy(proxyobj);
         var realobj = proxyobj._target;
         if (realobj) {
+          if (typeof realobj.stop == 'function') {
+            realobj.stop();
+          }
           this.remove(realobj);
         }
       }
