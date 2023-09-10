@@ -21,6 +21,7 @@ janus-ui-editor-property-integer {
 .janus_editor ui-input>ui-label {
   padding: .2em;
   vertical-align: middle;
+  min-width: auto;
 }
 .janus_editor ui-input>input {
   width: 100%;
