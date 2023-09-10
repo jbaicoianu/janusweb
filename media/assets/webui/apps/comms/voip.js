@@ -977,12 +977,12 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
 
     if (this.elements.inputDevice.value && this.elements.inputDevice.value != 'default') {
       console.log('input!', this.elements.inputDevice.value);
-      constraints.audio.deviceId = { exact: this.elements.inputDevice.value };
+      constraints.audio.deviceId = { ideal: this.elements.inputDevice.value };
     }
     if (this.elements.videoDevice && this.elements.videoDevice.value && this.elements.videoDevice.value != 'none') {
       console.log('video!', this.elements.videoDevice.value);
       constraints.video = {
-        deviceId: { exact: this.elements.videoDevice.value },
+        deviceId: { ideal: this.elements.videoDevice.value },
         height: 256,
         width: 256
       };
@@ -1342,5 +1342,13 @@ elation.elements.define('janus-voip-client-incomingcall', class extends elation.
     } else {
       chat.sendMessage('❌ request declined');
     }
+  }
+});
+elation.elements.define('janus-voip-client-none', class extends elation.elements.base {
+  create() {
+  }
+  connect() {
+  }
+  setInputStream(stream) {
   }
 });
