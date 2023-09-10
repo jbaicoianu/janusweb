@@ -65,9 +65,9 @@ janus.registerElement('locomotion_teleporter', {
       rand_pos: V(.5,0,.5),
       accel: V(0,-1,0),
       rand_accel: V(0,2,0),
-      rate: 50,
+      rate: 10,
       count: 60,
-      duration: .5,
+      duration: 3,
       collision_id: '',
       collidable: false,
       pickable: false,
@@ -337,6 +337,7 @@ janus.registerElement('locomotion_teleporter', {
   enableCursor() {
     if (!room.teleport) return;
     this.visible = true;
+    this.particles.resetParticles();
     this.particles.visible = true;
     if (this.laser.room !== room._target) room.appendChild(this.laser);
     if (this.particles.room !== room._target) room.appendChild(this.particles);
