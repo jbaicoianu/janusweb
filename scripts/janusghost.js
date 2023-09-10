@@ -131,13 +131,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         this.ghostassets = assets;
         this.assetpack = elation.engine.assets.loadJSON(assets.assetlist);
       } else {
-        console.log(this.ghostassets);
-        this.assetpack.loadJSON(assets.assetlist);
+        this.assetpack.loadJSON(assets.assetlist, true);
       }
 
       let animnames = []; //'idle', 'walk', 'walk_left', 'walk_right', 'walk_back', 'run', 'jump', 'fly', 'speak', 'type', 'portal'];
       let animassets = assets.assetlist.filter(asset => animnames.indexOf(asset.name) != -1);
-      console.log('some ghost animations', animassets, assets);
 
       if (!this.animationmixer) {
         // Set up our animation mixer with a simple bone mapper for our head.  We'll add more animations to this ass other assets load
@@ -664,9 +662,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         }
         if (ghostdef.head_id) {
           this.setHead(ghostdef.head_id, headpos, ghostdef.scale);
+        } else if (this.head) {
+          this.setHead(false);
         }
         if (ghostdef.body_id) {
           this.setBody(ghostdef.body_id, ghostdef.scale, ghostdef.pos);
+        } else if (this.body) {
+          this.setBody(false);
         }
         if (ghostdef._children) {
           for (var type in ghostdef._children) {
