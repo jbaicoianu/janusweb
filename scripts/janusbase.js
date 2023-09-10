@@ -818,10 +818,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           this.refresh();
         }
 
+/*
         let pos = this.position;
         if (isNaN(pos.x)) pos.x = 0;
         if (isNaN(pos.y)) pos.y = 0;
         if (isNaN(pos.z)) pos.z = 0;
+*/
 
         if (this.properties.color === this.defaultcolor && (this.properties.color.r != 1 || this.properties.color.g != 1 || this.properties.color.b != 1)) {
           this.updateColor();
@@ -830,7 +832,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         this.resetFrameUpdates();
         this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
         var proxy = this.getProxyObject();
-        if (typeof proxy.update == 'function' && this.created) {
+        if (this.created && typeof proxy.update == 'function') {
           proxy.update(ev.data);
         }
       }
