@@ -2404,7 +2404,7 @@ elation.require([
           } else if (val instanceof THREE.Euler) {
             if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
             if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
-              objectsrc += ' ' + k + '="' + val.toArray().slice(0, 3).map(n => Math.round((n * THREE.Math.RAD2DEG) * 10000) / 10000).join(' ') + '"';
+              objectsrc += ' ' + k + '="' + val.toArray().slice(0, 3).map(n => Math.round((n * THREE.MathUtils.RAD2DEG) * 10000) / 10000).join(' ') + '"';
             }
           } else if (val instanceof THREE.Quaternion) {
             if (defaultval instanceof THREE.Quaternion) defaultval = defaultval.toArray();
