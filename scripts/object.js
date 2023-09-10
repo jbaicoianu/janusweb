@@ -419,7 +419,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
           //texture.offset.copy(this.texture_offset);
           //texture.repeat.copy(this.texture_repeat);
-          //texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+          //texture.rotation = this.texture_rotation * THREE.MathUtils.DEG2RAD;
 
           if (texture) {
             this.assignTextureParameters(texture, modelasset, textureasset);
@@ -797,7 +797,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                     m.normalMap = ev.data; this.refresh();
                     m.normalMap.offset.copy(this.texture_offset);
                     m.normalMap.repeat.copy(this.texture_repeat);
-                    m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                    m.normalMap.rotation = this.texture_rotation * THREE.MathUtils.DEG2RAD;
                   }));
                   elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
                 }
@@ -934,9 +934,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             //m.needsUpdate = true;
             m.skinning = useSkinning;
             if (useVertexColors) {
-              m.vertexColors = THREE.VertexColors;
+              m.vertexColors = true;
             } else {
-              m.vertexColors = THREE.NoColors;
+              m.vertexColors = false
             }
             m.fog = this.fog;
             m.wireframe = this.wireframe;
@@ -1153,7 +1153,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       texture.generateMipmaps = linear && !(texture instanceof THREE.VideoTexture || texture instanceof THREE.SBSVideoTexture) && (textureasset && textureasset.detectImageType() != 'basis');
       texture.offset.copy(this.texture_offset);
       texture.repeat.copy(this.texture_repeat);
-      texture.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+      texture.rotation = this.texture_rotation * THREE.MathUtils.DEG2RAD;
       if (texture.repeat.x > 1 || texture.repeat.y > 1) {
         texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
       }
@@ -1171,12 +1171,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               if (m.map) {
                 m.map.offset.copy(this.texture_offset);
                 m.map.repeat.copy(this.texture_repeat);
-                m.map.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                m.map.rotation = this.texture_rotation * THREE.MathUtils.DEG2RAD;
               }
               if (m.normalMap) {
                 m.normalMap.offset.copy(this.texture_offset);
                 m.normalMap.repeat.copy(this.texture_repeat);
-                m.normalMap.rotation = this.texture_rotation * THREE.Math.DEG2RAD;
+                m.normalMap.rotation = this.texture_rotation * THREE.MathUtils.DEG2RAD;
               }
               // TODO - all maps which use uv layer 0 should be changed here
             });
