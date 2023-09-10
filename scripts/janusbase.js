@@ -1054,7 +1054,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           if (!this.fadetimers[clipname]) {
             // FIXME - for some reason, THREE.AnimationAction.fadeIn() / fadeOut() / etc are just causing the animations to stop, so we'll handle fading ourselves
             this.fadetimers[clipname] = setInterval(() => {
-              oldaction.weight *= .95;
+              oldaction.weight *= .9;
               if (oldaction.weight <= .001) {
                 oldaction.weight = 0;
                 oldaction.stop();
