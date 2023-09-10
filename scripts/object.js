@@ -209,9 +209,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (!this.videoasset || this.videoasset.name != this.video_id) {
         if (this.video_id && this.video_id != '' && !this.image_id) {
           this.loadVideo(this.video_id);
-          if (this.modelasset && texture) {
-            this.assignTextureParameters(texture, this.modelasset, this.videoasset);
-          }
         } else {
           this.videotexture = null;
         }
@@ -262,6 +259,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
         elation.events.add(this, 'click', elation.bind(this, this.handleVideoClick));
         this.room.videos[videoid] = this;
+        if (this.modelasset && texture) {
+          this.assignTextureParameters(texture, this.modelasset, videoasset);
+        }
       }
     }
     this.updateWebsurface = function() {
