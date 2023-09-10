@@ -35,6 +35,8 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         party_mode: { type: 'boolean', set: this.updatePartyMode },
         avatarsrc: { type: 'string' },
         cameraview: { type: 'string', default: 'firstperson' },
+        camerazoom: { type: 'float', default: 0 },
+        cameraangle: { type: 'float', default: 0 },
         decouplehead: { type: 'boolean', default: false },
       });
 
@@ -50,9 +52,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.view.container, 'touchend', elation.bind(this, this.handleTouchEnd));
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
-        'toggle_view': ['keyboard_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
-        'zoom_out': ['mouse_wheel_down', ev => this.zoomView(-1)],
-        'zoom_in': ['mouse_wheel_up', ev => this.zoomView(1)],
+        'toggle_view': ['keyboard_nomod_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
+        'zoom_out': ['mouse_wheel_down', ev => this.zoomView(-1, ev)],
+        'zoom_in': ['mouse_wheel_up', ev => this.zoomView(1, ev)],
         //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
         //'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
       });
@@ -1136,16 +1138,35 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       if (ev.value == 1) {
         if (this.cameraview == 'firstperson') {
           this.cameraview = 'thirdperson';
-          this.camera.position.z = 2;
+          this.cameraangle = 0;
+          this.camerazoom = 2;
         } else {
           this.cameraview = 'firstperson';
-          this.camera.position.z = 0;
+          this.cameraangle = 0;
+          this.camerazoom = 0;
         }
+        this.updateCamera();
       }
     }
-    this.zoomView = function(amount) {
+    this.zoomView = function(amount, ev) {
       if (this.cameraview == 'thirdperson') {
-        this.camera.position.z -= amount / 10;
+        //this.camera.position.z -= amount / 10;
+        //this.camera.position.z = Math.max(0.001, this.camera.position.z * (amount > 0 ? .95 : 1.05));
+        let state = this.engine.systems.controls.state;
+        if (state.keyboard_alt) {
+          this.cameraangle += amount * Math.PI / 64;
+        } else {
+          this.camerazoom = Math.max(0.001, this.camerazoom * (amount > 0 ? .95 : 1.05));
+        }
+        this.updateCamera();
+      }
+    }
+    this.updateCamera = function() {
+      if (this.camera) {
+        this.camera.fov = this.fov;
+        this.camera.position.z = Math.cos(this.cameraangle) * this.camerazoom;
+        this.camera.position.x = Math.sin(this.cameraangle) * this.camerazoom;
+        this.camera.orientation.setFromEuler(new THREE.Euler(0, this.cameraangle, 0));
       }
     }
     this.setAnimationSequence = function(sequence) {
