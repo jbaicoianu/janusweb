@@ -33,8 +33,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             diffuseColor.rgb *= vColor;
           #endif
           float dist = length(vViewPosition);
-          float mindist = .4;
-          float maxdist = .6;
+          float mindist = .2;
+          float maxdist = .4;
           if (dist < maxdist) {
             diffuseColor.a = clamp(((dist - mindist) / (maxdist - mindist)), 0., 1.);
           }
