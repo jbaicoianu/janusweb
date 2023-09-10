@@ -1065,7 +1065,7 @@ elation.require([
 
         if (this.audionodes) {
           this.audionodes.gain.connect(this.audionodes.listener.getInput());
-console.log('connect room audio to graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
+          //console.log('connect room audio to graph', this.audionodes.gain, this.audionodes.listener.getInput(), this);
           this.fadeAudioIn(2);
         }
         this.engine.systems.controls.pointerLockEnabled = this.pointerlock;
