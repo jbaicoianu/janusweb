@@ -1174,7 +1174,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     this.raycast = (function() {
       var _pos = new THREE.Vector3(),
           _dir = new THREE.Vector3(0,0,-1);
-      return function(dir, offset, classname, maxdist) {
+      return function(dir, offset, classname, maxdist, colliderroot=null) {
         if (!this.room) return [];
         if (dir) {
           _dir.copy(dir);
@@ -1187,7 +1187,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         }
         this.localToWorld(_pos);
         this.objects.dynamics.localToWorldDir(_dir);
-        return this.room.raycast(_dir, _pos, classname, maxdist);
+        return this.room.raycast(_dir, _pos, classname, maxdist, colliderroot);
       };
     })();
     this.getElementsByTagName = function(tagname, elements) {
