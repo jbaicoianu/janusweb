@@ -14,7 +14,8 @@ elation.require(['engine.things.label'], function() {
         'zalign':          { type: 'string', default: 'back', refreshGeometry: true },
         'emissive':        { type: 'color', default: 0x000000 },
         'opacity':         { type: 'float', default: 1.0 },
-        'depthTest':       { type: 'bool', default: true },
+        'depth_write':     { type: 'bool', default: true },
+        'depth_test':      { type: 'bool', default: true },
         'thickness':       { type: 'float', refreshGeometry: true },
         'segments':        { type: 'int', default: 6, refreshGeometry: true },
         'bevel':           { type: 'bool', default: false, refreshGeometry: true },
@@ -82,6 +83,9 @@ elation.require(['engine.things.label'], function() {
         this.mesh = mesh;
       }
       this.objects['3d'].add(mesh);
+      setTimeout(() => {
+        //this.setCollider('box', this.getBoundingBox(true));
+      }, 0);
       this.refresh();
     }
     this.createTextMaterial = function() {
@@ -91,7 +95,8 @@ elation.require(['engine.things.label'], function() {
         transparent: this.properties.opacity < 1,
         emissive: this.properties.emissive, 
         flatShading: false,
-        depthTest: this.properties.depthTest,
+        depthTest: this.depth_test,
+        depthWrite: this.depth_write,
         reflectivity: .5,
         wireframe: this.wireframe,
       };
