@@ -139,6 +139,7 @@ elation.require([
         let hashidx = this.url.indexOf('#');
         if (hashidx != -1) {
           this.urlhash = this.url.substr(hashidx+1);
+          this.setHash(this.urlhash)
           this.url = this.url.substr(0, hashidx);
         }
         this.roomid = md5(this.url);
@@ -275,7 +276,7 @@ elation.require([
         let obj = this.getObjectById(this.urlhash);
         if (obj) {
           obj.localToWorld(spawnpoint.position.set(0,0,0));
-          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld);
+          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
         }
       }
       return spawnpoint;
