@@ -113,6 +113,7 @@ elation.require([
       this.customElements = {};
       this.unknownElements = {};
       this.eventlistenerproxies = {};
+      this.pendingScriptMap = {};
 
       // FIXME - binding functions to this instance so we can unbind events later.  Should be done at a lower level
       this.onRoomEdit = elation.bind(this, this.onRoomEdit);
@@ -973,7 +974,6 @@ elation.require([
 
         if (assets.scripts) {
           this.pendingScripts = 0;
-          this.pendingScriptMap = {};
           this.loadScripts(assets.scripts);
         }
 
