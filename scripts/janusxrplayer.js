@@ -265,6 +265,10 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           pos: menupos,
           rotation: menurot,
         });
+        this.menupos = menupos;
+        this.menurot = menurot;
+        this.removeChild(this.menu);
+
         player.setHand(this.device.handedness, this.virtualskeleton);
       },
       updateDevice(device) {
@@ -394,6 +398,25 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.pointer.pos.copy(raypose.transform.position);
           this.pointer.orientation.copy(raypose.transform.orientation);
           this.pointer.updateCursorOpacity();
+        }
+        if (this.gamepad && this.gamepad.buttons && this.gamepad.buttons[4]) {
+          let button = this.gamepad.buttons[4];
+          if (button.pressed) {
+            this.buttonwaspressed = true;
+          } else if (this.buttonwaspressed && !button.pressed) {
+            this.buttonwaspressed = false;
+            if (!this.menu.parent || this.menu.parent === this) {
+              player.appendChild(this.menu);
+              player.worldToLocal(this.pointer.localToWorld(this.menu.pos.set(0,0,-.25)));
+              this.menu.billboard = 'y';
+            } else {
+              //this.appendChild(this.menu);
+              player.removeChild(this.menu);
+              this.menu.billboard = '';
+              this.menu.pos.copy(this.menupos);
+              //this.menu.visible = false;
+            }
+          } 
         }
       },
       createButtons() {
@@ -784,7 +807,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           col: 'green'
         });
         this.tmpobj = new THREE.Object3D();
-        this.joints = new THREE.InstancedMesh(new THREE.SphereBufferGeometry(1), new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: .2, roughness: .5}), 26);
+        this.joints = new THREE.InstancedMesh(new THREE.SphereGeometry(1), new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: .2, roughness: .5}), 26);
         this.joints.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
         this.jointposes = {};
         this.objects['3d'].add(this.joints);
