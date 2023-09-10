@@ -437,7 +437,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
       }
       if (normal_image_id) {
-        let normaltextureasset = this.getAsset('image', normal_image_id, true);
+        let normaltextureasset = this.getAsset('image', normal_image_id, false);
+        if (!normaltextureasset) { // no image found, try video
+          normaltextureasset = this.getAsset('video', normal_image_id);
+        }
         if (normaltextureasset) {
           textureNormal = normaltextureasset.getInstance();
           if (!this.assetloadhandlers[textureNormal.uuid]) {
