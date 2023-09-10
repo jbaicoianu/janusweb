@@ -157,23 +157,30 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
         col: 'lime',
         opacity: .4,
         outline: 3,
+        layers: '10',
       });
       this.outliner_hover = room.createObject('outliner', {
         col: 'gray',
         opacity: .4,
         outline: 1,
+        layers: '10',
       });
 setTimeout(() => {
       this.outliner_selected.col = 'lime';
       this.outliner_hover.col = 'gray';
+this.outliner_selected.setLayers('10');
+this.outliner_hover.setLayers('10');
 }, 0);
+      let editor = this;
       this.outliner_hover.update = function() {
+/*
         let rc = player.raycast();
         if (rc.length > 0 && rc[0].object !== room) {
           this.select(rc[0].object);
         } else {
           this.deselect();
         }
+*/
       }
     } else if (this.outliner_selected.room !== room) {
       room.appendChild(this.outliner_selected);
@@ -255,7 +262,7 @@ setTimeout(() => {
     this.roomedit.rotationsnap = snap;
     let manipulator = this.getManipulator();
     if (snap == 'Off') snap = 0;
-    if (manipulator) manipulator.setRotationSnap(+snap * THREE.Math.DEG2RAD);
+    if (manipulator) manipulator.setRotationSnap(+snap * THREE.MathUtils.DEG2RAD);
 /*
     if (this.elements.rotatesnap.value != snap) {
       this.elements.rotatesnap.value = snap || 'Off';
@@ -703,7 +710,7 @@ console.log('set translation snap', ev.data, ev);
         this.editObjectSnapVector(obj[attrname], this.roomedit.snap);
       } else if (attrtype == 'euler') {
         let rot = new THREE.Euler();
-        let move = (ev.deltaY > 0 ? -1 : 1) * this.roomedit.rotationsnap * THREE.Math.DEG2RAD;
+        let move = (ev.deltaY > 0 ? -1 : 1) * this.roomedit.rotationsnap * THREE.MathUtils.DEG2RAD;
         if (ev.ctrlKey) {
           rot.x += move;
         }
@@ -721,7 +728,7 @@ console.log('set translation snap', ev.data, ev);
         let quat2 = new THREE.Quaternion().setFromEuler(rot);
         quat.multiply(quat2);
         obj[attrname].radians.setFromQuaternion(quat);
-        //this.editObjectSnapVector(obj[attrname], this.roomedit.rotationsnap * THREE.Math.DEG2RAD);
+        //this.editObjectSnapVector(obj[attrname], this.roomedit.rotationsnap * THREE.MathUtils.DEG2RAD);
       } else if (attrtype == 'color') {
         let move = 4/255 * (ev.deltaY < 0 ? 1 : -1);
 
@@ -741,9 +748,9 @@ console.log('set translation snap', ev.data, ev);
           col.g += move;
           col.b += move;
         }
-        col.r = THREE.Math.clamp(col.r, 0, 1);
-        col.g = THREE.Math.clamp(col.g, 0, 1);
-        col.b = THREE.Math.clamp(col.b, 0, 1);
+        col.r = THREE.MathUtils.clamp(col.r, 0, 1);
+        col.g = THREE.MathUtils.clamp(col.g, 0, 1);
+        col.b = THREE.MathUtils.clamp(col.b, 0, 1);
         console.log('opacity after', obj.opacity);
         obj[mode] = col;
 obj.opacity = obj.opacity;
@@ -769,7 +776,7 @@ obj.opacity = obj.opacity;
         } else {
           amount /= divisor;
         }
-        obj[attrname] = THREE.Math.clamp(obj[attrname] + amount, min, max);
+        obj[attrname] = THREE.MathUtils.clamp(obj[attrname] + amount, min, max);
 
       } else if (attrtype == 'boolean' || attrtype == 'bool') {
         if (ev.deltaY < 1) {
@@ -893,10 +900,10 @@ obj.updateDirvecsFromOrientation();
         else if (this.roomedit.snap == .01) amount = 15;
         else if (this.roomedit.snap == .001) amount = 5;
 
-        let rot = new THREE.Euler().setFromVector3(vec.clone().multiplyScalar(amount * THREE.Math.DEG2RAD));
+        let rot = new THREE.Euler().setFromVector3(vec.clone().multiplyScalar(amount * THREE.MathUtils.DEG2RAD));
         let quat = new THREE.Quaternion();
         quat.setFromEuler(rot);
-        //obj.rotation = V(rot.x * THREE.Math.RAD2DEG, rot.y * THREE.Math.RAD2DEG, rot.z * THREE.Math.RAD2DEG);
+        //obj.rotation = V(rot.x * THREE.MathUtils.RAD2DEG, rot.y * THREE.MathUtils.RAD2DEG, rot.z * THREE.MathUtils.RAD2DEG);
         obj.orientation.multiply(quat);
 console.log('rotate it', vec.clone().multiplyScalar(amount), amount, rot, quat);
 
@@ -915,9 +922,9 @@ console.log('rotate it', vec.clone().multiplyScalar(amount), amount, rot, quat);
         break;
       case 'col':
         let snap = 10 / 255;
-        obj.col = V(THREE.Math.clamp(obj.col.r + vec.x * snap, 0, 1),
-                    THREE.Math.clamp(obj.col.g + vec.y * snap, 0, 1),
-                    THREE.Math.clamp(obj.col.b + vec.z * snap, 0, 1));
+        obj.col = V(THREE.MathUtils.clamp(obj.col.r + vec.x * snap, 0, 1),
+                    THREE.MathUtils.clamp(obj.col.g + vec.y * snap, 0, 1),
+                    THREE.MathUtils.clamp(obj.col.b + vec.z * snap, 0, 1));
 
 console.log('change color', obj.col, vec);
         break;
