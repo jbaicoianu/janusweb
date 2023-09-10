@@ -35,7 +35,7 @@ elation.require([], function() {
           engine: this._object.engine,
           properties: {
             object: object,
-            rotation: [object.rotation.x * THREE.Math.RAD2DEG, object.rotation.y * THREE.Math.RAD2DEG, object.rotation.z * THREE.Math.RAD2DEG], 
+            rotation: [object.rotation.x * THREE.MathUtils.RAD2DEG, object.rotation.y * THREE.MathUtils.RAD2DEG, object.rotation.z * THREE.MathUtils.RAD2DEG], 
             room: rootobject.room
           }
         });
