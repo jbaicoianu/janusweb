@@ -887,9 +887,9 @@ elation.require([
             // If no reciprocal link was found, spawn one so we can find our way back
             let linkrot = new EulerDegrees();
             linkrot.radians.copy(this.spawnpoint.rotation);
-            //linkrot.x *= THREE.Math.RAD2DEG;
+            //linkrot.x *= THREE.MathUtils.RAD2DEG;
             linkrot.y = linkrot.y + 180;
-            //linkrot.z *= THREE.Math.RAD2DEG;
+            //linkrot.z *= THREE.MathUtils.RAD2DEG;
             let linkpos = this.spawnpoint.localToWorld(V(0,0,player.fatness/2));
             this.createObject('link', {
               pos: linkpos,
