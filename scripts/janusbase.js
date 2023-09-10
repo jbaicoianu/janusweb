@@ -1284,9 +1284,9 @@ console.log('its null', k, this[k], prop);
         // Special handling for 'rotation' and 'color'
         if (realkey == 'rotation') {
 /*
-          props['rotation'][0] *= THREE.Math.RAD2DEG;
-          props['rotation'][1] *= THREE.Math.RAD2DEG;
-          props['rotation'][2] *= THREE.Math.RAD2DEG;
+          props['rotation'][0] *= THREE.MathUtils.RAD2DEG;
+          props['rotation'][1] *= THREE.MathUtils.RAD2DEG;
+          props['rotation'][2] *= THREE.MathUtils.RAD2DEG;
 */
         } else if (realkey == 'color') {
           if (!this.colorIsDefault) {
