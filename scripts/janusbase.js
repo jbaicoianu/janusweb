@@ -796,7 +796,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           }
           parent.worldToLocal(camera.getWorldPosition(playerpos)).sub(this.position);
           dir.copy(playerpos).normalize();
-          if (billboard == 'y') {
+          if (billboard == 'y' || billboard === true || billboard == 'true') {
             this.rotation.radians.set(0, Math.atan2(dir.x, dir.z), 0);
             this.frameupdates['rotation'] = true;
           }
