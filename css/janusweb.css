@@ -301,6 +301,9 @@ janus-overlay[hidden] {
   pointer-events: none;
   display: block !important;
 }
-fireboxroom {
+janus-viewer room,
+janus-viewer assets,
+fireboxroom room,
+fireboxroom assets {
   display: none;
 }
