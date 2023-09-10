@@ -285,7 +285,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.emitted = 0;
     }
     this.updateParticles = function(ev) {
-      if (!this.loaded || !this.started || !this.parent) return;
+      if (!this.loaded || !this.started || !this.parent || !this.visible) return;
       var now = performance.now(),
           elapsed = now - this.lasttime,
           endtime = now + this.duration * 1000,
@@ -553,9 +553,10 @@ elation.require(['janusweb.janusbase'], function() {
 
       point.active = 1;
 
-      var pos = this.geometry.attributes.position.array,
-          color = this.geometry.attributes.customColor.array,
-          size = this.geometry.attributes.size.array;
+      var geo = this.geometry,
+          pos = geo.attributes.position.array,
+          color = geo.attributes.customColor.array,
+          size = geo.attributes.size.array;
 
       if (newpos) {
         point.pos.copy(newpos);
@@ -564,8 +565,14 @@ elation.require(['janusweb.janusbase'], function() {
         pos[offset + 1] = newpos.y;
         pos[offset + 2] = newpos.z;
 
-        this.geometry.attributes.position.needsUpdate = true;
-        this.updateBoundingSphere(newpos);
+        geo.attributes.position.needsUpdate = true;
+        //this.updateBoundingSphere(newpos);
+        if (!this.updateBoundingSphereTimer) {
+          this.updateBoundingSphereTimer = setTimeout(() => {
+            this.updateBoundingSphere(newpos);
+            this.updateBoundingSphereTimer = false;
+          }, 0);
+        }
       }
 
       if (newvel) {
@@ -582,23 +589,119 @@ elation.require(['janusweb.janusbase'], function() {
         color[pointnum*4    ] = newcol.x;
         color[pointnum*4 + 1] = newcol.y;
         color[pointnum*4 + 2] = newcol.z;
-        color[pointnum*4 + 3] = elation.utils.any(point.opacity, this.opacity, 1);
+        color[pointnum*4 + 3] = elation.utils.any(point.opacity, this.properties.opacity, 1);
 
-        this.geometry.attributes.customColor.needsUpdate = true;
+        geo.attributes.customColor.needsUpdate = true;
       }
       if (newsize) {
         point.size = newsize;
         size[pointnum] = newsize;
 
-        this.geometry.attributes.size.needsUpdate = true;
+        geo.attributes.size.needsUpdate = true;
       }
       point.opacity = newopacity;
 
-      if (pointnum >= this.count) {
-        this.count = this.particles.length;
-        this.createParticles(false);
-        this.updateParticles();
+      if (pointnum >= this.properties.count) {
+        if (!this.updateParticleTimer) {
+          this.updateParticleTimer = setTimeout(() => { 
+            this.count = this.particles.length;
+            this.createParticles(false);
+            this.updateParticleTimer = false;
+          }, 0);
+        }
       }
     }
+    this.setPoints = (function() {
+      let furthest = new THREE.Vector3();
+      return function(points) {
+        var geo = this.geometry,
+            pos = geo.attributes.position.array,
+            color = geo.attributes.customColor.array,
+            size = geo.attributes.size.array;
+            furthestDistSq = 0,
+            particles = this.particles;
+        for (let i = 0; i < points.length; i++) {
+          let point = particles[i],
+              newpoint = points[i],
+              offset = i * 3;
+          
+          if (!point) {
+            point = this.createPoint();
+            point.active = 1;
+            particles[i] = point;
+          }
+
+          point.active = 1;
+
+          if ('pos' in newpoint) {
+            //point.pos.copy(newpoint.pos);
+            let p1 = point.pos,
+                p2 = newpoint.pos;
+            pos[offset    ] = p1.x = p2.x;
+            pos[offset + 1] = p1.y = p2.y;
+            pos[offset + 2] = p1.z = p2.z;
+
+  /*
+            point.pos.copy(newpoint.pos);
+            pos[offset    ] = point.pos.x;
+            pos[offset + 1] = point.pos.y;
+            pos[offset + 2] = point.pos.z;
+  */
+
+            //this.updateBoundingSphere(newpos);
+            let distSq = p2.x * p2.x + p2.y * p2.y + p2.z * p2.z;
+            if (distSq > furthestDistSq) {
+              furthest.x = newpoint.pos.x;
+              furthest.y = newpoint.pos.y;
+              furthest.z = newpoint.pos.z;
+              furthestDistSq = distSq;
+            }
+          }
+
+          if ('vel' in newpoint) {
+            //point.vel.copy(newpoint.vel);
+            point.vel.x = newpoint.vel.x;
+            point.vel.y = newpoint.vel.y;
+            point.vel.z = newpoint.vel.z;
+          }
+
+          if ('accel' in newpoint) {
+            //point.accel.copy(newpoint.accel);
+            point.accel.x = newpoint.accel.x;
+            point.accel.y = newpoint.accel.y;
+            point.accel.z = newpoint.accel.z;
+          }
+
+          if ('opacity' in newpoint) {
+            point.opacity = newpoint.opacity;
+          }
+
+
+          if ('col' in newpoint) {
+            point.color.setRGB(newpoint.col.x, newpoint.col.y, newpoint.col.z);
+
+            color[i*4    ] = newpoint.col.x;
+            color[i*4 + 1] = newpoint.col.y;
+            color[i*4 + 2] = newpoint.col.z;
+            color[i*4 + 3] = elation.utils.any(point.opacity, this.properties.opacity, 1);
+
+            geo.attributes.customColor.needsUpdate = true;
+          }
+          if ('size' in newpoint) {
+            point.size = newpoint.size;
+            size[i] = newpoint.size;
+
+            geo.attributes.size.needsUpdate = true;
+          }
+        }
+        geo.attributes.position.needsUpdate = true;
+        this.updateBoundingSphere(furthest);
+        if (points.length >= this.properties.count) {
+          this.count = particles.length;
+          this.createParticles(false);
+          this.updateParticleTimer = false;
+        }
+      }
+    })();
   }, elation.engine.things.janusbase);
 });
