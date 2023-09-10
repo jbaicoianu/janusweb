@@ -501,11 +501,11 @@ elation.require(['janusweb.janusbase'], function() {
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box;
       if (this.round) {
-        box = new THREE.CircleBufferGeometry(.5, 64);
+        box = new THREE.CircleGeometry(.5, 64);
         box.applyMatrix4(new THREE.Matrix4().makeScale(this.size.x, this.size.y, thickness));
         box.applyMatrix4(new THREE.Matrix4().makeTranslation(0, this.size.y/2, .02));
       } else {
-        box = new THREE.BoxBufferGeometry(this.size.x, this.size.y, thickness);
+        box = new THREE.BoxGeometry(this.size.x, this.size.y, thickness);
         box.applyMatrix4(new THREE.Matrix4().makeTranslation(0, this.size.y/2, thickness + .02));
       }
 
@@ -536,27 +536,31 @@ elation.require(['janusweb.janusbase'], function() {
         var group = new THREE.Mesh(box, mat);
         group.renderOrder = 10;
         group.castShadow = true;
+        let framegeo;
 
         if (this.draw_glow) {
           var framewidth = .05,
               frameheight = .05,
               framedepth = .01 / this.properties.size.z;
-          var framegeo = new THREE.BufferGeometry();
-          var framepart = new THREE.BoxBufferGeometry(this.size.x,frameheight,framedepth);
+          //var framegeo = new THREE.BufferGeometry();
+          var framepart = new THREE.BoxGeometry(this.size.x,frameheight,framedepth);
           var framemat4 = new THREE.Matrix4();
 
 
           framemat4.makeTranslation(0,this.size.y - frameheight/2,framedepth + offset);
-          framegeo.merge(framepart, framemat4);
-          framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
-          framegeo.merge(framepart, framemat4);
+          let framepart1 = framepart.clone().applyMatrix4(framemat4);
 
-          framepart = new THREE.BoxBufferGeometry(framewidth,this.size.y,framedepth);
+          framemat4.makeTranslation(0,frameheight/2,framedepth + offset);
+          let framepart2 = framepart.clone().applyMatrix4(framemat4);
+
+          framepart = new THREE.BoxGeometry(framewidth,this.size.y,framedepth);
 
           framemat4.makeTranslation(this.size.x / 2 - framewidth/2,this.size.y / 2,framedepth + offset);
-          framegeo.merge(framepart, framemat4);
+          let framepart3 = framepart.clone().applyMatrix4(framemat4);
           framemat4.makeTranslation(-this.size.x / 2 + framewidth/2,this.size.y / 2,framedepth + offset);
-          framegeo.merge(framepart, framemat4);
+          let framepart4 = framepart.clone().applyMatrix4(framemat4);
+
+          framegeo = THREE.BufferGeometryUtils.mergeBufferGeometries([framepart1, framepart2, framepart3, framepart4]);
 
           var framemat = new THREE.MeshPhongMaterial({color: 0x0000cc, emissive: 0x222222});
           var frame = new THREE.Mesh(framegeo, framemat);
