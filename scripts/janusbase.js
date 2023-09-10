@@ -1404,5 +1404,17 @@ console.log('clone', props);
       }
       return false;
     }
+    this.physics_collide = function(ev) {
+      let obj1 = ev.data.bodies[0].object, obj2 = ev.data.bodies[1].object,
+          other = (obj1 == this ? obj2 : obj1);
+
+      let events = elation.events.fire({type: 'collide', element: this, data: {
+        other: (typeof other.getProxyObject == 'function' ? other.getProxyObject() : other),
+        collision: ev.data
+      } });
+      if (elation.events.wasDefaultPrevented(events)) {
+        ev.preventDefault();
+      }
+    }
   }, elation.engine.things.generic);
 });
