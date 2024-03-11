@@ -52,7 +52,7 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
         this.state = 'disconnected';
       }
     }
-    this.elements = elation.elements.fromTemplate('janus.comms.status', this);
+    this.refresh();
 
     //elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
   }

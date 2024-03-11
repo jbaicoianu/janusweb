@@ -329,9 +329,7 @@ JanusClientConnection.prototype.connect = function() {
     this.status = 2;
     this._useridSuffix = '';
     this.sendLogon();
-    while (this.msgQueue.length > 0) {
-      this.send(this.msgQueue.shift());
-    }
+    this.sendQueuedCommands()
     this.dispatchEvent({type: 'connect'});
   }.bind(this);
 
@@ -362,6 +360,15 @@ JanusClientConnection.prototype.disconnect = function() {
   this.dispatchEvent({type: 'disconnecting'});
   this._websocket.close();
 }
+JanusClientConnection.prototype.sendQueuedCommands = function() {
+  if (this._websocket.readyState > 0) {
+    while (this.msgQueue.length > 0) {
+      this.send(this.msgQueue.shift());
+    }
+  } else {
+    setTimeout(() => this.sendQueuedCommands(), 100);
+  }
+}
 
 JanusClientConnection.prototype.sendLogon = function() {
   var msgData = {
@@ -385,13 +392,12 @@ JanusClientConnection.prototype.setUserId = function(userId) {
 };
 
 JanusClientConnection.prototype.send = function(msg) {
-  if (this._websocket.readyState == 0) {
-    this.msgQueue.push(msg);
-  } else if (this._websocket.readyState == 1) {
+  try {
     this._websocket.send(JSON.stringify(msg) + '\r\n');
-  } else {
-    //this.reconnect();
+  } catch (e) {
+    this.msgQueue.push(msg);
   }
+  //this.reconnect();
 };
 
 JanusClientConnection.prototype.onMessage = function(msg) {
