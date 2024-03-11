@@ -115,19 +115,23 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (asset.loaded) {
             setTimeout(elation.bind(this, this.handleLoad), 0);
           } else {
+            //this.loadingindicator = this.createObject('object', {});
+/*
             this.loadingindicator = this.createObject('particle', {
               col: 'green',
               scale: V(.025),
               vel: V(-1, 0, -1),
               accel: V(0, -5, 0),
               rand_vel: V(2, 2, 2),
-              count: 250,
-              rate: 500,
+              count: 25,
+              rate: 50,
               duration: .5,
               collidable: false,
               collision_trigger: true,
               loop: true,
             });
+*/
+            //elation.events.add(asset, 'asset_load_queued,asset_load_start,asset_load_progress,asset_load_processing,asset_load_complete', ev => { console.log(ev.type, this, ev); });
             elation.events.add(asset, 'asset_load_complete', elation.bind(this, this.handleLoad));
             elation.events.add(asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           }
@@ -206,6 +210,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.updateVideo = function() {
       if (!this.modelasset) return;
+      if (this.videotexture) {
+        if (this.videotexture.image) {
+          this.videotexture.image.pause();
+        }
+      }
       if (!this.videoasset || this.videoasset.name != this.video_id) {
         if (this.video_id && this.video_id != '' && !this.image_id) {
           this.loadVideo(this.video_id);
@@ -245,9 +254,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         // Refresh this object whenever the video has a new frame for us to display
         texture.onUpdate = (e) => this.refresh();
 
-        if (videoasset.auto_play) {
+        if (videoasset.auto_play && texture.image) {
           texture.image.addEventListener('canplaythrough', function() {
-            texture.image.play();
+            if (texture.image) {
+              texture.image.play();
+            }
           });
         }
 
@@ -298,6 +309,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       this.websurface = this.spawn('januswebsurface', null, {janus: this.janus, room: this.room, websurface_id: this.websurface_id});
       elation.events.add(this, 'mouseover', elation.bind(this.websurface, this.websurface.hover));
       elation.events.add(this, 'mouseout', elation.bind(this.websurface, this.websurface.unhover));
+      elation.events.add(this, 'click', elation.bind(this.websurface, this.websurface.click));
       this.replaceWebsurfaceMaterial();
       this.websurface.start();
     }
@@ -772,9 +784,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false, srgb: false});
               if (asset) {
-                m.normalMap = asset.getInstance();
                 m.normalMap = asset.getInstance();
                 if (!this.assetloadhandlers[m.normalMap.uuid]) {
                   this.assetloadhandlers[m.normalMap.uuid] = true;
@@ -790,9 +801,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.bumpScale = this.bumpmap_scale;
             } else if (m.bumpMap) {
               var imagesrc = m.bumpMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false, srgb: false});
               if (asset) {
-                m.normalMap = asset.getInstance();
                 m.normalMap = asset.getInstance();
                 if (!this.assetloadhandlers[m.normalMap.uuid]) {
                   this.assetloadhandlers[m.normalMap.uuid] = true;
@@ -810,7 +820,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               m.normalMap = textureNormal;
             } else if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
-              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+              var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false, srgb: false});
               if (asset) {
                 m.normalMap = asset.getInstance();
                 if (!this.assetloadhandlers[m.normalMap.uuid]) {
@@ -850,6 +860,8 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.emissiveMap = textureEmissive;
                 textureEmissive.encoding = THREE.sRGBEncoding;
                 m.emissive = new THREE.Color(0xffffff);
+              } else if (m.emissiveMap) {
+                m.emissiveMap.encoding = THREE.sRGBEncoding;
               } else if (this.emissive) {
                 //m.emissive = this.emissive.clone();
                 m.emissive.copy(this.emissive)
@@ -876,6 +888,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
             if (this.isUsingPBR() && !this.isUsingToonShader()) {
               m.envMap = this.getEnvmap();
+              m.envMapIntensity = room.skybox_intensity;
             }
 
             //m.roughness = 0.75;
@@ -1089,6 +1102,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           let materials = (elation.utils.isArray(n.material) ? n.material : [n.material]);
           materials.forEach(m => {
             m.envMap = envMap;
+            m.envMapIntensity = room.skybox_intensity;
           });
         }
       });
@@ -1383,7 +1397,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
     }
     this.setupOnBeforeRenderListener = function(type, args, arg2, arg3) {
       if (this.onbeforerender) {
-        this.objects['3d'].onBeforeRender = this.onbeforerender;
+        elation.events.add(this, 'load', ev => {
+          this.objects['3d'].onBeforeRenderx = this.onbeforerender;
+        });
       }
     }
     this.updateAudioNodes = function() {
