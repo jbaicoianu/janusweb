@@ -115,7 +115,7 @@ elation.component.add('engine.things.remoteplayer', function() {
       distancemodel: 'exponential',
       dist: 1,
       gain: 2,
-      rolloff: .8,
+      rolloff: .4,
     });
     this.head.add(this.mouth._target);
 
