@@ -555,6 +555,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
   }
   setUserData(data) {
     this.id = data.id;
+console.log('got a remote voip user', data);
 
     if (!this.label) {
       let label = document.createElement('h2');
@@ -621,11 +622,12 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
     if (!this.controlpanel) {
       this.controlpanel = elation.elements.create('ui-panel', { bottom: 1, append: this });
       this.mutebutton = elation.elements.create('ui-button', { label: 'Mute', name: "mutebutton", append: this.controlpanel });
-/*
-      this.volume = elation.elements.create('ui-slider', { name: "volume", min: 0, max: 2, value: this.video.volume, append: this.controlpanel });
+      this.volume = elation.elements.create('ui-slider', { name: "volume", min: 0, max: 200, value: this.video.volume * 100, append: this.controlpanel, snap: 1 });
 
       elation.events.add(this.volume, 'change', (ev) => {
-        remoteuser.setVolume(ev.data);
+        if (remoteuser) {
+          remoteuser.setVolume(ev.data / 100);
+        }
         this.muted = (ev.data == 0);
         if (this.muted && !this.mutebutton.hasclass('muted')) {
           this.mutebutton.addclass('muted');
@@ -633,7 +635,6 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
           this.mutebutton.removeclass('muted');
         }
       });
-*/
       elation.events.add(this.mutebutton, 'click', (ev) => {
 /*
         remoteuser.setVolume(0);
@@ -730,6 +731,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
   }
   toggleMute() {
     this.muted = !this.muted;
+console.log('mute?', this.muted, this);
     let remoteuser = janus.network.remoteplayers[this.id];
     if (this.muted) {
       this.mutebutton.addclass('muted');
