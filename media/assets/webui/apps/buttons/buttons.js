@@ -202,16 +202,25 @@ elation.elements.define('janus-button-audio', class extends elation.elements.ui.
   init() {
     super.init();
     this.defineAttribute('muted', { type: 'boolean' });
+    janus.engine.systems.sound.getOutputChannel().then(c => this.output_main = c);
   }
   create() {
+    /*
     this.popupcontent = `
-      <ui-slider name="volume_env" label="Environment" min="0" max="1.2" value="1"></ui-slider>
-      <ui-slider name="volume_voip" label="Voice Chat" min="0" max="1.2" value="1"></ui-slider>
+      <ui-slider name="volume_env" label="Main Volume" min="0" max="150" value="100" snap="1"></ui-slider>
+      <ui-slider name="volume_voip" label="Voice Chat" min="0" max="150" value="100" snap="1"></ui-slider>
+    `;
+    */
+    this.popupcontent = `
+      <ui-slider name="volume_env" label="Main Volume" min="0" max="150" value="100" snap="1"></ui-slider>
     `;
     super.create();
     this.createPopup();
     this.hidePopup();
-    elation.events.add(this.popup.content.elements['volume_env'], 'change', (ev) => this.adjustEnvironmentVolume(ev.data));
+
+    console.log(this.popup.content);
+    elation.events.add(this.popup.content.querySelector('[name="volume_env"]'), 'change', (ev) => this.adjustEnvironmentVolume(ev.data));
+    //elation.events.add(this.popup.content.querySelector('[name="volume_voip"]'), 'change', (ev) => this.adjustVoipVolume(ev.data));
     //this.addEventListener('click', (ev) => this.handleClick(ev));
 
     let soundsystem = janus.engine.systems.sound;
@@ -226,10 +235,15 @@ elation.elements.define('janus-button-audio', class extends elation.elements.ui.
     elation.events.add(soundsystem, 'sound_enabled', (ev) => this.updateMuteState());
   }
   adjustEnvironmentVolume(volume) {
+    //console.log('adjust environment output', room.audionodes.gain.gain.value);
+    /*
     if (room.audionodes) {
       room.audionodes.gain.gain.value = volume;
       this.updateMuteState();
     }
+    */
+    console.log(volume);
+    janus.engine.systems.sound.reallistener.gain.gain.value = volume / 100;
   }
   adjustVOIPVolume(volume) {
     // TODO
