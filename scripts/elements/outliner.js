@@ -59,7 +59,13 @@ elation.require(['janusweb.janusbase'], function() {
       this.outlinematerial.side = THREE.BackSide;
       //this.outlinematerial.blending = THREE.AdditiveBlending;
 
-      if (this.target) this.updateTarget();
+      if (this.target) {
+        this.updateTarget();
+      } else {
+        setTimeout(() => {
+          this.select(this.children[0]);
+        }, 50);
+      }
     },
     select(object) {
       this.selected = object;
