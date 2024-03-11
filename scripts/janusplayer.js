@@ -3,6 +3,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
   elation.component.add('engine.things.janusplayer', function() {
     //this.defaultavatar = '<FireBoxRoom>\n  <Assets>\n    <AssetObject id="screen" src="https://web.janusxr.org/media/assets/hoverscreen.obj" mtl="https://web.janusxr.org/media/assets/hoverscreen.mtl" />\n  </Assets>\n  <Room>\n    <Ghost id="januswebuser" col="#ffffff" lighting="true" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" screen_name="screen_Cube.004">\n      <Object id="screen" js_id="head" />\n    </Ghost>\n  </Room>\n</FireBoxRoom>'
+    //this.defaultavatar = '<FireBoxRoom>\n<Assets>\n<AssetObject id="screen" src="https://vesta.janusxr.org/avatars/static/janusweb/janusweb.obj.gz" mtl="https://vesta.janusxr.org/user_avatar/12689/janusweb.mtl" /></Assets>\n<Room>\n<Ghost id="januswebuser" head_id="screen" head_pos="0 1.4 0" body_id="" eye_pos="0 1.6 0" userid_pos="0 0.5 0" cull_face="back" />\n</Room>\n</FireBoxRoom>';
     this.defaultavatar = `
     <FireBoxRoom>
       <assets>
@@ -103,6 +104,17 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       this.cursor_style = 'default';
       this.cursor_object = '';
       this.lookat_object = '';
+      window.addEventListener('blur', ev => {
+        if (document.pointerLockElement && document.activeElement instanceof HTMLIFrameElement) {
+          document.pointerLockElement.focus();
+//this.disable();
+      this.engine.systems.controls.deactivateContext('janusplayer');
+      this.engine.systems.controls.activateContext('janusplayer');
+let click = new MouseEvent('click', { });
+document.body.dispatchEvent(click);
+//setTimeout(() => this.enable(), 100);
+        }
+      });
 
       if (this.usevoip) {
         this.voip = new JanusVOIPRecorder({audioScale: 1024});
@@ -886,8 +898,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           this.setCollider('sphere', {
             radius: this.collision_radius,
           });
-*/
           this.pickable = false;
+          this.collidable = false;
+*/
           this.setCollider('capsule', {
             radius: this.collision_radius,
             length: 1,
@@ -963,6 +976,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       }
     }
     this.handleTouchStart = function(ev) {
+      //if (!this.enabled) return;
       let halfscreenwidth = window.innerWidth / 2;
       this.enabled = true;
       for (let i = 0; i < ev.changedTouches.length; i++) {
@@ -1124,8 +1138,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
           elapsed = now - this.lookAtLERPstart,
           n = Math.min(1, Math.max(0, elapsed / this.lookAtLERPtime));
 
-      THREE.Quaternion.slerp(this.lookAtLERPq1body, this.lookAtLERPq2body, this.orientation, n);
-      THREE.Quaternion.slerp(this.lookAtLERPq1head, this.lookAtLERPq2head, this.head.orientation, n);
+      //THREE.Quaternion.slerp(this.lookAtLERPq1body, this.lookAtLERPq2body, this.orientation, n);
+      //THREE.Quaternion.slerp(this.lookAtLERPq1head, this.lookAtLERPq2head, this.head.orientation, n);
+      this.orientation.slerpQuaternions(this.lookAtLERPq1body, this.lookAtLERPq2body, n);
+      this.head.orientation.slerpQuaternions(this.lookAtLERPq1head, this.lookAtLERPq2head, n);
       if (n == 1) {
         this.lookAtLERPtime = 0;
       }
