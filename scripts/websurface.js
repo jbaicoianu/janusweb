@@ -45,7 +45,7 @@ elation.require(['engine.things.generic'], function() {
       elation.events.add(this, 'click', elation.bind(this, this.click));
     }
     this.createObject3D = function() {
-      var plane = new THREE.PlaneBufferGeometry(1,1);
+      var plane = new THREE.PlaneGeometry(1,1);
 
       var mat = new THREE.MeshBasicMaterial({
         color: 0x000000,
@@ -113,7 +113,7 @@ elation.require(['engine.things.generic'], function() {
       if (!this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'none';
-        canvas.style.position = 'absolute';
+        //canvas.style.position = 'absolute';
         this.engine.systems.controls.releasePointerLock();
         this.active = true;
         this.selectionmaterial.color.copy(this.activecolor);
@@ -127,7 +127,7 @@ setTimeout(elation.bind(this, function() {
       if (this.active) {
         var canvas = this.engine.client.view.rendersystem.renderer.domElement;
         canvas.style.pointerEvents = 'all';
-        canvas.style.position = 'static';
+        //canvas.style.position = 'static';
         this.engine.systems.controls.requestPointerLock();
         ev.stopPropagation();
         ev.preventDefault();
