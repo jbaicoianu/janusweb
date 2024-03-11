@@ -27,6 +27,7 @@ elation.require([
         'baseurl': { type: 'string', default: false },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
+        'skybox_intensity': { type: 'float', set: this.setSkybox, default: 1.0 },
         'skybox_equi': { type: 'string', set: this.setSkybox },
         'skybox_left_id': { type: 'string', set: this.setSkybox },
         'skybox_right_id': { type: 'string', set: this.setSkybox },
@@ -79,7 +80,7 @@ elation.require([
         'requires': { type: 'string' },
         'onload': { type: 'string' },
         'sync': { type: 'boolean', default: false },
-        'pointerlock': { type: 'boolean', default: true },
+        'pointerlock': { type: 'boolean', default: true, set: this.updatePointerLock },
       });
       this.translators = {
         '^janus-vfs:': elation.janusweb.translators.janusvfs({janus: this.janus}),
@@ -309,9 +310,11 @@ elation.require([
         elation.events.add(equi, 'asset_load', ev => {
           this.skyboxtexture = ev.target._texture;
           this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
+          this.skyboxtexture.encoding = THREE.sRGBEncoding;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
+          elation.events.fire({element: this, type: 'skybox_update'});
         });
         equi.getInstance();
       } else if (hasSkybox) {
@@ -1509,6 +1512,7 @@ elation.require([
             type: args.type,
             format: args.format,
             hls: args.hls,
+            proxy: args.proxy,
             baseurl: this.baseurl
           });
         }
@@ -2072,6 +2076,7 @@ elation.require([
           pickable:      ['property', 'pickable'],
 
           skybox:         ['property', 'skybox'],
+          skybox_intensity: ['property', 'skybox_intensity'],
           skybox_equi:    ['property', 'skybox_equi'],
           skybox_left_id: ['property', 'skybox_left_id'],
           skybox_right_id:['property', 'skybox_right_id'],
@@ -2167,29 +2172,72 @@ elation.require([
           //changestr += this.currentroom.changes[id];
           var change = this.changes[id];
           var real = this.getObjectFromProxy(change);
+          let propdefs = real._thingdef.properties,
+              proxydefs = change._proxydefs;
           if (real) {
-            var xmltype = typemap[real.type] || 'Object';
+            var xmltype = false;
+            if (room.customElements) {
+              for (let k in room.customElements) {
+                if (room.customElements[k].classname == real.type) {
+                  xmltype = k;
+                  break;
+                }
+              }
+            }
+            if (!xmltype) {
+              if (real.type in janus.customElements) {
+                xmltype = real.type;
+              }
+            }
+            if (!xmltype) {
+              xmltype = typemap[real.type] || 'Object';
+            }
             let xmlnode = xmldoc.createElement(xmltype);
             
             var attrs = Object.keys(change);
             for (var i = 0; i < attrs.length; i++) {
               var k = attrs[i];
 
+              let propdef = propdefs[proxydefs[k][1]];
+
               if (ignoreattributes.indexOf(k) != -1) continue;
 
+              let defaultval = (propdef ? propdef.default : null);
               var val = change[k];
-              if (val instanceof THREE.Vector2 ||
-                  val instanceof THREE.Quaternion ||
-                  val instanceof THREE.Vector3) {
-                val = val.toArray().map(function(n) { return (+n).toFixed(4); }).join(' ');
+              if (val instanceof THREE.Vector2) {
+                if (defaultval instanceof THREE.Vector2) defaultval = defaultval.toArray();
+                //if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1]))) {
+                  val = val.toArray().map(function(n) { return (+n).toFixed(4); }).join(' ');
+                //} else {
+                //  val = null;
+                //}
+              } else if (val instanceof THREE.Quaternion) {
+                //if (defaultval instanceof THREE.Quaternion) defaultval = defaultval.toArray();
+                //if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2] && val.w == defaultval[3]))) {
+                  val = val.toArray().map(function(n) { return (+n).toFixed(4); }).join(' ');
+                //} else {
+                //  val = null;
+                //}
+              } else if (val instanceof THREE.Vector3) {
+                if (defaultval instanceof THREE.Vector3) defaultval = defaultval.toArray();
+                //if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+                  val = val.toArray().map(function(n) { return (+n).toFixed(4); }).join(' ');
+                //} else {
+                //  val = null;
+                //}
               } else if (val instanceof THREE.Euler) {
-                val = [val.x.toFixed(4), val.y.toFixed(4), val.z.toFixed(4)].join(' ');
+                if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
+                //if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2]))) {
+                  val = [val.x.toFixed(4), val.y.toFixed(4), val.z.toFixed(4)].join(' ');
+                //} else {
+                //  val = null;
+                //}
               } else if (val instanceof THREE.Color) {
-                if (k == 'col' && real.colorIsDefault) {
-                  val = null;
-                } else {
+                //if (k == 'col' && real.colorIsDefault) {
+                //  val = null;
+                //} else {
                   val = val.toArray().map(function(n) { return +n.toFixed(4); }).join(' ');
-                }
+                //}
               } else if (elation.utils.isString(val) && val.indexOf('blob:') == 0) {
                 var xhr = new XMLHttpRequest();
 
@@ -2212,6 +2260,15 @@ elation.require([
                 }
                 val = 'data:image/png;base64,' + btoa(binary);
 */
+              } else if (elation.utils.isArray(val)) {
+                //if ('default' in propdef && val.length == 0) {
+                  // FIXME - this assumes if a default array is provided, it's probably empty. This may not always be true.
+                //  val = null;
+                //}
+              } else {
+                //if ('default' in propdef && val == defaultval) {
+                //  val = null;
+                //}
               }
 
               if (val !== null && val !== undefined && typeof val != 'function') {
@@ -2600,17 +2657,19 @@ elation.require([
             });
             if (!this.loaded && this.pendingScripts) {
               // We're still waiting for the room to finish loading, so wait for the room_load_complete event before checking if we need to load anything else
-              this.addEventListener('room_load_complete', (ev) => {
+              let func = (ev) => {
                 // Room and all of its assets have finished loading. If our required component still isn't available, check the master package list and autoload if possible
                 if (!finished) {
                   this.loadComponentList().then(components => {
                     if (components[k]) {
                       this.loadNewAsset('script', { src: components[k].url, override: { room: this.getProxyObject() } });
                       this._target.loadScripts([{src: components[k].url}]);
+                      this.removeEventListener('room_load_complete', func);
                     }
                   });
                 }
-              });
+              }
+              this.addEventListener('room_load_complete', func);
             } else {
               // Room is already loaded and scripts are processed - we still don't know about this component, so load it up
               this.loadComponentList().then(components => {
@@ -2871,6 +2930,9 @@ console.log('unknown material', mat);
         }
       }
       return stats;
+    }
+    this.updatePointerLock = function() {
+      this.engine.systems.controls.pointerLockEnabled = this.pointerlock;
     }
   }, elation.engine.things.generic);
 });
