@@ -1,3 +1,26 @@
+JanusWeb 1.5.42
+===============
+- New Features
+  - TiltBrush / OpenBrush support via three-icosa
+  - VOIP "start call" button
+  - Synced avatar morphtargets over network
+  - New <outliner> built-in element
+  - Support for .hdr envmaps
+- Updates
+  - glTF optimizations: KTX2 textures, Meshopt compression
+  - VR controller improvements
+  - Scriptable player walk/run speeds
+  - Editor improvements
+  - Upgrade Three.js to r140
+- Bugfixes
+  - Handle localStorage permission rejection
+  - Fixed particle rates < 1 particle per frame
+  - Fixed toon shader for <room toon="true">
+  - Material fixes for emissive, clearcoat, transmission tint, etc
+  - Fixed FBX texture load path
+  - Update player gravity when flying is toggled
+
+
 JanusWeb 1.5
 ============
 - Threejs upgrade to r133
