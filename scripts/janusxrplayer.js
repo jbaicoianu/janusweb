@@ -394,10 +394,15 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             this.updateMotionControllerModel(this.motionController);
           }
         }
-        if (this.pointer && raypose) {
-          this.pointer.pos.copy(raypose.transform.position);
-          this.pointer.orientation.copy(raypose.transform.orientation);
-          this.pointer.updateCursorOpacity();
+        if (this.pointer) {
+          if (raypose) {
+            this.pointer.pos.copy(raypose.transform.position);
+            this.pointer.orientation.copy(raypose.transform.orientation);
+            this.pointer.updateCursorOpacity();
+            this.pointer.visible = this.visible && this.opacity > 0;
+          } else {
+            this.pointer.visible = false;
+          }
         }
         if (this.gamepad && this.gamepad.buttons && this.gamepad.buttons[4]) {
           let button = this.gamepad.buttons[4];
@@ -610,6 +615,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         //this.cursor.zdir.copy(player.view_dir).multiplyScalar(-1);
         //this.cursor.zdir = normal;
         this.cursor.visible = true;
+        this.cursor.opacity = .8 * player.cursor_opacity;
       },
       updateCursorOpacity() {
         if (!this.activeobject) return;
@@ -628,6 +634,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.updateColor();
           this.cursor.image_id = 'cursor_dot_active';
           this.cursor.opacity = player.cursor_opacity;
+          this.bonk.opacity = 0.2 * player.cursor_opacity;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
 
 /*
@@ -792,6 +799,34 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       fingernames: ['THUMB', 'INDEX', 'MIDDLE', 'RING', 'LITTLE'],
       phalanxnames: ['METACARPAL', 'PHALANX_PROXIMAL', 'PHALANX_DISTAL', 'PHALANX_TIP'],
 
+      jointnames: [
+        'wrist',
+        'thumb-metacarpal',
+        'thumb-phalanx-proximal',
+        'thumb-phalanx-distal',
+        'thumb-tip',
+        'index-finger-metacarpal',
+        'index-finger-phalanx-proximal',
+        'index-finger-phalanx-intermediate',
+        'index-finger-phalanx-distal',
+        'index-finger-tip',
+        'middle-finger-metacarpal',
+        'middle-finger-phalanx-proximal',
+        'middle-finger-phalanx-intermediate',
+        'middle-finger-phalanx-distal',
+        'middle-finger-tip',
+        'ring-finger-metacarpal',
+        'ring-finger-phalanx-proximal',
+        'ring-finger-phalanx-intermediate',
+        'ring-finger-phalanx-distal',
+        'ring-finger-tip',
+        'pinky-finger-metacarpal',
+        'pinky-finger-phalanx-proximal',
+        'pinky-finger-phalanx-intermediate',
+        'pinky-finger-phalanx-distal',
+        'pinky-finger-tip',
+      ],
+
       isactive: true,
       handpos: null,
       p0: null,
@@ -804,11 +839,22 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.handmodel = this.parent.createObject('object', {
           id: 'cube',
           scale: V(.075, .025, .075),
-          col: 'green'
+          col: 'green',
+          visible: false
         });
         this.tmpobj = new THREE.Object3D();
-        this.joints = new THREE.InstancedMesh(new THREE.SphereGeometry(1), new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: .2, roughness: .5}), 26);
+        this.jointmaterial = new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: 1, roughness: .5, emissive: 0xccffcc, transparent: true});
+        this.joints = new THREE.InstancedMesh(new THREE.SphereGeometry(1), this.jointmaterial, 26);
+        this.joints.frustumCulled = false;
         this.joints.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+        let tmpobj = this.tmpobj;
+        for (let i = 0; i < 26; i++) {
+          tmpobj.position.set(Math.random(), Math.random(), Math.random());
+          tmpobj.scale.set(.0001, .0001, .0001);
+          tmpobj.updateMatrix();
+          this.joints.setMatrixAt(i, tmpobj.matrix);
+        }
+
         this.jointposes = {};
         this.objects['3d'].add(this.joints);
         this.handpos = new THREE.Vector3(0, 0, 0);
@@ -819,11 +865,14 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.p4 = new THREE.Vector3(0, 0, 0);
       },
       updatePose(xrFrame, xrReferenceFrame) {
-        if (!this.hand || !this.joints || !this.hand[0]) return;
+        if (!this.hand || !this.joints || !this.tmpobj) {
+          return;
+        }
 
         let tmpobj = this.tmpobj,
             i = 0;
         let poses = this.jointposes;
+/*
         let wristpose = xrFrame.getJointPose(this.hand[XRHand['WRIST']], xrReferenceFrame);
         this.jointposes['WRIST'] = wristpose;
         for (let fingernum = 0; fingernum < this.fingernames.length; fingernum++) {
@@ -843,15 +892,33 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             this.jointposes[jointname] = jointpose;
           }
         }
+*/
+        for ( const inputjoint of this.hand.values() ) {
+          const jointpose = xrFrame.getJointPose( inputjoint, xrReferenceFrame );
+          const jointname = inputjoint.jointName;
+          if (jointpose && jointpose.transform) {
+            let radius = Math.max(.002, jointpose.radius); 
+            tmpobj.position.copy(jointpose.transform.position);
+            tmpobj.quaternion.copy(jointpose.transform.orientation);
+            tmpobj.scale.set(radius, radius, radius);
+            tmpobj.updateMatrix();
+            this.joints.setMatrixAt(i, tmpobj.matrix);
+            //FIVARSlog('xr.debug', 'update joint: ' + i + ', ' + jointname + ', ' + tmpobj.matrix.elements.join(', '));
+          }
+          i++;
+          this.jointposes[jointname] = jointpose;
+        }
         this.joints.instanceMatrix.needsUpdate = true;
+        //this.joints.computeBoundingSphere();
 
-        if (this.jointposes['WRIST']) this.localToWorld(this.handpos.copy(this.jointposes['WRIST'].transform.position));
-        if (this.jointposes['THUMB_PHALANX_TIP']) this.localToWorld(this.p0.copy(this.jointposes['THUMB_PHALANX_TIP'].transform.position));
-        if (this.jointposes['INDEX_PHALANX_TIP']) this.localToWorld(this.p1.copy(this.jointposes['INDEX_PHALANX_TIP'].transform.position));
-        if (this.jointposes['MIDDLE_PHALANX_TIP']) this.localToWorld(this.p2.copy(this.jointposes['MIDDLE_PHALANX_TIP'].transform.position));
-        if (this.jointposes['RING_PHALANX_TIP']) this.localToWorld(this.p3.copy(this.jointposes['RING_PHALANX_TIP'].transform.position));
-        if (this.jointposes['LITTLE_PHALANX_TIP']) this.localToWorld(this.p4.copy(this.jointposes['LITTLE_PHALANX_TIP'].transform.position));
+        if (this.jointposes['wrist']) this.localToWorld(this.handpos.copy(this.jointposes['wrist'].transform.position));
+        if (this.jointposes['thumb-tip']) this.localToWorld(this.p0.copy(this.jointposes['thumb-tip'].transform.position));
+        if (this.jointposes['index-finger-tip']) this.localToWorld(this.p1.copy(this.jointposes['index-finger-tip'].transform.position));
+        if (this.jointposes['middle-finger-tip']) this.localToWorld(this.p2.copy(this.jointposes['middle-finger-tip'].transform.position));
+        if (this.jointposes['ring-finger-tip']) this.localToWorld(this.p3.copy(this.jointposes['ring-finger-tip'].transform.position));
+        if (this.jointposes['pinky-finger-tip']) this.localToWorld(this.p4.copy(this.jointposes['pinky-finger-tip'].transform.position));
         this.isactive = true;
+        this.jointmaterial.opacity = player.cursor_opacity;
       }
     });
     janus.registerElement('trackedplayer_hand_virtualskeleton', {
