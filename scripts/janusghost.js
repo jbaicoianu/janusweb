@@ -339,7 +339,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             if (this.body.animationmixer) {
               this.cloneAnimations(animasset);
             }
-            //this.body.setAnimation('idle');
+            this.body.setAnimation('idle');
           }
         });
         animasset.load();
