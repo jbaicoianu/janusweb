@@ -231,7 +231,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       }
     }
     this.createForces = function() {
-      if (this.collidable && !this.collision_trigger) {
+      if (this.collidable || this.collision_trigger) {
         elation.events.add(this.objects.dynamics, 'physics_collide', elation.bind(this, this.handleCollision));
       }
       this.updateRotationSpeed();
@@ -597,13 +597,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
             eac360: args.eac360,
+            vr180: args.vr180,
             hasalpha: args.hasalpha,
             auto_play: args.auto_play,
             type: args.type,
             format: args.format,
             hls: args.hls,
             preload: args.preload,
-            baseurl: this.baseurl
+            baseurl: this.baseurl,
+            proxy: args.proxy,
+            extratracks: args.extratracks,
           });
         } else if (args.video) {
           assetlist.push({
@@ -613,12 +616,15 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             loop: args.loop,
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
+            vr180: args.vr180,
             hasalpha: args.hasalpha,
             auto_play: args.auto_play,
             type: args.type,
             format: args.format,
             hls: args.hls,
-            baseurl: this.baseurl
+            baseurl: this.baseurl,
+            proxy: args.proxy,
+            extratracks: args.extratracks,
           });
         }
       } else if (type == 'sound') {
@@ -981,13 +987,13 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (other) {
         if (other.getProxyObject) {
           var proxy = other.getProxyObject();
-          //console.log('I collided', proxy, this);
+          //console.log('I collided', this.collision_trigger, other.collision_trigger, proxy, this);
 
-          if (this.collision_trigger || proxy.collision_trigger) {
+          if (this.collision_trigger || proxy.collision_trigger || other.collision_trigger) {
             this.dispatchEvent({type: 'trigger', data: { collision: ev.data, other: proxy }});
             ev.preventDefault();
             ev.stopPropagation();
-          } else if (this.collidable) {
+          } else if (this.collidable && other.collidable) {
             this.dispatchEvent({type: 'collision', data: { collision: ev.data, other: proxy }});
           } else {
             ev.preventDefault();
@@ -1033,7 +1039,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     }
     this.updateAnimation = function() {
       // Triggered whenever this.anim_id changes
-      if (this.anim_id) {
+      if (this.anim_id || !this.activeanimation) {
         this.setAnimation(this.anim_id);
       } else if (this.activeanimation) {
         this.stopAnimation();
@@ -1090,10 +1096,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (!event.target) {
         event.target = target || event.element;
       }
+/*
       var handlerfn = 'on' + event.type;
       if (handlerfn in this) {
         this.executeCallback(this[handlerfn], event);
       }
+*/
       // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
       let firedev = elation.events.fire(event);
       let returnValue = true;
