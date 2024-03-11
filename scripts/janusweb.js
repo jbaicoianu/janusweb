@@ -90,7 +90,7 @@ elation.require([
       this.engine.systems.controls.addContext('janus', {
         //'load_url': [ 'keyboard_tab', elation.bind(this, this.showLoadURL) ],
         'toggle_menu': [ 'keyboard_esc', elation.bind(this, this.toggleMenu) ],
-        'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
+        //'room_debug': [ 'keyboard_f6', elation.bind(this, this.showRoomDebug) ],
         'chat': [ 'keyboard_t', elation.bind(this, this.showChat) ],
         'bookmark': [ 'keyboard_ctrl_b', elation.bind(this, this.addBookmark) ],
         'mute': [ 'keyboard_ctrl_m', elation.bind(this, this.mute) ]
