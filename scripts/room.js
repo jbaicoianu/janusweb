@@ -151,6 +151,8 @@ elation.require([
         this.loadFromSource(this.source);
       }
       elation.events.add(this, 'thing_remove', elation.bind(this, this.onThingRemove));
+
+      document.addEventListener('visibilitychange', ev => this.handleVisibilityChange());
     }
     this.createChildren = function() {
       this.collidable = false;
@@ -2074,6 +2076,7 @@ elation.require([
           sync:          ['property', 'sync'],
           js_id:         ['property', 'roomid'],
           pickable:      ['property', 'pickable'],
+          audionodes:    ['property', 'audionodes'],
 
           skybox:         ['property', 'skybox'],
           skybox_intensity: ['property', 'skybox_intensity'],
@@ -2802,7 +2805,7 @@ console.log('dispatch to parent', event, this, event.target);
             ctx = this.audionodes.listener.context;
         //gain.gain.setValueAtTime(0, ctx.currentTime);
         gain.gain.cancelScheduledValues(ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(gain.gain.value, ctx.currentTime);
         gain.gain.linearRampToValueAtTime(value, ctx.currentTime + time);
       }
     }
@@ -2933,6 +2936,19 @@ console.log('unknown material', mat);
     }
     this.updatePointerLock = function() {
       this.engine.systems.controls.pointerLockEnabled = this.pointerlock;
+    }
+    this.handleVisibilityChange = function(ev) {
+      if (this.audionodes) {
+        if (document.visibilityState == 'visible') {
+          if (this.audioFadeTimer) clearTimeout(this.audioFadeTimer);
+          if (this.audionodes.gain.gain.value < 1) {
+            this.fadeAudioIn(1);
+          }
+        } else {
+          if (this.audioFadeTimer) clearTimeout(this.audioFadeTimer);
+          this.audioFadeTimer = setTimeout(() => this.fadeAudioOut(10), 10000);
+        }
+      }
     }
   }, elation.engine.things.generic);
 });
