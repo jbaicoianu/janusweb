@@ -51,6 +51,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.view.container, 'touchstart', elation.bind(this, this.handleTouchStart));
       elation.events.add(this.engine.client.view.container, 'touchmove', elation.bind(this, this.handleTouchMove));
       elation.events.add(this.engine.client.view.container, 'touchend', elation.bind(this, this.handleTouchEnd));
+      elation.events.add(this.engine.client.view.container, 'touchcancel', elation.bind(this, this.handleTouchEnd));
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'toggle_view': ['keyboard_nomod_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
@@ -989,8 +990,9 @@ document.body.dispatchEvent(click);
         }
       }
       if (!document.fullscreenElement) {
-        //this.engine.client.toggleFullscreen({data: 1});
+        this.engine.client.toggleFullscreen({data: 1});
       }
+      this.cancelTouchMovement(ev);
     }
     this.handleTouchMove = function(ev) {
       if (ev.defaultPrevented) return;
@@ -1026,22 +1028,22 @@ document.body.dispatchEvent(click);
           this.touchcache.positions[touch.identifier][0] = touch.clientX;
           this.touchcache.positions[touch.identifier][1] = touch.clientY;
         }
-
       }
+      this.cancelTouchMovement(ev);
     }
     this.handleTouchEnd = function(ev) {
-      for (let i = 0; i < ev.changedTouches.length; i++) {
-        let touch = ev.changedTouches[i];
+      this.cancelTouchMovement(ev);
+    }
+    this.cancelTouchMovement = function(ev) {
+      for (let i = 0; i < ev.touches.length; i++) {
+        let touch = ev.touches[i];
         if (touch.identifier === this.touchindex[0]) {
-          this.controlstate.move_right = 0;
-          this.controlstate.move_forward = 0;
-          this.touchindex[0] = null;
-        } else if (touch.identifier === this.touchindex[1]) {
-          this.controlstate.turn_right = 0;
-          this.controlstate.look_down = 0;
-          this.touchindex[1] = null;
+          return;
         }
       }
+      this.controlstate.move_right = 0;
+      this.controlstate.move_forward = 0;
+      this.touchindex[0] = null;
     }
     this.updatePartyMode = function(key, value) {
       if (typeof value != 'undefined') {
