@@ -26,7 +26,7 @@ elation.config.set('share.targets.yahoo.clientid', '374523350201-p566ctvssq49sa4
 elation.config.set('share.targets.facebook.clientid', '1197654320349894');
 elation.config.set('share.targets.file.enabled', true);
 
-elation.config.set('serviceworker.enabled', true);
+elation.config.set('serviceworker.enabled', false);
 
 // FIXME - hack for dev, we should support role-based config
 if (typeof document != 'undefined' && document.location.origin == 'https://bai.dev.supcrit.com') {
