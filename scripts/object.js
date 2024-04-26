@@ -195,7 +195,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         if (this.modelasset) {
           this.initAnimations(this.modelasset.animations);
           if (this.animations && this.anim_id && this.animations[this.anim_id]) {
-            console.log('start animation', this);
+            //console.log('start animation', this);
             this.animations[this.anim_id].play();
             this.activeanimation = this.animations[this.anim_id];
           }
