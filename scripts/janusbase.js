@@ -918,6 +918,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.frameupdates['zdir'] = false;
       this.frameupdates['rotation'] = false;
       this.frameupdates['rotation_dir'] = false;
+      this.frameupdates['rotation_order'] = false;
+      this.frameupdates['fwd'] = false;
 
       for (var k in this.lastframevalues) {
         this.lastframevalues[k].copy(this.properties[k]);

@@ -2,7 +2,6 @@ elation.require(['engine.things.label'], function() {
   elation.component.add('engine.things.janustext', function() {
     this.postinit = function() {
       elation.engine.things.janustext.extendclass.postinit.call(this);
-      this.frameupdates = [];
       this.textcache = this.engine.getScratchObject('textcache');
       this.defineProperties({
         'text':            { type: 'string', default: '', refreshGeometry: true },
@@ -30,7 +29,6 @@ elation.require(['engine.things.label'], function() {
         'wireframe':       { type: 'boolean', default: false, set: this.updateMaterial, comment: 'Wireframe rendering' },
       });
       this.emptygeometry = new THREE.BufferGeometry();
-      elation.events.add(this.engine, 'engine_frame', elation.bind(this, this.handleFrameUpdates));
     }
     this.createObject3D = function() {
       this.objects['3d'] = new THREE.Object3D();
