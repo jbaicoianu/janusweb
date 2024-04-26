@@ -867,6 +867,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                 m.emissive.copy(this.emissive)
               }
               m.emissiveIntensity = this.emissive_intensity;
+            } else {
+              if (textureEmissive) {
+                m.map = textureEmissive;
+                textureEmissive.encoding = THREE.sRGBEncoding;
+                m.color = new THREE.Color(0xffffff);
+              }
             }
             if (textureAlpha) {
               m.alphaMap = textureAlpha;
@@ -1028,6 +1034,11 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
           }
           if (oldmat.emissiveIntensity !== undefined) m.emissiveIntensity = oldmat.emissiveIntensity;
+        } else {
+          if (oldmat.emissiveMap && !oldmat.map) {
+            m.map = oldmat.emissiveMap;
+            oldmat.color.setRGB(1,1,1);
+          }
         }
 
         m.lightMap = oldmat.lightMap;
