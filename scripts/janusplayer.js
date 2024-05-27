@@ -925,9 +925,9 @@ document.body.dispatchEvent(click);
           this.setCollider('sphere', {
             radius: this.collision_radius,
           });
-          this.pickable = false;
           this.collidable = false;
 */
+          this.pickable = false;
           this.setCollider('capsule', {
             radius: this.collision_radius,
             length: 1,
