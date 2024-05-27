@@ -828,10 +828,12 @@ return;
       let headaction = this.headaction || this._target.headaction;
       if (headaction && headaction._clip.tracks[0]) {
         let track = headaction._clip.tracks[0];
-        track.values[0] = orientation.x * (invert ? -1 : 1);
-        track.values[1] = orientation.y * (invert ? -1 : 1);
-        track.values[2] = orientation.z * (invert ? -1 : 1);
-        track.values[3] = orientation.w; // * (invert ? -1 : 1);
+        if (track) {
+          track.values[0] = orientation.x * (invert ? -1 : 1);
+          track.values[1] = orientation.y * (invert ? -1 : 1);
+          track.values[2] = orientation.z * (invert ? -1 : 1);
+          track.values[3] = orientation.w; // * (invert ? -1 : 1);
+        }
       }
     }
     this.blink = function() {
