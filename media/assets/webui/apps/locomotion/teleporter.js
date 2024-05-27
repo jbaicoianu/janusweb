@@ -167,8 +167,14 @@ janus.registerElement('locomotion_teleporter', {
         speed = dir.length();
         dir.divideScalar(speed);
         let hits = room.raycast(dir, p0, null, speed);
-        if (hits.length > 0) {
-          let hit = hits[0];
+        let hit = false;
+        for (let j = 0; j < hits.length; j++) {
+          if (hits[j].object !== player) {
+            hit = hits[j];
+            break;
+          }
+        }
+        if (hit) {
           p1.copy(hit.point);
           if (hit.distance < 200) {
             this.pos = player.worldToLocal(hit.point);
