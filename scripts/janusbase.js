@@ -178,7 +178,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               collider.traverse(n => {
                 // Ignore collider if it's too high-poly
                 if (n instanceof THREE.Mesh && n.geometry instanceof THREE.BufferGeometry) {
-                  if (n.geometry.attributes.position.count > 65536) {
+                  if (n.geometry.attributes.position.count > 65536 * 3) {
                     console.warn('Collider mesh rejected, too many polys!', collision_id, this, n, collider);
                     elation.events.fire({type: 'thing_collider_rejected', element: this, data: {root: collider, mesh: n}});
                     remove.push(n);
