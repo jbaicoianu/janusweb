@@ -686,7 +686,7 @@ elation.require([
           //this.parseerror = false;
           elation.events.fire({element: this, type: 'room_load_processed'});
           elation.events.fire({type: 'janus_room_load', element: this});
-          if (this.pendingassets.length == 0) {
+          if (this.pendingassets.length == 0 && !this.completed) {
             setTimeout(() => elation.events.fire({element: this, type: 'room_load_complete'}), 0);
           }
         } catch (e) {
@@ -1760,10 +1760,12 @@ elation.require([
           this.pendingassets.splice(idx, 1);
           if (this.pendingassets.length == 0) {
             this.applyingEdits = false;
-            setTimeout(elation.bind(this, function() {
-              this.completed = true;
-              elation.events.fire({element: this, type: 'room_load_complete'});
-            }), 0);
+            if (!this.completed) {
+              setTimeout(elation.bind(this, function() {
+                  this.completed = true;
+                  elation.events.fire({element: this, type: 'room_load_complete'});
+              }), 0);
+            }
           }
         }
       }
