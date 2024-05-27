@@ -767,8 +767,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           dir = new THREE.Vector3(),
           up = new THREE.Vector3();
       return function(ev) {
-        let parent = this.properties.parent;
-        let billboard = this.properties.billboard;
+        const parent = this.properties.parent;
+        const billboard = this.properties.billboard;
         if (billboard && parent) {
           //player.camera.localToWorld(playerpos.set(0,0,0));
           //this.localToWorld(objpos.set(0,0,0));
@@ -796,14 +796,11 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           */
           // TODO - Simple trig makes this much faster, but to get the same functionality as before we'll need to implement each dimension
           //        For now, we only support billboarding with the Y axis locked (eg, doom sprites)
-          let views = this.engine.systems.render.views;
-          let camera = player.camera;
-          if (views.xr && views.xr.enabled && views.xr.camera && views.xr.camera.userData.thing) {
-            camera = views.xr.camera.userData.thing;
-          }
-          parent.worldToLocal(camera.getWorldPosition(playerpos)).sub(this.position);
-          dir.copy(playerpos).normalize();
           if (billboard == 'y' || billboard === true || billboard == 'true') {
+            const views = this.engine.systems.render.views;
+            const camera = (views.xr && views.xr.enabled && views.xr.camera && views.xr.camera.userData.thing ? views.xr.camera.userData.thing : player.camera)
+            parent.worldToLocal(camera.getWorldPosition(playerpos)).sub(this.position);
+            dir.copy(playerpos).normalize();
             this.rotation.radians.set(0, Math.atan2(dir.x, dir.z), 0);
             this.frameupdates['rotation'] = true;
           }
@@ -838,7 +835,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
 
         this.resetFrameUpdates();
         this.dispatchEvent({type: 'update', data: ev.data, bubbles: false});
-        var proxy = this.getProxyObject();
+        const proxy = this.getProxyObject();
         if (this.created && typeof proxy.update == 'function') {
           proxy.update(ev.data);
         }
