@@ -485,8 +485,21 @@ elation.require([
         var hashurl = hashargs['janus.url'];
         if (hashurl && hashurl != this.properties.url && !this.loading) {
           this.setActiveRoom(hashurl, this.currentroom.url, true);
-        } else if (!hashurl && this.properties.url != this.homepage && !document.location.hash) {
+        } else if (!hashurl && this.properties.url != this.homepage) { // && !document.location.hash) {
           this.setActiveRoom(this.homepage);
+        }
+        if (document.location.hash && document.location.hash.substr(1) in room.objects) {
+          let jumpto = room.objects[document.location.hash.substr(1)];
+          if (typeof jumpto.activate == 'function') {
+            jumpto.activate();
+          } else if (typeof jumpto.navigate == 'function') {
+            jumpto.navigate();
+          } else {
+            player.pos = jumpto.pos;
+            player.xdir.copy(jumpto.xdir);
+            player.ydir.copy(jumpto.ydir);
+            player.zdir.copy(jumpto.zdir);
+          }
         }
       }
     }
