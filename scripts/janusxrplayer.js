@@ -845,7 +845,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           visible: false
         });
         this.tmpobj = new THREE.Object3D();
+        this.tmpquat = new THREE.Quaternion();
         this.jointmaterial = new THREE.MeshPhysicalMaterial({color: 0xccffcc, metalness: 1, roughness: .5, emissive: 0xccffcc, transparent: true});
+        this.tmpobj.matrixAutoUpdate = false;
         this.joints = new THREE.InstancedMesh(new THREE.SphereGeometry(1), this.jointmaterial, 26);
         this.joints.frustumCulled = false;
         this.joints.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -871,7 +873,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           return;
         }
 
-        let tmpobj = this.tmpobj,
+        let tmpobj = this.tmpobj, tmpquat = this.tmpquat,
             i = 0;
         let poses = this.jointposes;
 /*
@@ -895,30 +897,36 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           }
         }
 */
-        for ( const inputjoint of this.hand.values() ) {
+        const handvalues = this.hand.values(), jointposes = this.jointposes;
+        for ( const inputjoint of handvalues ) {
           const jointpose = xrFrame.getJointPose( inputjoint, xrReferenceFrame );
           const jointname = inputjoint.jointName;
           if (jointpose && jointpose.transform) {
             let radius = Math.max(.002, jointpose.radius); 
+/*
             tmpobj.position.copy(jointpose.transform.position);
             tmpobj.quaternion.copy(jointpose.transform.orientation);
             tmpobj.scale.set(radius, radius, radius);
             tmpobj.updateMatrix();
+*/
+            tmpquat.copy(jointpose.transform.orientation);
+            if (tmpobj.scale.x != radius) tmpobj.scale.set(radius, radius, radius);
+            tmpobj.matrix.compose(jointpose.transform.position, tmpquat, tmpobj.scale)
             this.joints.setMatrixAt(i, tmpobj.matrix);
             //FIVARSlog('xr.debug', 'update joint: ' + i + ', ' + jointname + ', ' + tmpobj.matrix.elements.join(', '));
           }
           i++;
-          this.jointposes[jointname] = jointpose;
+          jointposes[jointname] = jointpose;
         }
         this.joints.instanceMatrix.needsUpdate = true;
         //this.joints.computeBoundingSphere();
 
-        if (this.jointposes['wrist']) this.localToWorld(this.handpos.copy(this.jointposes['wrist'].transform.position));
-        if (this.jointposes['thumb-tip']) this.localToWorld(this.p0.copy(this.jointposes['thumb-tip'].transform.position));
-        if (this.jointposes['index-finger-tip']) this.localToWorld(this.p1.copy(this.jointposes['index-finger-tip'].transform.position));
-        if (this.jointposes['middle-finger-tip']) this.localToWorld(this.p2.copy(this.jointposes['middle-finger-tip'].transform.position));
-        if (this.jointposes['ring-finger-tip']) this.localToWorld(this.p3.copy(this.jointposes['ring-finger-tip'].transform.position));
-        if (this.jointposes['pinky-finger-tip']) this.localToWorld(this.p4.copy(this.jointposes['pinky-finger-tip'].transform.position));
+        if (jointposes['wrist']) this.localToWorld(this.handpos.copy(this.jointposes['wrist'].transform.position));
+        if (jointposes['thumb-tip']) this.localToWorld(this.p0.copy(this.jointposes['thumb-tip'].transform.position));
+        if (jointposes['index-finger-tip']) this.localToWorld(this.p1.copy(this.jointposes['index-finger-tip'].transform.position));
+        if (jointposes['middle-finger-tip']) this.localToWorld(this.p2.copy(this.jointposes['middle-finger-tip'].transform.position));
+        if (jointposes['ring-finger-tip']) this.localToWorld(this.p3.copy(this.jointposes['ring-finger-tip'].transform.position));
+        if (jointposes['pinky-finger-tip']) this.localToWorld(this.p4.copy(this.jointposes['pinky-finger-tip'].transform.position));
         this.isactive = true;
         this.jointmaterial.opacity = player.cursor_opacity;
       }
