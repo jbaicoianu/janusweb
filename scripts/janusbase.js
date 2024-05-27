@@ -564,7 +564,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             hasalpha: args.hasalpha,
             maxsize: args.maxsize,
             preload: args.preload,
-            baseurl: this.baseurl
+            baseurl: this.baseurl,
+            srgb: args.srgb
           };
           assetlist.push(assetargs);
         } else if (args.canvas) {
