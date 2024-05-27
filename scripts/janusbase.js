@@ -1096,12 +1096,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       if (!event.target) {
         event.target = target || event.element;
       }
-/*
+
       var handlerfn = 'on' + event.type;
       if (handlerfn in this) {
         this.executeCallback(this[handlerfn], event);
       }
-*/
+
       // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
       let firedev = elation.events.fire(event);
       let returnValue = true;
