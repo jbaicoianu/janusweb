@@ -570,7 +570,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       create() {
         this.lasercolor = V(1,0,0);
         this.laser = this.createObject('linesegments', {
-          positions: [V(0,0,0), V(0,0,-.5)],
+          positions: [V(0,0,0), V(0,0,-5)],
           opacity: .8,
           col: this.lasercolor,
           visible: false,
@@ -580,7 +580,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           id: 'cylinder',
           col: 'white',
           lighting: false,
-          scale: V(.005, .5, .005),
+          scale: V(.005, 5, .005),
           rotation: V(-90,0,0),
           opacity: .2,
         });
@@ -634,6 +634,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.updateColor();
           this.cursor.image_id = 'cursor_dot_active';
           this.cursor.opacity = player.cursor_opacity;
+          this.bonk.col.setRGB(.5,1,.5);
           this.bonk.opacity = 0.2 * player.cursor_opacity;
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
 
@@ -650,6 +651,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.laser.updateColor();
           this.cursor.image_id = 'cursor_dot_inactive';
           this.cursor.opacity = player.cursor_opacity / 2;
+          this.bonk.col.setRGB(1,1,1);
           //this.laser.visible = false; // FIXME - hack to disable laser without breaking things
         }
       },
