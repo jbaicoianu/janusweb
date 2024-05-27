@@ -21,6 +21,7 @@ elation.require(['janusweb.janusbase'], function() {
         'mirror_recursion': { type: 'integer', default: 2, set: this.updateGeometry },
         'mirror_texturesize': { type: 'integer', default: 1024, set: this.updateGeometry },
         'external': { type: 'boolean', default: false },
+        'preload': { type: 'boolean', default: false },
         'target': { type: 'string', default: '' },
         'round': { type: 'boolean', default: false },
         'cooldown': { type: 'float', default: 1000 },
@@ -289,7 +290,12 @@ elation.require(['janusweb.janusbase'], function() {
               this.closePortal();
             }
           } else if (this.url) {
-            this.properties.janus.setActiveRoom(this.url, room.url);
+            if (this.preload) {
+              let newroom = this.properties.janus.preload(this.url);
+              elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
+            } else {
+              this.properties.janus.setActiveRoom(this.url, room.url);
+            }
           }
         }
         var gamepads = this.engine.systems.controls.gamepads;
@@ -320,6 +326,7 @@ elation.require(['janusweb.janusbase'], function() {
           shader_id: ['property', 'shader_id'],
           size: ['property', 'size'],
           round: ['property', 'round'],
+          preload: ['property', 'preload'],
         };
       }
       return this._proxyobject;
