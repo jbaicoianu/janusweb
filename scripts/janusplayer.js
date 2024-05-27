@@ -557,8 +557,34 @@ document.body.dispatchEvent(click);
       }
     }
     this.start = function() {
+      if (!this.started) {
+        if (!this.static) {
+          elation.events.add(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        } else {
+          this.handleFrameUpdates({data: {dt: 0}});
+        }
+        this.started = true;
+      }
+      for (var k in this.children) {
+        if (this.children[k].start) {
+          this.children[k].start();
+        }
+      }
+      this.dispatchEvent({type: 'start', bubbles: false});
     }
     this.stop = function() {
+      for (var k in this.children) {
+        if (this.children[k].stop) {
+          this.children[k].stop();
+        }
+      }
+      if (this.started) {
+        if (!this.static) {
+          elation.events.remove(this.room, 'janusweb_script_frame_end', this.handleFrameUpdates);
+        }
+        this.started = false;
+        this.dispatchEvent({type: 'stop', bubbles: false});
+      }
     }
     this.getProxyObject = function() {
       if (!this._proxyobject) {
