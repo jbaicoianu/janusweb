@@ -1886,6 +1886,10 @@ elation.require([
         }
       }
 */
+      // FIXME - hack to disable XR rendering while room is still loading. this can be handled better.
+      if (this.engine.systems.render.views.xr && this.engine.systems.render.renderer.xr.isPresenting) {
+        this.engine.systems.render.views.xr.enabled = this.completed;
+      }
       this.janus.scriptframeargs[0] = ev.data.delta * 1000;
       elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
       elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
