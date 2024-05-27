@@ -133,6 +133,17 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           this.startXR();
         });
       }
+      window.addEventListener('load', ev => {
+        window.scrollTo(0, 1);
+      });
+      window.addEventListener('touchend', ev => {
+        // FIXME - useragent hack isn't the best way of handling this, but it beats getting stuck in non-immersive fullscreen mode while in a VR headset
+        if (navigator.userAgent.indexOf('OculusBrowser') != -1) {
+          this.startXR();
+        } else if (!this.view.isFullscreen()) {
+          this.toggleFullscreen({value: 1});
+        }
+      });
     }
     initButtons() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
