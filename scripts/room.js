@@ -5,6 +5,18 @@ elation.require([
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
     'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs'
   ], function() {
+  let roomTranslators = false;
+  function initRoomTranslators() {
+    roomTranslators = {
+      '^janus-vfs:': elation.janusweb.translators.janusvfs({janus: janus}),
+      '^about:blank$': elation.janusweb.translators.blank({janus: janus}),
+      '^bookmarks$': elation.janusweb.translators.bookmarks({janus: janus}),
+      '^dat:': elation.janusweb.translators.dat({janus: janus}),
+      '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
+      '^error$': elation.janusweb.translators.error({janus: janus}),
+      '^default$': elation.janusweb.translators.default({janus: janus})
+    };
+  }
   elation.component.add('engine.things.janusroom', function() {
     this.postinit = function() {
       elation.engine.things.janusroom.extendclass.postinit.call(this);
@@ -82,15 +94,11 @@ elation.require([
         'sync': { type: 'boolean', default: false },
         'pointerlock': { type: 'boolean', default: true, set: this.updatePointerLock },
       });
-      this.translators = {
-        '^janus-vfs:': elation.janusweb.translators.janusvfs({janus: this.janus}),
-        '^about:blank$': elation.janusweb.translators.blank({janus: this.janus}),
-        '^bookmarks$': elation.janusweb.translators.bookmarks({janus: this.janus}),
-        '^dat:': elation.janusweb.translators.dat({janus: this.janus}),
-        '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: this.janus}),
-        '^error$': elation.janusweb.translators.error({janus: this.janus}),
-        '^default$': elation.janusweb.translators.default({janus: this.janus})
-      };
+
+      if (!roomTranslators) {
+        initRoomTranslators();
+      }
+
       this.spawnpoint = new THREE.Object3D();
       this.roomsrc = '';
       this.changes = {};
@@ -626,7 +634,7 @@ elation.require([
             this.loadFromSource(data);
           }), 
           failurecallback: elation.bind(this, function(xhr) {
-            var translator = this.translators['^error$'];
+            var translator = roomTranslators['^error$'];
             translator.exec({janus: this.properties.janus, room: this, error: xhr.status || 404})
                       .then(elation.bind(this, function(objs) {
                         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
@@ -1030,11 +1038,11 @@ elation.require([
       });
     }
     this.getTranslator = function(url) {
-      var keys = Object.keys(this.translators);
+      var keys = Object.keys(roomTranslators);
       for (var i = 0; i < keys.length; i++) {
         var re = new RegExp(keys[i]);
         if (url.match(re)) {
-          return this.translators[keys[i]];
+          return roomTranslators[keys[i]];
         }
       }
       // TODO - implement default page handling as translator
