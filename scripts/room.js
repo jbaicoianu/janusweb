@@ -221,13 +221,13 @@ elation.require([
       }
     }
     this.setActive = function() {
+      this.active = true;
       this.setSkybox();
       this.setFog();
       this.updateBloom();
       this.updateToneMapping();
       this.setNearFar();
       this.setPlayerPosition();
-      this.active = true;
       elation.events.fire({element: this, type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
@@ -485,13 +485,17 @@ elation.require([
       }
     }
     this.updateToneMapping = function() {
-      this.engine.systems.render.renderer.toneMapping = this.toneMappingTypes[this.tonemapping_type] || 0;
-      this.engine.systems.render.renderer.toneMappingExposure = this.tonemapping_exposure;
-      this.refresh();
+      if (this.active) {
+        this.engine.systems.render.renderer.toneMapping = this.toneMappingTypes[this.tonemapping_type] || 0;
+        this.engine.systems.render.renderer.toneMappingExposure = this.tonemapping_exposure;
+        this.refresh();
+      }
     }
     this.setNearFar = function() {
-      this.engine.client.player.camera.camera.near = this.properties.near_dist;
-      this.engine.client.player.camera.camera.far = this.properties.far_dist;
+      if (this.active) {
+        this.engine.client.player.camera.camera.near = this.properties.near_dist;
+        this.engine.client.player.camera.camera.far = this.properties.far_dist;
+      }
     }
     this.showDebug = function() {
       this.engine.client.player.disable();
