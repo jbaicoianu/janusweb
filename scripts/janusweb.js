@@ -315,7 +315,7 @@ elation.require([
         baseurl: baseurl,
         corsproxy: this.corsproxy,
         deferload: true
-      });
+      }, makeactive && typeof makeactive != 'undefined');
 
       if (this.currentroom && !stripreferrer) {
         room.referrer = this.currentroom.url;
@@ -356,7 +356,7 @@ elation.require([
           room = this.rooms[roomid];
         }
       } else if (url.type == 'janusroom') {
-        room = url;
+        room = url._target || url;
         url = room.url;
       }
       var player = this.engine.client.player;
@@ -424,7 +424,7 @@ elation.require([
         janus: this,
         corsproxy: this.corsproxy,
         deferload: true
-      });
+      }, !makeactive);
 
       this.rooms[newroom.roomid] = newroom;
       //console.log('made new room', url, room);
