@@ -21,6 +21,7 @@ janus.registerElement('xrmenu', {
     this.panels = {};
 
     let xrmenu = janus.ui.apps.default.apps.xrmenu;
+    if (!xrmenu) return;
     let asseturl = xrmenu.resolveFullURL('./xrmenu-assets.json');
     fetch(asseturl).then(res => res.json()).then(assetlist => {
       this.assetpack = elation.engine.assets.loadJSON(assetlist, xrmenu.resolveFullURL('./'));
@@ -186,28 +187,36 @@ janus.registerElement('xrmenu-popup', {
     this.shadowdom = container.attachShadow({mode: 'open'});
     //container.appendChild(element);
 
-setTimeout(() => {
-console.log('LOADED????', janus.ui, janus.ui.apps.default);
-    this.initShadowStylesheets();
-}, 0);
-    this.shadowdom.appendChild(element);
+    setTimeout(() => {
+      this.initShadowStylesheets();
+    }, 0);
+    //this.shadowdom.appendChild(element);
+    let a = document.createElement('html');
+    let b = document.createElement('body');
+    b.className = 'dark janusweb';
+    a.appendChild(b);
+    this.shadowdom.appendChild(a);
+    b.appendChild(element);
     document.body.appendChild(container);
 
+    elation.events.add(element, 'styleupdate', ev => {
+      this.initShadowStylesheets();
+    });
 
-container.style.position = 'absolute';
-container.style.top = '0';
-container.style.left = '0';
-container.style.zIndex = -1000;
-container.style.width = this.width + 'px';
-container.style.height = this.height + 'px';
-container.style.overflow = 'auto';
-container.style.opacity = 0;
-//container.style.transform = 'translateX(-40000px)';
-//container.style.border = '1px solid red';
+    container.style.position = 'absolute';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.zIndex = -1000;
+    container.style.width = this.width + 'px';
+    container.style.height = this.height + 'px';
+    container.style.overflow = 'hidden';
+    container.style.opacity = 0;
+    //container.style.transform = 'translateX(-40000px)';
+    //container.style.border = '1px solid red';
 
-this.elementcontainer = container;
+    this.elementcontainer = container;
 
-  this.initElementCanvas();
+    this.initElementCanvas();
 
     this.plane = this.createObject('object', {
       id: 'plane',
@@ -249,6 +258,7 @@ canvas.style.border = '1px solid red';
     this.loadNewAsset('image', {
       id: 'xrmenu-element-canvas',
       canvas: canvas,
+      transparent: true,
     });
     this.plane.image_id = 'xrmenu-element-canvas';
     this.canvas = canvas;
@@ -264,12 +274,23 @@ canvas.style.border = '1px solid red';
     let promises = [];
     for (let i = 0; i < document.styleSheets.length; i++) {
       //promises.push(new Promise(accept => {
-        let styleel = document.createElement('link');
-        styleel.rel = 'stylesheet';
-        styleel.href = elation.engine.assets.corsproxy + document.styleSheets[i].href;
-        //styleel.onload = accept;
-        this.shadowdom.appendChild(styleel);
-console.log('add link', document.styleSheets[i].href);
+        if (document.styleSheets[i].href ) {
+          // external stylesheet
+          let styleel = document.createElement('link');
+          styleel.rel = 'stylesheet';
+          styleel.href = elation.engine.assets.corsproxy + document.styleSheets[i].href;
+          this.shadowdom.appendChild(styleel);
+        } else if (document.styleSheets[i].cssRules.length > 0) {
+          // inline <style>  definition
+          let txt = '';
+          let sheet = document.styleSheets[i];
+          for (let i = 0; i < sheet.cssRules.length; i++) {
+            txt += sheet.cssRules[i].cssText + '\n';
+          }
+          let styleel = document.createElement('style');
+          styleel.appendChild(document.createTextNode(txt));
+          this.shadowdom.appendChild(styleel);
+        }
       //}));
     }
 /*
@@ -336,7 +357,6 @@ setTimeout(() => {
             clientY: mousexy[1],
             view: window,
           });
-console.log(mouseover);
           target.dispatchEvent(mouseover);
         }
       }
