@@ -2727,12 +2727,13 @@ elation.require([
     }
     this.dispatchEvent = function(event, target) {
       let firedev = elation.events.fire({element: this, target: target || event.target, event: event});
-/*
       if (!event.element) event.element = target || this;
       var handlerfn = 'on' + event.type;
-      if (this[handlerfn]) {
-        this.executeCallback(this[handlerfn], event);
+      let proxy = this.getProxyObject();
+      if (proxy[handlerfn] && typeof proxy[handlerfn] == 'function') {
+        proxy.executeCallback(proxy[handlerfn], event);
       }
+/*
       let firedev = elation.events.fire(event);
       let returnValue = true;
       firedev.forEach(e => returnValue &= e.returnValue);
@@ -2741,6 +2742,17 @@ console.log('dispatch to parent', event, this, event.target);
         this.parent.dispatchEvent(event, event.target);
       }
 */
+    }
+    this.executeCallback = function(callback, args) {
+      if (callback instanceof Function) {
+        callback(args);
+      } else if (elation.utils.isString(callback)) {
+        (function(fn) {
+          var event = args;
+          return eval(callback);
+        }).call(this.getProxyObject(), callback);
+
+      }
     }
     this.handleDelayedSound = function(ev) {
       // TODO - implement some visual indicator that this room is trying to play sound but was temporarily blocked
