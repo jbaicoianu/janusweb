@@ -191,7 +191,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                         emissive: 0x444400,
                         alphaTest: .01,
                         depthTest: false,
-                        depthWrite: false
+                        depthWrite: false,
+                        side: this.cull_face == 'none' ? THREE.DoubleSide : n.material.side,
                       });
                     }
                     n.userData.thing = this;
