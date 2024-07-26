@@ -103,7 +103,7 @@ elation.require(['janusweb.external.JanusClientConnection', 'janusweb.external.J
     }
     this.getServerForRoom = function(room) {
       var serverurl = this.getServerURLForRoom(room, true);
-      if (serverurl && !this.servers[serverurl]) {
+      if (serverurl && !this.servers[serverurl] && !room.private) {
         var server = new JanusClientConnection({
           host: serverurl,
           userId: this.janusweb.userId,
