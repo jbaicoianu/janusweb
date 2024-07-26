@@ -1018,10 +1018,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.opacity = (typeof oldmat.opacity != 'undefined' ? parseFloat(oldmat.opacity) : 1) * this.opacity;
         m.alphaTest = this.alphatest;
         m.aoMap = oldmat.aoMap;
-        m.normalMap = oldmat.normalMap;
-        m.bumpMap = oldmat.bumpMap;
-
         if (!(m instanceof THREE.MeshBasicMaterial)) {
+          m.normalMap = oldmat.normalMap;
+          m.bumpMap = oldmat.bumpMap;
+
           if (oldmat.emissiveMap) {
             m.emissiveMap = oldmat.emissiveMap;
             m.emissive.setRGB(1,1,1);
