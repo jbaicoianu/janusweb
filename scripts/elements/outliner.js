@@ -69,6 +69,10 @@ elation.require(['janusweb.janusbase'], function() {
     },
     select(object) {
       this.selected = object;
+      if (!object) {
+        this.deselect();
+        return;
+      }
       let objmeshes = [], skinnedmeshes = [];
       object.traverseObjects(n => {
         if (n instanceof THREE.Mesh && n.material !== this.outlinematerial) {
