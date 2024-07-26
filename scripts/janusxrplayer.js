@@ -313,7 +313,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             let visualResponse = component.visualResponses[k];
             // Find the topmost node in the visualization
             const valueNode = motionControllerRoot.getObjectByName(visualResponse.valueNodeName);
-
+            if (!valueNode) continue;
             // Calculate the new properties based on the weight supplied
             if (visualResponse.valueNodeProperty === 'visibility') {
               valueNode.visible = visualResponse.value;
