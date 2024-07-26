@@ -336,8 +336,8 @@ JanusClientConnection.prototype.connect = function() {
   this._websocket.onclose = function() {
     this.status = 0;
     this.dispatchEvent({type: 'disconnect'});
-    if (this.pendingReconnect) {
-      this.connect();
+    if (!this.pendingReconnect) {
+      this.reconnect();
     }
   }.bind(this);
 
@@ -346,10 +346,10 @@ JanusClientConnection.prototype.connect = function() {
 JanusClientConnection.prototype.reconnect = function(force) {
   var now = new Date().getTime();
   if (force || this.lastattempt + this.reconnectdelay <= now) {
+    this.pendingReconnect = true;
     if (this._websocket.readyState == this._websocket.OPEN) {
       console.log('Socket already connected, disconnecting');
       this.disconnect();
-      this.pendingReconnect = true;
     } else {
       console.log('Reconnecting...');
       this.connect();
@@ -392,12 +392,18 @@ JanusClientConnection.prototype.setUserId = function(userId) {
 };
 
 JanusClientConnection.prototype.send = function(msg) {
-  try {
-    this._websocket.send(JSON.stringify(msg) + '\r\n');
-  } catch (e) {
+  if (this._websocket.readyState == 3) {
     this.msgQueue.push(msg);
+    if (!this.pendingReconnect) {
+      this.reconnect();
+    }
+  } else {
+    try {
+      this._websocket.send(JSON.stringify(msg) + '\r\n');
+    } catch (e) {
+      this.msgQueue.push(msg);
+    }
   }
-  //this.reconnect();
 };
 
 JanusClientConnection.prototype.onMessage = function(msg) {
