@@ -393,7 +393,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         sourcecontainer.traverse(n => { /*console.log(' - ', n); */ if (n instanceof THREE.SkinnedMesh && n.skeleton) sourcemesh = n; });
       }
       this.objects['3d'].traverse(n => { if (n instanceof THREE.SkinnedMesh && n.skeleton) destmesh = n; });
-      //console.log('RETARGET ANI*MATION', clip, sourcemesh, destmesh, sourcecontainer);
       let remove = [];
       if (this.body && this.body.modelasset && this.body.modelasset.vrm) {
         let vrm = this.body.modelasset.vrm;
@@ -432,7 +431,6 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           let [name, property] = track.name.split('.');
           let srcbone = sourcemesh.skeleton.getBoneByName(name);
           let dstbone = destmesh.skeleton.getBoneByName(name);
-          //console.log(' - fix track', name, property, track, srcbone, dstbone);
           if (dstbone) {
             let scale = srcbone.position.length() / dstbone.position.length();
             if (property == 'position') {
@@ -445,6 +443,41 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           } else {
             //console.log('missing bone!', srcbone, track);
             remove.push(track);
+          }
+        });
+      } else {
+        let armature = sourcecontainer.getObjectByName('Armature');
+        newclip.tracks.forEach(track => {
+          track.name = track.name.replace('mixamorig', '');
+          let p = track.name.split('.');
+          if (p[1] == 'position') {
+            for (let i = 0; i < track.values.length / 3; i++) {
+              track.values[i * 3] *= armature.scale.x;
+              track.values[i * 3 + 1] *= armature.scale.y;
+              track.values[i * 3 + 2] *= armature.scale.z;
+            }
+          }
+          if (p[0] == 'Hips') {
+            if (p[1] == 'position') {
+              let v = new THREE.Vector3();
+              for (let i = 0; i < track.values.length / 3; i++) {
+                v.set(track.values[i * 3], track.values[i * 3 + 1], track.values[i * 3 + 2]).applyQuaternion(armature.quaternion);
+                //console.log('position rotation', v, [track.values[i * 3], track.values[i * 3 + 1], track.values[i * 3 + 2]], track);
+                track.values[i * 3] = v.x;
+                track.values[i * 3 + 1] = v.y;
+                track.values[i * 3 + 2] = v.z;
+              }
+            } else if (p[1] == 'quaternion') {
+              //console.log('apply rotation', track);
+              let q = new THREE.Quaternion();
+              for (let i = 0; i < track.values.length / 4; i++) {
+                q.set(track.values[i * 4], track.values[i * 4 + 1], track.values[i * 4 + 2], track.values[i * 4 + 3]).premultiply(armature.quaternion);
+                track.values[i * 4] = q.x;
+                track.values[i * 4 + 1] = q.y;
+                track.values[i * 4 + 2] = q.z;
+                track.values[i * 4 + 3] = q.w;
+              }
+            }
           }
         });
       }
