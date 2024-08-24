@@ -93,6 +93,7 @@ elation.require([
         'onload': { type: 'string' },
         'sync': { type: 'boolean', default: false },
         'pointerlock': { type: 'boolean', default: true, set: this.updatePointerLock },
+        'players': { type: 'object', get: this.getRoomPlayers }
       });
 
       if (!roomTranslators) {
@@ -2059,7 +2060,7 @@ elation.require([
         var hashargs = elation.url();
         var host = elation.utils.any(this.server, hashargs['janus.server'], elation.config.get('janusweb.network.host')),
             port = elation.utils.any(this.port, hashargs['janus.port'], elation.config.get('janusweb.network.port'), 5567);
-        this._server = this.janusweb.getConnection(host, port, this.url);
+        this._server = this.janus.network.getServerForRoom(this);
       }
       return this._server;
     }
@@ -2127,6 +2128,7 @@ elation.require([
           voipid: ['property', 'voipid'],
           voiprange: ['property', 'voiprange'],
           voipserver: ['property', 'voipserver'],
+          players: ['property', 'players'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -2990,6 +2992,15 @@ console.log('unknown material', mat);
           this.audioFadeTimer = setTimeout(() => this.fadeAudioOut(10), 10000);
         }
       }
+    }
+    this.getRoomPlayers = function() {
+      let players = {};
+      for (let k in janus.network.remoteplayers) {
+        if (this.janus.network.remoteplayers[k].room === this) {
+          players[k] = this.janus.network.remoteplayers[k];
+        }
+      }
+      return players;
     }
   }, elation.engine.things.generic);
 });
