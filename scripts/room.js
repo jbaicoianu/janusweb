@@ -317,16 +317,26 @@ elation.require([
       var assets = [];
       if (this.skybox_equi) {
         let equi = this.getAsset('image', this.skybox_equi);
-        elation.events.add(equi, 'asset_load', ev => {
-          this.skyboxtexture = ev.target._texture;
+        if (equi.loaded) {
+          this.skyboxtexture = equi.getInstance();
           this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
           this.skyboxtexture.encoding = THREE.sRGBEncoding;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
           elation.events.fire({element: this, type: 'skybox_update'});
-        });
-        equi.getInstance();
+        } else {
+          elation.events.add(equi, 'asset_load', ev => {
+            this.skyboxtexture = ev.target._texture;
+            this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
+            this.skyboxtexture.encoding = THREE.sRGBEncoding;
+            if (this.janus.currentroom === this) {
+              this.skyboxobj.setTexture(this.skyboxtexture);
+            }
+            elation.events.fire({element: this, type: 'skybox_update'});
+          });
+          equi.getInstance();
+        }
       } else if (hasSkybox) {
         assets = [
           this.getAsset('image', this.skybox_right_id || 'black'),
