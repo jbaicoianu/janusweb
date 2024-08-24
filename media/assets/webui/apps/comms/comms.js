@@ -102,7 +102,7 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data); });
     elation.events.add(this.janusweb.network, 'janusweb_user_joined,janusweb_user_left,janusweb_user_disconnected', (ev) => this.updateUsers());
     setTimeout(() => {
-      this.updateUsers();
+      //this.updateUsers();
       this.updateRoom(room);
     }, 100);
   }
@@ -117,8 +117,10 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
   }
   updateRoom(room) {
     this.room = room;
-    this.innerHTML = '';
-    this.elements = elation.elements.fromTemplate('janus.comms.userlist', this);
+    //this.innerHTML = '';
+    if (!this.elements) {
+      this.elements = elation.elements.fromTemplate('janus.comms.userlist', this);
+    }
     this.userlist_room = this.userlist_room;
     this.userlist_online = this.userlist_online;
     this.userlist_friends = this.userlist_friends;
@@ -135,11 +137,12 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     if (!janus.network) return;
     var remoteplayers = janus.network.remoteplayers;
     var users = Object.keys(remoteplayers);
-    users.unshift(player.userid);
+    //users.unshift(player.userid);
 
     if (this.elements.roomusers) {
       this.elements.roomusers.value = users.length;
     }
+    this.userlist_room = this.querySelector('ui-list[name="userlist_room"]');
     if (this.userlist_room) {
       this.userlist_room.setItems(users);
     }
