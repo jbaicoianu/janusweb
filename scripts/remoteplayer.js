@@ -141,7 +141,7 @@ elation.component.add('engine.things.remoteplayer', function() {
   this.setVolume = async function(volume) {
     if (this.mouth) {
       if (!this.mouth.audio) {
-        await this.mout.createAudio(null, listener);
+        await this.mouth.createAudio(null, listener);
       }
       this.mouth.audio.gain.gain.value = volume;
     }
