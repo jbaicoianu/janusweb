@@ -2807,6 +2807,7 @@ console.log('dispatch to parent', event, this, event.target);
           child.die();
         }
       }
+      elation.events.fire({type: 'janus_room_unload', element: this});
     }
     this.getAudioNodes = function() {
       return new Promise(async (resolve, reject) => {
