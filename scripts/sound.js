@@ -17,7 +17,8 @@ elation.require(['janusweb.janusbase'], function() {
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
         distancemodel: { type: 'string', default: 'inverse', set: this.updateSound },
         rolloff: { type: 'float', default: 1.0, set: this.updateSound },
-        rect: { type: 'string', set: this.updateSound }
+        rect: { type: 'string', set: this.updateSound },
+        stream: { type: 'boolean', default: false}
       });
       this.playing = false;
       //Object.defineProperty(this, 'playing', { get: function() { if (this.audio) return this.audio.isPlaying; return false; } });
@@ -86,22 +87,37 @@ elation.require(['janusweb.janusbase'], function() {
         this.audio.onEnded = elation.bind(this, this.updatePlaying);
         elation.events.add(this.audio.buffer, 'playing,pause,ended', elation.bind(this, this.updatePlaying));
         if (src) {
-          if (soundcache[src]) {
-            this.audio.setBuffer(soundcache[src]);
-            if (this.auto_play || this.singleshot || this.playStarted) {
-              this.play();
+          if (this.stream) {
+            let audio = new Audio(src);
+            audio.src = src;
+            let source = audio.captureStream();
+            audio.addEventListener('playing', ev => {
+              this.audio.setMediaStreamSource(source);
+              console.log('ahh', audio, this.audio);
+              this.audio.connect();
+              //this.audio.play();
+            });
+            if (this.auto_play || sound.auto_play) {
+              audio.play();
             }
           } else {
-            var loader = new THREE.AudioLoader();
-            loader.load(src, elation.bind(this, function(buffer) {
-              if (buffer) {
-                soundcache[src] = buffer;
-                this.audio.setBuffer(buffer);
-                if ((this.auto_play || this.singleshot || this.playStarted) && this.room == this.janus.currentroom) {
-                  this.play();
-                }
+            if (soundcache[src]) {
+              this.audio.setBuffer(soundcache[src]);
+              if (this.auto_play || this.singleshot || this.playStarted) {
+                this.play();
               }
-            }));
+            } else {
+              var loader = new THREE.AudioLoader();
+              loader.load(src, elation.bind(this, function(buffer) {
+                if (buffer) {
+                  soundcache[src] = buffer;
+                  this.audio.setBuffer(buffer);
+                  if ((this.auto_play || this.singleshot || this.playStarted) && this.room == this.janus.currentroom) {
+                    this.play();
+                  }
+                }
+              }));
+            }
           }
         } else if (sound && sound.buffer) {
           soundcache[src] = sound.buffer;
