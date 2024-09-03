@@ -189,12 +189,14 @@ elation.elements.define('janus-button-start', class extends elation.elements.ui.
   }
   onclick(ev) {
     janus.engine.systems.sound.enableSound();
-    janus.engine.systems.controls.requestPointerLock();
     if (room.objects.scroller) {
       room.objects.scroller.disable();
     }
-    //player.flying = false;
-    player.enable();
+    if (room.pointerlock) {
+      janus.engine.systems.controls.requestPointerLock();
+      //player.flying = false;
+      player.enable();
+    }
     //janus.ui.show();
   }
 });
