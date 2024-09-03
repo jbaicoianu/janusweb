@@ -209,8 +209,10 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       }
     });
     elation.events.add(janus._target, 'clientprint', (ev) => this.handleClientPrint(ev.data));
+    elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data); });
     // FIXME - first element with the current design is a <detail> element, but this is fragile if that changes
     this.elements[0].addEventListener('toggle', (ev) => this.elements.chatinput.focus());
+    this.updateRoom(room);
   }
   scrollToBottom() {
     setTimeout(() => {
@@ -219,7 +221,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
   }
   handleUserJoined(ev) {
     var data = ev.data;
-if (!this.elements.chatmessages) return;
+    if (!this.elements || !this.elements.chatmessages) return;
     this.elements.chatmessages.add({
       timestamp: new Date().getTime(),
       type: 'join',
@@ -301,6 +303,9 @@ if (!this.elements.chatmessages) return;
       this.numunread += incr;
     }
     this.elements.unread.count = this.numunread;
+  }
+  updateRoom(newroom) {
+    this.elements.toggle.open = !newroom.private;
   }
 });
 
