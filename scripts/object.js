@@ -1126,10 +1126,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       if (this.objects['3d']) {
         this.traverseObjects(n => {
           if (n.material) {
-            n.material.color = this.properties.color;
-
             var m = (elation.utils.isArray(n.material) ? n.material : [n.material]);
             for (var i = 0; i < m.length; i++) {
+              m[i].color = this.properties.color;
               m[i].opacity = this.opacity;
               m[i].transparent = (textureasset && textureasset.hasalpha) || m[i].opacity < 1;
               if (m[i].transparent) {
