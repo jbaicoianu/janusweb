@@ -1106,7 +1106,30 @@ document.body.dispatchEvent(click);
     this.dispatchEvent = function(event, target) {
       let firedev = elation.events.fire(event);
     }
-    this.lookAt = function(other, up) {
+    this.lookAt = function(other, up, turnhead) {
+      if (!up) up = new THREE.Vector3(0,1,0);
+      var otherpos = false;
+      if (other.properties && other.properties.position) {
+        otherpos = other.localToWorld(new THREE.Vector3());
+      } else if (other instanceof THREE.Vector3) {
+        otherpos = other.clone();
+      }
+      var thispos = this.localToWorld(new THREE.Vector3());
+
+      if (otherpos) {
+        var dir = thispos.clone().sub(otherpos).normalize();
+        if (turnhead) {
+          this.head.properties.orientation.setFromEuler(new THREE.Euler(-Math.asin(dir.y), Math.atan2(dir.x, dir.z), 0, 'XYZ'));
+        } else {
+          this.properties.orientation.setFromEuler(new THREE.Euler(0, Math.atan2(dir.x, dir.z), 0));
+          this.head.properties.orientation.setFromEuler(new THREE.Euler(-Math.asin(dir.y), 0, 0));
+        }
+        this.refresh();
+        room.refresh();
+        this.engine.systems.render.setdirty();
+      }
+    }
+    this.turnTo = function(other, up) {
       if (!up) up = new THREE.Vector3(0,1,0);
       var otherpos = false;
       if (other.properties && other.properties.position) {
