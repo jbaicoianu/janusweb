@@ -57,6 +57,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         ongazeprogress: { type: 'callback' },
         ongazeactivate: { type: 'callback' },
         oncollision: { type: 'callback' },
+        onmouseover: { type: 'callback' },
+        onmouseout: { type: 'callback' },
+        onmousemove: { type: 'callback' },
       });
       this.lastframevalues = {
         position: new THREE.Vector3(0,0,0),
