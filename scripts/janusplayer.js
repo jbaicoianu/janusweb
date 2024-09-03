@@ -1260,5 +1260,26 @@ document.body.dispatchEvent(click);
       });
       setTimeout(() => { this.defaultanimation = currentanimation; }, t * 1000);
     }
+    this.hasAnimation = function(anim_id) {
+      return anim_id in this.ghost.body.animations;
+    }
+    this.getAnimation = function(anim_id) {
+      if (this.hasAnimation(anim_id)) {
+        return this.ghost.body.animations[anim_id];
+      }
+      return false;
+    }
+    this.setAnimationSequence = function(sequence) {
+      let cumtime = 0;
+      for (let i = 0; i < sequence.length; i++) {
+        let anim_id = sequence[i];
+        let anim = this.getAnimation(anim_id);
+        if (anim) {
+          let clip = anim.getClip();
+          setTimeout(() => this.defaultanimation = anim_id, cumtime);
+          cumtime += clip.duration;
+        }
+      }
+    }
   }, elation.engine.things.player);
 });
