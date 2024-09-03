@@ -74,14 +74,25 @@ elation.require(['janusweb.janusbase'], function() {
         return;
       }
       let objmeshes = [], skinnedmeshes = [];
-      object.traverseObjects(n => {
-        if (n instanceof THREE.Mesh && n.material !== this.outlinematerial) {
-          if (n.isSkinnedMesh)
-            skinnedmeshes.push(n);
-          else
-            objmeshes.push(n);
-        }
-      });
+      if (object instanceof THREE.Object3D) {
+        object.traverse(n => {
+          if (n instanceof THREE.Mesh && n.material !== this.outlinematerial) {
+            if (n.isSkinnedMesh)
+              skinnedmeshes.push(n);
+            else
+              objmeshes.push(n);
+          }
+        });
+      } else {
+        object.traverseObjects(n => {
+          if (n instanceof THREE.Mesh && n.material !== this.outlinematerial) {
+            if (n.isSkinnedMesh)
+              skinnedmeshes.push(n);
+            else
+              objmeshes.push(n);
+          }
+        });
+      }
       // Create and update regular Meshes
       let meshIdx = 0;
       for (; meshIdx < objmeshes.length; meshIdx++) {
