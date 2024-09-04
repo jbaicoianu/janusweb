@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "elation-engine": ">=0.9.114",
-    "uglify-es": "*"
+    "uglify-js": "*"
   },
   "keywords": [
     "elation",
