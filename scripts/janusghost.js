@@ -880,7 +880,7 @@ return;
         this.blinktimer = setTimeout(() => {
           this.blinktimer = false;
           this.blink();
-        }, 2500 + Math.random() * 8500);
+        }, 250 + Math.random() * 10000);
       }
     }
     this.setSpeakingVolume = function(volume) {
