@@ -1246,20 +1246,6 @@ document.body.dispatchEvent(click);
         this.camera.orientation.setFromEuler(new THREE.Euler(0, this.cameraangle, 0));
       }
     }
-    this.setAnimationSequence = function(sequence) {
-      let t = 0;
-      let currentanimation = this.defaultanimation;
-      let body = this.ghost.body;
-      sequence.forEach(clipname => {
-        let anim = body.animations[clipname];
-        if (anim) {
-          let clip = anim.getClip();
-          setTimeout(() => { this.defaultanimation = clipname; }, t * 1000);
-          t += clip.duration;
-        }
-      });
-      setTimeout(() => { this.defaultanimation = currentanimation; }, t * 1000);
-    }
     this.hasAnimation = function(anim_id) {
       return anim_id in this.ghost.body.animations;
     }
@@ -1274,9 +1260,11 @@ document.body.dispatchEvent(click);
       for (let i = 0; i < sequence.length; i++) {
         let anim_id = sequence[i];
         let anim = this.getAnimation(anim_id);
+        anim.loop = (i == sequence.length - 1 ? THREE.LoopRepeat : THREE.LoopOnce);
+        anim.clampWhenFinished = !(i == sequence.length - 1);
         if (anim) {
           let clip = anim.getClip();
-          setTimeout(() => this.defaultanimation = anim_id, cumtime);
+          setTimeout(() => this.defaultanimation = anim_id, cumtime * 1000);
           cumtime += clip.duration;
         }
       }
