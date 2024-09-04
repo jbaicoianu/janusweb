@@ -286,7 +286,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.body = this.createObject('object', {
             id: bodyid,
             //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI,0)),
-            //rotation: V(0, 180, 0),
+            rotation: V(0, 180, 0),
             lighting: this.lighting,
             //cull_face: 'none'
             opacity: 0.9999,
@@ -446,7 +446,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           }
         });
       } else {
-        let armature = sourcecontainer.getObjectByName('Armature');
+        let armature = sourcecontainer.getObjectByName('Armature') || sourcecontainer;
         newclip.tracks.forEach(track => {
           track.name = track.name.replace('mixamorig', '');
           let p = track.name.split('.');
@@ -528,6 +528,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       var xdir = new THREE.Vector3(),
             ydir = new THREE.Vector3(),
             zdir = new THREE.Vector3(),
+            flip = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0));
+            origin = new THREE.Vector3(),
             matrix = new THREE.Matrix4(),
             q1 = new THREE.Quaternion();
       return function(movedata) {
@@ -550,16 +552,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           if (this.head) {
             ydir.fromArray(parser.getVectorValue(movedata.up_dir, [0,1,0]));
             zdir.fromArray(parser.getVectorValue(movedata.view_dir, [0,0,1]));
-            xdir.crossVectors(zdir, ydir);
-
-            xdir.crossVectors(zdir, ydir).normalize();
-            zdir.crossVectors(xdir, ydir).normalize();
-
-            matrix.makeBasis(xdir, ydir, zdir);
+            matrix.lookAt(origin, zdir, ydir);
             q1.setFromRotationMatrix(matrix);
-            this.head.properties.orientation.copy(this.orientation).invert().multiply(q1);
+            this.head.properties.orientation.copy(this.orientation).invert().multiply(q1).multiply(flip);
             if (this.body && this.headaction) {
-              this.setHeadOrientation(this.head.orientation);
+              this.setHeadOrientation(this.head.orientation, true);
             }
             if (movedata.head_pos && this.face) {
               var headpos = this.head.properties.position;
@@ -863,7 +860,7 @@ return;
         let track = headaction._clip.tracks[0];
         if (track) {
           track.values[0] = orientation.x * (invert ? -1 : 1);
-          track.values[1] = orientation.y * (invert ? -1 : 1);
+          track.values[1] = orientation.y * (invert ? 1 : -1);
           track.values[2] = orientation.z * (invert ? -1 : 1);
           track.values[3] = orientation.w; // * (invert ? -1 : 1);
         }

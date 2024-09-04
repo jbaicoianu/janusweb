@@ -177,7 +177,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         tmpMat.makeRotationFromQuaternion(player.properties.orientation);
         tmpMat.extractBasis(tmpVecX, tmpVecY, tmpVecZ);
         var ret = {
-          dir: (-tmpVecZ.x) + ' ' + (-tmpVecZ.y) + ' ' + (-tmpVecZ.z),
+          dir: (tmpVecZ.x) + ' ' + (tmpVecZ.y) + ' ' + (tmpVecZ.z),
           up_dir: '0 1 0',
           //view_dir: this.tmpVecZ.toArray().join(' ')
         };

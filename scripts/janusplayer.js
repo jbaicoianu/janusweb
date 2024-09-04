@@ -303,10 +303,10 @@ document.body.dispatchEvent(click);
           }
         }
         if (this.ghost && !this.decouplehead) {
-          this.ghost.setHeadOrientation(this.head.orientation, true);
+          this.ghost.setHeadOrientation(_tmpquat.multiplyQuaternions(this.neck.orientation._target, this.head.orientation._target), true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            this.ghost.head.orientation.copy(this.head.orientation).invert();
+            this.ghost.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);;
           }
         }
       }
@@ -510,10 +510,10 @@ document.body.dispatchEvent(click);
               avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
               showlabel: false,
               //pos: V(0, -this.fatness, 0),
-              rotation: V(0, 180, 0),
+              //rotation: V(0, 180, 0),
               renderorder: 101,
             });
-            this.ghost.orientation.set(0,1,0,0);
+            //this.ghost.orientation.set(0,1,0,0);
           }
         });
         this.visible = true;
@@ -702,7 +702,7 @@ document.body.dispatchEvent(click);
         avatar_src: 'data:text/plain,' + encodeURIComponent(avatar),
         showlabel: false,
         //pos: V(0, -this.fatness, 0),
-        rotation: V(0, 180, 0),
+        //rotation: V(0, 180, 0),
         renderorder: 101,
       });
 
@@ -1142,7 +1142,7 @@ document.body.dispatchEvent(click);
       if (otherpos) {
         var dir = thispos.clone().sub(otherpos).normalize();
         this.properties.orientation.setFromEuler(new THREE.Euler(0, Math.atan2(dir.x, dir.z), 0));
-        this.head.properties.orientation.setFromEuler(new THREE.Euler(-Math.asin(dir.y), 0, 0));
+        //this.head.properties.orientation.setFromEuler(new THREE.Euler(-Math.asin(dir.y), 0, 0));
         this.refresh();
         room.refresh();
         this.engine.systems.render.setdirty();
