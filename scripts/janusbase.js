@@ -470,11 +470,13 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
               //} else if (v === true || v === false) {
               //  propertydefs[k] = {type: 'boolean', default: v };
               } else if (v instanceof THREE.Vector3) {
-                propertydefs[k] = {type: 'vector3', default: v };
+                propertydefs[k] = {type: 'vector3', default: v.clone() };
               } else if (v instanceof THREE.Color) {
-                propertydefs[k] = {type: 'color', default: v };
+                propertydefs[k] = {type: 'color', default: v.clone() };
               } else if (v instanceof THREE.Euler) {
-                propertydefs[k] = {type: 'euler', default: v };
+                propertydefs[k] = {type: 'euler', default: v.clone() };
+              } else if (typeof v == 'boolean') {
+                propertydefs[k] = {type: 'boolean', default: v };
               } else {
                 propertydefs[k] = {type: 'object', default: v };
               }
