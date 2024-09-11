@@ -1110,13 +1110,17 @@ document.body.dispatchEvent(click);
     }
     this.lookAt = function(other, up, turnhead) {
       if (!up) up = new THREE.Vector3(0,1,0);
+      if (!other) return;
       var otherpos = false;
       if (other.properties && other.properties.position) {
         otherpos = other.localToWorld(new THREE.Vector3());
+      } else if (other instanceof THREE.Object3D) {
+        if (!otherpos) otherpos = new THREE.Vector3();
+        other.getWorldPosition(otherpos);
       } else if (other instanceof THREE.Vector3) {
         otherpos = other.clone();
       }
-      var thispos = this.localToWorld(new THREE.Vector3());
+      var thispos = this.head.localToWorld(new THREE.Vector3());
 
       if (otherpos) {
         var dir = thispos.clone().sub(otherpos).normalize();
