@@ -65,6 +65,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       append: container, 
       homepage: homepage, 
       corsproxy: corsproxy, 
+      showui: (args.showui && args.showui != "false"),
       shownavigation: (args.shownavigation && args.shownavigation != "false"),
       uiconfig: args.uiconfig,
       showchat: elation.utils.any(args.showchat, true),
@@ -95,6 +96,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         homepage: { type: 'string' },
         url: { type: 'string' },
         uiconfig: { type: 'string' },
+        showui: { type: 'boolean' },
         shownavigation: { type: 'boolean', default: true },
         showchat: { type: 'boolean', default: true },
         networking: { type: 'boolean', default: true },
@@ -195,7 +197,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
 
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       this.uiconfig = elation.utils.any(this.player.getSetting('uiconfig'), this.uiconfig, datapath + (datapath[datapath.length-1] != '/' ? '/' : '') + 'assets/webui/default.json');
-      if (this.shownavigation) {
+      if (this.showui && this.shownavigation) {
         this.createUI();
       }
       this.view.pickingactive = true;
@@ -327,6 +329,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           networking: { type: 'boolean', default: true },
           avatarsrc: { type: 'string', default: false },
           uiconfig: { type: 'string', default: false },
+          showui: { type: 'boolean', default: true },
           shownavigation: { type: 'boolean', default: true },
         });
       }
@@ -355,6 +358,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           networking: this.networking,
           corsproxy: this.corsproxy,
           //resolution: width + 'x' + height,
+          showui: this.showui && this.showui != 'false',
           shownavigation: this.shownavigation,
           avatarsrc: this.avatarsrc,
           uiconfig: this.uiconfig,
