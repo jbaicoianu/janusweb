@@ -69,6 +69,7 @@ elation.require(['janusweb.janusbase'], function() {
     },
     select(object) {
       this.selected = object;
+      if (!this.meshes) return;
       if (!object) {
         this.deselect();
         return;
@@ -130,6 +131,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.refresh();
     },
     deselect() {
+      if (!this.meshes) return;
       for (let meshIdx = 0; meshIdx < this.meshes.length; meshIdx++) {
         this.meshes[meshIdx].geometry = null;
         if (this.meshes[meshIdx].parent) {
