@@ -1004,6 +1004,7 @@ document.body.dispatchEvent(click);
     }
     this.handleTouchStart = function(ev) {
       //if (!this.enabled) return;
+      if (!room.pointerlock) return;
       let halfscreenwidth = window.innerWidth / 2;
       this.enabled = true;
       for (let i = 0; i < ev.changedTouches.length; i++) {
@@ -1021,6 +1022,7 @@ document.body.dispatchEvent(click);
       this.cancelTouchMovement(ev);
     }
     this.handleTouchMove = function(ev) {
+      if (!room.pointerlock) return;
       if (ev.defaultPrevented) return;
       //if (ev.touches.length == 1) {
         //var touchindex = this.touchindex;
