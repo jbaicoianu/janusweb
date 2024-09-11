@@ -62,6 +62,7 @@ elation.require([
         url:            { type: 'string', default: false },
         homepage:       { type: 'string', default: "" },
         corsproxy:      { type: 'string', default: '' },
+        showui:         { type: 'boolean', default: true },
         shownavigation: { type: 'boolean', default: true },
         showchat:       { type: 'boolean', default: true },
         datapath:       { type: 'string', default: '/media/janusweb' },
