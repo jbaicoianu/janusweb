@@ -147,6 +147,7 @@ document.body.dispatchEvent(click);
       this.currentavatar = '';
       this.getAvatarData().then(d => this.currentavatar = d);
       this.morphtargetchanges = {};
+      this.eventlistenerproxies = {};
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -661,6 +662,9 @@ document.body.dispatchEvent(click);
           getSetting:   ['function', 'getSetting'],
           setSetting:   ['function', 'setSetting'],
           setAvatar:    ['function', 'setAvatar'],
+          addEventListener:    ['function', 'addEventListenerProxy'],
+          dispatchEvent:       ['function', 'dispatchEvent'],
+          removeEventListener: ['function', 'removeEventListenerProxy'],
         });
       }
       return this._proxyobject;
@@ -1272,6 +1276,54 @@ document.body.dispatchEvent(click);
           let clip = anim.getClip();
           setTimeout(() => this.defaultanimation = anim_id, cumtime * 1000);
           cumtime += clip.duration;
+        }
+      }
+    }
+    this.dispatchEvent = function(event, target) {
+      if (!event.element) event.element = target || this;
+      if (!event.target) {
+        event.target = target || event.element;
+      }
+
+      var handlerfn = 'on' + event.type;
+      if (handlerfn in this) {
+        this.executeCallback(this[handlerfn], event);
+      }
+
+      // Bubble event up to parents, unless the event was thrown with bubbling disabled or an event handler called stopPropagation()
+      let firedev = elation.events.fire(event);
+      let returnValue = true;
+      firedev.forEach(e => returnValue &= e.returnValue);
+      if (event.bubbles !== false && returnValue && this.parent && this.parent.dispatchEvent) {
+        event.element = this.parent;
+        this.parent.dispatchEvent(event);
+      }
+    }
+    this.addEventListenerProxy = function(name, handler, bubble) {
+      var eventobj = {
+        target: handler,
+        fn: function(ev) {
+          var proxyev = elation.events.clone(ev, {
+            target: ev.target.getProxyObject(),
+          });
+          // Bind stopPropagation and preventDefault functions to the real event
+          proxyev.stopPropagation = elation.bind(ev, ev.stopPropagation),
+          proxyev.preventDefault = elation.bind(ev, ev.preventDefault),
+          handler(proxyev);
+        }
+      };
+      if (!this.eventlistenerproxies[name]) this.eventlistenerproxies[name] = [];
+      this.eventlistenerproxies[name].push(eventobj);
+
+      elation.events.add(this, name, eventobj.fn, bubble);
+    }
+    this.removeEventListenerProxy = function(name, handler, bubble) {
+      if (this.eventlistenerproxies[name]) {
+        for (var i = 0; i < this.eventlistenerproxies[name].length; i++) {
+          var evproxy = this.eventlistenerproxies[name][i];
+          if (evproxy.target === handler) {
+            elation.events.remove(this, name, evproxy.fn, bubble);
+          }
         }
       }
     }
