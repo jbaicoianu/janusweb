@@ -434,7 +434,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           addForce:            ['function', 'addForce'],
           removeForce:         ['function', 'removeForce'],
           die:                 ['function', 'die'],
-          refresh:             [ 'function', 'refresh'],
+          refresh:             ['function', 'refresh'],
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
           addClass:            ['function', 'addClass'],
@@ -477,6 +477,8 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
                 propertydefs[k] = {type: 'euler', default: v.clone() };
               } else if (typeof v == 'boolean') {
                 propertydefs[k] = {type: 'boolean', default: v };
+              } else if (v instanceof CustomEvent) {
+                propertydefs[k] = {type: 'callback' };
               } else {
                 propertydefs[k] = {type: 'object', default: v };
               }
