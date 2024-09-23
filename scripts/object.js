@@ -44,7 +44,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         lmap_id: { type: 'string', set: this.updateMaterial, comment: 'Lightmap texture ID' },
         video_id: { type: 'string', set: this.updateVideo, comment: 'Video texture ID' },
         shader_id: { type: 'string', set: this.updateMaterial, comment: 'Shader ID' },
-        shader_chunk_replace: { type: 'object' },
+        shader_chunk_replace: { type: 'object', set: this.updateMaterial },
         url: { type: 'string', set: this.updateWebsurfaceURL },
         loop: { type: 'boolean' },
         websurface_id: { type: 'string', set: this.updateWebsurface, comment: 'WebSurface ID' },
