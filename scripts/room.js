@@ -1373,16 +1373,17 @@ elation.require([
       if (this.jsobjects[objectargs.js_id]) {
         objectargs.js_id = objectargs.js_id + '_' + window.uniqueId();
       }
-      var object = parentobj.spawn(realtype, this.roomid + '_' + objectargs.js_id, objectargs);
-      if (objectargs.js_id) {
-        this.jsobjects[objectargs.js_id] = object.getProxyObject(customElement);
+      var object = parentobj.spawn(realtype, this.roomid + '_' + objectargs.js_id, objectargs),
+          proxyobj = object.getProxyObject(customElement);
+      if (proxyobj && objectargs.js_id && !objectargs.isinternal) {
+        this.jsobjects[objectargs.js_id] = proxyobj;
       }
 
       if (realtype == 'janussound') {
         this.sounds[objectargs.sound_id] = object;
         this.sounds[objectargs.js_id] = object;
 
-        this.jsobjects[objectargs.js_id].addEventListener('sound_delayed', (ev) => this.handleDelayedSound(ev));
+        proxyobj.addEventListener('sound_delayed', (ev) => this.handleDelayedSound(ev));
       }
       if (realtype == 'janusvideo') {
         this.videos[objectargs.video_id] = object;
@@ -1408,14 +1409,14 @@ elation.require([
           }
           children[k] = objs;
         }
-        this.createRoomObjects(children, this.jsobjects[objectargs.js_id]);
+        this.createRoomObjects(children, proxyobj);
       }
 
       if (this.enabled && !skipstart) {
         object.start();
       }
 
-      return this.jsobjects[objectargs.js_id];
+      return proxyobj;
     }
     this.appendChild = function(obj) {
       var proxyobj = obj
