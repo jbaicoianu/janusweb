@@ -52,6 +52,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         hasposition: { type: 'boolean', default: true },
         gazetime: { type: 'float' },
         static: { type: 'boolean', default: false },
+        isinternal: { type: 'boolean', default: false },
         ongazeenter: { type: 'callback' },
         ongazeleave: { type: 'callback' },
         ongazeprogress: { type: 'callback' },
