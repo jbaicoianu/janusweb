@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "./utils/init.sh",
+    "clean": "./utils/clean-build.sh",
     "build": "./utils/build.sh",
     "postversion": "git push origin v`npm view janusweb version`",
     "test": "./utils/activate.sh && ./node_modules/.bin/karma start tests/karma.conf.js --single-run",
