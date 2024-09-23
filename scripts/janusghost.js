@@ -437,7 +437,11 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       } else {
         let armature = sourcecontainer.getObjectByName('Armature') || sourcecontainer;
         newclip.tracks.forEach(track => {
-          track.name = track.name.replace('mixamorig', '');
+          //track.name = track.name.replace('mixamorig:', '');
+          let idx = track.name.indexOf(':');
+          if (idx > -1) {
+            track.name = track.name.substr(idx + 1);
+          }
           let p = track.name.split('.');
           if (p[1] == 'position') {
             for (let i = 0; i < track.values.length / 3; i++) {
