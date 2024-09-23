@@ -237,23 +237,13 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               //pos: headpos.clone().negate(),
               //orientation: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0)),
               //rotation: V(0, 180, 0),
-              lighting: this.lighting,
-              //cull_face: 'none'
-              opacity: 0.9999,
-              renderorder: this.renderorder || 100,
-              shader_chunk_replace: (this.lighting ? {
-                'color_fragment': 'color_fragment_discard_close',
-              } : {}),
             });
+            this.applyAvatarMaterial(this.face, 1);
             this.face.start();
           } else {
             this.face = headid;
             this.face.lighting = this.lighting;
-            this.face.opacity = 0.9999;
-            this.face.renderorder = this.renderorder || 100;
-            this.face.shader_chunk_replace = (this.lighting ? {
-              'color_fragment': 'color_fragment_discard_close',
-            } : {});
+            this.applyAvatarMaterial(this.face, 1);
             this.head.appendChild(headid);
             this.face.start();
           }
@@ -292,12 +282,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             rotation: V(0, 180, 0),
             lighting: this.lighting,
             //cull_face: 'none'
-            opacity: 0.9999,
-            renderorder: this.renderorder || 100,
-            shader_chunk_replace: (this.lighting ? {
-              'color_fragment': 'color_fragment_discard_close',
-            } : {}),
           });
+          this.applyAvatarMaterial(this.body, 0);
         } else {
           this.body = bodyid;
           this.appendChild(bodyid);
@@ -704,19 +690,35 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           this.setBody(false);
         }
         if (ghostdef._children) {
+          let potentialAttachments = [];
           for (var type in ghostdef._children) {
             for (var i = 0; i < ghostdef._children[type].length; i++) {
               let js_id = ghostdef._children[type][i].js_id;
-              delete ghostdef._children[type][i].js_id;
+              //delete ghostdef._children[type][i].js_id;
               let childobj = this.createObject(type, ghostdef._children[type][i]);
               this.ghostchildren.push(childobj);
               if (js_id == 'head') {
                 this.setHead(childobj, headpos, ghostdef.scale);
               } else if (js_id == 'body') {
                 this.setBody(childobj, ghostdef.scale, ghostdef.pos);
+              } else {
+                potentialAttachments.push(childobj);
+                this.applyAvatarMaterial(childobj, 2);
+                childobj.traverse(obj => {
+                  this.applyAvatarMaterial(obj, 3);
+                });
               }
             }
           }
+          this.body.addEventListener('load', ev => {
+            for (let i = 0; i < potentialAttachments.length; i++) {
+              let obj = potentialAttachments[i];
+              if (obj.js_id in this.body.parts) {
+                this.body.parts[obj.js_id].add(obj);
+                this.applyAvatarMaterial(obj, 3);
+              }
+            }
+          });
         }
       }
     }
@@ -896,6 +898,14 @@ return;
         };
       }
       return this._proxyobject;
+    }
+    this.applyAvatarMaterial = function(obj, renderorderOffset=0) {
+      if (this.lighting && obj.lighting) {
+        obj.transparent = true;
+        if (obj.opacity == 1) obj.opacity = 0.9999;
+        if (!obj.renderorder) obj.renderorder = this.renderorder + renderorderOffset;
+        obj.shader_chunk_replace = { 'color_fragment': 'color_fragment_discard_close' };
+      }
     }
   }, elation.engine.things.janusbase);
 });
