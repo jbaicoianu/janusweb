@@ -99,7 +99,7 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.userlist_friends = this.elements.userlist_friends;
     this.usermarkers = {};
 
-    elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data); });
+    elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data || ev.element); });
     elation.events.add(this.janusweb.network, 'janusweb_user_joined,janusweb_user_left,janusweb_user_disconnected', (ev) => this.updateUsers());
     setTimeout(() => {
       //this.updateUsers();
