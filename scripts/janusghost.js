@@ -38,6 +38,9 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           if (dist < maxdist) {
             diffuseColor.a = clamp(((dist - mindist) / (maxdist - mindist)), 0., 1.);
           }
+          if (diffuseColor.a <= 1e-4) {
+            discard;
+          }
         `;
       }
     }
