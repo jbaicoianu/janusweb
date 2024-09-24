@@ -127,6 +127,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       this.shoulders = this.createObject('object', {
         'js_id': this.properties.player_id + '_shoulders',
         'pos': V(0, 1.0, 0),
+        'isinternal': true,
       });
     }
     this.setGhostAssets = function(assets) {
@@ -282,6 +283,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             rotation: V(0, 180, 0),
             lighting: this.lighting,
             //cull_face: 'none'
+            isinternal: true,
           });
           this.applyAvatarMaterial(this.body, 0);
         } else {
@@ -699,6 +701,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
             for (var i = 0; i < ghostdef._children[type].length; i++) {
               let js_id = ghostdef._children[type][i].js_id;
               //delete ghostdef._children[type][i].js_id;
+              ghostdef._children[type][i].isinternal = true;
               let childobj = this.createObject(type, ghostdef._children[type][i]);
               this.ghostchildren.push(childobj);
               if (js_id == 'head') {
@@ -732,7 +735,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           'position': [0,1.0,0],
           'parent': this,
           'janus': this.janus,
-          'room': this.room
+          'room': this.room,
+          'isinternal': true,
         });
       }
       if (!this.hands) {
