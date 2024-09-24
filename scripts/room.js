@@ -840,7 +840,7 @@ elation.require([
       }
       this.createLights();
     }
-    this.createRoomObjects = function(roomdata, parent) {
+    this.createRoomObjects = function(roomdata, parent, isinternal) {
       var room = roomdata.room,
           assets = roomdata.assets || [];
 
@@ -853,6 +853,7 @@ elation.require([
         if (exclude.indexOf(k) == -1) {
           roomdata[k].forEach(elation.bind(this, function(n) {
             n.persist = true;
+            n.isinternal = isinternal;
             this.createObject(k, n, parent);
           }));
         }
@@ -1375,7 +1376,7 @@ elation.require([
       }
       var object = parentobj.spawn(realtype, this.roomid + '_' + objectargs.js_id, objectargs),
           proxyobj = object.getProxyObject(customElement);
-      if (proxyobj && objectargs.js_id && !objectargs.isinternal) {
+      if (proxyobj && objectargs.js_id && !objectargs.isinternal && (parentobj == this || 'js_id' in args)) {
         this.jsobjects[objectargs.js_id] = proxyobj;
       }
 
@@ -1409,7 +1410,7 @@ elation.require([
           }
           children[k] = objs;
         }
-        this.createRoomObjects(children, proxyobj);
+        this.createRoomObjects(children, proxyobj, objectargs.isinternal);
       }
 
       if (this.enabled && !skipstart) {
