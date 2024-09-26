@@ -109,7 +109,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         object = this.object;
         setTimeout(() => { this.handleLoad(); this.assignTextures(); }, 100);
       } else if (this.janusid) {
-        var asset = this.getAsset('model', this.janusid, true);
+        var asset = this.modelasset = this.getAsset('model', this.janusid, true);
         this.dispatchEvent({type: 'loadstart'});
         if (asset) {
           if (asset.loaded) {
