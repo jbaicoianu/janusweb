@@ -293,22 +293,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         if (pos) this.body.pos = pos;
         this.body.start();
         if (scale && this.body) this.body.scale.fromArray(scale);
-
-        elation.events.add(this, 'load', ev => {
-          if (this.body.modelasset) {
-            if (this.body.modelasset.loaded) {
-              this.loadAnimations();
-              if (this.animation_extras) {
-                this.loadAnimationExtras();
-              }
-            } else {
-              elation.events.add(this.body.modelasset, 'asset_load_complete', () => {
-                this.loadAnimations();
-                if (this.animation_extras) {
-                  this.loadAnimationExtras();
-                }
-              });
-            }
+        elation.events.add(this.body.modelasset, 'asset_load', ev => {
+          this.loadAnimations();
+          if (this.animation_extras) {
+            this.loadAnimationExtras();
           }
           // FIXME - this prevents avatars from being culled, which prevents our default mesh from disappearing but also means we lose out on possible performance optimizations in rooms with lots of avatars
           this.objects['3d'].traverse(n => {
