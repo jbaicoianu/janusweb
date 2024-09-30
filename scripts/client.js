@@ -266,13 +266,20 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       var frame = elation.ui.iframe({src: 'http://github.com/jbaicoianu/janusweb/', classname: 'janusweb_about'});
       aboutwin.setcontent(frame);
     }
+    isFullscreen() {
+      return document.fullscreenElement === this;
+    }
     toggleFullscreen(ev, updateOnly) {
-      var view = this.view;
-      if (!updateOnly && view && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
-        view.toggleFullscreen();
+      let isfullscreen = this.isFullscreen();
+      if (!updateOnly && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
+        if (!isfullscreen) {
+          this.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
       }
       if (this.fullscreenbutton) {
-        if (view.isFullscreen()) {
+        if (isfullscreen) {
           this.fullscreenbutton.addclass('state_fullscreen');
           this.fullscreenbutton.setLabel('Shrink');
         } else {
