@@ -705,15 +705,17 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
               }
             }
           }
-          this.body.addEventListener('load', ev => {
-            for (let i = 0; i < potentialAttachments.length; i++) {
-              let obj = potentialAttachments[i];
-              if (obj.js_id in this.body.parts) {
-                this.body.parts[obj.js_id].add(obj);
-                this.applyAvatarMaterial(obj, 3);
+          if (this.body) {
+            this.body.addEventListener('load', ev => {
+              for (let i = 0; i < potentialAttachments.length; i++) {
+                let obj = potentialAttachments[i];
+                if (obj.js_id in this.body.parts) {
+                  this.body.parts[obj.js_id].add(obj);
+                  this.applyAvatarMaterial(obj, 3);
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
     }
