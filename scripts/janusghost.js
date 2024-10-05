@@ -407,7 +407,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         //newclip = THREE.SkeletonUtils.retargetClip(destmesh, sourcemesh, newclip, {useFirstFramePosition: true});
         //console.log('retarget it!', newclip, destmesh, sourcemesh);
         newclip.tracks.forEach(track => {
-          let [name, property] = track.name.split('.');
+          let [name, property] = track.name.replace('mixamorig:', '').split('.');
           let srcbone = sourcemesh.skeleton.getBoneByName(name);
           let dstbone = destmesh.skeleton.getBoneByName(name);
           if (dstbone) {
