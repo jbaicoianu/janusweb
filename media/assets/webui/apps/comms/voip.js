@@ -145,7 +145,9 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
     });
     document.addEventListener('voip-picker-select', ev => {
       let localStream = ev.detail;
-      sfu.adapter.setLocalMediaStream(localStream);
+      if (localStream) {
+        sfu.adapter.setLocalMediaStream(localStream);
+      }
       sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
     });
     if (this.inputstream) {
@@ -220,7 +222,9 @@ console.log('leave room and remove all occupants', this.room);
   setInputStream(stream) {
     if (this.sfu) {
       this.inputstream = stream;
-      this.sfu.adapter.setLocalMediaStream(stream);
+      if (stream) {
+        this.sfu.adapter.setLocalMediaStream(stream);
+      }
     } else {
       this.connect();
     }
@@ -802,7 +806,9 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
     this.dispatchEvent(new CustomEvent('select', { detail: false }));
     document.dispatchEvent(new CustomEvent('voip-picker-select', { detail: false }));
     player.setSetting('voip', false);
-    this.subpicker.stopUserMedia();
+    if (this.subpicker) {
+      this.subpicker.stopUserMedia();
+    }
     if (!this.elements.none.active) this.elements.none.activate();
     this.elements.audio.deactivate();
   }
