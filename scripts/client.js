@@ -12,6 +12,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
     var corsproxy = elation.utils.any(args.corsproxy && args.corsproxy != 'false', elation.config.get('engine.assets.corsproxy'), document.location.href);
     var container = elation.utils.any(args.container, document.body);
     var fullsize = elation.utils.any(args.fullsize && args.fullsize != 'false', container == document.body);
+    var thirdperson = elation.utils.any(args.thirdperson && args.thirdperson != 'false', false);
 
     if (elation.config.get('serviceworker.enabled') && 'serviceWorker' in navigator) {
       var workerscript = elation.config.get('serviceworker.script', 'service-worker.js');
@@ -83,6 +84,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       tracking: usetracking,
       trackingid: trackingid,
       avatarsrc: args.avatarsrc,
+      thirdperson: thirdperson,
     });
     return new Promise(function(resolve, reject) {
       elation.events.add(janusweb.engine, 'engine_start', function() { resolve(janusweb); });
@@ -106,6 +108,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         server: { type: 'string' },
         avatarsrc: { type: 'string' },
         muted: { type: 'boolean', default: false },
+        thirdperson: { type: 'boolean', default: false },
       });
     }
     initEngine() {
@@ -192,6 +195,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         avatarsrc: this.avatarsrc,
         staticfriction: 2,
         dynamicfriction: 1.9,
+        cameraview: (this.thirdperson ? 'thirdperson' : 'firstperson'),
       });
       elation.events.add(this.engine.systems.render, 'render_view_add', (ev) => this.handleRenderViewAdd(ev));
 
@@ -273,7 +277,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       let isfullscreen = this.isFullscreen();
       if (!updateOnly && (typeof ev == 'undefined' || ev.value == 1 || typeof ev.value == 'undefined')) {
         if (!isfullscreen) {
-          this.requestFullscreen();
+          this.parentNode.requestFullscreen();
         } else {
           document.exitFullscreen();
         }
@@ -338,6 +342,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           uiconfig: { type: 'string', default: false },
           showui: { type: 'boolean', default: true },
           shownavigation: { type: 'boolean', default: true },
+          thirdperson: { type: 'boolean', default: false },
         });
       }
       create() {
@@ -371,6 +376,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           uiconfig: this.uiconfig,
           container: this,
           fullsize: this.fullsize,
+          thirdperson: this.thirdperson && this.thirdperson != 'false',
         };
         return args;
       }
