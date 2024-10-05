@@ -37,6 +37,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
         avatarsrc: { type: 'string' },
         cameraview: { type: 'string', default: 'firstperson' },
         camerazoom: { type: 'float', default: 0 },
+        cameraheight: { type: 'float', default: 0 },
         cameraangle: { type: 'float', default: 0 },
         decouplehead: { type: 'boolean', default: false },
       });
@@ -148,6 +149,12 @@ document.body.dispatchEvent(click);
       this.getAvatarData().then(d => this.currentavatar = d);
       this.morphtargetchanges = {};
       this.eventlistenerproxies = {};
+
+      if (this.cameraview == 'thirdperson') {
+        this.camerazoom = 2;
+        this.cameraheight = .25;
+      }
+      this.updateCamera();
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
@@ -169,6 +176,7 @@ document.body.dispatchEvent(click);
         }
       });
 
+      this.updateCamera();
       this.updateCollider();
     }
     this.enable = function() {
@@ -1227,10 +1235,12 @@ document.body.dispatchEvent(click);
           this.cameraview = 'thirdperson';
           this.cameraangle = 0;
           this.camerazoom = 2;
+          this.cameraheight = .25;
         } else {
           this.cameraview = 'firstperson';
           this.cameraangle = 0;
           this.camerazoom = 0;
+          this.cameraheight = 0;
         }
         this.updateCamera();
       }
@@ -1253,6 +1263,7 @@ document.body.dispatchEvent(click);
         this.camera.fov = this.fov;
         this.camera.position.z = Math.cos(this.cameraangle) * this.camerazoom;
         this.camera.position.x = Math.sin(this.cameraangle) * this.camerazoom;
+        this.camera.position.y = this.cameraheight;
         this.camera.orientation.setFromEuler(new THREE.Euler(0, this.cameraangle, 0));
       }
     }
