@@ -147,7 +147,7 @@ elation.elements.define('janus.username.picker', class extends elation.elements.
   create() {
     this.elements = elation.elements.fromString(`
       <form name="usernameform">
-        <ui-input label="${this.label}" name="clientid"></ui-input>
+        <ui-input type="text" label="${this.label}" name="clientid"></ui-input>
         <input type="submit" name="submit" value="${this.confirm ? this.confirmlabel : this.buttonlabel}">
       </form>
     `, this);
