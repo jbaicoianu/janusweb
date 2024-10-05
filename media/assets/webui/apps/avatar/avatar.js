@@ -67,7 +67,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
             <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
           </ui-tab>
           <ui-tab label="Ready Player Me">
-            <iframe data-src="https://demo.readyplayer.me/avatar" allow="camera"></iframe>
+            <iframe data-src="https://demo.readyplayer.me/avatar?frameApi" allow="camera"></iframe>
           </ui-tab>
         </ui-tabs>
       `;
@@ -226,20 +226,54 @@ this.appendChild(this.previewwindow);
   }
   handleWindowMessage(ev) {
     if (ev.origin.match(/https:\/\/.*\.readyplayer\.me/)) {
-      let avatarurl = ev.data;
-      let avatarstr = `
-<FireBoxRoom>
-  <assets>
-    <assetobject id="body" src="${avatarurl}" />
-    <assetobject id="avatar_animations" src="https://assets.metacade.com/james/readyplayerme/animations.glb" />
-  </assets>
-  <room>
-    <ghost body_id="body" bone_head="Head" morphtarget_mouth="mouthOpen" morphtarget_eyes="eyesClosed" />
-  </room>
-</FireBoxRoom>
-`;
-      player.setAvatar(avatarstr);
-      this.handleAvatarSelect({data: { url: 'data:text/plain,' + avatarstr } });
+      if (ev.data.indexOf('https:') == 0) {
+        // raw URL
+        let avatarurl = ev.data;
+        let avatarstr = `
+  <FireBoxRoom>
+    <assets>
+      <assetobject id="body" src="${avatarurl}" />
+      <assetobject id="avatar_animations" src="https://assets.metacade.com/james/readyplayerme/animations.glb" />
+    </assets>
+    <room>
+      <ghost body_id="body" bone_head="Head" morphtarget_mouth="mouthOpen" morphtarget_eyes="eyesClosed" />
+    </room>
+  </FireBoxRoom>
+  `;
+        player.setAvatar(avatarstr);
+        this.handleAvatarSelect({data: { url: 'data:text/plain,' + avatarstr } });
+      } else if (ev.data[0] == '{') {
+        // frame API
+        let apimsg = JSON.parse(ev.data);
+        let frame = this.querySelector('iframe'); // FIXME - hacky
+        if (apimsg.eventName == 'v1.frame.ready') {
+           frame.contentWindow.postMessage(JSON.stringify({
+              target: 'readyplayerme',
+              type: 'subscribe',
+              eventName: 'v2.**'
+            }), '*');
+        } else if (apimsg.eventName == 'v2.avatar.exported') {
+          let avatarurl = apimsg.data.url;
+          let animurl = 'https://assets.metacade.com/james/readyplayerme/animations.glb';
+          if (apimsg.data.metadata.gender == 'female') {
+            animurl = 'https://assets.metacade.com/james/readyplayerme/animations-rpm-female.glb';
+          }
+          // TODO - select avatar pack based on metadata.gender
+          let avatarstr = `
+    <FireBoxRoom>
+      <assets>
+        <assetobject id="body" src="${avatarurl}" />
+        <assetobject id="avatar_animations" src="${animurl}" />
+      </assets>
+      <room>
+        <ghost body_id="body" bone_head="Head" morphtarget_mouth="mouthOpen" morphtarget_eyes="eyesClosed" />
+      </room>
+    </FireBoxRoom>
+    `;
+          player.setAvatar(avatarstr);
+          this.handleAvatarSelect({data: { url: 'data:text/plain,' + avatarstr } });
+        }
+      }
     }
   }
 });
