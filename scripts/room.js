@@ -1374,7 +1374,7 @@ elation.require([
       if (this.jsobjects[objectargs.js_id]) {
         objectargs.js_id = objectargs.js_id + '_' + window.uniqueId();
       }
-      var object = parentobj.spawn(realtype, (parentobj.js_id || room.roomid) + '_' + objectargs.js_id, objectargs),
+      var object = parentobj.spawn(realtype, room.roomid + (parentobj.js_id ? '_' + parentobj.js_id : '') + '_' + objectargs.js_id, objectargs),
           proxyobj = object.getProxyObject(customElement);
       if (proxyobj && objectargs.js_id && !objectargs.isinternal && (parentobj == this || 'js_id' in args)) {
         this.jsobjects[objectargs.js_id] = proxyobj;
