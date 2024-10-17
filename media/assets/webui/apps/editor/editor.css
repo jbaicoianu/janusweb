@@ -164,3 +164,8 @@ janus-ui-editor-property-vector3.selected[constraint="none"] ui-input input {
 janus-ui-editor-source .CodeMirror {
   max-width: 80em;
 }
+janus-ui-editor-source ui-button[name="refresh"] {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

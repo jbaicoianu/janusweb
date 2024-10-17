@@ -656,6 +656,7 @@ console.log('set translation snap', ev.data, ev);
   }
   editObjectUpdate() {
     var obj = this.roomedit.object;
+    if (!obj) return;
     var bbox = this.roomedit.objectBoundingBox;
 
     var point = this.roomedit.objectPosition || this.roomedit.object.position;
@@ -1627,6 +1628,11 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
     //let roomtab = elation.elements.create('ui-tab', { append: this.tabs, label: 'Room Markup' });
     let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: room.getRoomSource(), hints: this.jmlhints });
 
+    let refreshbutton = elation.elements.create('ui-button', { append: this, label: '↻', title: "Refresh room source", name: "refresh" });
+    refreshbutton.addEventListener('click', ev => {
+      roomedit.source = room.getRoomSource();
+    });
+
     if (room.roomassets.script) {
       for (let k in room.roomassets.script) {
         let scriptasset = room.roomassets.script[k];
@@ -1880,7 +1886,7 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
   init() {
     super.init();
     this.defineAttributes({
-      source: { type: 'string' },
+      source: { type: 'string', set: this.updateSource },
       filename: { type: 'string', default: 'New File' },
       mode: { type: 'string', default: 'xml' },
       hints: { type: 'object' },
@@ -1983,6 +1989,11 @@ console.log('editor hints', this.hints);
       room.updateSource(newsource);
       this.updatetimer = false;
     }, 500);
+  }
+  updateSource() {
+    if (this.source != this.codemirror.getValue()) {
+      this.codemirror.setValue(this.source);
+    }
   }
 });
 
