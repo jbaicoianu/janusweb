@@ -246,7 +246,7 @@ this.appendChild(this.previewwindow);
         // frame API
         let apimsg = JSON.parse(ev.data);
         let frame = this.querySelector('iframe'); // FIXME - hacky
-        if (apimsg.eventName == 'v1.frame.ready') {
+        if (apimsg.eventName == 'v1.frame.ready' && frame && frame.contentWindow) {
            frame.contentWindow.postMessage(JSON.stringify({
               target: 'readyplayerme',
               type: 'subscribe',
