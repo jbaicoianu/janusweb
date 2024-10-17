@@ -309,3 +309,10 @@ fireboxroom room,
 fireboxroom assets {
   display: none;
 }
+janus-ui-main ui-panel {
+  opacity: 1;
+}
+janus-ui-main.fadeout ui-panel {
+  opacity: 0;
+  transition: opacity 2s ease-out;
+}
