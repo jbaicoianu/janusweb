@@ -18,7 +18,7 @@ janus.registerElement('locomotion_teleporter', {
       shadow: false,
       shadow_cast: false,
       shadow_receive: false,
-      renderorder: 51,
+      renderorder: 501,
       depth_test: false,
       depth_write: false,
     });
@@ -29,9 +29,10 @@ janus.registerElement('locomotion_teleporter', {
       collidable: false,
       pickable: false,
       shadow: false,
+      opacity: .1,
       shadow_cast: false,
       shadow_receive: false,
-      renderorder: 50,
+      renderorder: 500,
     });
     this.pointer = this.marker.createObject('Object', {
       id: 'pyramid',
@@ -44,7 +45,7 @@ janus.registerElement('locomotion_teleporter', {
       shadow: false,
       shadow_cast: false,
       shadow_receive: false,
-      renderorder: 52,
+      renderorder: 502,
     });
 /*
     this.light = this.createObject('Light', {
