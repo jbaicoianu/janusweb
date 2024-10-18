@@ -220,6 +220,9 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     // FIXME - first element with the current design is a <detail> element, but this is fragile if that changes
     this.elements[0].addEventListener('toggle', (ev) => this.elements.chatinput.focus());
     this.updateRoom(room);
+    if (window.innerWidth < 760) {
+      this.elements.toggle.open = false;
+    }
   }
   scrollToBottom() {
     setTimeout(() => {
