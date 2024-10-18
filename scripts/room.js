@@ -93,7 +93,10 @@ elation.require([
         'onload': { type: 'string' },
         'sync': { type: 'boolean', default: false },
         'pointerlock': { type: 'boolean', default: true, set: this.updatePointerLock },
-        'players': { type: 'object', get: this.getRoomPlayers }
+        'players': { type: 'object', get: this.getRoomPlayers },
+        'defaultview': { type: 'string' },
+        'showavatar': { type: 'bool', default: true, set: this.updateAvatarVisibility },
+        'spawnradius': { type: 'float', default: 0 },
       });
 
       if (!roomTranslators) {
@@ -229,6 +232,11 @@ elation.require([
       this.updateToneMapping();
       this.setNearFar();
       this.setPlayerPosition();
+      if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+        player.setCameraView(this.defaultview);
+      }
+      this.updateAvatarVisibility();
+
       elation.events.fire({element: this, type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
@@ -258,14 +266,22 @@ elation.require([
         document.location.hash = hash;
       }
       let spawnpoint = this.getSpawnpoint();
-      player.startposition.copy(spawnpoint.position);
-      player.startorientation.copy(spawnpoint.orientation);
+      if (typeof player != 'undefined') {
+        player.startposition.copy(spawnpoint.position);
+        player.startorientation.copy(spawnpoint.orientation);
+      }
     }
     this.getSpawnpoint = function(referrer) {
       let spawnpoint = {
         position: this.spawnpoint.position,
         orientation: this.spawnpoint.quaternion,
       };
+      if (this.spawnradius) {
+        let dist = Math.random() * this.spawnradius,
+            angle = Math.random() * 2 * Math.PI;
+        spawnpoint.position.x += Math.sin(angle) * dist;
+        spawnpoint.position.z += Math.cos(angle) * dist;
+      }
       if (referrer) {
         let links = this.getObjectsByTagName('link');
         for (let i = 0; i < links.length; i++) {
@@ -981,6 +997,12 @@ elation.require([
         this.flying = elation.utils.any(room.flying, true);
         this.teleport = elation.utils.any(room.teleport, true);
         this.pointerlock = elation.utils.any(room.pointerlock, true);
+        this.defaultview = elation.utils.any(room.defaultview, null);
+        this.showavatar = elation.utils.any(room.showavatar, true);
+        if ('spawnradius' in room) this.spawnradius = room.spawnradius;
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+          player.setCameraView(this.defaultview);
+        }
         //if (room.col) this.properties.col = room.col;
 
         this.properties.walk_speed = room.walk_speed || 1.8;
@@ -2131,6 +2153,8 @@ elation.require([
           voiprange: ['property', 'voiprange'],
           voipserver: ['property', 'voipserver'],
           players: ['property', 'players'],
+          defaultview: ['property', 'defaultview'],
+          showavatar: ['property', 'showavatar'],
 
           localToWorld:  ['function', 'localToWorld'],
           worldToLocal:  ['function', 'worldToLocal'],
@@ -3003,6 +3027,19 @@ console.log('unknown material', mat);
         }
       }
       return players;
+    }
+    this.updateAvatarVisibility = function() {
+      if (typeof player != 'undefined' && player.ghost) {
+        if (this.showavatar) {
+          player.ghost.visible = true;
+          if (player.ghost.body) player.ghost.body.visible = true;
+          if (player.ghost.head) player.ghost.head.visible = true;
+        } else {
+          player.ghost.visible = false;
+          if (player.ghost.body) player.ghost.body.visible = false;
+          if (player.ghost.head) player.ghost.head.visible = false;
+        }
+      }
     }
   }, elation.engine.things.generic);
 });
