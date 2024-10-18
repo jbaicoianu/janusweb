@@ -344,6 +344,7 @@ ui-window>.ui_window_content {
 }
 ui-window>ui-window-content {
   order: 1;
+  position: relative;
 }
 ui-window[scrollable]>ui-window-content {
   overflow: auto;
@@ -1087,7 +1088,7 @@ ui-treeview ui-list {
   margin: 0 0 0 .3em;
   padding-left: .8em;
   -webkit-user-select: none;
-  -webkit-tap-highlight-color: rgba(0,0,0,0); 
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 ui-treeview>ui-list {
   border-left: 0;
@@ -1122,7 +1123,7 @@ ui-treeview ui-treeviewitem>ui-text:hover {
 ui-treeview ui-treeviewitem.state_selected>ui-text {
   color: #0f0;
 }
-ui-treeview ul li.state_selected, 
+ui-treeview ul li.state_selected,
 ui-treeview ul li.state_hover li.state_selected {
   max-height: none;
 }
@@ -1283,4 +1284,94 @@ ui-image-picker canvas {
   padding: 2px;
   display: inline-block;
   vertical-align: top;
+}
+
+/* <ui-wizard> */
+ui-wizard {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+ui-wizard[type="paginate"]>ui-wizard-step {
+  display: none;
+  opacity: 0;
+  transition: opacity 500ms linear;
+  flex: 1;
+}
+ui-wizard[step=""]>ui-wizard-backbutton,
+ui-wizard[step="1"]>ui-wizard-backbutton {
+  display: none;
+}
+/* Up to 10 steps - wizards with more steps should probably be split up some */
+ui-wizard[type="paginate"][step=""]>ui-wizard-step:nth-of-type(1),
+ui-wizard[type="paginate"][step="1"]>ui-wizard-step:nth-of-type(1),
+ui-wizard[type="paginate"][step="2"]>ui-wizard-step:nth-of-type(2),
+ui-wizard[type="paginate"][step="3"]>ui-wizard-step:nth-of-type(3),
+ui-wizard[type="paginate"][step="4"]>ui-wizard-step:nth-of-type(4),
+ui-wizard[type="paginate"][step="5"]>ui-wizard-step:nth-of-type(5),
+ui-wizard[type="paginate"][step="6"]>ui-wizard-step:nth-of-type(6),
+ui-wizard[type="paginate"][step="7"]>ui-wizard-step:nth-of-type(7),
+ui-wizard[type="paginate"][step="8"]>ui-wizard-step:nth-of-type(8),
+ui-wizard[type="paginate"][step="9"]>ui-wizard-step:nth-of-type(9),
+ui-wizard[type="paginate"][step="10"]>ui-wizard-step:nth-of-type(10) {
+  display: flex;
+  opacity: 1;
+  flex: 1;
+  flex-direction: column;
+}
+ui-wizard-step>section {
+  padding: 0 .5em 0 .5em;
+}
+ui-wizard[type="paginate"] ui-wizard-pagination {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  align-items: center;
+  justify-items: center;
+}
+ui-wizard[type="paginate"] ui-wizard-pagination ui-button.back {
+  grid-column-start: 1;
+}
+ui-wizard[type="paginate"] ui-wizard-pagination ui-button.next {
+  grid-column-start: 2;
+}
+ui-wizard-navigation {
+  display: flex;
+  flex-direction: row;
+}
+ui-wizard-navigation ui-buttonbar {
+  width: 100%;
+}
+ui-wizard-navigation ui-buttonbar ui-button {
+  margin: 0;
+  position: relative;
+  clip-path: polygon(0 0, 120% 0%, 120% 100%, 0 100%, 1lh 50%);
+  padding-left: 1lh;
+}
+ui-wizard-navigation ui-buttonbar ui-button:first-child {
+  clip-path: none;
+  border-radius: 0;
+}
+ui-wizard-navigation ui-buttonbar ui-button::after {
+  width:0;
+  height: 0;
+  content: '';
+  display: block;
+  position: absolute;
+  right: calc(-1lh + 1px);
+  border-top: 1lh solid transparent;
+  border-bottom: 1lh solid transparent;
+  border-left: 1lh solid var(--logo-green);
+  top: 0;
+}
+ui-wizard-navigation ui-buttonbar ui-button:last-child::after {
+  display: none;
+}
+ui-wizard-navigation ui-buttonbar ui-button[disabled]::after {
+  border-left: 1lh solid #666;
+}
+ui-wizard-navigation ui-buttonbar ui-button.state_active {
+  background: white;
+}
+ui-wizard-navigation ui-buttonbar ui-button.state_active::after {
+  border-left: 1lh solid white;
 }
