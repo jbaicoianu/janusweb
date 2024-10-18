@@ -336,9 +336,7 @@ JanusClientConnection.prototype.connect = function() {
   this._websocket.onclose = function() {
     this.status = 0;
     this.dispatchEvent({type: 'disconnect'});
-    if (!this.pendingReconnect) {
-      this.reconnect();
-    }
+    this.reconnect();
   }.bind(this);
 
   this._websocket.onmessage = this.onMessage.bind(this)  
@@ -354,6 +352,8 @@ JanusClientConnection.prototype.reconnect = function(force) {
       console.log('Reconnecting...');
       this.connect();
     }
+  } else {
+    console.log('reconnect attempted too soon', this.lastattempt, now, this.reconnectdelay);
   }
 }
 JanusClientConnection.prototype.disconnect = function() {
@@ -392,7 +392,7 @@ JanusClientConnection.prototype.setUserId = function(userId) {
 };
 
 JanusClientConnection.prototype.send = function(msg) {
-  if (this._websocket.readyState == 3) {
+  if (this._websocket.readyState > 1) {
     this.msgQueue.push(msg);
     if (!this.pendingReconnect) {
       this.reconnect();
