@@ -142,11 +142,13 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         window.scrollTo(0, 1);
       });
       window.addEventListener('touchend', ev => {
-        // FIXME - useragent hack isn't the best way of handling this, but it beats getting stuck in non-immersive fullscreen mode while in a VR headset
-        if (navigator.userAgent.indexOf('OculusBrowser') != -1) {
-          this.startXR();
-        } else if (!this.view.isFullscreen()) {
-          this.toggleFullscreen({value: 1});
+        if (ev.target == this.engine.systems.render.renderer.domElement) {
+          // FIXME - useragent hack isn't the best way of handling this, but it beats getting stuck in non-immersive fullscreen mode while in a VR headset
+          if (navigator.userAgent.indexOf('OculusBrowser') != -1) {
+            this.startXR();
+          } else if (!this.view.isFullscreen()) {
+            this.toggleFullscreen({value: 1});
+          }
         }
       });
     }
