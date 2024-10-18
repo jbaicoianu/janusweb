@@ -1411,6 +1411,12 @@ console.log('clone', props);
             roomproxy.appendChild(objproxy);
           }
           this.start();
+        } else if (!newroom && !ischild) {
+          let oldroomproxy = (oldroom._target ? oldroom : oldroom.getProxyObject()),
+              objproxy = (this._target ? this : this.getProxyObject());
+          if (oldroomproxy.contains(objproxy)) {
+            oldroomproxy.removeChild(objproxy);
+          }
         }
       }
     }
