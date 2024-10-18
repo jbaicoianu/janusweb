@@ -745,12 +745,12 @@ document.body.dispatchEvent(click);
 
       if (this.jumping) {
         animid = 'jump';
-      } else if (this.controlstate.move_left) {
-        animid = (running ? 'run' : 'walk_left');
-      } else if (this.controlstate.move_right) {
-        animid = (running ? 'run' : 'walk_right');
+      } else if (this.controlstate.move_left && Math.abs(this.controlstate.move_left) > .15) {
+        animid = (running ? 'run' : (this.controlstate.move_left > 0 ? 'walk_left' : 'walk_right'));
+      } else if (this.controlstate.move_right && Math.abs(this.controlstate.move_right) > .15) {
+        animid = (running ? 'run' : (this.controlstate.move_right > 0 ? 'walk_right' : 'walk_left'));
       } else if (this.controlstate.move_forward) {
-        animid = (running ? 'run' : 'walk');
+        animid = (running ? 'run' : (this.controlstate.move_forward > 0 ? 'walk' : 'walk_back'));
       } else if (this.controlstate.move_backward) {
         animid = (running ? 'run' : 'walk_back');
       } else if (document.activeElement && this.properties.janus.chat && document.activeElement === this.properties.janus.chat.input.inputelement) {
