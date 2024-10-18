@@ -2876,6 +2876,9 @@ console.log('dispatch to parent', event, this, event.target);
         gain.gain.cancelScheduledValues(ctx.currentTime);
         gain.gain.linearRampToValueAtTime(gain.gain.value, ctx.currentTime);
         gain.gain.linearRampToValueAtTime(value, ctx.currentTime + time);
+        if (gain.gain.value == 0) {
+          gain.gain.value = .01;
+        }
       }
     }
     this.fadeAudioOut = function(time=4, value=0) {
