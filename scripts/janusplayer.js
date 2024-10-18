@@ -1119,9 +1119,6 @@ document.body.dispatchEvent(click);
         }
       };
     })();
-    this.dispatchEvent = function(event, target) {
-      let firedev = elation.events.fire(event);
-    }
     this.lookAt = function(other, up, turnhead) {
       if (!up) up = new THREE.Vector3(0,1,0);
       if (!other) return;
@@ -1314,8 +1311,9 @@ document.body.dispatchEvent(click);
       let returnValue = true;
       firedev.forEach(e => returnValue &= e.returnValue);
       if (event.bubbles !== false && returnValue && this.parent && this.parent.dispatchEvent) {
-        event.element = this.parent;
-        this.parent.dispatchEvent(event);
+        let ev = elation.events.clone(event);
+        ev.element = this.parent;
+        this.parent.dispatchEvent(ev);
       }
     }
     this.addEventListenerProxy = function(name, handler, bubble) {
