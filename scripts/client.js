@@ -504,15 +504,17 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         }
         elation.events.fire({type: 'overlay_show', element: this});
       }
-      hide() {
+      hide(remove=true) {
         super.hide();
         elation.events.fire({type: 'overlay_hide', element: this});
-        setTimeout(() => {
-          if (this.parentNode) {
-            this.oldparent = this.parentNode;
-            this.parentNode.removeChild(this);
-          }
-        }, 1000);
+        if (remove) {
+          setTimeout(() => {
+            if (this.parentNode) {
+              this.oldparent = this.parentNode;
+              this.parentNode.removeChild(this);
+            }
+          }, 1000);
+        }
       }
     });
   }
