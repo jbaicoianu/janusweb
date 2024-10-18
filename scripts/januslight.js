@@ -7,7 +7,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_directional: { type: 'bool', default: false, set: this.updateLight },
         light_range: { type: 'float', default: 0, set: this.updateLight, min: 0, comment: 'Max distance at which light can affect objects' },
         light_intensity: { type: 'float', default: 10, set: this.updateLight, comment: 'Light brightness' },
-        light_cone_angle: { type: 'float', default: 0, set: this.updateLight, min: 0, max: 1, comment: 'Light cone shape. 0 = directional, 1 = point light, anything inbetween is a spotlight' },
+        light_cone_angle: { type: 'float', default: 0, set: this.updateLight, min: 0, max: 1, comment: 'Light cone shape. 0 = point light, 1 = directional, anything inbetween is a spotlight' },
         light_cone_exponent: { type: 'float', default: 1, set: this.updateLight },
         light_penumbra: { type: 'float', default: 1, set: this.updateLight, min: 0, max: 1, comment: 'Spotlight fall-off. 0 is crisp, 1 is smooth' },
         light_decay: { type: 'float', default: 2, set: this.updateLight, comment: 'The amount the light dims along the distance of the light. Default is 1. For physically correct lighting, set this to 2.' },
