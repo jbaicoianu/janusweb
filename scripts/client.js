@@ -489,8 +489,13 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
     elation.elements.define('janus.overlay', class extends elation.elements.base {
       init() {
         super.init();
-        elation.events.add(this.player, 'player_enable', ev => { this.hide(); });
-        elation.events.add(this.player, 'player_disable', ev => { this.show(); });
+        this.defineAttributes({
+          autotoggle: { type: 'bool', default: false }
+        });
+        if (this.autotoggle) {
+          elation.events.add(this.player, 'player_enable', ev => { this.hide(); });
+          elation.events.add(this.player, 'player_disable', ev => { this.show(); });
+        }
       }
       show() {
         super.show();
