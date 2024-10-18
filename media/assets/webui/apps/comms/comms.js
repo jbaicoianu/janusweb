@@ -30,6 +30,7 @@ elation.elements.define('janus-comms-status', class extends elation.elements.bas
   }
   create() {
     this.player = player;
+    this.userid = player.getNetworkUsername();
     if (typeof room != 'undefined') {
       this.room = room;
     }
