@@ -1140,7 +1140,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       }
     }
     this.isUsingPBR = function() {
-      return this.lighting && elation.utils.any(this.room.pbr, elation.config.get('janusweb.materials.pbr'));
+      return this.lighting && elation.utils.any(this.room && this.room.pbr, elation.config.get('janusweb.materials.pbr'));
     }
     this.isUsingToonShader = function() {
       return this.lighting && elation.utils.any(this.room.toon, elation.config.get('janusweb.materials.toon'));
