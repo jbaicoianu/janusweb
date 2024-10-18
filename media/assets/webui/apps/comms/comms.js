@@ -100,6 +100,7 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.usermarkers = {};
 
     elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.data || ev.element); });
+    elation.events.add(this.janusweb, 'room_change', (ev) => { let newroom = this.janusweb.rooms[this.janusweb.getRoomId(ev.data)]; if (newroom) this.updateRoom(newroom); });
     elation.events.add(this.janusweb.network, 'janusweb_user_joined,janusweb_user_left,janusweb_user_disconnected', (ev) => this.updateUsers());
     setTimeout(() => {
       //this.updateUsers();
@@ -132,10 +133,16 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
       this.elements.userlist_details.open = true;
     }
     this.updateUsers();
+    elation.events.add(this.room, 'join', ev => {
+      setTimeout(() => {
+        this.updateUsers();
+      }, 1000);
+    });
+    elation.events.add(this.room, 'room_active', ev => { this.updateUsers(); });
   }
   updateUsers() {
     if (!janus.network) return;
-    var remoteplayers = janus.network.remoteplayers;
+    var remoteplayers = this.room.players;
     var users = Object.keys(remoteplayers);
     //users.unshift(player.userid);
 
