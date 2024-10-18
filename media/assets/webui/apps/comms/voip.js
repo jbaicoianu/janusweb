@@ -1,4 +1,11 @@
+
+let sfus = {};
+
 elation.elements.define('janus-voip-client', class extends elation.elements.base {
+  init() {
+    super.init();
+    this.defineAttribute('spatialized', { type: 'boolean', default: false, set: this.updateSpatialization });
+  }
   create() {
     this.localuser = document.createElement('janus-voip-localuser');
     this.appendChild(this.localuser);
@@ -10,7 +17,6 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     let datapath = elation.config.get('janusweb.datapath', '/media/janusweb'),
         assetpath = datapath + 'assets/webui/apps/comms/';
 
-
     janus.assetpack.loadJSON([
       { "assettype":"sound", "name":"voip_ui_enter", "src":"assets/webui/apps/comms/sounds/ui_casual_pops_confirm.wav" },
       { "assettype":"sound", "name":"voip_ui_mic", "src":"assets/webui/apps/comms/sounds/ui_casual_pops_back.wav" },
@@ -20,7 +26,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     elation.events.add(janus._target, 'room_change', (ev) => {
       if (!room.loaded) {
         room.addEventListener('room_load_processed', async () => {
-          console.log('changed room', room.voipid, ev);
+          console.log('[voip-client] changed room', room.voipid, ev);
           this.setRoom(room);
         });
       } else {
@@ -44,6 +50,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     let roomid = newroom.voipid || newroom.id;
 
     if (this.currentroom) { // && this.rooms[roomid] !== this.currentroom) {
+      console.log('[voip-client] setRoom called, disconnect from existing room', this.currentroom);
       if (this.currentroom.disconnect) {
         this.currentroom.disconnect();
       }
@@ -51,7 +58,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     }
 
     if (newroom.private) {
-      console.log('Room is private, don\'t connect to VOIP server');
+      console.log('[voip-client] Room is private, don\'t connect to VOIP server');
       this.currentroom = false;
       return;
     }
@@ -62,6 +69,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
         append: this,
         roomid: roomid,
       });
+      console.log('[voip-client] create new voip-client', voiptype, roomid, this.rooms[roomid]);
 
       if (this.inputstream) {
         this.rooms[roomid].setInputStream(this.inputstream);
@@ -72,6 +80,7 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
         elation.events.fire({type: 'init', element: this});
       });
     } else {
+      console.log('[voip-client] voip client for room already exists', roomid, this.rooms[roomid]);
       this.appendChild(this.rooms[roomid]);
       this.rooms[roomid].connect();
     }
@@ -85,7 +94,6 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     this.localuser.setData(null);
   }
   handleUserChat(ev) {
-    console.log('got a chat', ev.data);
     let msg = ev.data.message;
     let m = msg.data.match(/📞 (.*$)/);
     if (m) {
@@ -99,6 +107,25 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
       }
     }
   }
+  updateSpatialization() {
+    if (this.spatialized) {
+      requestAnimationFrame(() => this.spatialize());
+    } else {
+      remoteusers.forEach(user => {
+        if (user.spatialized) user.spatialized = false;
+      });
+    }
+  }
+  spatialize() {
+    let remoteusers = this.querySelectorAll('janus-voip-remoteuser');
+    remoteusers.forEach(user => {
+      if (!user.spatialized) user.spatialized = true;
+      user.spatialize();
+    });
+    if (this.spatialized) {
+      requestAnimationFrame(() => this.spatialize());
+    }
+  }
 });
 elation.elements.define('janus-voip-client-janus', class extends elation.elements.base {
   create() {
@@ -106,36 +133,46 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
   }
   connect() {
     if (typeof NAF != 'undefined' && !('janus' in NAF.adapters.adapters)) {
-      console.log('NAF adapter not found, load it');
+      console.log('[voip-client-janus] NAF adapter not found, load it');
       elation.file.get('js', janus.ui.apps.default.apps.comms.resolveFullURL('./external/naf-janus-adapter.js'), (ev) => {
+        console.log('[voip-client-janus] NAF adapter loaded, continue');
         this.connect();
       });
       return;
     }
-    let sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
-    this.sfu = sfu;
 
     let voipserver = room.voipserver || 'voip.janusxr.org';
 
-    sfu.connect('wss://' + voipserver + '/', 'default', room.url, true);
+    let sfu = sfus[voipserver];
+    if (!sfu) {
+      sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
+      sfu.connect('wss://' + voipserver + '/', 'default', room.url, true);
+      sfus[voipserver] = sfu;
+    } else {
+      sfu.adapter.setRoom(room.url);
+      sfu.adapter.reconnect();
+    }
+    this.sfu = sfu;
+
 
     this.localuser = this.parentNode.localuser;
     //this.localuser = document.createElement('janus-voip-localuser');
     //this.appendChild(this.localuser);
 
-    let remoteusers = {};
+    let remoteusers = this.remoteusers = {};
     sfu.addEventListener('voip-media-change', (ev) => {
-      console.log('got some media', ev.detail);
+      console.log('[voip-client-janus] got some media', ev.detail);
       this.localuser.setData(ev.detail.stream);
     });
     sfu.addEventListener('voip-user-connect', (ev) => {
-      console.log('new client', ev);
+      console.log('[voip-client-janus] user connected', ev);
       let el = document.createElement('janus-voip-remoteuser');
       el.setUserData(ev.detail);
       this.appendChild(el);
       remoteusers[ev.detail.id] = el;
     });
     sfu.addEventListener('voip-user-disconnect', (ev) => {
+      console.log('[voip-client-janus] user disconnected', ev);
       let userid = ev.detail.id,
           user = remoteusers[userid];
       if (user) {
@@ -200,7 +237,7 @@ console.log('leave room and remove all occupants', this.room);
     let sfu = this.sfu;
     if (!room.private) {
       sfu.adapter.setRoom(room.url)
-      console.log('room is now', sfu.adapter.room);
+      console.log('[voip-client-janus] room is now', sfu.adapter.room);
       sfu.adapter.reconnect();
 /*
       let handle = sfu.adapter.publisher.handle;
@@ -210,7 +247,7 @@ console.log('leave room and remove all occupants', this.room);
       });
 */
     } else {
-      console.log('new room is private, disconnect');
+      console.log('[voip-client-janus] new room is private, disconnect');
       setTimeout(() => {
         sfu.adapter.disconnect();
       }, 0);
@@ -449,7 +486,7 @@ elation.elements.define('janus-voip-localuser', class extends elation.elements.b
       video.srcObject = data;
       this.appendChild(video);
       video.muted = true;
-      video.play().then(() => console.log('playing', video)).catch(e => console.log('Failed to start video', e, video));
+      video.play().then(() => console.log('[voip-localuser] playing', video)).catch(e => console.log('[voip-localuser] Failed to start video', e, video));
       this.video = video;
     }
 
@@ -553,13 +590,18 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       'averagevolume': { type: 'float', default: 0 },
       'speaking': { type: 'boolean', default: false },
       'threshold': { type: 'float', default: .2 },
+      'spatialized': { type: 'bool', default: false },
     });
     this.lastposition = V();
     setTimeout(() => this.setAttribute('active', true), 100);
   }
   setUserData(data) {
+    if (!this.created) {
+      setTimeout(() => this.setUserData(data), 10);
+      return;
+    }
     this.id = data.id;
-console.log('got a remote voip user', data);
+console.log('[voip-remoteuser] got a remote voip user', data);
 
     if (!this.label) {
       let label = document.createElement('h2');
@@ -570,22 +612,44 @@ console.log('got a remote voip user', data);
 
     if (data.media.video) {
       let track = data.media.video.getVideoTracks()[0];
-      data.media.video.addEventListener('addtrack', (ev) => console.log('a track was added', ev));
-      data.media.video.addEventListener('removetrack', (ev) => console.log('a track was added', ev));
+      data.media.video.addEventListener('addtrack', (ev) => console.log('[voip-remoteuser] a track was added', ev));
+      data.media.video.addEventListener('removetrack', (ev) => console.log('[voip-remoteuser] a track was removed', ev));
       let video = document.createElement('video');
       video.muted = true;
       video.srcObject = data.media.video;
       this.appendChild(video);
-      console.log('remote user call play', video);
+      console.log('[voip-remoteuser] remote user call play', video);
       video.play()
-        .then(() => { console.log('remote user video playing', video, this); })
-        .catch(e => { console.log('failed to play remote video', video, e, this); });
+        .then(() => {
+          console.log('[voip-remoteuser] remote user video playing', video, this);
+          this.updateVideo();
+
+      let frametimer = false;
+      let detectStoppedVideo = (frame) => {
+        video.requestVideoFrameCallback(detectStoppedVideo);
+        if (frametimer) clearTimeout(frametimer);
+        frametimer = setTimeout(() => { 
+          // FIXME - when video stops, we still display the last frame indefinitely. The below code clears the video frame,
+          //         but prevents video from resuming if the remote player reenables their camera
+          //video.srcObject = new MediaStream(video.srcObject.getAudioTracks());
+          this.hasvideo = false;
+        }, 2000);
+        if (!this.hasvideo) {
+          this.hasvideo = true;
+        }
+      };
+
+      detectStoppedVideo(false);
+      video.addEventListener('ended', ev => { console.log('[voip-remoteuser] video ended', video, this); this.updateVideo(); });
+      video.addEventListener('empty', ev => { console.log('[voip-remoteuser] video empty', video, this); this.updateVideo(); });
+      video.addEventListener('pause', ev => { console.log('[voip-remoteuser] video paused', video, this); this.updateVideo(); });
+        })
+        .catch(e => { console.log('[voip-remoteuser] failed to play remote video', video, e, this); });
       this.video = video;
-      video.addEventListener('resize', (ev) => { console.log('video resized', video, this); this.updateVideo(); });
-      this.updateVideo();
-      this.hasvideo = true;
+      video.addEventListener('resize', (ev) => { console.log('[voip-remoteuser] video resized', video, this); this.updateVideo(); });
+      //this.hasvideo = true;
     } else {
-      this.hasvideo = false;
+      //this.hasvideo = false;
     }
 
     // audio
@@ -594,7 +658,12 @@ console.log('got a remote voip user', data);
       audio.srcObject = data.media.audio;
       this.audio = audio;
       this.appendChild(audio);
-      this.hasaudio = true;
+
+      audio.play()
+        .then(() => {
+          console.log('[voip-remoteuser] remote user audio playing', audio, this);
+          this.hasaudio = true;
+        });
 
       let listener = player.engine.systems.sound.getRealListener();
       let context = listener.context;
@@ -624,7 +693,7 @@ console.log('got a remote voip user', data);
     let remoteuser = janus.network.remoteplayers[this.id];
 
     if (!this.controlpanel) {
-      this.controlpanel = elation.elements.create('ui-panel', { bottom: 1, append: this });
+      this.controlpanel = elation.elements.create('ui-panel', { bottom: true, append: this });
       this.mutebutton = elation.elements.create('ui-button', { label: 'Mute', name: "mutebutton", append: this.controlpanel });
       this.volume = elation.elements.create('ui-slider', { name: "volume", min: 0, max: 200, value: this.video.volume * 100, append: this.controlpanel, snap: 1 });
 
@@ -703,10 +772,10 @@ console.log('got a remote voip user', data);
       });
     }
 
-    console.log('got remote media', data, remoteuser);
+    console.log('[voip-remoteuser] got remote media', data, remoteuser);
   }
   destroy() {
-    console.log('stop media', this.id);
+    console.log('[voip-remoteuser] stop media', this.id);
     if (this.video) {
       //this.video.pause();
     }
@@ -731,11 +800,13 @@ console.log('got a remote voip user', data);
         this.hasvideo = false;
         elation.html.removeclass(video, 'active');
       }
+    } else {
+      this.hasvideo = false;
     }
   }
   toggleMute() {
     this.muted = !this.muted;
-console.log('mute?', this.muted, this);
+console.log('[voip-remoteuser] mute?', this.muted, this);
     let remoteuser = janus.network.remoteplayers[this.id];
     if (this.muted) {
       this.mutebutton.addclass('muted');
@@ -763,12 +834,29 @@ console.log('mute?', this.muted, this);
       this.colorreset = setTimeout(() => {
         this.speaking = false;
         this.colorreset = false;
+        this.video.style.removeProperty('box-shadow');
       }, 200);
+      let shadowsize = 2 + (3 * this.averagevolume);
+      this.video.style.boxShadow = '0 0 2px ' + shadowsize + 'px rgba(0,255,0,.8)';
+    } else {
+      this.video.style.removeProperty('box-shadow');
     }
+    this.hasaudio = this.averagevolume > 0;
 
     if (this.label3d) {
       this.label3d.setAudioVolume(this.averagevolume);
       this.remoteuser.setSpeakingVolume(this.averagevolume);
+    }
+  }
+  spatialize() {
+    if (!this.relativepos) this.relativepos = V();
+    let remoteuser = janus.network.remoteplayers[this.id];
+    if (remoteuser) {
+      let relativepos = player.worldToLocal(remoteuser.localToWorld(this.relativepos.set(0, 0, 0)));
+      let angle = Math.PI - Math.atan2(relativepos.x, relativepos.z),
+          len = .4 * window.innerHeight;
+      this.style.top = ( window.innerHeight / 2 - len * Math.cos(angle) - (this.offsetHeight / 2)) + 'px';
+      this.style.left = (len * Math.sin(angle) + window.innerWidth / 2 - (this.offsetWidth / 2)) + 'px';
     }
   }
 });
@@ -795,10 +883,10 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
       //         We should use a session cookie-based timeout in addition to the localStorage settings
       this.handleSelectAudio({detail: 1});
     }
-    console.log('voip picker loaded config', this.voipconfig);
+    console.log('[voip-picker] voip picker loaded config', this.voipconfig);
   }
   handleSelectNone() {
-    console.log('selected none');
+    console.log('[voip-picker] selected none');
     //janus.engine.systems.sound.enableSound();
     if (this.subpicker && this.subpicker.parentNode) {
       this.subpicker.parentNode.removeChild(this.subpicker);
@@ -813,16 +901,16 @@ elation.elements.define('janus-voip-picker', class extends elation.elements.base
     this.elements.audio.deactivate();
   }
   handleSelectAudio(ev) {
-    console.log('selected audio', ev.detail, this.voipconfig);
+    console.log('[voip-picker] selected audio', ev.detail, this.voipconfig);
     //janus.engine.systems.sound.enableSound();
     if (!this.subpicker) {
       this.subpicker = elation.elements.create('janus-voip-picker-audio', { config: (this.voipconfig ? JSON.stringify(this.voipconfig) : false), showvideo: this.showvideo });
       elation.events.add(this.subpicker, 'select', ev => {
-console.log('SELECTED', ev.detail);
+console.log('[voip-picker] SELECTED', ev.detail);
         document.dispatchEvent(new CustomEvent('voip-picker-select', { detail: ev.detail }));
         this.dispatchEvent(new CustomEvent('select', { detail: ev.detail }));
         let voipsettings = this.subpicker.getSettings();
-        console.log('update voip settings', voipsettings);
+        console.log('[voip-picker] update voip settings', voipsettings);
         player.setSetting('voip', voipsettings);
       });
     }
@@ -832,7 +920,7 @@ console.log('SELECTED', ev.detail);
     this.elements.none.deactivate();
   }
   handleSelectVideo() {
-    console.log('selected video');
+    console.log('[voip-picker] selected video');
     this.dispatchEvent(new CustomEvent('select', { detail: 'video' }));
   }
 });
@@ -877,7 +965,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     this.elements = elation.elements.fromString(tplstr, this);
 
     if (this.config) {
-      console.log('I have a config!', this.config);
+      console.log('[voip-picker-audio] I have a config!', this.config);
       this.setSettings(JSON.parse(this.config));
     }
 
@@ -900,7 +988,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
       this.updateButton();
     });
     elation.events.add(this.elements.webcamEnabled, 'toggle', (ev) => {
-      console.log('toggled', ev.data, ev);
+      console.log('[voip-picker-audio] toggled', ev.data, ev);
       if (ev.data) {
         this.getUserMedia({video: true});
       }
@@ -952,7 +1040,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
             this.elements.webcamEnabled.hide();
             this.elements.videoDevice.show();
           } else {
-            console.log('NO WEBCAM PERMISSION');
+            console.log('[voip-picker-audio] NO WEBCAM PERMISSION');
             this.elements.webcamEnabled.show();
             this.elements.videoDevice.hide();
           }
@@ -984,11 +1072,11 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
     constraints.audio.autoGainControl = { ideal: false };
 
     if (this.elements.inputDevice.value && this.elements.inputDevice.value != 'default') {
-      console.log('input!', this.elements.inputDevice.value);
+      console.log('[voip-picker-audio] input!', this.elements.inputDevice.value);
       constraints.audio.deviceId = { ideal: this.elements.inputDevice.value };
     }
     if (this.elements.videoDevice && this.elements.videoDevice.value && this.elements.videoDevice.value != 'none') {
-      console.log('video!', this.elements.videoDevice.value);
+      console.log('[voip-picker-audio] video!', this.elements.videoDevice.value);
       constraints.video = {
         deviceId: { ideal: this.elements.videoDevice.value },
         height: 256,
@@ -1029,7 +1117,7 @@ elation.elements.define('janus-voip-picker-audio', class extends elation.element
         this.elements.error.hide();
         this.updateButton();
       }).catch(err => {
-        console.log('OH NO!', err);
+        console.log('[voip-picker-audio] OH NO!', err);
         this.elements.error.innerHTML = err;
         this.elements.error.show();
       });
@@ -1218,7 +1306,7 @@ elation.elements.define('janus-voip-picker-videotest', class extends elation.ele
       }
       video.srcObject = stream;
       video.muted = true;
-      video.play().then(() => console.log('playing', video));
+      video.play().then(() => console.log('[voip-picker-videotest] playing', video));
     } else if (video && video.parentNode) {
       video.parentNode.removeChild(video);
     }

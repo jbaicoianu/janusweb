@@ -81,7 +81,7 @@ elation.require([
         'server': { type: 'string' },
         'port': { type: 'int' },
         'rate': { type: 'int', default: 200 },
-        'voip': { type: 'string', default: 'none' },
+        'voip': { type: 'string', default: 'janus' },
         'voipid': { type: 'string' },
         'voiprange': { type: 'float', default: 1 },
         'voipserver': { type: 'string', default: 'voip.janusxr.org' },

@@ -1,5 +1,4 @@
 janus-voip-client {
-  border: 1px solid black;
   position: relative;
   max-width: 75vh;
   flex-wrap: wrap;
@@ -11,29 +10,55 @@ janus-voip-client-janus {
 janus-voip-localuser {
   display: block;
   bottom: 0px;
-  border: 2px solid black;
   padding: 0px;
-  box-shadow: 0 0 5px black;
   z-index: 10;
+}
+janus-voip-localuser:empty {
+  border: none;
+  box-shadow: none;
 }
 janus-voip-localuser video {
   max-width: 128px;
   height: 128px;
   display: block;
   margin: 1px 0 0 1px;
+  border: 1px solid #aaa;
+  border-radius: 50%;
+  box-shadow: 0 0 2px 2px white;
 }
 janus-voip-remoteuser {
   xdisplay: inline-block;
-  border: 2px solid black;
   position: relative;
   font-family: monospace;
   transition: transform 250ms ease;
   transform: scale(0, 0);
   min-width: 5em;
+  min-width: 32px;
+  min-height: 32px;
+  text-align: center;
+}
+janus-voip-remoteuser audio {
+  display: inline-block;
 }
 janus-voip-remoteuser video {
-  display: none;
-  max-width: 128px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #aaa;
+  border-radius: 50%;
+  box-shadow: 0 0 2px 2px white;
+  display: inline-block;
+  background: url(images/mic-disabled.png);
+  background-size: contain;
+  background-position: center center;
+  transition: all 200ms ease-out;
+}
+janus-voip-remoteuser[hasaudio] video {
+  background: url(images/mic-enabled.png);
+  background-size: contain;
+  background-position: center center;
+}
+janus-voip-remoteuser[hasvideo] video {
+  width: 128px;
   height: 128px;
 }
 janus-voip-remoteuser video.active {
@@ -55,12 +80,13 @@ janus-voip-remoteuser h2 {
   text-shadow: 0 0 5px black;
   color: white;
   font-size: .8em;
+  margin-bottom: .5em;
 }
 janus-voip-remoteuser {
 }
 janus-voip-localuser[speaking],
 janus-voip-remoteuser[speaking] {
-  border: 2px solid #0f0;
+  xborder: 2px solid #0f0;
 }
 janus-voip-localuser ui-button {
   position: absolute;
@@ -76,7 +102,7 @@ janus-voip-localuser ui-button {
 janus-voip-remoteuser ui-button {
   font-size: 0;
   width: auto;
-  opacity: .5;
+  opacity: 0;
 }
 janus-voip-localuser ui-button:before,
 janus-voip-remoteuser ui-button:before {
@@ -199,4 +225,23 @@ janus-voip-client-incomingcall ui-button[action="reject"] {
 }
 janus-voip-client-incomingcall ui-button[action="reject"]:hover {
   background: #a00;
+}
+ui-panel[top]:not([left]):not([right]):has(janus-voip-client[spatialized]) {
+  top: 0;
+  left: 0;
+}
+ui-panel[top]:has(janus-voip-client[spatialized])::after {
+  position: absolute;
+  width: 80vh;
+  height: 80vh;
+  display: block;
+  content: '';
+  left: calc(50vw - 40vh);
+  top: 10vh;
+  border: 2px solid rgba(128,128,128,.5);
+  border-radius: 50%;
+  pointer-events: none;
+}
+janus-voip-remoteuser[spatialized] {
+  position: absolute;
 }
