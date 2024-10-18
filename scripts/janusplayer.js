@@ -1234,18 +1234,24 @@ document.body.dispatchEvent(click);
     this.toggleCamera = function(ev) {
       if (ev.value == 1) {
         if (this.cameraview == 'firstperson') {
-          this.cameraview = 'thirdperson';
-          this.cameraangle = 0;
-          this.camerazoom = 2;
-          this.cameraheight = .25;
+          this.setCameraView('thirdperson');
         } else {
-          this.cameraview = 'firstperson';
-          this.cameraangle = 0;
-          this.camerazoom = 0;
-          this.cameraheight = 0;
+          this.setCameraView('firstperson');
         }
-        this.updateCamera();
       }
+    }
+    this.setCameraView = function(cameraview) {
+      this.cameraview = cameraview;
+      if (this.cameraview == 'thirdperson') {
+        this.cameraangle = 0;
+        this.camerazoom = 2;
+        this.cameraheight = .25;
+      } else if (this.cameraview == 'firstperson') {
+        this.cameraangle = 0;
+        this.camerazoom = 0;
+        this.cameraheight = 0;
+      }
+      this.updateCamera();
     }
     this.zoomView = function(amount, ev) {
       if (this.cameraview == 'thirdperson') {
