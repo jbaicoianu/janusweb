@@ -166,6 +166,8 @@ console.log('occupants received', Object.keys(occupantList), Object.keys(this.co
     }
   }
   setRoom(roomId) {
+    this.connectedClients = {};
     this.adapter.setRoom(roomId);
+    this.adapter.reconnect();
   }
 }

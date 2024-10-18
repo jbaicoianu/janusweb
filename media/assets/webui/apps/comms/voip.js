@@ -149,8 +149,7 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
       sfu.connect('wss://' + voipserver + '/', 'default', room.url, true);
       sfus[voipserver] = sfu;
     } else {
-      sfu.adapter.setRoom(room.url);
-      sfu.adapter.reconnect();
+      sfu.setRoom(room.url);
     }
     this.sfu = sfu;
 
@@ -159,34 +158,47 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
     //this.localuser = document.createElement('janus-voip-localuser');
     //this.appendChild(this.localuser);
 
-    let remoteusers = this.remoteusers = {};
-    sfu.addEventListener('voip-media-change', (ev) => {
-      console.log('[voip-client-janus] got some media', ev.detail);
-      this.localuser.setData(ev.detail.stream);
-    });
-    sfu.addEventListener('voip-user-connect', (ev) => {
-      console.log('[voip-client-janus] user connected', ev);
-      let el = document.createElement('janus-voip-remoteuser');
-      el.setUserData(ev.detail);
-      this.appendChild(el);
-      remoteusers[ev.detail.id] = el;
-    });
-    sfu.addEventListener('voip-user-disconnect', (ev) => {
-      console.log('[voip-client-janus] user disconnected', ev);
-      let userid = ev.detail.id,
-          user = remoteusers[userid];
-      if (user) {
-        user.destroy();
-        setTimeout(() => { if (user.parentNode === this) this.removeChild(user); }, 250);
-      }
-    });
-    document.addEventListener('voip-picker-select', ev => {
-      let localStream = ev.detail;
-      if (localStream) {
-        sfu.adapter.setLocalMediaStream(localStream);
-      }
-      sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
-    });
+    if (!this.remoteusers) {
+      this.remoteusers = {};
+    }
+    let remoteusers = this.remoteusers;
+    if (!this.sfueventsregistered) {
+      sfu.addEventListener('voip-media-change', (ev) => {
+        console.log('[voip-client-janus] got some media', ev.detail);
+        this.localuser.setData(ev.detail.stream);
+      });
+      sfu.addEventListener('voip-user-connect', (ev) => {
+        console.log('[voip-client-janus] user connected', ev);
+        if (!this.remoteusers[ev.detail.id]) {
+          let el = document.createElement('janus-voip-remoteuser');
+          el.setUserData(ev.detail);
+          this.appendChild(el);
+          this.remoteusers[ev.detail.id] = el;
+        } else {
+          let el = this.remoteusers[ev.detail.id];
+          el.setUserData(ev.detail);
+          this.appendChild(el);
+        }
+      });
+      sfu.addEventListener('voip-user-disconnect', (ev) => {
+        console.log('[voip-client-janus] user disconnected', ev);
+        let userid = ev.detail.id,
+            user = remoteusers[userid];
+        if (user) {
+          user.destroy();
+          setTimeout(() => { if (user.parentNode === this) this.removeChild(user); }, 250);
+        }
+      });
+      document.addEventListener('voip-picker-select', ev => {
+        let localStream = ev.detail;
+        if (localStream) {
+          sfu.adapter.setLocalMediaStream(localStream);
+        }
+        sfu.dispatchEvent(new CustomEvent('voip-media-change', {detail: { stream: localStream }}));
+      });
+      elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
+      this.sfueventsregistered = true;
+    }
     if (this.inputstream) {
       sfu.adapter.setLocalMediaStream(this.inputstream);
     }
@@ -225,7 +237,6 @@ console.log('leave room and remove all occupants', this.room);
     });
 */
     // FIXME - player proxy should expose .addEventListener()
-    elation.events.add(player._target, 'username_change', (ev) => this.handleUsernameChange(ev));
     elation.events.fire({type: 'init', element: this});
   }
   disconnect() {
@@ -236,9 +247,8 @@ console.log('leave room and remove all occupants', this.room);
   initRoom(room) {
     let sfu = this.sfu;
     if (!room.private) {
-      sfu.adapter.setRoom(room.url)
+      sfu.setRoom(room.url)
       console.log('[voip-client-janus] room is now', sfu.adapter.room);
-      sfu.adapter.reconnect();
 /*
       let handle = sfu.adapter.publisher.handle;
       sfu.adapter.sendJoin(handle, {
@@ -585,6 +595,7 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
   create() {
     this.defineAttributes({
       'muted': { type: 'boolean', default: false },
+      'active': { type: 'boolean', default: false },
       'hasaudio': { type: 'boolean', default: false },
       'hasvideo': { type: 'boolean', default: false },
       'averagevolume': { type: 'float', default: 0 },
@@ -593,7 +604,6 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
       'spatialized': { type: 'bool', default: false },
     });
     this.lastposition = V();
-    setTimeout(() => this.setAttribute('active', true), 100);
   }
   setUserData(data) {
     if (!this.created) {
@@ -602,19 +612,24 @@ elation.elements.define('janus-voip-remoteuser', class extends elation.elements.
     }
     this.id = data.id;
 console.log('[voip-remoteuser] got a remote voip user', data);
+    this.active = true;
 
     if (!this.label) {
       let label = document.createElement('h2');
-      label.innerText = this.id;
       this.appendChild(label);
       this.label = label;
     }
+    this.label.innerText = this.id;
 
     if (data.media.video) {
       let track = data.media.video.getVideoTracks()[0];
       data.media.video.addEventListener('addtrack', (ev) => console.log('[voip-remoteuser] a track was added', ev));
       data.media.video.addEventListener('removetrack', (ev) => console.log('[voip-remoteuser] a track was removed', ev));
-      let video = document.createElement('video');
+      let video = this.video;
+      if (!video) {
+        video = document.createElement('video');
+        video.addEventListener('resize', (ev) => { console.log('[voip-remoteuser] video resized', video.videoWidth, video.videoHeight, video, this); this.updateVideo(); });
+      }
       video.muted = true;
       video.srcObject = data.media.video;
       this.appendChild(video);
@@ -624,29 +639,24 @@ console.log('[voip-remoteuser] got a remote voip user', data);
           console.log('[voip-remoteuser] remote user video playing', video, this);
           this.updateVideo();
 
-      let frametimer = false;
-      let detectStoppedVideo = (frame) => {
-        video.requestVideoFrameCallback(detectStoppedVideo);
-        if (frametimer) clearTimeout(frametimer);
-        frametimer = setTimeout(() => { 
-          // FIXME - when video stops, we still display the last frame indefinitely. The below code clears the video frame,
-          //         but prevents video from resuming if the remote player reenables their camera
-          //video.srcObject = new MediaStream(video.srcObject.getAudioTracks());
-          this.hasvideo = false;
-        }, 2000);
-        if (!this.hasvideo) {
-          this.hasvideo = true;
-        }
-      };
-
-      detectStoppedVideo(false);
-      video.addEventListener('ended', ev => { console.log('[voip-remoteuser] video ended', video, this); this.updateVideo(); });
-      video.addEventListener('empty', ev => { console.log('[voip-remoteuser] video empty', video, this); this.updateVideo(); });
-      video.addEventListener('pause', ev => { console.log('[voip-remoteuser] video paused', video, this); this.updateVideo(); });
+          let frametimer = false;
+          let detectStoppedVideo = (frame) => {
+            video.requestVideoFrameCallback(detectStoppedVideo);
+            if (frametimer) clearTimeout(frametimer);
+            frametimer = setTimeout(() => { 
+              // FIXME - when video stops, we still display the last frame indefinitely. The below code clears the video frame,
+              //         but prevents video from resuming if the remote player reenables their camera
+              //video.srcObject = new MediaStream(video.srcObject.getAudioTracks());
+              this.hasvideo = false;
+            }, 2000);
+            if (frame && !this.hasvideo) {
+              this.hasvideo = true;
+            }
+          };
+          detectStoppedVideo(false);
         })
         .catch(e => { console.log('[voip-remoteuser] failed to play remote video', video, e, this); });
       this.video = video;
-      video.addEventListener('resize', (ev) => { console.log('[voip-remoteuser] video resized', video, this); this.updateVideo(); });
       //this.hasvideo = true;
     } else {
       //this.hasvideo = false;
@@ -654,7 +664,7 @@ console.log('[voip-remoteuser] got a remote voip user', data);
 
     // audio
     if (data.media.audio) {
-      let audio = document.createElement('audio');
+      let audio = this.audio || document.createElement('audio');
       audio.srcObject = data.media.audio;
       this.audio = audio;
       this.appendChild(audio);
@@ -784,7 +794,7 @@ console.log('[voip-remoteuser] got a remote voip user', data);
       let tracks = this.audio.srcObject.getTracks();
       //tracks.forEach(track => { console.log('stop track', track); track.stop(); });
     }
-    this.removeAttribute('active');
+    this.active = false;
     if (this.parentNode) {
       this.parentNode.removeChild(this);
     }
@@ -793,10 +803,10 @@ console.log('[voip-remoteuser] got a remote voip user', data);
     let video = this.video;
     if (video) {
       let hasclass = elation.html.hasclass(video, 'active');
-      if (video.videoWidth > 0 && video.videoHeight > 0 && !hasclass) {
+      if (video.videoWidth > 2 && video.videoHeight > 2 && !hasclass) {
         this.hasvideo = true;
         elation.html.addclass(video, 'active');
-      } else if (hasclass && (video.videoWidth == 0 || video.videoHeight == 0)) {
+      } else if (hasclass && (video.videoWidth <= 2 || video.videoHeight <= 2)) {
         this.hasvideo = false;
         elation.html.removeclass(video, 'active');
       }
