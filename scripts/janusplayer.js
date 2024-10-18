@@ -1346,5 +1346,14 @@ document.body.dispatchEvent(click);
         }
       }
     }
+    this.attachObject = function(attachpoint, obj) {
+      if (this.ghost && this.ghost.body) {
+        if (attachpoint in this.ghost.body.parts) {
+          this.ghost.body.parts[attachpoint].add(obj);
+        }
+        return obj;
+      }
+      return false;
+    }
   }, elation.engine.things.player);
 });
