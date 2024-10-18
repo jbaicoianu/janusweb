@@ -315,7 +315,7 @@ document.body.dispatchEvent(click);
           this.ghost.setHeadOrientation(_tmpquat.multiplyQuaternions(this.neck.orientation._target, this.head.orientation._target), true);
           if (this.ghost._target.head) {
             //this.ghost._target.face.position.copy(this.head.position);
-            this.ghost.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);;
+            this.ghost._target.head.orientation.copy(this.head.orientation).multiply(this.neck.orientation);;
           }
         }
       }
