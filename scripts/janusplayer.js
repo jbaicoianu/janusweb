@@ -155,6 +155,7 @@ document.body.dispatchEvent(click);
         this.cameraheight = .25;
       }
       this.updateCamera();
+      this.handleFrameUpdates = elation.bind(this, this.handleFrameUpdates);
     }
     this.createChildren = function() {
       elation.engine.things.janusplayer.extendclass.createChildren.call(this);
