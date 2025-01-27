@@ -420,6 +420,7 @@ elation.require(['janusweb.janusbase'], function() {
       pointpos.add(this.emitter_pos);
 
       point.opacity = this.opacity;
+      point.active = 0;
 
       var vel = point.vel,
           accel = point.accel,
