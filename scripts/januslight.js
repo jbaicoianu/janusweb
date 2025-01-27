@@ -17,6 +17,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow_far: { type: 'float', set: this.updateLight },
         light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
+        light_shadow_size: { type: 'int', default: 512, set: this.updateLight },
         light_helper: { type: 'boolean', default: false, set: this.updateLightHelper },
         light_style: { type: 'string', default: '' },
         light_style_fps: { type: 'float', default: 10 },
@@ -196,6 +197,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.light.shadow.camera.fov = 90;
       this.light.shadow.mapSize.set(shadowSize, shadowSize);
       this.light.shadow.bias = this.light_shadow_bias;
+      this.light.shadow.mapSize.set(this.light_shadow_size, this.light_shadow_size);
 
       // directional light shadow parameters
       let d = this.light_range;
@@ -256,6 +258,7 @@ elation.require(['janusweb.janusbase'], function() {
           light_shadow_far:    [ 'property', 'light_shadow_far'],
           light_shadow_bias:   [ 'property', 'light_shadow_bias'],
           light_shadow_radius: [ 'property', 'light_shadow_radius'],
+          light_shadow_size:   [ 'property', 'light_shadow_size'],
           color_temperature:   [ 'property', 'color_temperature'],
         };
       }
