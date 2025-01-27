@@ -32,7 +32,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (!this.geometry) {
           let geo = new THREE.BufferGeometry();
           let lineobj = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({
-            vertexColors: THREE.VertexColors,
+            vertexColors: true,
             opacity: this.opacity,
             transparent: (this.transparent !== null ? this.transparent : this.opacity < 1),
             depthWrite: this.depth_write,
