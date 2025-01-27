@@ -124,6 +124,7 @@ elation.require(['janusweb.janusbase'], function() {
         if (asset) var thumb = asset.getInstance();
         if (thumb) {
           mat.map = thumb;
+          mat.map.encoding = THREE.sRGBEncoding;
           if (asset.loaded) {
             if (asset.hasalpha) {
               mat.transparent = true;
