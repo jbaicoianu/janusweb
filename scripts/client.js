@@ -372,7 +372,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           trackingid: this.trackingid,
           networking: this.networking,
           corsproxy: this.corsproxy,
-          //resolution: width + 'x' + height,
+          resolution: width + 'x' + height,
           showui: this.showui && this.showui != 'false',
           shownavigation: this.shownavigation,
           avatarsrc: this.avatarsrc,
