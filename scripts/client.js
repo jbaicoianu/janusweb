@@ -109,6 +109,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         avatarsrc: { type: 'string' },
         muted: { type: 'boolean', default: false },
         thirdperson: { type: 'boolean', default: false },
+        autofullscreen: { type: 'boolean', default: false },
       });
     }
     initEngine() {
@@ -146,7 +147,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           // FIXME - useragent hack isn't the best way of handling this, but it beats getting stuck in non-immersive fullscreen mode while in a VR headset
           if (navigator.userAgent.indexOf('OculusBrowser') != -1) {
             this.startXR();
-          } else if (!this.view.isFullscreen()) {
+          } else if (this.autofullscreen && !this.view.isFullscreen()) {
             this.toggleFullscreen({value: 1});
           }
         }
