@@ -320,6 +320,7 @@ JanusClientConnection.prototype.connect = function() {
   this.error = '';
   this._websocket = new WebSocket(this._host, 'binary');
   this.status = 1;
+  this.active = false;
   this.loggedin = false;
   this.loggingin = false;
   this.msgQueue = [];
@@ -336,7 +337,9 @@ JanusClientConnection.prototype.connect = function() {
   this._websocket.onclose = function() {
     this.status = 0;
     this.dispatchEvent({type: 'disconnect'});
-    this.reconnect();
+    if (this.active) {
+      this.reconnect();
+    }
   }.bind(this);
 
   this._websocket.onmessage = this.onMessage.bind(this)  

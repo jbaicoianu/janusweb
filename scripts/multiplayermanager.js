@@ -156,6 +156,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         var oldserver = this.getServerForRoom(this.activeroom);
         //oldserver.leave_room(room.url);
         oldserver.unsubscribe(room.url);
+        oldserver.active = false;
       }
 
       // Tell the server we're now in the new room
@@ -165,6 +166,7 @@ console.log('[MultiplayerManager] set active room:', room, this.activeroom);
         var partymode = this.player.party_mode && room.party_mode;
         server.subscribe(room.url);
         server.enter_room(room.url, partymode);
+        server.active = true;
       }
     }
     this.getJanusOrientation = (function() { 

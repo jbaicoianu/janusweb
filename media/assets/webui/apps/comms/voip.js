@@ -52,7 +52,8 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
     if (this.currentroom) { // && this.rooms[roomid] !== this.currentroom) {
       console.log('[voip-client] setRoom called, disconnect from existing room', this.currentroom);
       if (this.currentroom.disconnect) {
-        this.currentroom.disconnect();
+        //this.currentroom.disconnect();
+        this.currentroom.leave();
       }
       this.removeChild(this.currentroom);
     }
@@ -128,6 +129,10 @@ elation.elements.define('janus-voip-client', class extends elation.elements.base
   }
 });
 elation.elements.define('janus-voip-client-janus', class extends elation.elements.base {
+  init() {
+    super.init();
+    this.defineAttribute('roomid', { type: 'string' });
+  }
   create() {
     this.connect();
   }
@@ -143,13 +148,14 @@ elation.elements.define('janus-voip-client-janus', class extends elation.element
 
     let voipserver = room.voipserver || 'voip.janusxr.org';
 
+    let roomid = this.roomid || room.voipid || room.url;
     let sfu = sfus[voipserver];
     if (!sfu) {
       sfu = new JanusNAF(player.getNetworkUsername()); //'testclient-' + Math.floor(Math.random() * 1e6));
-      sfu.connect('wss://' + voipserver + '/', 'default', room.url, true);
+      sfu.connect('wss://' + voipserver + '/', 'default', roomid, true);
       sfus[voipserver] = sfu;
     } else {
-      sfu.setRoom(room.url);
+      sfu.setRoom(roomid);
     }
     this.sfu = sfu;
 
@@ -244,10 +250,16 @@ console.log('leave room and remove all occupants', this.room);
       this.sfu.adapter.disconnect();
     }
   }
+  leave() {
+    if (this.sfu && this.sfu.adapter && this.sfu.adapter.publisher) {
+      this.sfu.adapter.sendLeave(this.sfu.adapter.publisher.handle);
+    }
+  }
   initRoom(room) {
     let sfu = this.sfu;
     if (!room.private) {
-      sfu.setRoom(room.url)
+      let roomid = room.voipid || room.url;
+      sfu.setRoom(roomid)
       console.log('[voip-client-janus] room is now', sfu.adapter.room);
 /*
       let handle = sfu.adapter.publisher.handle;
