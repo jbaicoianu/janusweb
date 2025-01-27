@@ -84,6 +84,7 @@ JanusFireboxParser.prototype.parseAssets = function(xml, baseurl, datapath) {
       reverse3d: n.reverse3d,
       tex_linear: n.tex_linear,
       equi: n.equi,
+      srgb: n.srgb,
     });
   });
   videoassets.forEach(function(n) { 
