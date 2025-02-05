@@ -648,7 +648,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         let shader = this.getAsset('shader', this.shader_id);
         if (shader) {
           shadermaterial = shader.getInstance();
-          shadermaterial.uniforms = this.room.parseShaderUniforms(shader.uniforms);
+          elation.utils.merge(this.room.parseShaderUniforms(shader.uniforms), shadermaterial.uniforms);
           shadermaterial.side = this.sidemap[this.properties.cull_face];
           shadermaterial.shadowSide = shadowside
           shadermaterial.receiveShadow = this.shadow && this.shadow_receive;
