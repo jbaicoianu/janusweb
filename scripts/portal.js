@@ -104,8 +104,9 @@ elation.require(['janusweb.janusbase'], function() {
         side: THREE.DoubleSide,
       };
       var mat;
+      let shader = false;
       if (this.shader_id) {
-        let shader = this.getAsset('shader', this.shader_id);
+        shader = this.getAsset('shader', this.shader_id);
         //console.log('shader', this.shader_id, shader);
         if (shader) {
           let shadermaterial = shader.getInstance();
@@ -123,8 +124,12 @@ elation.require(['janusweb.janusbase'], function() {
         var asset = this.getAsset('image', this.thumb_id);
         if (asset) var thumb = asset.getInstance();
         if (thumb) {
-          mat.map = thumb;
-          mat.map.encoding = THREE.sRGBEncoding;
+          thumb.encoding = THREE.sRGBEncoding;
+          if (shader) {
+            mat.uniforms.iChannel0.value = thumb;
+          } else {
+            mat.map = thumb;
+          }
           if (asset.loaded) {
             if (asset.hasalpha) {
               mat.transparent = true;
