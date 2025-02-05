@@ -38,6 +38,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.lastactivatetime = 0;
     }
     this.createObject3D = function() {
+      this.created = true;
       this.objects['3d'] = new THREE.Object3D();
       this.updateGeometry();
       return this.objects['3d'];
@@ -99,6 +100,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
     }
     this.createMaterial = function() {
+      if (this.portalmaterial) return this.portalmaterial;
       var matargs = {
         color: 0xdddddd,
         side: THREE.DoubleSide,
@@ -153,6 +155,8 @@ elation.require(['janusweb.janusbase'], function() {
       mat.polygonOffset = true;
       mat.polygonOffsetFactor = -1;
       mat.polygonOffsetUnits = -4;
+
+      this.portalmaterial = mat;
 
       return mat;
     }
@@ -510,6 +514,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.janus.network.unsubscribe(this.portalroom);
     }
     this.updateGeometry = function() {
+      if (!this.created) return;
       var thickness = 0.05 * this.size.z;
       var offset = ((thickness / 2) / this.properties.scale.z) * 2;
       var box;
