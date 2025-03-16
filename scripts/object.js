@@ -67,6 +67,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         color_write: { type: 'boolean', default: null, set: this.updateMaterial },
         envmap_id: { type: 'string', set: this.updateMaterial, comment: 'Environment map texture ID (overrides skybox reflections)' },
         normalmap_id: { type: 'string', set: this.updateMaterial, comment: 'Normal map texture ID' },
+        normal_scale: { type: 'integer', set: this.updateMaterial, default: 1, comment: 'Normal scale' },
         bumpmap_id: { type: 'string', set: this.updateMaterial, comment: 'Bumpmap texture ID' },
         bumpmap_scale: { type: 'float', default: 1.0, set: this.updateMaterial, comment: 'Bumpmap scale' },
         alphamap_id: { type: 'string', set: this.updateMaterial, comment: 'Alpha map texture ID' },
@@ -796,6 +797,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
                 }
               }
+              m.normalScale.set(this.normal_scale, this.normal_scale);
             } else if (textureBump) {
               m.bumpMap = textureBump;
               m.bumpScale = this.bumpmap_scale;
@@ -818,6 +820,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (textureNormal) {
               m.normalMap = textureNormal;
+              m.normalScale.set(this.normal_scale, this.normal_scale);
             } else if (m.normalMap) {
               var imagesrc = m.normalMap.sourceFile;
               var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false, srgb: false});
@@ -829,6 +832,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.normalMap = ev.data; this.refresh(); }));
                 }
               }
+              m.normalScale.set(this.normal_scale, this.normal_scale);
             }
 
             if (textureLightmap && textureLightmap.image) {
@@ -1473,6 +1477,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           envmap_id:  [ 'property', 'envmap_id'],
           websurface_id:  [ 'property', 'websurface_id'],
           normalmap_id:  [ 'property', 'normalmap_id'],
+          normal_scale:  [ 'property', 'normal_scale'],
           alphamap_id:  [ 'property', 'alphamap_id'],
           displacementmap_id:  [ 'property', 'displacementmap_id'],
           displacementmap_scale:  [ 'property', 'displacementmap_scale'],
