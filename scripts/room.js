@@ -958,6 +958,7 @@ elation.require([
         if (room.skybox_down_id) this.properties.skybox_down_id = room.skybox_down_id;
         if (room.skybox_front_id) this.properties.skybox_front_id = room.skybox_front_id;
         if (room.skybox_back_id) this.properties.skybox_back_id = room.skybox_back_id;
+        if (typeof room.skybox_intensity != 'undefined') this.skybox_intensity = room.skybox_intensity;
 
         if (room.cubemap_radiance_id) this.properties.cubemap_radiance_id = room.cubemap_radiance_id;
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
