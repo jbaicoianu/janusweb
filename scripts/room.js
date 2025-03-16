@@ -2182,6 +2182,10 @@ elation.require([
           getBoundingSphere:     ['function', 'getBoundingSphere'],
           getBoundingBox:        ['function', 'getBoundingBox'],
 
+          getElementsByTagName:  ['function', 'getObjectsByTagName'],
+          getElementsByClassName:['function', 'getObjectsByClassName'],
+          getElementById:        ['function', 'getObjectById'],
+
           registerElement:     ['function', 'registerElement'],
           extendElement:       ['function', 'extendElement'],
           addEventListener:    ['function', 'addEventListenerProxy'],
