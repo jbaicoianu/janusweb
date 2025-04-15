@@ -103,7 +103,7 @@ this.debug.style.zIndex = '1000';
       janus.engine.systems.render.renderer.domElement.addEventListener('touchstart', (ev) => {
         this.show();
         this.reset();
-        if (!player.enabled) player.enable();
+        if (room.pointerlock && !player.enabled) player.enable();
       });
     }
   }
