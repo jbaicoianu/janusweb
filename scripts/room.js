@@ -1964,6 +1964,9 @@ elation.require([
         if (this.jsobjects[k].hasClass(classname)) {
           objects.push(this.jsobjects[k]);
         }
+        if (this.jsobjects[k].getElementsByClassName) {
+          objects.push(...this.jsobjects[k].getElementsByClassName(classname));
+        }
       }
       return objects;
     }
