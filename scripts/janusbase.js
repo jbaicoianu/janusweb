@@ -210,17 +210,18 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             });
             var collider = colliderasset.getInstance();
             this.collidermesh = collider;
-            if (collider.userData.loaded) {
+
+            if (colliderasset.state == 'complete') {
               //this.colliders.add(collider);
               processMeshCollider(collider);
             } else {
               let meshColliderLoaded = false;
-              elation.events.add(collider, 'asset_load', elation.bind(this, function(ev) {
+              elation.events.add(collider, 'asset_load', ev => {
                 if (!meshColliderLoaded) {
                   processMeshCollider(collider);
                 }
                 meshColliderLoaded = true;
-              }) );
+              });
             }
           }
         }
@@ -440,6 +441,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           executeCallback:     ['function', 'executeCallback'],
           isEqual:             ['function', 'isEqual'],
           addClass:            ['function', 'addClass'],
+          getElementsByClassName: ['function', 'getElementsByClassName'],
           removeClass:         ['function', 'removeClass'],
           hasClass:            ['function', 'hasClass'],
           raycast:             ['function', 'raycast'],
@@ -1218,7 +1220,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         if (el.tag == tag) {
           elements.push(el);
         }
-        el.getElementsByTagName(tagname, elements);
+        if (el.getElementsByTagName) el.getElementsByTagName(tagname, elements);
       };
       return elements;
     }
@@ -1242,6 +1244,19 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         obj = obj.parent;
       }
       return false;
+    }
+    this.getElementsByClassName = function(classname) {
+      var objects = [];
+      for (var k in this.children) {
+        let child = this.children[k];
+        if (child.hasClass && child.hasClass(classname)) {
+          objects.push(child.getProxyObject());
+        }
+        if (child.getElementsByClassName) {
+          objects.push(...child.getElementsByClassName(classname));
+        }
+      }
+      return objects;
     }
     this.setLayers = function(layers) {
       // TODO - this system is experimental, and probably isn't quite ready for use
@@ -1431,6 +1446,8 @@ console.log('clone', props);
     this.physics_collide = function(ev) {
       let obj1 = ev.data.bodies[0].object, obj2 = ev.data.bodies[1].object,
           other = (obj1 == this ? obj2 : obj1);
+
+      if (!(obj1.collidable && obj2.collidable)) return;
 
       let events = elation.events.fire({type: 'collide', element: this, data: {
         other: (typeof other.getProxyObject == 'function' ? other.getProxyObject() : other),
