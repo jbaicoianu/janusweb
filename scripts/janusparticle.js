@@ -47,6 +47,8 @@ elation.require(['janusweb.janusbase'], function() {
         rand_accel: { type: 'vector3', default: [0, 0, 0]},
         rand_col: { type: 'vector3', default: [0, 0, 0]},
         rand_scale: { type: 'vector3', default: [0, 0, 0]},
+        speed_min: { type: 'float', default: null },
+        speed_max: { type: 'float', default: null },
         loop: { type: 'bool', default: true, set: this.updateParticles },
         refreshrate: { type: 'int', default: 30 },
         blend_src: { type: 'string', default: 'src_alpha', set: this.updateMaterial },
@@ -438,6 +440,14 @@ elation.require(['janusweb.janusbase'], function() {
         vel.y += randomInRange(rand_vel.y);
         vel.z += randomInRange(rand_vel.z);
       }
+
+      let speed = vel.length();
+      if (this.speed_min !== null && speed < this.speed_min) {
+        vel.normalize().multiplyScalar(this.speed_min);
+      } else if (this.speed_max !== null && speed > this.speed_max) {
+        vel.normalize().multiplyScalar(this.speed_max);
+      }
+
       if (rand_accel.lengthSq() > 0) {
         accel.x += randomInRange(rand_accel.x);
         accel.y += randomInRange(rand_accel.y);
