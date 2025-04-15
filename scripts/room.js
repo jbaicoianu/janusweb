@@ -1499,6 +1499,7 @@ elation.require([
             tex_linear: args.tex_linear,
             sbs3d: args.sbs3d,
             ou3d: args.ou3d,
+            equi: args.equi,
             reverse3d: args.reverse3d,
             hasalpha: args.hasalpha,
             maxsize: args.maxsize,
