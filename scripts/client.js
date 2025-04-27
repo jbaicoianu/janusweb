@@ -71,7 +71,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
       uiconfig: args.uiconfig,
       showchat: elation.utils.any(args.showchat && args.showchat != 'false', true),
       usevoip: elation.utils.any(args.usevoip && args.usevoip != 'false', false),
-      resolution: args.resolution, 
+      resolution: elation.utils.any(args.resolution, ''),
       fullsize: fullsize,
       url: args.url,
       networking: args.networking,
