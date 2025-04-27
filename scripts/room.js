@@ -1605,15 +1605,15 @@ elation.require([
         let object = args.object;
         if (args.mesh_verts) {
           let geo = new THREE.BufferGeometry();
-          geo.addAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
+          geo.setAttribute( 'position', new THREE.Float32BufferAttribute( args.mesh_verts, 3 ) );
           if (args.mesh_faces) {
             geo.setIndex(args.mesh_faces);
           }
           if (args.mesh_normals) {
-            geo.addAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
+            geo.setAttribute( 'normal', new THREE.Float32BufferAttribute( args.mesh_normals, 3 ) );
           }
           if (args.mesh_uvs) {
-            geo.addAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
+            geo.setAttribute( 'uv', new THREE.Float32BufferAttribute( args.mesh_uvs, 2 ) );
           }
           object = new THREE.Mesh(geo, new THREE.MeshPhongMaterial());
         }
