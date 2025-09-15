@@ -67,7 +67,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
             <ui-list name="avatar" selectable="1" collection="avatarlist" itemcomponent="janus-avatar-picker-item"></ui-list>
           </ui-tab>
           <ui-tab label="Ready Player Me">
-            <iframe data-src="https://demo.readyplayer.me/avatar?frameApi" allow="camera"></iframe>
+            <iframe name="rpmselector" data-src="https://demo.readyplayer.me/avatar?frameApi" allow="camera"></iframe>
           </ui-tab>
         </ui-tabs>
       `;
@@ -94,7 +94,7 @@ elation.elements.define('janus-avatar-picker', class extends elation.elements.ba
     let threshold = [];
     for (let i = 0; i < 100; i += 10) threshold.push(i / 100);
     let observer = new IntersectionObserver(ev => this.handleIntersectionChange(ev), { root: document, rootMargin: '0px', threshold: threshold });
-    observer.observe(this);
+    observer.observe(this.elements.rpmselector);
     document.addEventListener('scroll', ev => this.handleScroll(ev));
     window.addEventListener('message', ev => this.handleWindowMessage(ev));
   }
