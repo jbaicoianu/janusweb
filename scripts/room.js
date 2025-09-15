@@ -304,7 +304,7 @@ elation.require([
         let obj = this.getObjectById(this.urlhash);
         if (obj) {
           obj.localToWorld(spawnpoint.position.set(0,0,0));
-          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
+          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,-1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
         }
       }
       return spawnpoint;
