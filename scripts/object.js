@@ -667,9 +667,12 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
           } else {
             shadermaterial.blending = THREE.NormalBlending;
+            shadermaterial.transparent = this.transparent;
           }
           if (this.depth_write !== null) {
             shadermaterial.depthWrite = this.depth_write;
+          } else {
+            shadermaterial.depthWrite = !this.transparent;
           }
           if (this.depth_test !== null) {
             shadermaterial.depthTest = this.depth_test;
@@ -677,7 +680,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
           if (this.color_write !== null) {
             shadermaterial.colorWrite = this.color_write;
           }
+          if (texture) shadermaterial.uniforms['iChannel0'].value = texture;
+          if (textureNormal) shadermaterial.uniforms['iChannel1'].value = textureNormal;
           this.traverseObjects((n) => {
+            n.renderOrder = this.renderorder;
             if (n.material) {
               if (Array.isArray(n.material)) {
                 for (let i = 0; i < n.material.length; i++) {
