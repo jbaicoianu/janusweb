@@ -9,9 +9,10 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       <assets>
         <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
         <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
+        <assetobject id="avatar_animations_sit" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations-sit.glb" />
       </assets>
       <room>
-        <ghost scale=".01 .01 .01" col="#e0d5a1" body_id="body" bone_head="head" />
+        <ghost scale=".01 .01 .01" col="#e0d5a1" body_id="body" bone_head="head" animation_extras="avatar_animations_sit" />
       </room>
     </FireBoxRoom>
     `;

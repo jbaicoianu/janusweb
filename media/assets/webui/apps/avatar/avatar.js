@@ -264,9 +264,10 @@ this.appendChild(this.previewwindow);
       <assets>
         <assetobject id="body" src="${avatarurl}" />
         <assetobject id="avatar_animations" src="${animurl}" />
+        <assetobject id="avatar_animations_sit" src="https://assets.metacade.com/james/readyplayerme/animation-pack-sit.glb" />
       </assets>
       <room>
-        <ghost body_id="body" bone_head="Head" morphtarget_mouth="mouthOpen" morphtarget_eyes="eyesClosed" />
+        <ghost body_id="body" bone_head="Head" morphtarget_mouth="mouthOpen" morphtarget_eyes="eyesClosed" animation_extras="avatar_animations_sit" />
       </room>
     </FireBoxRoom>
     `;
