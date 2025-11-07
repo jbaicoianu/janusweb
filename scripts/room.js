@@ -301,6 +301,7 @@ elation.require([
           }
         }
       } else if (this.urlhash) {
+        // XR Fragments spec (Level1: URL) https://xrfragment.org/#teleport%20camera
         let obj = this.getObjectById(this.urlhash);
         if (obj) {
           obj.localToWorld(spawnpoint.position.set(0,0,0));
