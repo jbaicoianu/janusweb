@@ -1,6 +1,6 @@
 <p align="center"><a href="https://web.janusvr.com" target="_blank"><img width="480" alt="JanusWeb" src="https://imgur.com/ejvyphR.jpg"></a></p>
 
-<p align="center"><b>A web framework for building social virtual reality experiences.</b></p>
+<p align="center"><b>A web framework/browser for building rich virtual reality experiences.</b></p>
 
 <div align="center">
   <a href="https://janusvr.com">Site</a>
@@ -12,6 +12,8 @@
   <a href="https://web.janusvr.com">Demo</a>
   &mdash;
   <a href="https://github.com/madjin/janus-guide">Docs</a>
+  &mdash;
+  <a href="https://discord.gg/7eyK2wE">Discord</a>
 </div>
 
 
@@ -39,20 +41,24 @@
 
 ## Features
 
+- [Open Immersive Web-layer](https://madjin.github.io/janus-guide/#/home/about) for browsing XR experiences across the web 
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
 - Rendering functionality provided by Three.js / WebGL
+- Separately host WebXR experiences via ([JML](https://madjin.github.io/janus-guide/#/examples/markup) in) any textfile.
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
-- Realtime collaboration across all devices via built-in networking
+- [Realtime collaboration](https://madjin.github.io/janus-guide/#/home/usecases) across all devices via built-in networking
 - Import Collada, OBJ, glTF, and other popular 3d file formats
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
 - Support for 2d, sbs3d/ou3d, and 360 degree video textures using HTML5 Video
 - Scriptable client enables many customized uses
+- And [much more](https://madjin.github.io/janus-guide/#/home/toc)
+
 
 ## Using
 
-There are several different ways to use JanusWeb, depending on how much control you want to 
+There are [several different ways](https://madjin.github.io/janus-guide/#/home/usecases) to use JanusWeb, depending on how much control you want to 
 have over the whole system.
 
 ### Use our viewer
@@ -208,6 +214,14 @@ than happy to help you through this (it's all very experimental right now!)
 If you need to load a specific version of JanusWeb, all previous versions are stores on the same server, and can be accessed by construction a URL of the form ```https://web.janusvr.com/<version>/```.  This is useful if you have a room which you know works with a specific version, which relies on features which have since been deprecated or changed, or to determine whether bugs have been introduced.  
 
 JanusWeb versions follow the [Semantic Versioning 2.0.0](http://semver.org/) spec, which follows the format ```<major>.<minor>.<patch>``` - for example, at the time of writing (March 2017) the current stable release is **1.0.15**.  So if you want to view this version, you could go to https://web.janusvr.com/1.0.15/ and if you wanted to pull this specific version into your page, you could do so with ```<script src="https://web.janusvr.com/1.0.15/janusweb.js"></script>```.  We also support aliases for the most current version - for instance, https://web.janusvr.com/1.0/ will always refer to the most recent 1.0 release, https://web.janusvr.com/0.9/ the final 0.9 release, etc.
+
+## Ecosystem
+
+> Visualisation of [hyperlinked Janus rooms across the web](https://panopticon.spyduck.net/) (snapshot)
+
+* [janus-server](https://github.com/janusvr/janus-server) multiuser presence layer
+* [janus-gateway](https://janus.conf.meetecho.com/) webrtc/voip-layer [docs](https://janus.conf.meetecho.com/)
+* [janusxr-cli](https://github.com/coderofsalvation/janusxr-cli) swiss army CLI knife for room health/preservation
 
 ## Contributing
 JanusWeb is open source, and we welcome any contributions!  Please do report bugs using GitHub Issues,
