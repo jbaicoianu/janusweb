@@ -1,6 +1,6 @@
 <p align="center"><a href="https://web.janusvr.com" target="_blank"><img width="480" alt="JanusWeb" src="https://imgur.com/ejvyphR.jpg"></a></p>
 
-<p align="center"><b>A web framework for building social virtual reality experiences.</b></p>
+<p align="center"><b>A web framework/browser for building rich virtual reality experiences.</b></p>
 
 <div align="center">
   <a href="https://janusvr.com">Site</a>
@@ -12,6 +12,8 @@
   <a href="https://web.janusvr.com">Demo</a>
   &mdash;
   <a href="https://github.com/madjin/janus-guide">Docs</a>
+  &mdash;
+  <a href="https://discord.gg/7eyK2wE">Discord</a>
 </div>
 
 
@@ -39,20 +41,24 @@
 
 ## Features
 
+- [Open Immersive Web-layer](https://madjin.github.io/janus-guide/#/home/about) for browsing XR experiences across the web 
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
 - Rendering functionality provided by Three.js / WebGL
+- Separately host WebXR experiences via ([JML](https://madjin.github.io/janus-guide/#/examples/markup) in) any textfile.
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
-- Realtime collaboration across all devices via built-in networking
+- [Realtime collaboration](https://madjin.github.io/janus-guide/#/home/usecases) across all devices via built-in networking
 - Import Collada, OBJ, glTF, and other popular 3d file formats
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
 - Support for 2d, sbs3d/ou3d, and 360 degree video textures using HTML5 Video
 - Scriptable client enables many customized uses
+- And [much more](https://madjin.github.io/janus-guide/#/home/toc)
+
 
 ## Using
 
-There are several different ways to use JanusWeb, depending on how much control you want to 
+There are pseveral different ways] to use JanusWeb, depending on how much control you want to 
 have over the whole system.
 
 ### Use our viewer
