@@ -1329,30 +1329,19 @@ console.log('its null', k, this[k], prop);
         }
         //if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
       }
-console.log('clone', props);
+
+      if (!parent) parent = this.parent || room;
+
+      let clone = parent.createObject(this.tag, props);
+
       if (cloneChildren) {
         let children = this.children;
         props.children = [];
         for (let i = 0; i < children.length; i++) {
-          props.children.push(children[i].clone(true, this));
+          props.children.push(children[i].clone(true, clone));
         }
       }
-      //let parent = this.parent || room;
-      if (!parent) parent = this.parent || room;
-
-      return parent.createObject(this.tag, props);
-/*
-      {
-        pos: this.pos.clone(),
-        rotation: this.rotation.clone(),
-        scale: this.scale.clone(),
-        color: this.color.clone(),
-        lighting: this.lighting,
-        id: this.id,
-        js_id: this.js_id + '_copy',
-        collision_id: this.collision_id,
-      });
-*/
+      return clone;
     }
     this.addControlContext = function(name, defs) {
       let legacydefs = {};
