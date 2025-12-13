@@ -320,7 +320,20 @@ console.log('set translation snap', ev.data, ev);
   }
   handleExportClick(ev) {
     let exporter = new THREE.GLTFExporter();
+    let userDatas = new Map();
+    // Store and nullify userData objects for each object before serializing
+    room._target.objects['3d'].traverse(n => {
+      userDatas.set(n, n.userData);
+      n.userData = {};
+    });
     exporter.parse(room._target.objects['3d'], (data) => {
+      // Restore userData objects
+      room._target.objects['3d'].traverse(n => {
+        if (userDatas.has(n)) {
+          n.userData = userDatas.get(n);
+        }
+      });
+
       let filedata = new Blob([data], {type: 'model/gltf-binary'});
 
       var url = window.URL.createObjectURL(filedata);
