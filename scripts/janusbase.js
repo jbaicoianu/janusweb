@@ -377,6 +377,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           gazetime:  ['property', 'gazetime'],
           layers:  ['property', 'layers'],
           renderorder:  ['property', 'renderorder'],
+          lighting: [ 'property', 'lighting' ],
 
           pickable:  [ 'property', 'pickable'],
           collidable:  [ 'property', 'collidable'],
