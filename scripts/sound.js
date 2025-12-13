@@ -65,7 +65,7 @@ elation.require(['janusweb.janusbase'], function() {
           }
           //this.audio.panner.maxDistance = this.properties.distance;
           if (this.dist) {
-            this.audio.setRefDistance(this.dist);
+            this.audio.setRefDistance(Math.max(0, this.dist));
           } else {
             //this.audio.panner.distanceModel = 'linear';
           }
