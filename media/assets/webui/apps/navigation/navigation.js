@@ -408,6 +408,11 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
     }
   }
   handleBlur(ev) {
+    // enter-key on Quest devices (onscreen keyboards) is not emitted (blur-event instead)
+    // https://developers.meta.com/horizon/documentation/web/webxr-keyboard/
+    if (navigator.userAgent.indexOf('OculusBrowser') != -1) {
+      this.handleAccept({altKey:true}) // get straight to it
+    }
     setTimeout(() => {
       this.suggestions.hide();
     }, 100);
