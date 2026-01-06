@@ -313,7 +313,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
       if (!animasset.loaded) {
         let animationsLoaded = false;
         elation.events.add(animasset, 'asset_load_complete', ev => {
-          if (!animationsLoaded) {
+          if (!animationsLoaded && animasset.animations) {
             animationsLoaded = true;
             if (this.body.animationmixer) {
               this.cloneAnimations(animasset);
@@ -323,7 +323,7 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
         });
         animasset.load();
       } else {
-        if (this.body.animationmixer) {
+        if (this.body.animationmixer && animasset.animations) {
           this.cloneAnimations(animasset);
         }
         //this.body.setAnimation('idle');
