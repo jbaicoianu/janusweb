@@ -569,12 +569,12 @@ elation.require([
       }
       var baseurl = baseurloverride;
       if (!baseurl) {
-        if (url && !this.baseurl) {
+        if (url && url.match("://") && !this.baseurl) {
           baseurl = url.split('/');
           if (baseurl.length > 3) baseurl.pop();
           baseurl = baseurl.join('/') + '/';
-          this.baseurl = baseurl;
         }
+        this.baseurl = baseurl || "";
       } else {
         this.baseurl = baseurl;
       }
@@ -592,7 +592,7 @@ elation.require([
       var fullurl = url;
       if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
       if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
-        fullurl = self.location.origin + fullurl;
+        fullurl = self.location.origin + (fullurl[0] == '/' ? '' :'/') + fullurl;
       } else if (!fullurl.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) && fullurl.indexOf(document.location.origin) != 0) {
         fullurl = proxyurl + fullurl;
       }
