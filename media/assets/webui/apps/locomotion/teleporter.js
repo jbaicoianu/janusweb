@@ -102,7 +102,7 @@ janus.registerElement('locomotion_teleporter', {
     });
     player.head.add(this.shroud._target);
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
-    this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
+    //this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
 
     this.disableCursor();
     window.addEventListener('mousemove', this.handleMouseMove);
@@ -133,8 +133,10 @@ janus.registerElement('locomotion_teleporter', {
     });
     this.activateControlContext('teleporter');
 
-    //room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
-    //room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
+    // emulated mouse-events (via webxr handtracking e.g.)
+    room.addEventListener('mousemove', (ev) => this.handleMouseMove(ev));
+    room.addEventListener('mousedown', (ev) => this.handleMouseDown(ev));
+    room.addEventListener('mouseup', (ev) => this.handleMouseUp(ev));
     elation.events.add(janus._target, 'room_change', (ev) => this.handleRoomChange(ev));
   },
   update() {
@@ -152,11 +154,13 @@ janus.registerElement('locomotion_teleporter', {
       if (hand) {
         startpoint = hand.pointer.localToWorld(V(0, 0, 0));
         v0 = hand.pointer.localToWorld(V(0, 0, -speed)).sub(startpoint);
+        hand.teleportPos = hand.teleportPos || v0
       } else {
         startpoint = player.head.localToWorld(V(0,0,0));
         v0 = player.head.localToWorld(V(0,0,-speed)).sub(startpoint);
         return; // Head-locked teleporter is awkward, do we really still support this?
       }
+
       let i = 0,
           p0 = startpoint.clone(),
           dir = v0.clone().normalize();
@@ -181,6 +185,8 @@ janus.registerElement('locomotion_teleporter', {
             this.pos = player.worldToLocal(hit.point);
             this.localToWorld(this.particles.emitter_pos.set(0,0,0));
             this.updateTeleportAngle();
+            // track movement to cancel longpresstimer
+            hand.teleportPos = hand.teleportPos || this.pos.clone()
           }
           laserpoints[i * 2].copy(p0);
           laserpoints[i * 2 + 1].copy(p1);
@@ -262,16 +268,18 @@ janus.registerElement('locomotion_teleporter', {
 
     }
   },
-  teleport() {
+  teleport(mouse) {
     //if (!room.teleport) return;
     let pos = player.localToWorld(this.pos.clone());
     pos.y += player.fatness; // FIXME - This accounts for wonky player sphere collider, when we switch to a capsule we won't need it
     player.pos = pos;
     player.vel = V(0,0,.01); // "wake up" physics engine
-    player.angular.set(0,0,0);
-    let playerangle = Math.atan2(this.pos.x, this.pos.z);
-    console.log('Teleport player', pos, playerangle);
-    this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
+    console.log('Teleport player', pos);
+    if( this.teleportangle && !mouse){
+      player.angular.set(0,0,0);
+      let playerangle = Math.atan2(this.pos.x, this.pos.z);
+      this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
+    }
   },
   updateTeleportAngle() {
     let controls = this.activecontrols;
@@ -282,27 +290,28 @@ janus.registerElement('locomotion_teleporter', {
   handleMouseDown(ev) {
     if (!room.teleport) return;
     if (ev.button == 0 && (player.enabled || janus.hmd)) {
-      if (!this.longpresstimer) {
-        //this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.enableCursor(); }, this.longpresstime);
-        this.mousediff = [0,0];
+      if( ev.inputSourceObject ){ // translate webxr emulated mousedown event 
+        this.teleporthand = ev.inputSourceObject.device.handedness
+        let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+        if( hand ) hand.teleportPos = false 
       }
-      //this.active = true;
+      if (!this.longpresstimer) {
+        this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.longpresstimer = true; }, this.longpresstime);
+        this.mousediff = [0,0];
+      }else this.cancelLongPress()
     }
   },
   handleMouseMove(ev) {
     if (!room.teleport) return;
-    if (this.longpresstimer) {
-      this.mousediff[0] += ev.movementX;
-      this.mousediff[1] += ev.movementY
-      var distance = Math.sqrt(this.mousediff[0] * this.mousediff[0] + this.mousediff[1] * this.mousediff[1]);
-      if (distance > this.deadzone) {
-        clearTimeout(this.longpresstimer);
-        this.longpresstimer = false;
-      }
-    }
+    //if (this.longpresstimer) {
+    //  this.mousediff[0] += ev.movementX;
+    //  this.mousediff[1] += ev.movementY
+    //  var distance = Math.sqrt(this.mousediff[0] * this.mousediff[0] + this.mousediff[1] * this.mousediff[1]);
+    //  if (distance > this.deadzone) this.cancelLongPress()
+    //}
   },
   handleTouchMove(ev) {
-    if (!room.teleport) return;
+    if (!room.teleport || !this.active) return;
     if (this.longpresstimer) {
       var touch = ev.changedTouches[0];
 
@@ -315,9 +324,7 @@ janus.registerElement('locomotion_teleporter', {
       }
       this.lasttouch = [touch.clientX, touch.clientY];
       var distance = Math.sqrt(this.mousediff[0] * this.mousediff[0] + this.mousediff[1] * this.mousediff[1]);
-      if (distance > this.deadzone) {
-        clearTimeout(this.longpresstimer);
-      }
+      if (distance > this.deadzone) this.cancelLongPress()
       if (this.active) {
         ev.stopPropagation();
         ev.preventDefault();
@@ -325,42 +332,56 @@ janus.registerElement('locomotion_teleporter', {
     }
   },
   handleMouseUp(ev) {
-    //if (!room.teleport) return;
-    if (this.longpresstimer) {
-      clearTimeout(this.longpresstimer);
-      this.longpresstimer = false;
-    }
-    if (this.active) {
+    if (!room.teleport) return;
+    if (this.teleportactive) {
 /*
       player.pos = this.pos;
       this.sound.pos = this.pos;
       this.sound.play();
 */
-      this.showShroud();
-      this.teleport();
+      this.teleport(true);
+      this.active = false
+      this.teleportactive = false;
+      this.teleporthand = false;
+      this.shroud.visible = false;
+      this.shroud.opacity = 0;
     }
-    this.disableCursor();
+    if( this.longpresstimer === true ){ 
+      // trigger teleport when longpress timer expired
+      this.enableCursor()
+    }else this.disableCursor();
   },
   enableCursor() {
     if (!room.teleport) return;
+    let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+    if( hand ) hand.pointer.laser.visible = false // prevent (portal)clicks
+    this.active = true;
+    this.teleportactive = true;
     this.visible = true;
     this.particles.resetParticles();
     this.particles.visible = true;
     if (this.laser.room !== room._target) room.appendChild(this.laser);
     if (this.particles.room !== room._target) room.appendChild(this.particles);
     this.laser.visible = true;
-    this.active = true;
     this.particles.start();
   },
   disableCursor() {
+    let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+    if( hand ) hand.pointer.laser.visible = true // restore original laser 
+    this.teleportactive = false;
     this.visible = false;
     this.particles.visible = false;
     this.laser.visible = false;
     this.active = false;
     this.particles.stop();
+    this.cancelLongPress()
   },
   showShroud() {
     this.shroud.visible = true;
     this.shroud.opacity = 1;
+  },
+  cancelLongPress(){
+    clearTimeout(this.longpresstimer);
+    this.longpresstimer = false
   }
 });

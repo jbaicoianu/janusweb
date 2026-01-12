@@ -3,5 +3,6 @@
   { "assettype": "image", "name": "xrmenu-button-back", "src": "./images/previous-button.png", "hasalpha": true },
   { "assettype": "image", "name": "xrmenu-button-reset", "src": "./images/address-location.png", "hasalpha": true },
   { "assettype": "image", "name": "xrmenu-button-reload", "src": "./images/redo-arrow.png", "hasalpha": true },
-  { "assettype": "image", "name": "xrmenu-button-sound", "src": "./images/audio-settings.png", "hasalpha": true }
+  { "assettype": "image", "name": "xrmenu-button-sound", "src": "./images/audio-settings.png", "hasalpha": true },
+  { "assettype": "image", "name": "xrmenu-button-teleport", "src": "./images/teleport.png", "hasalpha": true }
 ]

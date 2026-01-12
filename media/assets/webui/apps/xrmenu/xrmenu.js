@@ -13,6 +13,7 @@ janus.registerElement('xrmenu', {
       renderorder: 9,
     });
 */
+    console.log("creating xrmenu")
 
     this.worldpos = V();
     this.worlddir = V();
@@ -82,25 +83,22 @@ janus.registerElement('xrmenu', {
           image_id: 'xrmenu-button-sound',
           //onactivate: (ev) => this.engine.client.stopXR(),
         }),
+        teleport: this.createObject('xrmenu-button', {
+          pos: V(.68, 0, 0),
+          label: 'Teleport',
+          image_id: 'xrmenu-button-teleport',
+          toggle: true,
+          enabled: room.teleport,
+          //onactivate: (ev) => this.engine.client.stopXR(),
+        }),
       };
       this.buttons.home.addEventListener('activate', ev => janus.navigateHome());
       this.buttons.back.addEventListener('activate', ev => janus.navigateBack());
       this.buttons.reset.addEventListener('activate', ev => player.reset_position());
       this.buttons.reload.addEventListener('activate', ev => location.reload());
       this.buttons.exitvr.addEventListener('activate', ev => this.engine.client.stopXR());
-      this.buttons.sound.addEventListener('activate', ev => {
-        if (!this.panels['sound']) {
-          this.panels['sound'] = this.buttons.sound.createObject('xrmenu-popup', {
-            content: 'janus-voip-picker'
-          });
-        } else {
-          if (this.panels['sound'].parent === this.buttons.sound) {
-            this.buttons.sound.removeChild(this.panels['sound']);
-          } else {
-            this.buttons.sound.appendChild(this.panels['sound']);
-          }
-        }
-      });
+      this.buttons.sound.addEventListener('activate', ev => this.toggleSound());
+      this.buttons.teleport.addEventListener('activate', ev => this.toggleTeleport());
       this.reflow();
     });
   },
@@ -115,6 +113,23 @@ janus.registerElement('xrmenu', {
       let button = this.buttons[buttonnames[i]];
       button.pos.x = (-width / 2) + (this.buttonwidth * this.buttonmargin * (i + .5)) ;
     }
+  },
+  toggleSound(){
+    if (!this.panels['sound']) {
+      this.panels['sound'] = this.buttons.sound.createObject('xrmenu-popup', {
+        content: 'janus-voip-picker'
+      });
+    } else {
+      if (this.panels['sound'].parent === this.buttons.sound) {
+        this.buttons.sound.removeChild(this.panels['sound']);
+      } else {
+        this.buttons.sound.appendChild(this.panels['sound']);
+      }
+    }
+  },
+  toggleTeleport(){
+    room.teleport = !room.teleport
+    this.buttons.teleport.state(room.teleport)
   },
 /*
   update() {
@@ -135,16 +150,20 @@ janus.registerElement('xrmenu', {
 janus.registerElement('xrmenu-button', {
   onactivate: null,
   image_id: '',
+  toggle: false,
+  enabled: true,
 
   create() {
     this.button = this.createObject('object', {
       id: 'plane',
       scale: V(.1, .1, .02),
       col: '#fff',
-      pos: V(0, 0, .01),
+      pos: V(0, 0, this.enabled ? 0.01 : 0 ),
       collision_id: 'cube',
       image_id: this.image_id,
       renderorder: 10,
+      emissive: this.enabled ? (this.toggle ? '#FFF' : '#595')
+                             : '#555',
     });
     this.button.addEventListener('mouseover', ev => this.handleMouseOver(ev));
     this.button.addEventListener('mouseout', ev => this.handleMouseOut(ev));
@@ -153,9 +172,11 @@ janus.registerElement('xrmenu-button', {
     this.button.addEventListener('click', ev => this.handleClick(ev));
   },
   handleMouseOver(ev) {
+    if( this.toggle ) return
     this.button.emissive = '#595';
   },
   handleMouseOut(ev) {
+    if( this.toggle ) return
     this.button.emissive = '#555';
   },
   handleMouseDown(ev) {
@@ -164,7 +185,10 @@ janus.registerElement('xrmenu-button', {
   handleMouseUp(ev) {
     this.button.pos.z = .01;
   },
-  
+  state(enabled){
+    this.button.emissive = (this.enabled = enabled) ? '#FFF' : '#555'
+    this.button.pos.z = enabled ? .01 : 0
+  },
   handleClick(ev) {
     this.dispatchEvent({type: 'activate'});
   },
