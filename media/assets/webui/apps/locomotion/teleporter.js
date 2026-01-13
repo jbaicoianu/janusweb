@@ -1,3 +1,10 @@
+/*
+ * for room-specific teleport sound use:
+ *
+ * <room teleport_sound_id="mysound" ...>
+ *
+ */
+
 janus.registerElement('locomotion_teleporter', {
   active: false,
   longpresstime: 500,
@@ -102,7 +109,13 @@ janus.registerElement('locomotion_teleporter', {
     });
     player.head.add(this.shroud._target);
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
-    //this.sound = room.createObject('Sound', { id: 'teleport2' }, this);
+
+    let locomotion = janus.ui.apps.default.apps.locomotion;
+    let asseturl = locomotion.resolveFullURL('./locomotion-assets.json');
+    fetch(asseturl).then(res => res.json()).then(assetlist => {
+      this.assetpack = elation.engine.assets.loadJSON(assetlist, locomotion.resolveFullURL('./'));
+      this.sound = room.createObject('Sound', { id: room.teleport_sound_id || 'button-teleport' }, this);
+    })
 
     this.disableCursor();
     window.addEventListener('mousemove', this.handleMouseMove);
@@ -141,7 +154,7 @@ janus.registerElement('locomotion_teleporter', {
   },
   update() {
     if (this.active) {
-      let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+      let hand = this.xrplayer ? this.xrplayer.trackedobjects['hand_' + this.teleporthand] : null
       let startpoint,
           segments = this.linesegments,
           duration = .25,
@@ -186,7 +199,7 @@ janus.registerElement('locomotion_teleporter', {
             this.localToWorld(this.particles.emitter_pos.set(0,0,0));
             this.updateTeleportAngle();
             // track movement to cancel longpresstimer
-            hand.teleportPos = hand.teleportPos || this.pos.clone()
+            if( hand ) hand.teleportPos = hand.teleportPos || this.pos.clone()
           }
           laserpoints[i * 2].copy(p0);
           laserpoints[i * 2 + 1].copy(p1);
@@ -237,7 +250,6 @@ janus.registerElement('locomotion_teleporter', {
       if (len > .8) {
         this.updateTeleportAngle();
       } else if (len < .01) {
-        this.showShroud();
         this.teleport();
         this.teleportactive = false;
         this.teleporthand = false;
@@ -275,7 +287,12 @@ janus.registerElement('locomotion_teleporter', {
     player.pos = pos;
     player.vel = V(0,0,.01); // "wake up" physics engine
     console.log('Teleport player', pos);
-    if( this.teleportangle && !mouse){
+    this.showShroud();
+    if( this.sound ){
+      this.sound.pos = pos;
+      this.sound.play();
+    }
+    if( this.xrplayer && this.teleportangle && !mouse){
       player.angular.set(0,0,0);
       let playerangle = Math.atan2(this.pos.x, this.pos.z);
       this.xrplayer.orientation._target.setFromEuler(new THREE.Euler(0, this.teleportangle - playerangle, 0));
@@ -290,13 +307,13 @@ janus.registerElement('locomotion_teleporter', {
   handleMouseDown(ev) {
     if (!room.teleport) return;
     if (ev.button == 0 && (player.enabled || janus.hmd)) {
-      if( ev.inputSourceObject ){ // translate webxr emulated mousedown event 
+      if( ev.inputSourceObject && this.xrplayer ){ // translate webxr emulated mousedown event 
         this.teleporthand = ev.inputSourceObject.device.handedness
         let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
         if( hand ) hand.teleportPos = false 
       }
       if (!this.longpresstimer) {
-        this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.longpresstimer = true; }, this.longpresstime);
+        this.longpresstimer = setTimeout(() => { console.log('timer fired'); this.enableCursor(); }, this.longpresstime);
         this.mousediff = [0,0];
       }else this.cancelLongPress()
     }
@@ -334,27 +351,19 @@ janus.registerElement('locomotion_teleporter', {
   handleMouseUp(ev) {
     if (!room.teleport) return;
     if (this.teleportactive) {
-/*
-      player.pos = this.pos;
-      this.sound.pos = this.pos;
-      this.sound.play();
-*/
       this.teleport(true);
       this.active = false
       this.teleportactive = false;
       this.teleporthand = false;
-      this.shroud.visible = false;
-      this.shroud.opacity = 0;
-    }
-    if( this.longpresstimer === true ){ 
-      // trigger teleport when longpress timer expired
-      this.enableCursor()
-    }else this.disableCursor();
+      this.disableCursor();
+    }else if( this.longpresstimer ) this.disableCursor();
   },
   enableCursor() {
     if (!room.teleport) return;
-    let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
-    if( hand ) hand.pointer.laser.visible = false // prevent (portal)clicks
+    if( this.xrplayer ){
+      let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+      if( hand ) hand.pointer.laser.visible = false // prevent (portal)clicks
+    }
     this.active = true;
     this.teleportactive = true;
     this.visible = true;
@@ -366,8 +375,10 @@ janus.registerElement('locomotion_teleporter', {
     this.particles.start();
   },
   disableCursor() {
-    let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
-    if( hand ) hand.pointer.laser.visible = true // restore original laser 
+    if( this.xrplayer ){
+      let hand = this.xrplayer.trackedobjects['hand_' + this.teleporthand];
+      if( hand ) hand.pointer.laser.visible = true // restore original laser 
+    }
     this.teleportactive = false;
     this.visible = false;
     this.particles.visible = false;
