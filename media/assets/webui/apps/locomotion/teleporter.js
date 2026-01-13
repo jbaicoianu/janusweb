@@ -9,7 +9,7 @@ janus.registerElement('locomotion_teleporter', {
   active: false,
   longpresstime: 500,
   deadzone: 5,
-  xrplayer: null,
+  xrplayer: null, // *TODO* use janus.engine.client.xrplayer instead (and allow desktop too)
   linesegments: 100,
 
   create() {
