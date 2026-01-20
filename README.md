@@ -70,10 +70,145 @@ You can even put your mark-up onto sites like PasteBin or PiratePad.  Then just 
 in our viewer by entering the URL into the navigation bar, and you can link directly to it, share 
 on social media, or embed our viewer directly into other webpages, blog posts, or articles.
 
-See also **Using a specific version of JanusWeb** below.
+### Local-first
+
+Run the viewer locally on your desktop, raspberry pi (ARM64) or server?<br>
+Use our all-in-one **janusweb.com** multi-platform binary file:
+
+| executable    | platforms |
+|-|-|
+| [janusweb.com](releases/latest/download/janusweb.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
+
+Run `janusweb.com` from anywhere, or put it into a folder with your 3D models or JanusXR rooms:
+
+```
+$ chmod +x janusweb.com          # only for non-windows users
+
+$ ./janusweb.com 
+I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
+I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
+Launching browser..
+```
+
+A browser will popup, and connect to `https://janusxr.org` via Janusweb.<br>
+Webbrowsers on the same network can access your node `https://192.168.1.168:8080`
+
+> Optionally, you can expose this janusweb-node to the internet. Check [here](https://redbean.dev) for more commandline options.
+</details>
+
+<details>
+<summary><b>Usecase:</b> 3D file viewer</summary>
+<br>
+Make sure `janusweb.com` is in a folder with your 3D models
+
+```
+$ ls 
+janusweb.com
+world1.glb
+world2.glb
+```
+
+Then make sure you rename `janusweb.com` to whatever you want to set as homepage:
+
+```
+$ mv janusweb.com world1.com
+$ ./world1.com 
+I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
+I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
+✅ detected /world1.glb (setting as spatial home)
+Launching browser..
+```
+</details>
+
+<details>
+<summary><b>Usecase:</b> all-in-one JanusXR node</summary>
+<br>
+Make sure `janusweb.com` is in a folder with your JanusXR rooms or 3D models
+
+```
+$ ls 
+janusweb.com
+world1.html
+world2.html
+foo.glb
+```
+
+Then make sure you rename `janusweb.com` to whatever you want to set as homepage:
+
+```
+$ zip -r janusweb.com *              # add janus files to janusweb.com
+$ mv janusweb.com world1.com         # hint homepage room (world1.html) sidecarfile
+$ ./world1.com                       
+✅ detected /world1.html (setting as spatial home)
+I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
+I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
+Launching browser..
+```
+
+Profit! You can now send `world1.com` to a friend, and his browser will launch straight into world1.html 
+
+> NOTE: you can also point directly to a 3D model (`foo.com` would load `foo.glb`) or PDF-file etc!
+</details>
+
+<details>
+<summary><b>Usecase:</b> run in docker/OCI container</summary>
+<br>
+
+Make sure to run you're in a folder with your JanusXR rooms or 3D models, and `janusweb.com`
+
+```
+$ ls 
+janusweb.com
+world1.html
+world2.html
+foo.glb
+
+$ unzip janusweb.com          # extract the viewer files
+
+$ docker run -d -v ./:/www -p 8080:8080 --name janusweb busybox:latest /bin/httpd -f -h /www -p 8080
+e7928798379e872983b7ec9b89237ebc
+
+$ docker ps
+CONTAINER ID  IMAGE                             COMMAND               CREATED         STATUS         PORTS                   NAMES
+6711ed9739f3  docker.io/library/busybox:latest  /bin/httpd -f -h ...  16 seconds ago  Up 16 seconds  0.0.0.0:8080->8080/tcp  janusweb
+```
+
+Profit! You can now point your browser to `http://127.0.0.1:8080` or configure your reverseproxy for SSL certs/domain etc.
+
+</details>
+
+<details>
+<summary><b>Usecase:</b> get the latest build files</summary>
+
+<br>
+Sometimes, developers just want the latest janusweb **files**.<br>
+Good news, the executable is also a zip-file.<br>
+
+```
+$ ls 
+janusweb.com
+$ unzip janusweb.com
+$ ls
+index.html
+janusweb.js
+(...)
+
+$ janusweb.com 
+I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
+I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
+Launching browser..
+
+( the webserver will prioritize the unzipped files )
+
+$ zip janusweb.com index.html   # you can even update the binary 
+```
+
+> Profit!
+
+</details>
 
 ### Pull our scripts into your page
-Using the above method, all of your links would go through our servers.  If you'd prefer to 
+Using the above method, all of your links would go through community CORS-proxies. If you'd prefer to 
 link to your own servers, you can pull our JS into your page and use JanusWeb as a scriptable
 client via its API.  This looks something like this:
 
@@ -97,13 +232,38 @@ client via its API.  This looks something like this:
 ```
 
 The `elation.janusweb.init()` function can take a number of arguments, and returns a promise which
-receives an instance of the client.  This client reference can be controlled via its API.  See the 
-sections on **Arguments** and **Scripting** below.
+receives an instance of the client.  This client reference can be controlled via its API:
 
-See also **Using a specific version of JanusWeb** below.
+```html
+<html>
+  <head>
+    <title>My JanusVR Room</title>
+  </head>
+  <body>
+    <script src="https://web.janusvr.com/janusweb.js"></script>
+    <script>
+        elation.janusweb.init({url: document.location.href })
+        .then( (client)=> console.log("rendering this page's virtual twin") )
+    </script>
 
-### Install from ZIPs
-(TODO - we will start shipping zip builds of JanusWeb once we release v1.0)
+    <!-- 
+    <fireboxroom>
+      <room use_local_asset="room1">
+        <object id="cube" pos="0 1 5" />
+        <text col="1 0 0" pos="0 2 4">my first room</text>
+      </room>
+    </fireboxroom>
+    -->
+
+  </body>
+</html>
+```
+
+> **NOTE**: you can also update the `janusweb.com` binary to your likings: (`unzip janusweb.com index.html && vi index.html && zip janusweb.com index.html` see 'get the latest build files' above)
+
+See the sections on **Arguments** and **Scripting** below.
+
+> See also **Using a specific version of JanusWeb** below.
 
 ### Install from NPM
 (TODO - we will start shipping official NPM packages of JanusWeb once we release v1.0)
