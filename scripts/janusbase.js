@@ -1366,7 +1366,7 @@ console.log('its null', k, this[k], prop);
           }
         }];
       }
-      return this.engine.systems.controls.addContext(name, legacydefs);
+      return this.engine.systems.controls.addContext(name, legacydefs, this);
     }
     this.activateControlContext = function(name) {
       this.engine.systems.controls.activateContext(name, this);
