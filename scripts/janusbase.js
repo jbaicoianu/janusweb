@@ -350,6 +350,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           room:     ['property', 'room'],
           parts:    ['property', 'jsparts'],
           js_id:    ['property', 'js_id'],
+          jsid:     ['property', 'js_id'],
           pos:      ['property', 'position'],
           rotation: ['property', 'rotation'],
           scale:    ['property', 'scale'],
