@@ -412,7 +412,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
             this.buttonwaspressed = false;
             if (!this.menu.parent || this.menu.parent === this) {
               player.appendChild(this.menu);
-              player.worldToLocal(this.pointer.localToWorld(this.menu.pos.set(0,0,-.25)));
+              player.worldToLocal(this.pointer.localToWorld(this.menu.pos.set(0.1,-0.07,-.2)));
               this.menu.billboard = 'y';
             } else {
               //this.appendChild(this.menu);
@@ -656,8 +656,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         }
       },
       handleRaycastEnter(ev) {
-        let proxyobj = ev.data.object,
-            obj = proxyobj._target;
+        let proxyobj = ev.data.object
+        if( !proxyobj || !proxyobj?._target ) return
+        obj = proxyobj._target;
         let oldactiveobject = this.activeobject;
         if (this.activeobject) {
           this.engine.client.view.proxyEvent({
@@ -723,6 +724,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.engine.client.view.proxyEvent(evdata, evdata.element);
       },
       handleRaycastMove(ev) {
+        if( ! ev?.data?.intersection?.face?.normal ) return // skip those!
         this.updateLaserEndpoint(ev.data.intersection.point, ev.data.intersection.face.normal);
         if (this.activeobject) {
           let obj = this.activeobject.objects['3d'];
@@ -779,7 +781,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         }
       },
       handleSelect(ev) {
-        if (this.activeobject) {
+        if (this.activeobject && this.laser.visible ) {
           let obj = this.activeobject.objects['3d'];
           console.log('CLICK IT', this.activeobject);
           this.engine.client.view.proxyEvent({

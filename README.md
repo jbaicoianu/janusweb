@@ -11,7 +11,7 @@
   &mdash;
   <a href="https://web.janusvr.com">Demo</a>
   &mdash;
-  <a href="https://github.com/madjin/janus-guide">Docs</a>
+  <a href="https://coderofsalvation.github.io/janus-guide/">Docs</a>
   &mdash;
   <a href="https://discord.gg/7eyK2wE">Discord</a>
 </div>
@@ -132,7 +132,9 @@ JanusWeb supports several arguments at initialization time to control how it beh
 <table>
   <tr><th> Name           </th><th> Description                            </th><th> Default                  </th></tr>
 
-  <tr><td> autoload       </td><td> Load URL by default or wait for script </td><td> true                     </td></tr>
+  <tr><td> autostart      </td><td> call `elation.janusweb.init({..})` automatically or manually </td><td> true                     </td></tr>
+
+  <tr><td> autoload      </td><td> Load URL by default or wait for script </td><td> true                     </td></tr>
 
   <tr><td> crosshair      </td><td> Show player crosshair                  </td><td> true                     </td></tr>
 
@@ -148,10 +150,6 @@ JanusWeb supports several arguments at initialization time to control how it beh
 
   <tr><td> server         </td><td> Presence server to connect to          </td><td> wss://presence.janusvr.com:5567/</td></tr>
 
-  <tr><td> shownavigation </td><td> Control visibility of navigation bar   </td><td> true                     </td></tr>
-
-  <tr><td> showchat       </td><td> Control visibility of chat             </td><td> true                     </td></tr>
-
   <tr><td> stats          </td><td> Enable render performance stats        </td><td> false                    </td></tr>
 
   <tr><td> url            </td><td> Default page to load                   </td><td> (homepage)               </td></tr>
@@ -166,12 +164,18 @@ JanusWeb supports several arguments at initialization time to control how it beh
                                     for Opus via WebAudio)                 </td><td> false                    </td></tr>
 </table>
 
+> NOTE: see [client.js](https://github.com/jbaicoianu/janusweb/blob/master/scripts/client.js#L65) for the most up to date arguments 
+
 ## Scripting
 After initializing the client, `elation.janusweb.init()` returns a Promise which provides a reference to the client.
 You can programatically control this client to do all sorts of things.  For instance, we can make the client load a
 URL, wait for the world and all of its assets to load, and then take a screenshot of the world after a specified delay:
 
 ```javascript
+<janus-viewer autostart="false">     <!-- disable autostart, we will   -->
+</janus-viewer>                      <!-- call elation.janusweb.init() -->
+
+<script>
 var pageinfo = elation.utils.parseURL(document.location.href),
     urlargs = pageinfo.args || {},
     hashargs = pageinfo.hash || {};
@@ -179,11 +183,11 @@ var pageinfo = elation.utils.parseURL(document.location.href),
 var url = elation.utils.any(hashargs.url, urlargs.url, 'http://www.janusvr.com/index.html'),
     delay = elation.utils.any(hashargs.delay, urlargs.delay, 1000);
 
-elation.janusweb.init({
+elation.janusweb.init({ 
   url: url,
   resolution: '1920x1080',
-  showchat: false,
-  shownavigation: false
+  uiconfig: "./media/assets/webui/default.json" // tweak ui here
+  // more options at https://github.com/jbaicoianu/janusweb/blob/master/scripts/client.js#L93
 }).then(function(client) {
   elation.events.add(client.janusweb.currentroom, 'room_load_complete', function() {
     setTimeout(function() {
@@ -194,7 +198,9 @@ elation.janusweb.init({
       });
     }, delay);
   });
+  elation.janusweb.init = function(){} // init only once 
 });
+</script>
 
 ```
 
@@ -217,11 +223,27 @@ JanusWeb versions follow the [Semantic Versioning 2.0.0](http://semver.org/) spe
 
 ## Ecosystem
 
-> Visualisation of [hyperlinked Janus rooms across the web](https://panopticon.spyduck.net/) (snapshot)
+Platforms using JanusXR + JanusWeb:
 
-* [janus-server](https://github.com/janusvr/janus-server) multiuser presence layer
-* [janus-gateway](https://janus.conf.meetecho.com/) webrtc/voip-layer [docs](https://janus.conf.meetecho.com/)
-* [janusxr-cli](https://github.com/coderofsalvation/janusxr-cli) swiss army CLI knife for room health/preservation
+|    | URL | source / docker |
+|----|-----|------------|
+| <img src="https://imgur.com/JMYi81Z.png"/><br><br> | [vesta.janusxr.org](https://vesta.janusxr.org) | |
+| <img src="https://codeberg.org/coderofsalvation/xrforge/media/branch/master/xrforge.jpg"/><br><br> | [xrforge.isvery.ninja](https://xrforge.isvery.ninja) | [codeberg.org](https://codeberg.org/coderofsalvation/xrforge)
+
+Visualisations of hyperlinked Janus clusters across the web:
+* [augmentedperception.com](https://augmentedperception.com) 
+* [panopticon](https://panopticon.spyduck.net/) 
+
+Extra Tools / Components:
+* [custom components](https://github.com/jbaicoianu/janus-custom-components)
+* [janusxr-cli](https://github.com/coderofsalvation/janusxr-cli) swiss army CLI knife for room health/preservation #cli
+* [corsanywhere](https://github.com/Rob--W/cors-anywhere) for hasslefree hopping clusters #stack
+* [janus-gateway](https://janus.conf.meetecho.com/) webrtc/voip-layer [docs](https://janus.conf.meetecho.com/) #stack
+* [janus-server](https://github.com/janusvr/janus-server) multiuser presence layer #stack
+
+Reference:
+* [quick scripting reference](https://github.com/jbaicoianu/janusweb/wiki/Scripting-Support-2.0)
+* [janus guide](https://coderofsalvation.github.io/janus-guide/)
 
 ## Contributing
 JanusWeb is open source, and we welcome any contributions!  Please do report bugs using GitHub Issues,

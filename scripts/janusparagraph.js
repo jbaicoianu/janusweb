@@ -3,7 +3,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
       this.defineProperties({
-        text: {type: 'string', default: '', set: this.updateTexture},
+        text: {type: 'string', default: '', set: this.toInlineHTML },
         font_size: {type: 'integer', default: 16, set: this.updateTexture},
         text_col: {type: 'color', default: 0x000000, set: this.updateTexture},
         back_col: {type: 'color', default: 0xffffff, set: this.updateTexture},
@@ -11,6 +11,7 @@ elation.require(['janusweb.janusbase'], function() {
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         css: {type: 'string', set: this.updateTexture },
         depth_write: { type: 'boolean', default: true },
+        transparent: {type: 'boolean', set: this.updateTexture },
         depth_test: { type: 'boolean', default: true },
         collision_id: { type: 'string', default: 'cube' },
         collision_scale: { type: 'vector3', default: V(.5, .5, .02) },
@@ -75,7 +76,7 @@ elation.require(['janusweb.janusbase'], function() {
       var basestyle = 'font-family: sans-serif;' +
                       'font-size: ' + this.font_size + 'px;' +
                       'color: ' + text_col + ';' +
-                      'background: ' + back_col + ';' +
+                      'background: ' + (this.transparent ? 'transparent' : back_col) + ';' +
                       'max-width: 1014px;' +
                       'padding: 5px;';
 
@@ -85,7 +86,7 @@ elation.require(['janusweb.janusbase'], function() {
       // styled divs instead.
 
       var sanitarydiv = document.createElement('div');
-      sanitarydiv.innerHTML = this.text;
+      sanitarydiv.innerHTML = this.html;
       var content = sanitarydiv.innerHTML.replace(/<br\s*\/?>/g, '<div class="br"></div>');
       content = content.replace(/<hr\s*\/?>/g, '<div class="hr"></div>');
       content = content.replace(/<img(.*?)>/g, "<img$1 />");
@@ -150,5 +151,40 @@ elation.require(['janusweb.janusbase'], function() {
       }
       return this._proxyobject;
     }
+
+    this.toInlineHTML = async function(){
+      this.html = this.text
+      try{
+        // find all img tags and capture src attributes
+        const imgRegex = /<img[^>]*src=["'](?!data:)([^"']+)["']/gi;
+        const matches = [];
+        let match;
+        while ((match = imgRegex.exec(this.html)) !== null) { // Collect all src values
+          matches.push(match[1]);
+        }
+        // fill array with base64 image-strings
+        const dataURLs = await Promise.all( matches.map(src => this.toDataURL(src)) );
+        // Replace each src in the html with the corresponding data URL
+        let updatedHtml = this.html;
+        matches.forEach((src, i) => {
+          updatedHtml = updatedHtml.replace( `src="${src}"`, `src="${dataURLs[i]}"`)
+        });
+        this.html = updatedHtml
+      }catch(e){ console.error(e) } // continue when inlining failed
+      this.updateTexture()
+    };
+
+    this.toDataURL = function(url){
+      const finalUrl = `${elation.engine.assets.corsproxy||''}${url}`
+      return fetch(finalUrl)
+      .then(response => response.blob())
+      .then(blob => new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      }))
+    }
+
   }, elation.engine.things.janusbase);
 });
