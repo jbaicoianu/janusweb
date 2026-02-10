@@ -945,9 +945,9 @@ document.body.dispatchEvent(click);
 */
           this.pickable = false;
           this.setCollider('capsule', {
-            radius: this.collision_radius,
-            length: 1,
-            offset: V(0, this.collision_radius, 0)
+            radius: this.fatness,
+            length: this.height - (this.fatness * 2),
+            offset: V(0, this.fatness, 0)
           });
         } else {
           this.removeCollider();
