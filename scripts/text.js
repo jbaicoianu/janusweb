@@ -11,7 +11,7 @@ elation.require(['engine.things.label'], function() {
         'align':           { type: 'string', default: 'center', refreshGeometry: true },
         'verticalalign':   { type: 'string', default: 'bottom', refreshGeometry: true },
         'zalign':          { type: 'string', default: 'back', refreshGeometry: true },
-        'emissive':        { type: 'color', default: 0x000000 },
+        'emissive':        { type: 'color', default: 0x000000, set: this.updateMaterial },
         'opacity':         { type: 'float', default: 1.0 },
         'depth_write':     { type: 'bool', default: true },
         'depth_test':      { type: 'bool', default: true },
@@ -120,6 +120,7 @@ elation.require(['engine.things.label'], function() {
           this.material.metalness = this.metalness;
           this.material.envMap = this.getEnvmap();
         }
+        this.material.emissive = this.emissive;
         this.material.needsUpdate = true;
       }
     }
