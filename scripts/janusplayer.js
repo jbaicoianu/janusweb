@@ -56,7 +56,7 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
       elation.events.add(this.engine.client.view.container, 'touchcancel', elation.bind(this, this.handleTouchEnd));
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
-        'toggle_view': ['keyboard_nomod_v,keyboard_shift_v', elation.bind(this, this.toggleCamera)],
+        'toggle_view': ['keyboard_nomod_v,keyboard_shift_v', ev => { if (ev.value == 1) this.toggleCamera() }],
         'zoom_out': ['mouse_wheel_down', ev => this.zoomView(-1, ev)],
         'zoom_in': ['mouse_wheel_up', ev => this.zoomView(1, ev)],
         //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
@@ -1230,8 +1230,11 @@ document.body.dispatchEvent(click);
       this.defaultanimation = 'portal';
       setTimeout(() => this.defaultanimation = 'idle', 3000);
     }
-    this.toggleCamera = function(ev) {
-      if (ev.value == 1) {
+    this.toggleCamera = function(arg) {
+      if (typeof arg == 'string') {
+        this.setCameraView(arg);
+      } else if (!arg || arg.value) {
+        // Legacy handling - if arg is a control input event, check to make sure this is a button press, not a release
         if (this.cameraview == 'firstperson') {
           this.setCameraView('thirdperson');
         } else {
