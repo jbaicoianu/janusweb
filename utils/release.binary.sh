@@ -20,43 +20,12 @@ download(){
 }
 
 configure(){
-  lua='
-    HidePath("/usr/share/zoneinfo/")
-    HidePath("/usr/share/ssl/")
-    homepage = false
-    homepath = false
-    home = arg[-1]:gsub(".*/","")
-                  :gsub(".com","")
-    ext = { "txt", "xml", "html", "pdf", "mp3", "yaml", "json", "xlsx", "png", "jpg", "glb", "gltf", "dae", "obj"}
-    for k,v in pairs(ext) do
-      file = string.format("%s.%s", home, v)
-      if( path.exists( file ) ) then homepath = "/" .. file; end
-    end
-
-    if( homepath ) then 
-      print("✅ detected " .. homepath .. " (setting as spatial home)")
-      homepage = Slurp("/zip/index.html"):gsub("<janus%-viewer .-</janus%-viewer>","<janus-viewer src=\"" .. homepath .. "\"></janus-viewer>")
-
-      function OnHttpRequest()
-        path = GetPath()
-        if( homepage and path == "/" ) then
-          SetStatus(200)
-          SetHeader("Content-Type", "text/html; charset=utf-8")
-          SetHeader("Access-Control-Allow-Origin", "*")
-          Write(homepage)
-        else
-          Route()
-        end
-      end
-    end
-    LaunchBrowser()
-  '
   cd $VERSION
-  args="-D\n." # default args (-i /zip/janusweb.lua -D .)
-  echo -e "$args" > .args
-  echo -e "$lua"  > .init.lua
   ln -fs media/images/icons/janusweb-256x256.ico favicon.ico
-  zip -r janusxr.com .args .init.lua *
+  zip -r janusxr.com *
+  set -x
+  cd ../../janusxr.com
+  zip -r ../$VERSION/janusxr.com .* *
 }
 
 download

@@ -73,18 +73,18 @@ on social media, or embed our viewer directly into other webpages, blog posts, o
 ### Local-first
 
 Run the viewer locally on your desktop, raspberry pi (ARM64) or server?<br>
-Use our all-in-one **janusweb.com** multi-platform binary file:
+Use our all-in-one **janusxr.com** multi-platform binary file:
 
 | executable    | platforms |
 |-|-|
-| [janusweb.com](releases/latest/download/janusweb.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
+| [janusxr.com](releases/latest/download/janusxr.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
 
-Run `janusweb.com` from anywhere, or put it into a folder with your 3D models or JanusXR rooms:
+Run `janusxr.com` from anywhere, or put it into a folder with your 3D models or JanusXR rooms:
 
 ```
-$ chmod +x janusweb.com          # only for non-windows users
+$ chmod +x janusxr.com          # only for non-windows users
 
-$ ./janusweb.com 
+$ ./janusxr.com 
 I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
 I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
 Launching browser..
@@ -99,19 +99,19 @@ Webbrowsers on the same network can access your node `https://192.168.1.168:8080
 <details>
 <summary><b>Usecase:</b> 3D file viewer</summary>
 <br>
-Make sure `janusweb.com` is in a folder with your 3D models
+Make sure `janusxr.com` is in a folder with your 3D models
 
 ```
 $ ls 
-janusweb.com
+janusxr.com
 world1.glb
 world2.glb
 ```
 
-Then make sure you rename `janusweb.com` to whatever you want to set as homepage:
+Then make sure you rename `janusxr.com` to whatever you want to set as homepage:
 
 ```
-$ mv janusweb.com world1.com
+$ mv janusxr.com world1.com
 $ ./world1.com 
 I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
 I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
@@ -123,21 +123,21 @@ Launching browser..
 <details>
 <summary><b>Usecase:</b> all-in-one JanusXR node</summary>
 <br>
-Make sure `janusweb.com` is in a folder with your JanusXR rooms or 3D models
+Make sure `janusxr.com` is in a folder with your JanusXR rooms or 3D models
 
 ```
 $ ls 
-janusweb.com
+janusxr.com
 world1.html
 world2.html
 foo.glb
 ```
 
-Then make sure you rename `janusweb.com` to whatever you want to set as homepage:
+Then make sure you rename `janusxr.com` to whatever you want to set as homepage:
 
 ```
-$ zip -r janusweb.com *              # add janus files to janusweb.com
-$ mv janusweb.com world1.com         # hint homepage room (world1.html) sidecarfile
+$ zip -r janusxr.com *              # add janus files to janusxr.com
+$ mv janusxr.com world1.com         # hint homepage room (world1.html) sidecarfile
 $ ./world1.com                       
 ✅ detected /world1.html (setting as spatial home)
 I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
@@ -154,16 +154,16 @@ Profit! You can now send `world1.com` to a friend, and his browser will launch s
 <summary><b>Usecase:</b> run in docker/OCI container</summary>
 <br>
 
-Make sure to run you're in a folder with your JanusXR rooms or 3D models, and `janusweb.com`
+Make sure to run you're in a folder with your JanusXR rooms or 3D models, and `janusxr.com`
 
 ```
 $ ls 
-janusweb.com
+janusxr.com
 world1.html
 world2.html
 foo.glb
 
-$ unzip janusweb.com          # extract the viewer files
+$ unzip janusxr.com          # extract the viewer files
 
 $ docker run -d -v ./:/www -p 8080:8080 --name janusweb busybox:latest /bin/httpd -f -h /www -p 8080
 e7928798379e872983b7ec9b89237ebc
@@ -178,6 +178,13 @@ Profit! You can now point your browser to `http://127.0.0.1:8080` or configure y
 </details>
 
 <details>
+<summary><b>Usecase:</b> deploy janusweb as github/gitlab/codeforge webpage</summary>
+
+<br>
+*TODO* provide action-files
+</details>
+
+<details>
 <summary><b>Usecase:</b> get the latest build files</summary>
 
 <br>
@@ -186,21 +193,21 @@ Good news, the executable is also a zip-file.<br>
 
 ```
 $ ls 
-janusweb.com
-$ unzip janusweb.com
+janusxr.com
+$ unzip janusxr.com
 $ ls
 index.html
 janusweb.js
 (...)
 
-$ janusweb.com 
+$ janusxr.com 
 I2026-01-19T15:41:10 (srvr) listen http://127.0.0.1:8080
 I2026-01-19T15:41:10 (srvr) listen http://192.168.1.168:8080
 Launching browser..
 
 ( the webserver will prioritize the unzipped files )
 
-$ zip janusweb.com index.html   # you can even update the binary 
+$ zip janusxr.com index.html   # you can even update the binary 
 ```
 
 > Profit!
@@ -259,7 +266,7 @@ receives an instance of the client.  This client reference can be controlled via
 </html>
 ```
 
-> **NOTE**: you can also update the `janusweb.com` binary to your likings: (`unzip janusweb.com index.html && vi index.html && zip janusweb.com index.html` see 'get the latest build files' above)
+> **NOTE**: you can also update the `janusxr.com` binary to your likings: (`unzip janusxr.com index.html && vi index.html && zip janusxr.com index.html` see 'get the latest build files' above)
 
 See the sections on **Arguments** and **Scripting** below.
 
