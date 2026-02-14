@@ -92,6 +92,8 @@ elation.require(['janusweb.janusbase'], function() {
       content = content.replace(/<img(.*?)>/g, "<img$1 />");
 
       var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+      styletag    += 'a { color:unset; text-decoration: none; }' // dont confuse users with nonclickable links
+
       if (this.css) {
         styletag += this.css;
       }
