@@ -70,10 +70,10 @@ You can even put your mark-up onto sites like PasteBin or PiratePad.  Then just 
 in our viewer by entering the URL into the navigation bar, and you can link directly to it, share 
 on social media, or embed our viewer directly into other webpages, blog posts, or articles.
 
-### Local-first
+### Single-binary server+client 
 
-Run the viewer locally on your desktop, raspberry pi (ARM64) or server?<br>
 Use our all-in-one **janusxr.com** multi-platform binary file:
+Run a **local-first** viewer locally on your desktop, raspberry pi (ARM64) or server.<br>
 
 | executable    | platforms |
 |-|-|
@@ -121,9 +121,10 @@ Launching browser..
 </details>
 
 <details>
-<summary><b>Usecase:</b> all-in-one JanusXR node</summary>
+<summary><b>Usecase:</b> all-in-one JanusXR runtime</summary>
 <br>
-Make sure `janusxr.com` is in a folder with your JanusXR rooms or 3D models
+You can bundle all your XR experiences with the server/client binary.<br>
+Just Make sure `janusxr.com` is in a folder with your JanusXR rooms or 3D models
 
 ```
 $ ls 
@@ -150,8 +151,40 @@ Profit! You can now send `world1.com` to a friend, and his browser will launch s
 > NOTE: you can also point directly to a 3D model (`foo.com` would load `foo.glb`) or PDF-file etc!
 </details>
 
+
 <details>
-<summary><b>Usecase:</b> run in docker/OCI container</summary>
+<summary><b>Usecase:</b> run as a docker</summary>
+<br>
+You can run our docker-image as following:
+
+```
+$ docker run -p 8080:8080 codeberg.org/coderofsalvation/janusxr:1.5.56
+```
+
+Profit! You can now point your browser to `http://localhost:8080` or configure your reverseproxy for SSL certs/domain etc.<br>
+Or optionally, serve your own XR experiences with it:
+
+```
+$ ls
+myworld1.xml myworld2.html myworld3.glb
+$ 
+$ docker run -p 8081:8080 -v $(pwd):/data codeberg.org/coderofsalvation/janusxr:1.5.56 /www/janusxr.com -D /data
+```
+
+Profit! You can now use URLs like `http://localhost:8080/#janus.url=https://localhost:8080/myworld1.xml` e.g.<br>
+Btw. you can build the docker image yourself too:
+
+```
+$ utils/release.binary.sh # build the janusxr.com binary 
+$ docker build -t janusxr.com .
+$ docker run -p 8080:8080 janusxr
+```
+
+</summary>
+</details>
+
+<details>
+<summary><b>Usecase:</b> serve all-in-one-binary in different docker/OCI container</summary>
 <br>
 
 Make sure to run you're in a folder with your JanusXR rooms or 3D models, and `janusxr.com`
@@ -159,11 +192,14 @@ Make sure to run you're in a folder with your JanusXR rooms or 3D models, and `j
 ```
 $ ls 
 janusxr.com
+
+$ unzip janusxr.com          # extract the viewer files
+
+$ ls 
+janusxr.com
 world1.html
 world2.html
 foo.glb
-
-$ unzip janusxr.com          # extract the viewer files
 
 $ docker run -d -v ./:/www -p 8080:8080 --name janusweb busybox:latest /bin/httpd -f -h /www -p 8080
 e7928798379e872983b7ec9b89237ebc

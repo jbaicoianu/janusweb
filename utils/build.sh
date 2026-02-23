@@ -1,4 +1,5 @@
 #!/bin/bash
+PATH=$PATH:$(pwd)/node_modules/.bin
 
 NODEJS=`which node`
 if [ -z "$NODEJS" ]; then
@@ -58,9 +59,9 @@ fi
 ./elation component runjs utils.pack -config janusweb.$CFGNAME -bundle janusweb.physicsworker physics.worker
 mv janusweb.css janusweb.js janusweb.assetworker.js janusweb.physicsworker.js "$BUILDDIR"
 echo -n 'Minifying'
-cat "$BUILDDIR/janusweb.js" |uglifyjs >"$BUILDDIR/janusweb.min.js" && echo -n '.'
-cat "$BUILDDIR/janusweb.assetworker.js" |uglifyjs >"$BUILDDIR/janusweb.assetworker.min.js" && echo -n '.'
-cat "$BUILDDIR/janusweb.physicsworker.js" |uglifyjs >"$BUILDDIR/janusweb.physicsworker.min.js" && echo -n '.'
+cat "$BUILDDIR/janusweb.js" | uglifyjs >"$BUILDDIR/janusweb.min.js" && echo -n '.'
+cat "$BUILDDIR/janusweb.assetworker.js" | uglifyjs >"$BUILDDIR/janusweb.assetworker.min.js" && echo -n '.'
+cat "$BUILDDIR/janusweb.physicsworker.js" | uglifyjs >"$BUILDDIR/janusweb.physicsworker.min.js" && echo -n '.'
 echo 'done'
 rm janusweb.assetworker.css
 echo Built new release in \"$BUILDDIR/\"
