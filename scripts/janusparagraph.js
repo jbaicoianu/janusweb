@@ -36,7 +36,7 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
       this.defineProperties({
-        text: {type: 'string', default: '', set: this.toInlineHTML },
+        text: {type: 'string', default: '', set: this.textToHTML },
         font_size: {type: 'integer', default: 16, set: this.updateTexture},
         text_col: {type: 'color', default: 0x000000, set: this.updateTexture},
         back_col: {type: 'color', default: 0xffffff, set: this.updateTexture},
@@ -68,15 +68,14 @@ elation.require(['janusweb.janusbase'], function() {
         const finalUrl = `${elation.engine.assets.corsproxy||''}${uriExFragment||''}`
         fetch( finalUrl )
         .then( (res) => res.text() )
-        .then( (text) => this.text = text )
+        .then( (text) => this.html = text )
       },
       translate: function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
-        if( !this.text ) return
-        this.html = this.text
+        if( !this.html ) return
         if( this.selector && typeof this.index != 'undefined' ){
-          const type    = this.text.match(/<(rss|feed)/) ? "text/xml" : "text/html"
+          const type    = this.html.match(/<(rss|feed)/) ? "text/xml" : "text/html"
           const parser  = new DOMParser()
-          const xmlDoc  = parser.parseFromString( this.text, type)
+          const xmlDoc  = parser.parseFromString( this.html, type)
           const partial = xmlDoc.querySelectorAll(this.selector) // KiSS JML: CSS selectors level 1
           if( partial.length ){
             this.indexes = partial.length > 1 ? partial.length : 1
@@ -170,6 +169,8 @@ elation.require(['janusweb.janusbase'], function() {
       var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
       styletag    += 'a { color:unset; text-decoration: none; }' // dont confuse users with nonclickable links
 
+
+
       // hybrid 2D/3D styling: apply styles from container HTML if any
       styletag += [ ...(new DOMParser)
                        .parseFromString(room.fullsource,"text/html")
@@ -177,6 +178,7 @@ elation.require(['janusweb.janusbase'], function() {
                   ]
                   .map( (el) => el.innerText )
                   .join("\n")
+
 
       if (this.css) {
         styletag += this.css;
@@ -245,10 +247,16 @@ elation.require(['janusweb.janusbase'], function() {
       return this._proxyobject;
     }
 
+    this.textToHTML = function(){
+      if( this.html == this.text ) return
+      this.html = this.text
+      this.toInlineHTML()
+    }
+
     this.toInlineHTML = async function(){
       // skip uninited url content
-      if( !this.text && this.url ) return 
-      if( this.text ) this.translator.translate.apply(this)
+      if( !this.html && this.url ) return 
+      if( this.html ) this.translator.translate.apply(this)
       if( !this.html || this.htmlLast == this.html ) return // skip fake updates
       this.htmlLast = this.html
       try{
@@ -267,6 +275,7 @@ elation.require(['janusweb.janusbase'], function() {
           updatedHtml = updatedHtml.replace( `src="${src}"`, `src="${dataURLs[i]}"`)
         });
         this.html = updatedHtml
+        this.text = this.html
       }catch(e){ console.error(e) } // continue when inlining failed
       this.updateTexture()
     };
@@ -288,11 +297,12 @@ elation.require(['janusweb.janusbase'], function() {
     this.fetchSource = async function(){
       const t = this.translator = {...XMLTranslator}
       if( !this.url ){
-        t.fetch = () => this.text = this.text || room.fullsource
+        t.fetch = () => this.html = this.text || room.fullsource
       }
       // allow (via event) other scripts to select different translator based on url 
       room.dispatchEvent({type:'paragraph_translator', detail:{ paragraph:this, translator: t} }) 
       await t.fetch.call(this, this.url)
+      this.toInlineHTML()
     }
 
     this.useCache = async function(url, myFetch) {
