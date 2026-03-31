@@ -152,6 +152,30 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
           }
         }
       });
+      this.initProxies()
+    }
+    initProxies() {
+      elation.engine.assets = new Proxy(elation.engine.assets,{
+        get(me,k){
+          if( k == "corsproxy" && me[k] ){
+            const p = elation.config.get("engine.assets.corsproxies")
+            if( ! p?.length ){ 
+              return me[k] // nothing to roundrobin
+            }else{ // roundrobin proxies
+              if( !p.index ) p.index = 0
+              const corsproxy = p[ p.index ]  
+              elation.config.set("engine.assets.corsproxy", corsproxy )
+              p.index = (p.index + 1) % p.length
+              return corsproxy
+            }
+          }
+          return me[k]
+        },
+        set(me,k,v){
+          me[k] = v
+          return true
+        }
+      })
     }
     initButtons() {
       this.sharebutton = elation.ui.button({classname: 'janusweb_sharing', label: 'Share'});
