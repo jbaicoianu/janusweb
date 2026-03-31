@@ -18,6 +18,7 @@ elation.require([], function() {
             ]
           },
           room: {
+            gravity: 0,
             pos: [0,0,0],
             xdir: "1 0 0",
             zdir: "0 0 1",
@@ -78,7 +79,7 @@ elation.require([], function() {
             <Assets>
               <assetobject id="scene" src="${hrefNoHash}"/>
             </Assets>
-            <Room>
+            <Room gravity="0">
               <object pos="0 0 0" collision_id="scene" id="scene" />
             </Room>
         </FireBoxRoom>
@@ -90,4 +91,3 @@ elation.require([], function() {
 
   });
 });
-
