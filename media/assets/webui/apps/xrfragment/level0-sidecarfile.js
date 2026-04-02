@@ -26,6 +26,7 @@ elation.require([], function() {
     load(){
       this.cleanup()
       this.loadWebVTT() // https://xrfragment.org/#sidecar%20files
+      this.loadSound()  // https://xrfragment.org/#sidecar%20files
       this.initStartButton()
       this.initSubtitle()
     }
@@ -51,7 +52,7 @@ elation.require([], function() {
     loadSound(){ // https://xrfragment.org/#sidecar%20files
       room.removeObject('xrf_audio')
       const audio     = room.url.replace(this.extension,'.ogg') 
-      room.loadNewAsset("sound", {id:"xrf_audio", src:audio})
+      room.loadNewAsset("sound", {id:"xrf_audio", src:audio,proxy:false})
       this.sound = room.createObject('sound',{ id: "xrf_audio", js_id: 'xrf_audio', loop:true })
     }
 
@@ -85,7 +86,7 @@ elation.require([], function() {
         scale: '1.2 5 1.2',
       })
       this.btn.addEventListener('click', () => this.start() )
-      this.positionStartButton()
+      setTimeout( () => this.positionStartButton(), 500)
     }
 
     positionStartButton(){
@@ -231,7 +232,6 @@ elation.require([], function() {
         this.webvtt.i = 0;
       }
       // start sound
-      this.loadSound()  // https://xrfragment.org/#sidecar%20files
       this.sound.pos = '0 0 0'
       if( this.sound.isPlaying ) this.sound.stop()
       this.sound.timeoffset = undefined
@@ -268,12 +268,17 @@ elation.require([], function() {
 });
 
 xrf_install_sidecarfiles = function(){
-  if( !room.sidecarfile ){ 
-    room.sidecarfile = new elation.janusweb.sidecarfile(room);
+  if( !room.objects?.scene?.modelasset?.loaded ) {
+    return setTimeout( xrf_install_sidecarfiles, 300 ) 
   }
+  if( !room.sidecarfile   ) room.sidecarfile = new elation.janusweb.sidecarfile(room);
+  setTimeout( () => room.sidecarfile.positionStartButton(), 500 )
 }
 
+xrf_install_sidecarfiles()
+
 elation.events.add(null, 'room_load_complete', xrf_install_sidecarfiles )
+elation.events.add(null, 'room_enable',        xrf_install_sidecarfiles )
 elation.events.add(null, 'janusweb_script_frame', function(){
   if( room?.sidecarfile ) room.sidecarfile.update()
 })
@@ -286,19 +291,12 @@ elation.events.add(null, 'room_disable', function(){
   if( room?.sidecarfile?.subtitle ) room.sidecarfile.stop()
 })
 
-elation.events.add(null, 'room_enable', function(){
-  if( room?.sidecarfile?.subtitle ){ 
-    // wait for the player to get repositioned
-    setTimeout( () => room.sidecarfile.positionStartButton(), 500 )
-  }
-})
-
 // some convenience WebVTT cue settings => room function mappings 
 // href:#fadeAudioOut&spawnhere => room.fadeAudioOut()
 // href:#myfunc=3               => room.myfunc(3)
 elation.events.add(null, 'href', function(e){
-  const {url,hash} = room.hyperlink.getUrlObject(e.data.href)
-  hash.forEach( (v,k) => { if( room[k] ) room[k](v) })
+  if( room?.hyperlink ){
+    const {url,hash} = room.hyperlink.getUrlObject(e.data.href)
+    hash.forEach( (v,k) => { if( room[k] ) room[k](v) })
+  }
 })
-
-xrf_install_sidecarfiles()

@@ -7,7 +7,7 @@ BUILD=build/$VERSION
 test -f "$BUILD/index.html" || { echo "[x] could not find $BUILD/index.html (run 'npm run build' first)"; exit 1;}
 
 download(){
-  rm $BUILD/*.com # delete old
+  rm $BUILD/*.com || true # delete old
   url="https://redbean.dev/redbean-3.0.0.com"
   checksum="382f1288bb96ace4bab5145e7df236846c33cc4f1be69233710682a9e71e7467  $BUILD/janusxr.com"
   verify(){

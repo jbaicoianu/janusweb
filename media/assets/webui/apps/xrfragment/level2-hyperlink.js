@@ -96,7 +96,7 @@ elation.require([], function() {
       opts = opts ? {...opts, url, hash} : {url,hash} 
       console.log("hyperlink: "+href)
       elation.events.fire({element: this, type: 'href', data: {href,opts}});
-      if( room.baseurl != (url.origin+url.pathname) ) return this.executeExternal(href,opts)
+      if( room.url != url.origin+url.pathname ) return this.executeExternal(href,opts)
       hash.forEach( (v,k) => {
         const {operator,param} = this.getOperators(k)
         switch( param ){
@@ -165,7 +165,10 @@ elation.require([], function() {
     }
 
     getUrlObject = function(href){
-      const url  = new URL( (href.match(/:\//) ? '' : document.location.origin+'/' ) + href)
+      const urlExpanded = href[0] == '#'                                                    
+                    ? room.url+href                                                   
+                    : href.match(/:\//) ? href : room.baseurl+href                                 
+      const url  = new URL( urlExpanded )
       const hash = new URLSearchParams( String(url.hash).substr(1) ) 
       return {url,hash}
     }
@@ -222,10 +225,13 @@ elation.require([], function() {
 });
 
 xrf_install_hyperlinks = function(){
-  if( !room.hyperlink ){ 
-    room.hyperlink = new elation.janusweb.hyperlink(room);
+  if( !room.objects?.scene?.modelasset?.loaded ) {
+    return setTimeout( xrf_install_hyperlinks, 300 ) 
   }
-  janus.loading = false // force!
+  if( !room.hyperlink     ){
+    room.hyperlink = new elation.janusweb.hyperlink(room)
+    janus.loading = false // force!
+  }
 }
 
 xrf_install_hyperlinks()

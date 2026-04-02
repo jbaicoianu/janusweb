@@ -16,8 +16,9 @@ xrf_engines = function(){
     if( obj.userData[key] == 'true'  ) obj.userData[key] = true
 
     // increment/decrement
-    let scroller = key.match(/[+]$/) && typeof obj.userData[key] == 'number'
+    let scroller = key.match(/[+]$/) 
     if( scroller && !scene.scrollers ){
+      if( typeof obj.userData[key] != 'number' ) obj.userData[key] = parseFloat(obj.userData[key])
       scene.scrollers = []
       elation.events.add(null, 'janusweb_script_frame', function(e){
         scene.scrollers.map( (f) => f(e.data) ) // e.data == delta
@@ -138,7 +139,7 @@ xrf_engines = function(){
                                     // THREE fallthrough
                                     if( key.match(/^-three-/) ){
 
-                                      if( realKey.match('material.') ){ // clone shared materials
+                                      if( realKey.match('material.') && obj.material ){ // clone shared materials
                                         obj.material = obj.material.clone()
                                         if( realKey.match('material.map') ) obj.material.map = obj.material.map.clone()
                                       }
@@ -146,10 +147,15 @@ xrf_engines = function(){
                                       const setKeyVal     = (o, path, val       ) => new Function('o', 'v',     `o.${path}  = v               `)(o, val);
                                       if( scroller ){
                                         const setKeyValIncr = (o, path, val, delta) => new Function('o', 'speed', `o.${path} += ${delta} * speed`)(o, val);
-                                        const myscroller    = function(path,val,delta){
-                                          setKeyValIncr( this, path, val, delta) 
-                                        }.bind(obj, realKey.replace(/[+]$/,''), obj.userData[key])
-                                        scene.scrollers.push(myscroller)
+                                        try{ 
+                                          const myscroller    = function(path,val,delta){
+                                            setKeyValIncr( this, path, val, delta) 
+                                          }.bind(obj, realKey.replace(/[+]$/,''), obj.userData[key])
+                                          myscroller(0.000001)              // see if it triggers error
+                                          scene.scrollers.push(myscroller)  // otherwise add frame-function
+                                        }catch(e){ 
+                                          console.error(`could not apply engine prefix: ${obj.name} => ${key} (tip: dont use them on <paragraph> objects)`) 
+                                        }
                                       }else{
                                         try{ 
                                           setKeyVal( obj, realKey, obj.userData[key] ) 
@@ -161,7 +167,7 @@ xrf_engines = function(){
     }
 
     if( match ){
-      console.log(`xrfragment: engine prefix '${key}:${realKey}' = '${obj.userData[key]}'`)
+      //console.log(`xrfragment: engine prefix '${key}:${realKey}' = '${obj.userData[key]}'`)
     }
   }
 
@@ -209,4 +215,4 @@ xrf_engines.applyCleanup = function(cleanup){
 
 
 elation.events.add(null, 'room_load_complete', xrf_engines ) // future scenes
-xrf_engines()                                                // current scene
+if( room.loaded ) xrf_engines()                              // current scene

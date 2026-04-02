@@ -16,22 +16,23 @@
  *     room.addEventListener("paragraph_translator", function(e){
  *       const {translator,paragraph} = e.detail
  *       // now you can override the default translator
- *       translator.fetch       = async (url) => this.text = "a response"  // my custom fetch function
- *       translator.translate = () => this.html = this.text                // my x2html translator
+ *       translator.fetch     = async (url) => this.text = "a response"    // my custom fetch function
+ *       translator.translate = async (   ) => ["<h1>head</h1>",this.text] // my x2html translator
  *     }
  *
  *  NOTES:
  *  1. By default, selectors are done via `document.querySelectorAll`
  *  2. in case of multiple results:
  *    2.1 clicking the paragraph with cycle through them
- *    2.2 setting cycle="2000" allows for (2sec per item) slideshows
+ *    2.2 setting cycle="3000" allows for (2sec per item) slideshows
  *    2.3 setting `rooms.objects.myparagraph.index++` cycles to next item
  *  3. width/height-attributes offers finer control of texture size
  *  4. ttl-attributes allows finer control of webrequest-cache (default 2 mins)
  *  5. setting `rooms.object.myparagraph.selector = "#section2"' allows for statemanagement
+ *  6. separation of `this.text` (for JML) and `this.html` (for texture) is necessary (to not break JML/glb exports)
  */
 
-elation.require(['janusweb.janusbase'], function() {
+elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-rss'], function() {
   elation.component.add('engine.things.janusparagraph', function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
@@ -52,7 +53,7 @@ elation.require(['janusweb.janusbase'], function() {
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Receive shadows from self and other objects' },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Cast shadows onto self and other objects' },
         url: { type: 'string', default: '', set: this.fetchSource },
-        selector: { type: 'string', default: '', set: this.updateHTML },
+        selector: { type: 'string', default: '', set: this.fetchSource },
         index: { type: 'integer', default: 0, set: this.updateHTML },
         cycle: {type: 'integer', default: 0, set: this.updateHTML },
         width: { type: 'integer', default: 1024 },  
@@ -61,33 +62,21 @@ elation.require(['janusweb.janusbase'], function() {
       });
     }
 
-    let XMLTranslator = this.translator = {
-      fetch: async function(uri){
-        if( !uri.match(/^http/) ) return // let other translate deal with it
-        const uriExFragment = String(uri).replace(/#.*/,'')
-        const finalUrl = `${elation.engine.assets.corsproxy||''}${uriExFragment||''}`
-        fetch( finalUrl )
-        .then( (res) => res.text() )
-        .then( (text) => this.html = text )
-      },
-      translate: function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
-        if( !this.html ) return
-        if( this.selector && typeof this.index != 'undefined' ){
-          const type    = this.html.match(/<(rss|feed)/) ? "text/xml" : "text/html"
-          const parser  = new DOMParser()
-          const xmlDoc  = parser.parseFromString( this.html, type)
-          const partial = xmlDoc.querySelectorAll(this.selector) // KiSS JML: CSS selectors level 1
-          if( partial.length ){
-            this.indexes = partial.length > 1 ? partial.length : 1
-            this.html    = type == 'text/xml' 
-                         ? partial[ this.index % this.indexes ].textContent 
-                         : partial[ this.index % this.indexes ].outerHTML;
-            this.autoRotateIndex()
-          }else{ 
-            console.error(`paragraph: level1 css selector '${this.selector}' not matching anything`)
-          }
+    this.paragraphs = [] // for cycle / partial purposes
+
+    this.textToHTML = function(){
+      // IMPORTANT: skip infinite loop  
+      if( this.html == this.text ) return 
+      if( this.text ){
+        if( this.html ){ // reset stuff 
+          this.url   = this.selector = '' 
+          this.cycle = this.indexes = 0;
         }
-      }
+        this.fetchSource() // expect 'selector' not being set here 
+      }else{
+        this.html = ''
+        this.updateTexture()
+      } 
     }
 
     this.createObject3D = function() {
@@ -98,7 +87,12 @@ elation.require(['janusweb.janusbase'], function() {
       mesh.castShadow = this.shadow && this.shadow_cast;
       mesh.receiveShadow = this.shadow && this.shadow_receive;
      
-      elation.events.add(this, 'click', elation.bind(this, () => this.indexes && (this.index++) ) )
+      elation.events.add(this, 'click', () => {
+        if( this.indexes ){
+          this.index++
+          this.cycle = 0 // disable
+        }
+      })
 
       return mesh;
     }
@@ -247,18 +241,7 @@ elation.require(['janusweb.janusbase'], function() {
       return this._proxyobject;
     }
 
-    this.textToHTML = function(){
-      if( this.html == this.text ) return
-      this.html = this.text
-      this.toInlineHTML()
-    }
-
     this.toInlineHTML = async function(){
-      // skip uninited url content
-      if( !this.html && this.url ) return 
-      if( this.html ) this.translator.translate.apply(this)
-      if( !this.html || this.htmlLast == this.html ) return // skip fake updates
-      this.htmlLast = this.html
       try{
         // find all img tags and capture src attributes
         const imgRegex = /<img[^>]*src=["'](?!data:)([^"']+)["']/gi;
@@ -275,9 +258,7 @@ elation.require(['janusweb.janusbase'], function() {
           updatedHtml = updatedHtml.replace( `src="${src}"`, `src="${dataURLs[i]}"`)
         });
         this.html = updatedHtml
-        this.text = this.html
       }catch(e){ console.error(e) } // continue when inlining failed
-      this.updateTexture()
     };
 
     this.toDataURL = async function(url){
@@ -295,14 +276,24 @@ elation.require(['janusweb.janusbase'], function() {
     }
 
     this.fetchSource = async function(){
-      const t = this.translator = {...XMLTranslator}
-      if( !this.url ){
-        t.fetch = () => this.html = this.text || room.fullsource
+      if( this.url && this.fetchSource.last == this.url ) return // avoid fake updates
+      this.fetchSource.last = this.url || this.fetchSource.last
+
+      let translator = {  // fallback translator for non-url content
+        translate: async ()    => [this.html],
+        fetch:     async (uri) => {
+          if( String(this.text).match(/^data:text/) ){  // support text data-uri's
+            return await window.fetch(this.text).then( (r) => r.text() )
+          }
+          return this.text || room.fullsource
+        }
       }
       // allow (via event) other scripts to select different translator based on url 
-      room.dispatchEvent({type:'paragraph_translator', detail:{ paragraph:this, translator: t} }) 
-      await t.fetch.call(this, this.url)
-      this.toInlineHTML()
+      room.dispatchEvent({type:'paragraph_translator', detail:{ paragraph:this, translator }})
+      this.html = await translator.fetch.call(this, this.url || ' ')
+      await this.toInlineHTML()
+      this.paragraphs  = await translator.translate.apply(this)
+      await this.updateHTML()
     }
 
     this.useCache = async function(url, myFetch) {
@@ -314,20 +305,30 @@ elation.require(['janusweb.janusbase'], function() {
     },
 
     this.autoRotateIndex = function(){
-      if( this.cycle == 0 ){
-        clearInterval(this.intervalId )
-        this.intervalId = false
-      }
-      if( !this.intervalId && this.cycle ){
-        this.intervalId = setInterval( () => {
-          this.index = (this.index+1) % this.indexes 
-        }, this.cycle )
+      if( this.paragraphs.length > 1 ){
+        if( this.cycle == 0 ){
+          clearInterval(this.intervalId )
+          this.intervalId = false
+        }
+        if( !this.intervalId && this.cycle ){
+          this.intervalId = setInterval( () => {
+            this.index = (this.index+1) % this.indexes 
+            this.html = this.paragraphs[ this.index ]
+          }, this.cycle )
+        }
       }
     }
 
-    this.updateHTML = function(html){
+    this.updateHTML = async function(html){
+      // skip uninited url content
+      if( !this.html && this.url ) return 
       if( this.html ){ 
-        this.toInlineHTML()
+        this.indexes     = this.paragraphs.length > 1 ? this.paragraphs.length : 1
+        this.html        = this.paragraphs[ this.index % this.indexes ]
+        if( !this.html || this.htmlLast == this.html ) return // skip fake updates
+        this.htmlLast = this.html
+        this.autoRotateIndex()
+        this.updateTexture()
       }
     }
 
