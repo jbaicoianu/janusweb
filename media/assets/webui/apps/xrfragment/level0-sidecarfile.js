@@ -86,11 +86,13 @@ elation.require([], function() {
         scale: '1.2 5 1.2',
       })
       this.btn.addEventListener('click', () => this.start() )
-      setTimeout( () => this.positionStartButton(), 500)
+      this.positionStartButton()
     }
 
     positionStartButton(){
-      this.btn.pos = player.localToWorld( V(0,1.8,-1) )
+      setTimeout( () => {
+        this.btn.pos = player.localToWorld( V(0,1.8,-1) )
+      }, 500)
     }
 
     initSubtitle(){
@@ -251,6 +253,7 @@ elation.require([], function() {
       this.playing = false
       this.update.id = false
       this.subtitle.visible = false 
+      this.subtitle.text = ''
       this.btn.visible = true
       this.btn.pickable = true
     }
@@ -272,7 +275,10 @@ xrf_install_sidecarfiles = function(){
     return setTimeout( xrf_install_sidecarfiles, 300 ) 
   }
   if( !room.sidecarfile   ) room.sidecarfile = new elation.janusweb.sidecarfile(room);
-  setTimeout( () => room.sidecarfile.positionStartButton(), 500 )
+  else{
+    room.sidecarfile.positionStartButton() // wait for user being spawned
+    room.sidecarfile.stop()
+  }
 }
 
 xrf_install_sidecarfiles()

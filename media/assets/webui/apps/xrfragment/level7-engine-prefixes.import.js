@@ -80,19 +80,27 @@ xrf_engines = function(){
                                        if( opts.src && !opts.src.match(/(^\.|:\/)/) ) opts.src = room.baseurl + opts.src
                                        room.loadNewAsset( opts['tag'].replace(/^asset/,''), opts )
                                      }else{
-                                       opts.js_id = opts.name = opts.jsid = String(`-janus-${obj.name}_${obj.userData['-janus-tag']}`).replace(/.*janus-/,'-janus-')
+                                       opts.js_id = opts.name = String(`-janus-${obj.name}_${obj.userData['-janus-tag']}`).replace(/.*janus-/,'-janus-')
                                        // create room object
                                        const jo = room.createObject( opts.tag, opts )
                                        jo.objects['3d'].name = opts.js_id
                                        jo.visible = false
                                         
                                        // replace janusobject with nested THREE obj
+                                       obj.parent.add( jo.objects['3d'] )
+
+                                       // fix unclickable objects (since obj might be nested in the scene-tree)
+                                       if( jo.colliders ){
+                                         jo.removeCollider()
+                                         jo.colliders.parent.children.push( jo.objects['3d'] )
+                                       }
+
                                        // we need setTimeout otherwise quaternion is not updated 
                                        // https://github.com/jbaicoianu/janusweb/issues/306
-                                       obj.parent.add( jo.objects['3d'] )
                                        setTimeout( () => {
                                          jo.orientation.copy( obj.quaternion)
                                          jo.position.copy( obj.position )
+                                         //jo.scale.copy( obj.scale )
                                          jo.visible = true
                                        },200)
                                        // mark previously generated geo/materials by janusweb export for deletion
@@ -125,8 +133,8 @@ xrf_engines = function(){
 
       default:                      match = false                     
               
-                                    // JANUS fallthrough
-                                    if( key.match(/^-janus-/) ){
+                                    // JANUS property fallthrough
+                                    if( key.match(/^-janus-/) && !key.match("-janus-tag") ){
                                       // *TODO* more heuristics to determine scene
                                       if( obj.name == 'Scene' || obj?.parent?.name == '' || obj.userData['-janus-source']){ 
                                         room[realKey] = obj.userData[key];
@@ -173,10 +181,11 @@ xrf_engines = function(){
 
   room.gravity = 0 // new default unless specified otherwise
   let scene = elation.engine.instances.default.systems.world.scene['world-3d'] 
-  // janus requires first initialzing of assets
-  const isAsset = (obj) => String(obj.userData['-janus-tag']).match(/^asset/)
-  applyPrefixes(scene,map, (o) => isAsset(o)  )
-  applyPrefixes(scene,map, (o) => !isAsset(o) )
+  const isAsset    = (obj) => String(obj.userData['-janus-tag']).match(/^asset/)
+  const isJanusTag = (obj) => String(obj.userData['-janus-tag']) && !isAsset(obj)
+  applyPrefixes(scene,map, (o) => isAsset(o)                    ) // janus requires first initialzing of assets
+  applyPrefixes(scene,map, (o) => isJanusTag(o)                 ) // then regular janus tags
+  applyPrefixes(scene,map, (o) => !isJanusTag(o) && !isAsset(o) ) // then set properties on the rest
   applyCleanup(cleanup)
 }
 
@@ -194,11 +203,13 @@ xrf_engines.toJanusObject = function(obj,opts){
 xrf_engines.applyPrefixes = function(scene,map,criteria){
   criteria = criteria ? criteria : (obj) => true 
   scene.traverse( (obj) => {
-    for( let field in obj.userData ){
-      if( obj.userData[field] ){ 
-        try{
-          map(obj,field, field.replace(/^-(janus|three)-/,'') )
-        }catch(e){ console.error(e) }
+    if( criteria(obj) ){
+      for( let field in obj.userData ){
+        if( obj.userData[field] ){ 
+          try{
+            map(obj,field, field.replace(/^-(janus|three)-/,'') )
+          }catch(e){ console.error(e) }
+        }
       }
     }
   })
