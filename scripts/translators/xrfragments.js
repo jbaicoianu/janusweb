@@ -18,12 +18,13 @@ elation.require([], function() {
             ]
           },
           room: {
+            gravity: 0,
             pos: [0,0,0],
             xdir: "1 0 0",
             zdir: "0 0 1",
           },
           object: [
-            {id: 'scene', js_id: 0, pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1", lighting: "false"}
+            {id: 'scene', js_id: "scene", pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1"}
           ],
           link: []
         };
@@ -34,8 +35,8 @@ elation.require([], function() {
     this.spawnUserAtFragment = function(source) {
       // XR Fragments deeplink spec: explicit or default spawn
       // https://xrfragment.org/#teleport%20camera
-      if( ! this.room.urlhash ) this.room.urlhash = 'spawn'
-      this.room.setPlayerPosition.apply(this.room)
+      if( ! room.urlhash ) room.urlhash = 'spawn'
+      room.setPlayerPosition.apply(room)
       console.log("[xrfragment] camera teleport")
     }
 
@@ -78,7 +79,7 @@ elation.require([], function() {
             <Assets>
               <assetobject id="scene" src="${hrefNoHash}"/>
             </Assets>
-            <Room>
+            <Room gravity="0">
               <object pos="0 0 0" collision_id="scene" id="scene" />
             </Room>
         </FireBoxRoom>
@@ -90,4 +91,3 @@ elation.require([], function() {
 
   });
 });
-

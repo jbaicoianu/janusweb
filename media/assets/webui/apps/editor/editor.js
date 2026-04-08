@@ -325,7 +325,10 @@ console.log('set translation snap', ev.data, ev);
     room._target.objects['3d'].traverse(n => {
       userDatas.set(n, n.userData);
       n.userData = {};
+      elation.events.fire({element: this, type: 'webui_editor_export_node', data:{n,userData: userDatas.get(n)} })
     });
+    elation.events.fire({element: this, type: 'webui_editor_export', data:{ scene: room._target.objects['3d']} })
+
     exporter.parse(room._target.objects['3d'], (data) => {
       // Restore userData objects
       room._target.objects['3d'].traverse(n => {

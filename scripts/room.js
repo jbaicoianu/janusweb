@@ -3,11 +3,16 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube'
   ], function() {
   let roomTranslators = false;
   function initRoomTranslators(room) {
-    roomTranslators = {
+
+    room.translators = roomTranslators = {
+
+
+      '^peertube$': elation.janusweb.translators.peertube({janus: janus}),
+
       '^janus-vfs:': elation.janusweb.translators.janusvfs({janus: janus}),
       '^about:blank$': elation.janusweb.translators.blank({janus: janus}),
       '^bookmarks$': elation.janusweb.translators.bookmarks({janus: janus}),
@@ -15,7 +20,7 @@ elation.require([
       '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
       '^error$': elation.janusweb.translators.error({janus: janus}),
       '.*\.(gltf|glb|dae)$': elation.janusweb.translators.xrfragments({janus: janus}),
-      '^default$': elation.janusweb.translators.default({janus: janus})
+      '^default$': elation.janusweb.translators.default({janus: janus}),
     }
   }
   elation.component.add('engine.things.janusroom', function() {
@@ -247,7 +252,8 @@ elation.require([
         orientation = spawnpoint.orientation;
       }
       var player = this.engine.client.player;
-      if (player.parent !== this) {
+      if( pos.equals(player.position) ) return // ignore 
+      if (player.parent.id !== this.id) {
         // Reparent player to the room if necessary
         this.appendChild(player.getProxyObject());
       }
@@ -298,16 +304,25 @@ elation.require([
               spawnpoint.orientation.multiply(node.orientation);
             }
             spawnpoint.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
-            break;
+            return spawnpoint;
           }
         }
-      } else if (this.urlhash) {
+      }
+      if (this.urlhash) {
         // XR Fragments deeplink spec (Level1: URL) https://xrfragment.org/#teleport%20camera
-        let obj = this.getObjectById(this.urlhash) || this.getObjectByDeepName(this.urlhash)
-        if (obj) {
-          obj.localToWorld(spawnpoint.position.set(0,0,0));
-          spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,-1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
-        }
+        // backwards-compat: pos-names are deprecated
+        let obj
+        new URLSearchParams( this.urlhash.replace(/pos=/,'') ).forEach( (v,name) => {
+          let obj = this.getObjectById(name) || this.getObjectByDeepName(name)
+          if (obj) {
+            obj.localToWorld(spawnpoint.position.set(0,0,0));
+            if( obj.type == 'PerspectiveCamera' ){
+              spawnpoint.position.y -= 1.6 // https://xrfragment.org/#teleport%20camera%20spawnpoint
+            }
+            spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,-1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
+          }
+        })
+        if( obj ) elation.events.fire({element: this, type: 'href', data: {href,opts}});
       }
       return spawnpoint;
     }
@@ -1655,6 +1670,8 @@ elation.require([
         assetlist.push({
           assettype: 'shader',
           name: args.id,
+          shadertype: args.shadertype || 'default',
+          hasalpha: args.hasalpha,
           fragment_src: args.src,
           vertex_src: args.vertex_src,
           uniforms: args.uniforms,
