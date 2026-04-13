@@ -49,7 +49,7 @@ elation.require([], function() {
       // patch setPlayerPosition() with shroud animations during local teleports
       room.setPlayerPosition = (
         (original) => function(room){
-          this.hyperlink.showShroud()
+          if( room?.hyperlink ) room.hyperlink.showShroud()
           return original.apply(this,room)
         }.bind(room)
       )(room.setPlayerPosition)
@@ -155,13 +155,13 @@ elation.require([], function() {
     }
 
     executeExternal(href, opts){
-      if( opts.portalActivateDelay ){
-        setTimeout( () => {
-          janus.setActiveRoom( href, room.url)
-        }, opts.portalActivateDelay)
+      let data = {
+        execute: () => player.spawnPortal(href),
+        href,
+        opts
       }
-      player.spawnPortal(href)
-      elation.events.fire({element: this, type: 'href_portal', data: {href,opts}});
+      elation.events.fire({element: this, type: 'href_portal', data});
+      data.execute()
     }
 
     getUrlObject = function(href){
@@ -228,8 +228,8 @@ xrf_install_hyperlinks = function(){
   if( !room.objects?.scene?.modelasset?.loaded ) {
     return setTimeout( xrf_install_hyperlinks, 300 ) 
   }
-  if( !room.hyperlink     ){
-    room.hyperlink = new elation.janusweb.hyperlink(room)
+  if( !janus.hyperlink     ){
+    janus.hyperlink = new elation.janusweb.hyperlink(room)
     janus.loading = false // force!
   }
 }
@@ -248,16 +248,16 @@ elation.events.add(null, 'href', function(e){
 
 elation.events.add(null, 'room_load_complete', xrf_install_hyperlinks ) 
 elation.events.add(null, 'room_disable', function(e){
-  if( room?.hyperlink ) room.hyperlink.cleanup()
+  if( janus?.hyperlink ) janus.hyperlink.cleanup()
 })
 
 elation.events.add(null, 'room_enable', function(e){
-  if( room?.hyperlink ) room.hyperlink.init()
+  if( janus?.hyperlink ) janus.hyperlink.init()
   else xrf_install_hyperlinks()
 })
 
 elation.events.add(null, 'janusweb_script_frame', function(){
-  if( room?.hyperlink ) room.hyperlink.update()
+  if( janus?.hyperlink ) janus.hyperlink.update()
 })
 
 if( room.urlhash ){ 

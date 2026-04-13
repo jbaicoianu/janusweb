@@ -6,7 +6,7 @@
  * NOTE: you can also load sidecarfiles in a roomscript manually:
  *
  *       elation.events.add(null, 'room_load_complete', function(e){
- *         if( room?.sidecarfile ) room.sidecarfile.load()
+ *         if( janus?.sidecarfile ) janus.sidecarfile.load()
  *       })
  */
 
@@ -156,8 +156,8 @@ elation.require([], function() {
               ${ item.who ? `<b>${item.who}:</b><br/>` : '' }
               ${item.text.replace(/\n/g,'<br/>')}
             `)
-            if( room.hyperlink && item.href && !item.seen ){
-              room.hyperlink.execute(item.href, {portalActivateDelay:6000})
+            if( janus.hyperlink && item.href && !item.seen ){
+              janus.hyperlink.execute(item.href) 
             }
             item.seen = true
           }
@@ -271,13 +271,13 @@ elation.require([], function() {
 });
 
 xrf_install_sidecarfiles = function(){
-  if( !room.objects?.scene?.modelasset?.loaded ) {
+  if( !room.overlay && !room.objects?.scene?.modelasset?.loaded ) {
     return setTimeout( xrf_install_sidecarfiles, 300 ) 
   }
-  if( !room.sidecarfile   ) room.sidecarfile = new elation.janusweb.sidecarfile(room);
+  if( !janus.sidecarfile   ) janus.sidecarfile = new elation.janusweb.sidecarfile(room);
   else{
-    room.sidecarfile.positionStartButton() // wait for user being spawned
-    room.sidecarfile.stop()
+    janus.sidecarfile.positionStartButton() // wait for user being spawned
+    janus.sidecarfile.stop()
   }
 }
 
@@ -286,23 +286,23 @@ xrf_install_sidecarfiles()
 elation.events.add(null, 'room_load_complete', xrf_install_sidecarfiles )
 elation.events.add(null, 'room_enable',        xrf_install_sidecarfiles )
 elation.events.add(null, 'janusweb_script_frame', function(){
-  if( room?.sidecarfile ) room.sidecarfile.update()
+  if( janus?.sidecarfile ) janus.sidecarfile.update()
 })
 elation.events.add(null, 'room_load_start', function(e){
   if( !e.data ) return
-  if( room?.sidecarfile?.subtitle ) room.sidecarfile.subtitle.setHTML(`<div class='loading'>🔗 ${e.data.name}<br/><br/>please wait..</div>`)
+  if( janus?.sidecarfile?.subtitle ) janus.sidecarfile.subtitle.setHTML(`<div class='loading'>🔗 ${e.data.name}<br/><br/>loading..</div>`)
 })
 
 elation.events.add(null, 'room_disable', function(){
-  if( room?.sidecarfile?.subtitle ) room.sidecarfile.stop()
+  if( janus?.sidecarfile?.subtitle ) janus.sidecarfile.stop()
 })
 
 // some convenience WebVTT cue settings => room function mappings 
 // href:#fadeAudioOut&spawnhere => room.fadeAudioOut()
 // href:#myfunc=3               => room.myfunc(3)
 elation.events.add(null, 'href', function(e){
-  if( room?.hyperlink ){
-    const {url,hash} = room.hyperlink.getUrlObject(e.data.href)
+  if( janus?.hyperlink ){
+    const {url,hash} = janus.hyperlink.getUrlObject(e.data.href)
     hash.forEach( (v,k) => { if( room[k] ) room[k](v) })
   }
 })

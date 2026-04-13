@@ -43,6 +43,7 @@ elation.require([
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
+        'overlay': { type: 'boolean', default: false, set: this.setOverlay },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
         'skybox_intensity': { type: 'float', set: this.setSkybox, default: 1.0 },
@@ -232,17 +233,18 @@ elation.require([
     }
     this.setActive = function() {
       this.active = true;
-      this.setSkybox();
-      this.setFog();
-      this.updateBloom();
-      this.updateToneMapping();
-      this.setNearFar();
-      this.setPlayerPosition();
-      if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
-        player.setCameraView(this.defaultview);
+      if( !this.overlay ){ 
+        this.setSkybox();
+        this.setFog();
+        this.updateBloom();
+        this.updateToneMapping();
+        this.setNearFar();
+        this.setPlayerPosition();
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+          player.setCameraView(this.defaultview);
+        }
+        this.updateAvatarVisibility();
       }
-      this.updateAvatarVisibility();
-
       elation.events.fire({element: this, type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
@@ -326,10 +328,16 @@ elation.require([
       }
       return spawnpoint;
     }
+    this.setOverlay = function(){
+      if( this.overlay ){
+        this.skybox = false 
+        this.use_local_asset = false 
+      }
+    }
     this.setSkybox = function() {
-      if (!this.loaded) return;
+      if (!this.loaded ) return;
 
-      if (!this.skybox) {
+      if (!this.skybox ) {
         this.engine.systems.render.renderer.setClearAlpha(0);
         return;
       } else {
@@ -904,7 +912,7 @@ elation.require([
       }
       
       if (room && !parent) {
-        if (room.use_local_asset) {
+        if (room.use_local_asset && !this.overlay) {
           var modelid = (room.visible !== false ? room.use_local_asset : undefined),
               collisionid = room.use_local_asset + '_collision',
               collisionscale = V(1,1,1),
@@ -974,7 +982,7 @@ elation.require([
             });
           }
         }
-        if (this.active) {
+        if (this.active && !this.overlay) {
           setTimeout(() => this.setPlayerPosition(), 0);
         }
 
@@ -1029,7 +1037,7 @@ elation.require([
         this.defaultview = elation.utils.any(room.defaultview, null);
         this.showavatar = elation.utils.any(room.showavatar, true);
         if ('spawnradius' in room) this.spawnradius = room.spawnradius;
-        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview && !this.overlay) {
           player.setCameraView(this.defaultview);
         }
         //if (room.col) this.properties.col = room.col;
@@ -1105,6 +1113,7 @@ elation.require([
       });
     }
     this.getTranslator = function(url) {
+      url = url.replace(/#.*/,'')
       var keys = Object.keys(roomTranslators);
       for (var i = 0; i < keys.length; i++) {
         var re = new RegExp(keys[i]);

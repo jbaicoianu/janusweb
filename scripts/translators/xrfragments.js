@@ -2,6 +2,7 @@ elation.require([], function() {
   elation.component.add('janusweb.translators.xrfragments', function() {
     this.init = function() {
       this.description = "this implements the https://xrfragment.org standard for immersive 3d file browsing"
+      this.instance = 0
     }
     this.exec = function(args) {
       return new Promise(elation.bind(this, function(resolve, reject) {
@@ -10,11 +11,11 @@ elation.require([], function() {
         this.setupEvents()
 
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
-
+        let name = '-'+args.url 
         var roomdata = {
           assets: {
             assetlist: [
-              {assettype: 'model', name: 'scene', src: args.url},
+              {assettype: 'model', name, src: args.url},
             ]
           },
           room: {
@@ -24,7 +25,7 @@ elation.require([], function() {
             zdir: "0 0 1",
           },
           object: [
-            {id: 'scene', js_id: "scene", pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1"}
+            {id: name, js_id: "scene", pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1"}
           ],
           link: []
         };
@@ -33,6 +34,9 @@ elation.require([], function() {
     }
 
     this.spawnUserAtFragment = function(source) {
+      if( source.type == 'room_load_complete' && source.element.overlay ){
+        return // no need to respawn for overlay rooms
+      }
       // XR Fragments deeplink spec: explicit or default spawn
       // https://xrfragment.org/#teleport%20camera
       if( ! room.urlhash ) room.urlhash = 'spawn'

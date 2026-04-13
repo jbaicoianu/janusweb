@@ -510,6 +510,7 @@ document.body.dispatchEvent(click);
         };
       }
       newroom.appendChild(this.getProxyObject());
+      if( newroom.overlay ) this.position.sub(newroom.position)
       if (this.ghost) {
         this.ghost.setRoom(newroom);
       } else if (!this.ghost) { // && this.room.selfavatar) {
@@ -873,6 +874,7 @@ document.body.dispatchEvent(click);
     this.updateCursorStyle = function(ev) {
       var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
       var obj = ev.element;
+      if( !obj?.getProxyObject ) return
       var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
 
       if (obj && proxyobj && (ev.type == 'mouseover' || ev.type == 'mousemove') && (

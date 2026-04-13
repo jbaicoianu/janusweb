@@ -12,6 +12,7 @@ elation.require(['janusweb.janusbase'], function() {
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
         'collision_scale': { type: 'vector3', set: this.updateCollider },
         'seamless': { type: 'boolean', default: false },
+        'overlay': { type: 'boolean', default: false },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
         'auto_load': { type: 'boolean', default: false },
@@ -302,9 +303,15 @@ elation.require(['janusweb.janusbase'], function() {
               this.closePortal();
             }
           } else if (this.url) {
-            if (this.preload) {
-              let newroom = this.properties.janus.preload(this.url);
-              elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
+            // force preload to prevent flickering on Quest (2) devices 
+            this.preload = janus.engine.client?.xrsession?.mode ? true : this.preload 
+            if (this.preload || this.overlay) {
+              if( this.overlay ){
+                this.properties.janus.merge(this.url, true, this.getWorldPosition() );
+              }else{
+                let newroom = this.properties.janus.preload(this.url);
+                elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
+              }
             } else {
               this.properties.janus.setActiveRoom(this.url, room.url);
             }

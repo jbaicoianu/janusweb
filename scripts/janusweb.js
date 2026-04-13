@@ -9,7 +9,7 @@ elation.require([
     this.settings = {
       multiplayer: true,
       sessiontracking: true,
-      jsdebugger: false,
+      jsdebugger: true,
       selfavatar: false,
       maxmemory: 2048,
       comfortmode: false,
@@ -305,41 +305,52 @@ elation.require([
         //this.leave_room(this.currentroom.url);
         this.currentroom = false;
       }
-      this.refresh();
+      this.refresh();      
     }
-    this.load = function(url, makeactive, baseurl, stripreferrer) {
+    this.load = function(url, makeactive, baseurl, stripreferrer, overlayPosition) {
       var roomname = url;
 
-      var room = this.spawn('janusroom', roomname, {
+      let newroom = this.spawn('janusroom', roomname, {
         url: url,
         janus: this,
         baseurl: baseurl,
         corsproxy: this.corsproxy,
-        deferload: true
+        deferload: true,
+        overlay:         overlayPosition ? true : false,
+        defaultlights:   overlayPosition ? false : true,
+        skybox:          overlayPosition ? false : true,
+        use_local_asset: overlayPosition ? false : true,
+        position:        overlayPosition || null
       }, makeactive && typeof makeactive != 'undefined');
 
       if (this.currentroom && !stripreferrer) {
-        room.referrer = this.currentroom.url;
+        newroom.referrer = this.currentroom.url;
       } else {
-        room.referrer = null;
+        newroom.referrer = null;
       }
-      elation.events.fire({element: this, type: 'room_load_start', data: room});
-      room.load();
-      // FIXME - should be able to spawn without adding to the heirarchy yet
-      this.remove(room);
+
+      elation.events.fire({element: this, type: 'room_load_start', data: newroom});
+      newroom.load();
 
       if (this.networking) {
-        this.network.registerRoom(room, true);
+        this.network.registerRoom(newroom, true);
       }
 
-      this.rooms[room.roomid] = room;
-      //console.log('made new room', url, room);
+      this.rooms[newroom.roomid] = newroom;
+      //console.log('made new room', url, newroom);
       this.loading = false;
-      if (room && makeactive) {
-        this.setActiveRoom(url, room.referrer);
+      if (newroom && makeactive && !overlayPosition ) {
+        // FIXME - setActiveRoom should be able to spawn without adding to the heirarchy yet
+        this.remove(newroom);
+
+        this.setActiveRoom(url, newroom.referrer);
       }
       this.initScripting();
-      return room;
+      if( overlayPosition ){
+        this.currentroom.add(newroom)
+        newroom.enable()
+      }
+      return newroom;
     }
     this.loadFromSource = function(source, makeactive, baseurl) {
       var dataurl = 'data:text/html,' + encodeURIComponent(source);
@@ -376,7 +387,6 @@ elation.require([
           } else if (oldroom) {
             room.referrer = oldroom.url;
           }
-
           this.clear();
           this.currentroom = room;
 
@@ -388,7 +398,7 @@ elation.require([
           }
 
           player.setRoom(room);
-          this.add(this.currentroom);
+          if( !this.currentroom.parent ) this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
           this.loading = false;
@@ -419,6 +429,9 @@ elation.require([
     this.preload = function(url, stripreferrer) {
       return this.load(url, false, null, stripreferrer);
     }
+    this.merge = function(url, stripreferrer, overlayPosition){
+      return this.load(url, false, null, stripreferrer, overlayPosition);
+    },
     this.createRoom = function(url, makeactive=true) {
       let newroom = this.spawn('janusroom', url, {
         url: url,
