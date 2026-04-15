@@ -85,7 +85,14 @@ elation.require([
         elation.engine.assets.setCORSProxy(this.corsproxy);
       }
       this.assetpack = elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
+
       this.parser = new JanusFireboxParser();
+      this.parser.parse = ((me,parse) => function(){ // wrap with event 
+        let roomdata = parse.apply( me, arguments )
+        elation.events.fire({element: null, type: 'room_load_parse', data: {roomdata, args:arguments} });
+        return roomdata
+      })(this.parser, this.parser.parse)
+
       this.scriptingInitialized = false;
 
       this.engine.systems.controls.addContext('janus', {
@@ -307,8 +314,12 @@ elation.require([
       }
       this.refresh();      
     }
-    this.load = function(url, makeactive, baseurl, stripreferrer, overlayPosition) {
-      var roomname = url;
+    this.load = function(url, makeactive, baseurl, stripreferrer, portal) {
+      let roomname = url
+      if( portal ){ 
+        if( url.match(/#$/) )  url = room.url           // # = self
+        roomname += '#'+String(Math.random()).substr(2) // allow duplicates 
+      } 
 
       let newroom = this.spawn('janusroom', roomname, {
         url: url,
@@ -316,11 +327,10 @@ elation.require([
         baseurl: baseurl,
         corsproxy: this.corsproxy,
         deferload: true,
-        overlay:         overlayPosition ? true : false,
-        defaultlights:   overlayPosition ? false : true,
-        skybox:          overlayPosition ? false : true,
-        use_local_asset: overlayPosition ? false : true,
-        position:        overlayPosition || null
+        overlay:         portal ? true : false,
+        defaultlights:   portal ? false : true,
+        skybox:          portal ? false : true,
+        use_local_asset: portal ? false : true,
       }, makeactive && typeof makeactive != 'undefined');
 
       if (this.currentroom && !stripreferrer) {
@@ -335,19 +345,19 @@ elation.require([
       if (this.networking) {
         this.network.registerRoom(newroom, true);
       }
-
       this.rooms[newroom.roomid] = newroom;
       //console.log('made new room', url, newroom);
       this.loading = false;
-      if (newroom && makeactive && !overlayPosition ) {
+      if (newroom && makeactive && !portal ) {
         // FIXME - setActiveRoom should be able to spawn without adding to the heirarchy yet
         this.remove(newroom);
 
         this.setActiveRoom(url, newroom.referrer);
       }
       this.initScripting();
-      if( overlayPosition ){
-        this.currentroom.add(newroom)
+      if( portal ){
+        this.remove(newroom);
+        portal.add(newroom)
         newroom.enable()
       }
       return newroom;
@@ -429,8 +439,8 @@ elation.require([
     this.preload = function(url, stripreferrer) {
       return this.load(url, false, null, stripreferrer);
     }
-    this.merge = function(url, stripreferrer, overlayPosition){
-      return this.load(url, false, null, stripreferrer, overlayPosition);
+    this.merge = function(url, stripreferrer, portal){
+      return this.load(url, false, null, stripreferrer, portal);
     },
     this.createRoom = function(url, makeactive=true) {
       let newroom = this.spawn('janusroom', url, {

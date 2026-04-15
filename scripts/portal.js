@@ -6,7 +6,7 @@ elation.require(['janusweb.janusbase'], function() {
         'title': { type: 'string', set: this.updateTitle },
         'janus': { type: 'object' },
         'room': { type: 'object' },
-        //'color': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
+        'col': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
         'size': { type: 'vector3', default: new THREE.Vector3(1.4,2.2,1), set: this.updateGeometry },
         'open': { type: 'boolean', default: false },
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
@@ -103,8 +103,10 @@ elation.require(['janusweb.janusbase'], function() {
     this.createMaterial = function() {
       if (this.portalmaterial) return this.portalmaterial;
       var matargs = {
-        color: 0xdddddd,
+        color: this.col,
         side: THREE.DoubleSide,
+        transparent: this.transparent,
+        opacity: this.opacity
       };
       var mat;
       let shader = false;
@@ -276,8 +278,6 @@ elation.require(['janusweb.janusbase'], function() {
       //this.openPortal();
     }
     this.activate = function(ev) {
-      //console.log('activate', ev, this.seamless);
-
       let now = Date.now();
       if (now - this.lastactivatetime < this.cooldown) {
         return;
@@ -307,7 +307,10 @@ elation.require(['janusweb.janusbase'], function() {
             this.preload = janus.engine.client?.xrsession?.mode ? true : this.preload 
             if (this.preload || this.overlay) {
               if( this.overlay ){
-                this.properties.janus.merge(this.url, true, this.getWorldPosition() );
+                this.objects['3d'].traverse( (o) => o.visible = false ) // hide
+                this.pickable = this.collidable = false
+                let overlay = this.properties.janus.merge(this.url, true, this )
+                overlay.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
               }else{
                 let newroom = this.properties.janus.preload(this.url);
                 elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
@@ -325,6 +328,9 @@ elation.require(['janusweb.janusbase'], function() {
         }
         elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
+      ev.preventDefault()
+      ev.stopPropagation()
+      return false
     }
     this.useFocus = function(ev) {
       this.hover();
@@ -352,7 +358,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
     this.openPortal = function() {
       if (!this.url) return;
-      if (!this.portalroom) {
+      if (!this.portalroom ) {
         this.portalroom = this.janus.load(this.properties.url, false);
         console.log('load that room', this.portalroom);
 
@@ -403,6 +409,7 @@ elation.require(['janusweb.janusbase'], function() {
       //this.group.remove(this.mesh);
       console.log('OPEN');
       elation.events.fire({element: this, type: 'janusweb_portal_open'});
+      if( this.overlay ) this.visible = false
     }
     this.updatePortal = function() {
       if (this.open) {

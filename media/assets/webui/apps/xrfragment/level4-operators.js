@@ -44,23 +44,26 @@ elation.events.add(null, 'href_portal', function(e){
   }
 })
 
-//elation.events.add(null, 'click', function(e){
-//  // keep track of last clicked portal/href
-//  obj = false
-//  if( e?.data?.thing                  ) obj = e.data.thing 
-//  if( e?.data?.object?.userData?.href ) obj = e.data.object
-//  if( obj ) janus.lastclick = obj
-//})
-//
-//elation.events.add(null, 'room_load_start', function(e){
-//  let newroom = e.data
-//  if( newroom.urlhash && newroom.urlhash[0] == '!' ){ 
-//    newroom.overlay  = true
-//    if( newroom.position.length() == 0 ){
-//      newroom.position = janus.lastclick.getWorldPosition() 
-//    }
-//  }
-//})
+/* NOTE: removing objects after they're loaded is not the most efficient way */
+elation.events.add(null, 'janus_room_load', function(e){
+  room = e.element
+  if( room.urlhash && room.urlhash[0] == '!' && room.urlhash.length > 1 ){
+    let id     = room.urlhash.substr(1)
+    let scene  = e.element.objects['3d']
+    let remove = []
+    let obj    = false
+    // find selected object
+    scene.traverse( (o) => {
+      if( o.id == id  || o.name == id ) obj = o 
+      if( o?.userData?.thing && o.userData.thing.js_id == id ){ obj = o }
+    })
+    scene.children = []
+    if( obj ){
+      scene.add(obj)
+      obj.position.set(0,0,0)
+    }
+  }
+})
 
 xrf_install_operators()
 elation.events.add(null, 'room_load_complete', xrf_install_operators )

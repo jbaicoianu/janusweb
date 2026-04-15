@@ -90,6 +90,7 @@ elation.require([], function() {
     }
 
     positionStartButton(){
+      if( !this.btn ) return
       setTimeout( () => {
         this.btn.pos = player.localToWorld( V(0,1.8,-1) )
       }, 500)
@@ -250,6 +251,7 @@ elation.require([], function() {
 
 
     stop(){
+      if( !this.playing || !this.subtitle || !this.btn ) return
       this.playing = false
       this.update.id = false
       this.subtitle.visible = false 

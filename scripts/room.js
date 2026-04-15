@@ -210,6 +210,7 @@ elation.require([
       };
     }
     this.updateLights = function() {
+      if( this.overlay ) return
       if (!this.roomlights) {
         this.createLights();
       }
