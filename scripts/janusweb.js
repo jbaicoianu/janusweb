@@ -357,7 +357,15 @@ elation.require([
       this.initScripting();
       if( portal ){
         this.remove(newroom);
-        portal.add(newroom)
+        let target = portal.target && janus.currentroom 
+                     ? janus.currentroom.getObjectByDeepName(portal.target ) || 
+                       janus.currentroom.getObjectById(portal.target)        || 
+                       room.players[ portal.target ]                         ||
+                       portal
+                     : portal
+        if( portal.target == 'player' ) target = player // not part of the room, but useful for HUDs
+        elation.events.fire({element: this, type: 'room_overlay_add', data: {portal,newroom,target} });
+        target.add(newroom)
         newroom.enable()
       }
       return newroom;
@@ -574,7 +582,6 @@ elation.require([
           movedata = data.position,
           edit = movedata.room_edit,
           del = movedata.room_delete;
-
       var room = this.rooms[roomId];
       if (room) {
         if (edit) {

@@ -1126,13 +1126,10 @@ elation.require([
       return false;
     }
     this.enable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.start) {
-          obj.start();
-        }
-      }
+      this.getObjectsDeep()
+          .filter( (obj) => obj.start   )
+          .map(    (obj) => obj.start() )
+
       if (!this.enabled) {
         this.enabled = true;
         this.engine.systems.ai.add(this);
@@ -1166,13 +1163,10 @@ elation.require([
       //this.showDebug();
     }
     this.disable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.stop) {
-          obj.stop();
-        }
-      }
+      this.getObjectsDeep()
+          .filter( (obj) => obj.stop   )
+          .map(    (obj) => obj.stop() )
+
       if (this.enabled) {
         this.engine.systems.ai.remove(this);
         elation.events.fire({type: 'room_disable', data: this});
@@ -1994,6 +1988,25 @@ elation.require([
       }
 */
 
+    }
+    this.getObjectsDeep = function() {
+      let result = []
+      // search direct childern 
+      const collectChildren = (room) => {
+        var keys = Object.keys(room.children);
+        for (var i = 0; i < keys.length; i++) {
+          const obj = room.children[keys[i]] 
+          result.push( obj );
+        }
+      }
+      collectChildren(this.janus.currentroom)
+      // search deep for janusobjects (in nested rooms too)
+      this.janus.currentroom.objects['3d'].traverse( (o) => {
+        if( o?.userData?.thing?.type == "janusroom" && o.userData.thing.id != this.id ){
+          collectChildren( o.userData.thing )
+        }
+      })
+      return result
     }
     this.getObjectByDeepName = function(name) {
       if( !this.janus.currentroom ) return

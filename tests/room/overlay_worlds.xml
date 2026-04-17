@@ -1,0 +1,26 @@
+<fireboxroom>
+  <assets>
+  </assets>
+  <room fwd="0 0 -1" pos="-15 8 -6">
+    
+    <!-- important: 1. use url_pos='0 0 0' to trigger embedded rooms      -->
+
+    <link url="https://vesta.janusxr.org/spyduck/new-bark-town-pokemon-gsc" auto_load="true"
+          url_pos="0 0 0" pos="0 2.66 -70.48" scale="2 3 1" 
+          collision_scale="1 1 0.05" size="1 1 1"/>
+    
+    <link url="https://vesta.janusxr.org" auto_load="true" auto_load_delay="3000"
+          url_pos="0 0 0" pos="-41.21 3.59 -40.97" scale="2 3 1" 
+          collision_scale="1 1 0.05" size="1 1 1"/>
+    
+    <link url="https://www.janusxr.org/newlobby/index.html" auto_load="true" auto_load_delay="6000"
+          url_pos="0 0 0" pos="-21.72 8.38 0" scale="2 3 1" 
+          collision_scale="1 1 0.05" size="1 1 1"/>
+
+    <link url="https://xrforge.isvery.ninja/models/zzswz4qlqw8w/model_files/test.xrf.glb" 
+          auto_load="true" url_pos="0 0 0" pos="-41.72 28.38 0" scale="2 3 1" 
+          collision_scale="1 1 0.05" size="1 1 1"/>
+
+
+  </room>
+</fireboxroom>

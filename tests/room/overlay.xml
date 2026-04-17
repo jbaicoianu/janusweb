@@ -6,36 +6,18 @@
     <!-- room environment                                      -->
     <!-- important: use pos to offset the scene,               -->
     <!--            that way the overlay-rooms align correctly -->
-    <object pos="0 0 -52.05">   
+    <object pos="0 0 0">   
 
-      <object pos="0 0.05 0" scale="74 74 1" col="0.6039 0.6 0.5882" opacity="0.5" transparent="true" collision_id="plane" id="plane" rotation="-90 0 0" />
-      <object collision_id="room1_collision" shadows="true" id="room3" pos="0 -4.68 0"/>
-      <object pos="0 65 0" scale="5 5 74" collision_id="cube" id="cube" />
-      <object pos="0 65 0" scale="5 5 74" collision_id="cube" id="cube" rotation="0 90 0"/>
+      <object id="cube" scale="0.5 0.5 0.5" pos="0 0.5 -4" col="1 0 0" js_id="mycube"/>
 
-      <!-- example portals                                  -->
-      <!-- recursive (discovery-map style) overlay room    -->
-      <link overlay="true" pos="0 0.01 -21.72" scale="2 3 1" collision_scale="1 1 0.05" url="overlay.xml" shader_id="defaultportal" size="1 1 1">
-        <object scale="20 21 1" sync="true" id="plane" opacity="0.5"/>
-      </link>
-      
-      <link overlay="true" pos="-21.72 0.01 0" rotation="0 90 0" scale="2 3 1" collision_scale="1 1 0.05" url="overlay.xml" shader_id="defaultportal" size="1 1 1">
-        <object scale="20 21 1" sync="true" id="plane" opacity="0.5" />
-      </link>
-
-      <link overlay="true" pos="21.72 0.01 0" rotation="0 -90 0" scale="2 3 1" collision_scale="1 1 0.05" url="overlay.xml" shader_id="defaultportal" size="1 1 1">
-        <object scale="20 21 1" sync="true" id="plane" opacity="0.5" />
-      </link>
-      
-      <link overlay="true" pos="0 0.01 -21.72" scale="2 3 1" collision_scale="1 1 0.05" url="overlay.xml" shader_id="defaultportal" size="1 1 1">
-        <object scale="20 21 1" sync="true" id="plane" opacity="0.5"/>
-      </link>
 
       <!-- xrfragments webui-app: https://xrfragment.org/#%23! (same principle but via URL spec) -->
-      <link url="paragraph.xml#!" pos="2 0.05 -6" rotation="-90 0 0.01" scale="2 2 1" shader_id="defaultportal"/>
+      <link url="paragraph.xml#!" pos="0 0.05 -6" rotation="-90 0 0.01" scale="2 2 1" shader_id="defaultportal" url_pos="0 1 2" title="spawn room to portal"/>
       
       <!-- xrfragments webui-app: https://xrfragment.org/#%23! (same principle but via URL spec) -->
-      <link url="paragraph.xml#!p2" pos="0 3 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" billboard="true"/>
+      <link url="paragraph.xml#!p2" pos="-1 1 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" billboard="true" url_pos="0 1 0" target="mycube" url_scale="2 2 2" title="spawn partial to mycube"/>
+
+      <link url="paragraph.xml#!p2" pos="1 1 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" billboard="true" url_pos="0 0 -2" target="player" url_scale="2 2 2" title="spawn partial to player"/>
 
       <!-- external portal (just to test back-button) -->
       <link url="https://janusxr.org" pos="-15 0 -6" scale="2 3 1" shader_id="defaultportal" billboard="true" draw_glow="false"/>

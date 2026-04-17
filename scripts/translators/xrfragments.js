@@ -7,7 +7,7 @@ elation.require([], function() {
     this.exec = function(args) {
       return new Promise(elation.bind(this, function(resolve, reject) {
 
-        var room = this.room = args.room;
+        let room = this.room = args.room;
         this.setupEvents()
 
         var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');

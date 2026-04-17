@@ -3,7 +3,11 @@ elation.require(['janusweb.janusbase'], function() {
     this.postinit = function() {
       this.defineProperties({
         'url': { type: 'string', set: this.updateTitle },
+        'url_pos':      { type: 'vector3', default: null },
+        'url_scale':    { type: 'vector3', default: null },
+        'url_rotation': { type: 'vector3', default: null },
         'title': { type: 'string', set: this.updateTitle },
+        'title_col': { type: 'color', default: new THREE.Color(0x00FFFF), set: this.updateTitle },
         'janus': { type: 'object' },
         'room': { type: 'object' },
         'col': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
@@ -12,10 +16,10 @@ elation.require(['janusweb.janusbase'], function() {
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
         'collision_scale': { type: 'vector3', set: this.updateCollider },
         'seamless': { type: 'boolean', default: false },
-        'overlay': { type: 'boolean', default: false },
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
-        'auto_load': { type: 'boolean', default: false },
+        'auto_load': { type: 'boolean', default: false, set: this.updateAutoload },
+        'auto_load_delay': { type: 'integer', default: 1000 },
         'thumb_id': { type: 'string', set: this.updateMaterial },
         'shader_id': { type: 'string', set: this.updateMaterial, default: 'lava' },
         'mirror': { type: 'boolean', default: false, set: this.updateGeometry },
@@ -53,6 +57,13 @@ elation.require(['janusweb.janusbase'], function() {
       }
       */
     }
+
+    this.updateAutoload = function(){
+      if( this.auto_load && !this.open && !this.room.overlay ){       // prevent recursion
+        setTimeout( () => this.activate(), this.auto_load_delay ) // give 1 sec headroom 
+      }
+    }
+
     this.updateTitle = function() {
       if (this.draw_text) {
         var title = this.title;
@@ -71,7 +82,7 @@ elation.require(['janusweb.janusbase'], function() {
               text: title, 
               position: [0, this.size.y, .05],
               persist: false,
-              color: 0x0099ff,
+              color: this.title_col,
               emissive: 0x222266,
               scale: [1/this.scale.x, 1/this.scale.y, 1/this.scale.z],
               thickness: 0.5,
@@ -305,12 +316,24 @@ elation.require(['janusweb.janusbase'], function() {
           } else if (this.url) {
             // force preload to prevent flickering on Quest (2) devices 
             this.preload = janus.engine.client?.xrsession?.mode ? true : this.preload 
-            if (this.preload || this.overlay) {
-              if( this.overlay ){
-                this.objects['3d'].traverse( (o) => o.visible = false ) // hide
+            const embed = this.url_pos || this.url_scale || this.url_rotation
+            if (this.preload || embed ){
+              if( embed ){
+                // hide portal children if any
+                this.objects['3d'].traverse( (o) => o.visible = false ) 
                 this.pickable = this.collidable = false
-                let overlay = this.properties.janus.merge(this.url, true, this )
-                overlay.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
+                let room = this.properties.janus.merge(this.url, true, this ) // embed room
+                // position our nested room
+                if( this.url_rotation ){ 
+                  room.objects['3d'].quaternion.setFromEuler(
+                    new THREE.Euler( THREE.MathUtils.degToRad( this.url_rotation.x ),
+                                     THREE.MathUtils.degToRad( this.url_rotation.y ),
+                                     THREE.MathUtils.degToRad( this.url_rotation.z ))
+                  )
+                }
+                room.position.add( this.url_pos )
+                room.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
+                if( this.url_scale ) room.scale.multiply(this.url_scale )
               }else{
                 let newroom = this.properties.janus.preload(this.url);
                 elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
@@ -328,8 +351,10 @@ elation.require(['janusweb.janusbase'], function() {
         }
         elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
-      ev.preventDefault()
-      ev.stopPropagation()
+      if( ev ){ 
+        ev.preventDefault()   // do not bubble up portal click 
+        ev.stopPropagation()  // in nested (overlay) room  
+      }
       return false
     }
     this.useFocus = function(ev) {
@@ -409,7 +434,7 @@ elation.require(['janusweb.janusbase'], function() {
       //this.group.remove(this.mesh);
       console.log('OPEN');
       elation.events.fire({element: this, type: 'janusweb_portal_open'});
-      if( this.overlay ) this.visible = false
+      if( this.url_pos ) this.visible = false
     }
     this.updatePortal = function() {
       if (this.open) {

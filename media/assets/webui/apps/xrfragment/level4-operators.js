@@ -13,12 +13,12 @@ function xrf_install_operators(){
     scene = elation.engine.instances.default.systems.world.scene['world-3d']
   }else return 
 
-  // set .overlay = true for portal-urls to files containing #!
+  // set .url_pos = 0,0,0 for portal-urls to files containing #!
   scene.traverse( (o) => {
     if( o?.userData?.thing && o.userData.thing.componentname == 'engine.things.janusportal'){
       let portal = o.userData.thing
-      if( portal.url.match(/#!/) ){ 
-        portal.overlay = true
+      if( portal.url.match(/#!/) && !portal.url_pos ){ 
+        portal.url_pos = V(0,0,0)
       }
     }
   })
@@ -44,18 +44,23 @@ elation.events.add(null, 'href_portal', function(e){
   }
 })
 
+/* this cherry-picks an object via the #!myobject operator
 /* NOTE: removing objects after they're loaded is not the most efficient way */
 elation.events.add(null, 'janus_room_load', function(e){
-  room = e.element
+  let room = e.element
   if( room.urlhash && room.urlhash[0] == '!' && room.urlhash.length > 1 ){
     let id     = room.urlhash.substr(1)
     let scene  = e.element.objects['3d']
     let remove = []
     let obj    = false
-    // find selected object
+    // find selected object (this is a fuzzy match)
     scene.traverse( (o) => {
       if( o.id == id  || o.name == id ) obj = o 
-      if( o?.userData?.thing && o.userData.thing.js_id == id ){ obj = o }
+      if( o?.userData?.thing ){
+        if( o.userData.thing.js_id == id || o.userData.thing.janusid == id ){ 
+          obj = o 
+        }
+      }
     })
     scene.children = []
     if( obj ){
