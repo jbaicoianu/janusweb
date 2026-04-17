@@ -43,7 +43,7 @@ elation.require([
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
-        'overlay': { type: 'boolean', default: false, set: this.setOverlay },
+        'nested': { type: 'boolean', default: false, set: this.setNested },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
         'skybox_intensity': { type: 'float', set: this.setSkybox, default: 1.0 },
@@ -210,7 +210,7 @@ elation.require([
       };
     }
     this.updateLights = function() {
-      if( this.overlay ) return
+      if( this.nested ) return
       if (!this.roomlights) {
         this.createLights();
       }
@@ -234,7 +234,7 @@ elation.require([
     }
     this.setActive = function() {
       this.active = true;
-      if( !this.overlay ){ 
+      if( !this.nested ){ 
         this.setSkybox();
         this.setFog();
         this.updateBloom();
@@ -329,8 +329,8 @@ elation.require([
       }
       return spawnpoint;
     }
-    this.setOverlay = function(){
-      if( this.overlay ){
+    this.setNested = function(){
+      if( this.nested ){
         this.skybox = false 
         this.use_local_asset = false 
       }
@@ -913,7 +913,7 @@ elation.require([
       }
       
       if (room && !parent) {
-        if (room.use_local_asset && !this.overlay) {
+        if (room.use_local_asset && !this.nested) {
           var modelid = (room.visible !== false ? room.use_local_asset : undefined),
               collisionid = room.use_local_asset + '_collision',
               collisionscale = V(1,1,1),
@@ -983,7 +983,7 @@ elation.require([
             });
           }
         }
-        if (this.active && !this.overlay) {
+        if (this.active && !this.nested) {
           setTimeout(() => this.setPlayerPosition(), 0);
         }
 
@@ -1038,7 +1038,7 @@ elation.require([
         this.defaultview = elation.utils.any(room.defaultview, null);
         this.showavatar = elation.utils.any(room.showavatar, true);
         if ('spawnradius' in room) this.spawnradius = room.spawnradius;
-        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview && !this.overlay) {
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview && !this.nested) {
           player.setCameraView(this.defaultview);
         }
         //if (room.col) this.properties.col = room.col;
@@ -2008,10 +2008,14 @@ elation.require([
       })
       return result
     }
-    this.getObjectByDeepName = function(name) {
+    this.getObjectByDeepName = function(name,fuzzy) {
       if( !this.janus.currentroom ) return
       let obj = this.janus.currentroom.objects['3d'].getObjectByName(name)
-      if( obj ){ // return polyglot THREE/janusweb object for convenience
+      if( !obj && fuzzy ){
+        obj = this.getObjectById( name)        || 
+              this.players[ name ]             
+      }
+      if( obj && !obj.objects ){ // return polyglot THREE/janusweb object for convenience
         return new Proxy(obj,{
           set(me,k,v){ obj[k] = v; return true;    },
           get(me,k){ 
@@ -3116,7 +3120,15 @@ console.log('unknown material', mat);
           if (player.ghost.head) player.ghost.head.visible = false;
         }
       }
+    },
+
+    this.reparent = function(obj, parentId, searchRoom ){
+      searchRoom = searchRoom || this
+      let target = searchRoom.getObjectByDeepName( parentId, true )
+      if( !target && parentId == 'player' ) target = player
+      if( target ) target.add( obj ) // reparent !
     }
+
   }, elation.engine.things.generic);
 });
 

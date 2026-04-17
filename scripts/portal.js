@@ -37,6 +37,7 @@ elation.require(['janusweb.janusbase'], function() {
       elation.engine.things.janusportal.extendclass.postinit.call(this);
       elation.events.add(this, 'thing_use_focus', elation.bind(this, this.useFocus));
       elation.events.add(this, 'thing_use_blur', elation.bind(this, this.useBlur));
+      elation.events.add(null, 'room_load_nested', elation.bind(this, this.onEmbedRoom));
       elation.events.add(player, 'player_enable', elation.bind(this, this.disableDebounce));
       elation.events.add(player, 'player_disable', elation.bind(this, this.enableDebounce));
 
@@ -59,7 +60,7 @@ elation.require(['janusweb.janusbase'], function() {
     }
 
     this.updateAutoload = function(){
-      if( this.auto_load && !this.open && !this.room.overlay ){       // prevent recursion
+      if( this.auto_load && !this.open && !this.room.nested ){       // prevent recursion
         setTimeout( () => this.activate(), this.auto_load_delay ) // give 1 sec headroom 
       }
     }
@@ -323,17 +324,6 @@ elation.require(['janusweb.janusbase'], function() {
                 this.objects['3d'].traverse( (o) => o.visible = false ) 
                 this.pickable = this.collidable = false
                 let room = this.properties.janus.merge(this.url, true, this ) // embed room
-                // position our nested room
-                if( this.url_rotation ){ 
-                  room.objects['3d'].quaternion.setFromEuler(
-                    new THREE.Euler( THREE.MathUtils.degToRad( this.url_rotation.x ),
-                                     THREE.MathUtils.degToRad( this.url_rotation.y ),
-                                     THREE.MathUtils.degToRad( this.url_rotation.z ))
-                  )
-                }
-                room.position.add( this.url_pos )
-                room.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
-                if( this.url_scale ) room.scale.multiply(this.url_scale )
               }else{
                 let newroom = this.properties.janus.preload(this.url);
                 elation.events.add(newroom, 'room_load_complete', ev => this.properties.janus.setActiveRoom(newroom));
@@ -353,7 +343,7 @@ elation.require(['janusweb.janusbase'], function() {
       }
       if( ev ){ 
         ev.preventDefault()   // do not bubble up portal click 
-        ev.stopPropagation()  // in nested (overlay) room  
+        ev.stopPropagation()  // in nested room  
       }
       return false
     }
@@ -697,5 +687,27 @@ elation.require(['janusweb.janusbase'], function() {
         player.vel = V(0,0,0);
       }
     }
+
+    // this will position/rotate/scale a nested room (via attrs: url_pos / url_rotation / url_scale )
+    // relative to the portal
+    // optionally it might reparent the embedded room to a different object ( via attr: target=..... )
+    this.onEmbedRoom = function(ev){
+      let {portal,room} = ev.data
+      let players = room.players
+      if( portal.id != this.id ) return // not for us 
+      // position our nested room
+      if( this.url_rotation ){ 
+        room.objects['3d'].quaternion.setFromEuler(
+          new THREE.Euler( THREE.MathUtils.degToRad( this.url_rotation.x ),
+                           THREE.MathUtils.degToRad( this.url_rotation.y ),
+                           THREE.MathUtils.degToRad( this.url_rotation.z ))
+        )
+      }
+      room.position.add( this.url_pos )
+      room.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
+      if( this.url_scale ) room.scale.multiply(this.url_scale )
+      if( this.target ) room.reparent( room, this.target, janus.currentroom )
+    }
+
   }, elation.engine.things.janusbase);
 });

@@ -510,7 +510,7 @@ document.body.dispatchEvent(click);
         };
       }
       newroom.appendChild(this.getProxyObject());
-      if( newroom.overlay ) this.position.sub(newroom.position)
+      if( newroom.nested ) this.position.sub(newroom.position)
       if (this.ghost) {
         this.ghost.setRoom(newroom);
       } else if (!this.ghost) { // && this.room.selfavatar) {

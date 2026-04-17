@@ -34,8 +34,8 @@ elation.require([], function() {
     }
 
     this.spawnUserAtFragment = function(source) {
-      if( source.type == 'room_load_complete' && source.element.overlay ){
-        return // no need to respawn for overlay rooms
+      if( source.type == 'room_load_complete' && source.element.nested ){
+        return // no need to respawn for nested rooms
       }
       // XR Fragments deeplink spec: explicit or default spawn
       // https://xrfragment.org/#teleport%20camera

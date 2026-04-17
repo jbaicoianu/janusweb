@@ -273,7 +273,7 @@ elation.require([], function() {
 });
 
 xrf_install_sidecarfiles = function(){
-  if( !room.overlay && !room.objects?.scene?.modelasset?.loaded ) {
+  if( !room.nested && !room.objects?.scene?.modelasset?.loaded ) {
     return setTimeout( xrf_install_sidecarfiles, 300 ) 
   }
   if( !janus.sidecarfile   ) janus.sidecarfile = new elation.janusweb.sidecarfile(room);
