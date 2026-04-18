@@ -713,8 +713,8 @@ elation.require(['janusweb.janusbase'], function() {
       }
       if( portal.target ){ 
         tobj.position.set(0,0,0) // reset
-        tobj.scale.set( 1/portal.scale.x, 1/portal.scale.y, 1/portal.scale.z ) // undo portal scale
       }
+      tobj.scale.set( 1/portal.scale.x, 1/portal.scale.y, 1/portal.scale.z ) // undo portal scale
       tobj.position.add( portal.url_pos )
       if( portal.url_scale ) tobj.scale.multiply(portal.url_scale )
     }

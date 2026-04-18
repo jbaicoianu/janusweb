@@ -33,8 +33,10 @@ elation.events.add(null, 'room_load_nested', function(e){
       if( name[0] == '!' && v ){ 
         let obj = room.getObjectByDeepName( name.substr(1), true )
         if( obj ){ 
-          room.reparent( obj, v, janus.currentroom ) // attach to v
+          const scale = obj.scale.clone()
           portal.applyUrlSpatialParams(portal,obj)
+          obj.scale.copy(scale) // undo portal unscale 
+          room.reparent( obj, v, janus.currentroom ) // attach to v
         }
       }
     })

@@ -167,7 +167,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
 
       // hybrid 2D/3D styling: apply styles from container HTML if any
       styletag += [ ...(new DOMParser)
-                       .parseFromString(room.fullsource,"text/html")
+                       .parseFromString(this.room.fullsource,"text/html")
                        .querySelectorAll("style[type=\"text/css\"]") 
                   ]
                   .map( (el) => el.innerText )
@@ -285,7 +285,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
           if( String(this.text).match(/^data:text/) ){  // support text data-uri's
             return await window.fetch(this.text).then( (r) => r.text() )
           }
-          return this.text || room.fullsource
+          return this.text || this.room.fullsource
         }
       }
       // allow (via event) other scripts to select different translator based on url 
