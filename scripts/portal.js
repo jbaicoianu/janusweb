@@ -13,6 +13,7 @@ elation.require(['janusweb.janusbase'], function() {
         'col': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
         'size': { type: 'vector3', default: new THREE.Vector3(1.4,2.2,1), set: this.updateGeometry },
         'open': { type: 'boolean', default: false },
+        'open_collapse': { type: 'boolean', default: true },
         'collision_id': { type: 'string', default: 'cube', set: this.updateCollider },
         'collision_scale': { type: 'vector3', set: this.updateCollider },
         'seamless': { type: 'boolean', default: false },
@@ -321,8 +322,10 @@ elation.require(['janusweb.janusbase'], function() {
             if (this.preload || embed ){
               if( embed ){
                 // hide portal children if any
-                this.objects['3d'].traverse( (o) => o.visible = false ) 
-                this.pickable = this.collidable = false
+                if( this.open_collapse ){
+                  this.objects['3d'].traverse( (o) => o.visible = false ) 
+                  this.pickable = this.collidable = false
+                }
                 let room = this.properties.janus.merge(this.url, true, this ) // embed room
               }else{
                 let newroom = this.properties.janus.preload(this.url);
@@ -693,20 +696,27 @@ elation.require(['janusweb.janusbase'], function() {
     // optionally it might reparent the embedded room to a different object ( via attr: target=..... )
     this.onEmbedRoom = function(ev){
       let {portal,room} = ev.data
-      let players = room.players
       if( portal.id != this.id ) return // not for us 
+      this.applyUrlSpatialParams(this,room)
+      if( portal.target ) room.reparent( room, portal.target, janus.currentroom )
+    }
+
+    this.applyUrlSpatialParams = function(portal,obj){
+      const tobj = obj.objects['3d']
       // position our nested room
-      if( this.url_rotation ){ 
-        room.objects['3d'].quaternion.setFromEuler(
-          new THREE.Euler( THREE.MathUtils.degToRad( this.url_rotation.x ),
-                           THREE.MathUtils.degToRad( this.url_rotation.y ),
-                           THREE.MathUtils.degToRad( this.url_rotation.z ))
+      if( portal.url_rotation ){ 
+        tobj.quaternion.setFromEuler(
+          new THREE.Euler( THREE.MathUtils.degToRad( portal.url_rotation.x ),
+                           THREE.MathUtils.degToRad( portal.url_rotation.y ),
+                           THREE.MathUtils.degToRad( portal.url_rotation.z ))
         )
       }
-      room.position.add( this.url_pos )
-      room.scale.set( 1/this.scale.x, 1/this.scale.y, 1/this.scale.z ) // compensate
-      if( this.url_scale ) room.scale.multiply(this.url_scale )
-      if( this.target ) room.reparent( room, this.target, janus.currentroom )
+      if( portal.target ){ 
+        tobj.position.set(0,0,0) // reset
+        tobj.scale.set( 1/portal.scale.x, 1/portal.scale.y, 1/portal.scale.z ) // undo portal scale
+      }
+      tobj.position.add( portal.url_pos )
+      if( portal.url_scale ) tobj.scale.multiply(portal.url_scale )
     }
 
   }, elation.engine.things.janusbase);

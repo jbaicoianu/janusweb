@@ -24,7 +24,8 @@
       <link url="paragraph.xml#!p2=mycube" pos="-1 2 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" billboard="true" url_pos="0 1 0" url_scale="2 2 2" title="paragraph.xml#!p2=mycube" title_col="0 0 0"/>
 
       <!-- xrfragments webui-app: partials to objects (see https://xrfragment.org/#%23! ) -->
-      <link url="paragraph.xml#!p2=mycube&!p1=player" pos="1 2 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" billboard="true" url_pos="0 1 0" url_scale="2 2 2" title="paragraph.xml#!p2=mycube&!p1=player" title_col="0 0 0"/>
+      <!-- note: assignments via fragments will retain the relative positions (so url_pos has no effect) -->
+      <link url="paragraph.xml#!p1=mycube&!p2=player" pos="1 2 -4" scale="0.5 0.5 0.5" shader_id="defaultportal" draw_glow="false" url_pos="0 1 -1" title="paragraph.xml#!p2=mycube&!p1=player" title_col="0 0 0"/>
 
       <!-- external portal (just to test back-button) -->
       <link url="https://janusxr.org" pos="-15 0 -6" scale="2 3 1" shader_id="defaultportal" billboard="true" draw_glow="false"/>
