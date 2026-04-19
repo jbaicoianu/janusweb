@@ -19,8 +19,8 @@
     <link url="#" url_pos="0 0 -30" pos="0 0.01 -21.72" scale="2 3 1" collision_scale="1 1 0.05" shader_id="defaultportal" size="1 1 1">
       <object scale="20 21 1" id="plane" opacity="0.5" pos="0 0 -0.5" lighting="false"/>
     </link>
-    
-    <link url="#" auto_load="true" url_pos="0 0 -30" pos="-21.72 0.01 0" rotation="0 90 0" scale="2 3 1" collision_scale="1 1 0.05" shader_id="defaultportal" size="1 1 1">
+
+    <link url="#" url_pos="0 0 -30" auto_load="true" pos="-21.72 0.01 0" rotation="0 90 0" scale="2 3 1" collision_scale="1 1 0.05" shader_id="defaultportal" size="1 1 1">
       <object scale="20 21 1" id="plane" opacity="0.3" pos="0 0 -0.5" lighting="false"/>
     </link>
 

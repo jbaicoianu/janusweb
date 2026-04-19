@@ -360,12 +360,12 @@ elation.require([
         // portal (and media/assets/webui/xrfragments) will use this event to 
         // relocate/reparent the nested room 
         newroom.visible = false
-        elation.events.add(newroom, 'room_load_processed', function(e){
-          let data = {portal,room:newroom}
+        let data = {portal,room:newroom}
+        portal.add(newroom)
+        newroom.enable()
+        elation.events.add(newroom, 'room_load_processed', (e) => {
           // wait until objects are initialized
-          portal.add(newroom)
           elation.events.fire({element: this,   type: 'room_load_nested', data })
-          newroom.enable()
           newroom.visible = true
         })
       }
