@@ -2858,7 +2858,7 @@ console.log('dispatch to parent', event, this, event.target);
       return fullurl
     }
     this.isLocal = function(url){
-      return (!url.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) && url.indexOf(document.location.origin) != 0) 
+      return url.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) || url.indexOf(document.location.origin) != 0
     }
     this.dispose = function() {
       if (this.assetpack) {
