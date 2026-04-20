@@ -391,7 +391,7 @@ elation.elements.define('janus.ui.urlbar', class extends elation.elements.ui.pan
   handleAccept(ev) {
     var url = this.input.value;
     if (url.length > 0) {
-      if (url.indexOf(':') == -1) {
+      if (url.indexOf(':') == -1 && !url.match(/^\.\//) ) {
         url = 'http://' + url;
       }
       if (ev.altKey) {

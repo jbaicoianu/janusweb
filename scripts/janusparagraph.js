@@ -262,7 +262,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
     };
 
     this.toDataURL = async function(url){
-      const finalUrl = `${elation.engine.assets.corsproxy||''}${url}`
+      const finalUrl = this.room.isLocal(url) ? url : `${elation.engine.assets.corsproxy||''}${url}`
       return await this.useCache(url, async () => 
         await fetch(finalUrl)
         .then(response => response.blob())
