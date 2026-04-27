@@ -4,12 +4,10 @@ on:
   push:
     # Monitor all branches so we can catch '#deploy' in commit messages
     branches: ["**"]
-  workflow_dispatch:
+    tags:
+      - "v*.*.*"
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions: write-all
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
@@ -19,10 +17,6 @@ concurrency:
 jobs:
   build-and-deploy:
     # Run only on the master branch OR if the commit message contains '#deploy'
-    if: |
-      github.ref == 'refs/heads/master' || 
-      contains(github.event.head_commit.message, '#deploy')
-    
     runs-on: ubuntu-latest
     
     steps:
@@ -48,6 +42,15 @@ jobs:
           ./utils/build.sh
           ./utils/release.binary.sh
 
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            build/janusweb-*.tar.gz 
+            build/*/janusxr.com
+        #env: # only needed when creating a release in other repo
+        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Organize build artifacts
         # Creates a clean 'www' folder and copies your build/sub/folders into it
         run: |
@@ -65,3 +68,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
