@@ -10,6 +10,7 @@ if [ -z "$NODEJS" ]; then
 fi
 
 export PATH=$PATH:$(pwd)/node_modules/.bin # uglifyjs fix
+
 VERSION=$("$NODEJS" -pe "require('./package.json').version")
 BUILDROOT=$(pwd)/build
 BUILDBASE=${VERSION}
