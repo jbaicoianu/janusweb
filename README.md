@@ -45,6 +45,7 @@
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
 - Rendering functionality provided by Three.js / WebGL
 - Separately host WebXR experiences via ([JML](https://madjin.github.io/janus-guide/#/examples/markup) in) any textfile.
+- Basic support for RSS/ATOM feed-URLs (project existing content into 3D)
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
 - [Realtime collaboration](https://madjin.github.io/janus-guide/#/home/usecases) across all devices via built-in networking
 - Import Collada, OBJ, glTF, and other popular 3d file formats
@@ -77,7 +78,7 @@ Run a **local-first** viewer locally on your desktop, raspberry pi (ARM64) or se
 
 | executable    | platforms |
 |-|-|
-| [janusxr.com](https://jbaicoianu.github.io/janusweb/janusxr.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
+| [janusxr.com](releases/latest/download/janusxr.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
 
 Run `janusxr.com` from anywhere, or put it into a folder with your 3D models or JanusXR rooms:
 

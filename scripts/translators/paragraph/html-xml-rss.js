@@ -13,7 +13,10 @@
   let XMLTranslator = {
     fetch: async function(uri){
       const uriExFragment = String(uri).replace(/#.*/,'')
-      const finalUrl = `${elation.engine.assets.corsproxy||''}${uriExFragment||''}`
+      let finalUrl = `${uriExFragment||''}`
+      if( this.use_proxy && elation.engine.assets.corsproxy ){
+        finalUrl = elation.engine.assets.corsproxy + finalUrl
+      }
       return await this.useCache( finalUrl, async () => 
         await fetch( finalUrl )
         .then( (res) => res.text() )
@@ -21,17 +24,49 @@
     },
     translate: async function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
       if( !this.html ) return [""]
-      if( this.selector && typeof this.index != 'undefined' ){
-        const type      = this.html.match(/<(rss|feed)/) ? "text/xml" : "text/html"
-        const parser    = new DOMParser()
-        const xmlDoc    = parser.parseFromString( this.html, type)
-        let paragraphs  = [ ...xmlDoc.querySelectorAll(this.selector) ] // KiSS JML: CSS selectors level 1
-        if( !paragraphs.length ){
-          console.error(`paragraph: level1 css selector '${this.selector}' not matching anything`)
+      let source   = this.html.replace(/<\?.*\?>/g,"").trim()
+      let selector = this.selector
+
+      source = source.replace(/<([\/])?([a-zA-Z0-9_]+:)/gi,'<$1') // strip namespaces (<media:content> =>  <content> )
+
+      const selectContent = (selector) => {
+        if( selector && typeof this.index != 'undefined' ){
+          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, "text/html")
+          let paragraphs  = [ ...xmlDoc.querySelectorAll(selector) ] // KiSS JML: CSS selectors level 1
+          if( !paragraphs.length ){
+            console.error(`paragraph: level1 css selector '${selector}' not matching anything`)
+          }
+          let data = {
+            items:  paragraphs.map( (p) => selector.match("description") || p.innerHTML.match(/&lt;/) ? p.textContent : p.innerHTML ),
+            paragraph: this
+          }
+          // dont exceed maxitems
+          data.items = data.items.slice( 
+            this.maxindex > 0 ? 0             : this.maxindex*-1,  
+            this.maxindex > 0 ? this.maxindex : null 
+          )
+          return data.items 
         }
-        return paragraphs.map( (p) => type == 'text/xml' ? p.textContent : p.outerHTML )
+        return []
       }
-      return [this.html]
+      // lets do it!
+      let items = [this.html]
+      if( selector ) items = selectContent(selector)
+
+      if( !selector && source.match(/^<(feed|rss)[ >]/) ){
+        let fallbackSelectors = [
+          "item content",     // RSS2 (html)
+          "entry content",    // atom (html)
+          "item description", // RSS1 (textonly)
+        ]
+        fallbackSelectors.map( (selector) => {
+          let sitems = selectContent(selector) 
+          if( sitems.length ){
+            items = sitems
+          }
+        })
+      }
+      return items 
     }
   }
 
