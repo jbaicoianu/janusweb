@@ -19,7 +19,7 @@
     "url": "https://github.com/jbaicoianu/janusweb"
   },
   "dependencies": {
-    "elation-engine": ">=0.9.114",
+    "elation-engine": "^0.10.0",
     "uglify-js": "*"
   },
   "keywords": [
