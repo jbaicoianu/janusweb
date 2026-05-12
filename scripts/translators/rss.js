@@ -153,12 +153,6 @@ elation.require([], function() {
       setTimeout( () => {
         // lazyload media assets after room is initialized
         this.loadMediaAssets(paragraph.paragraphs)
-        this.updatePage()
-      }, 1000 ) 
-      
-      setTimeout( () => {
-        // lazyload media assets after room is initialized
-        this.loadMediaAssets(paragraph.paragraphs)
         this.upgradeContent()
         this.updatePage()
       }, 1000 ) 
@@ -167,7 +161,6 @@ elation.require([], function() {
     this.upgradeContent = function(){
       let paragraph = room.objects.rss
       if( !paragraph.xmlDoc ) return
-
     }
 
     this.loadMediaAssets = function(items){

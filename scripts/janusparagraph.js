@@ -273,11 +273,12 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         this.paragraphs.map( (html) => p.push( inliner(html) ) )
         this.paragraphs = await Promise.all(p)
         elation.events.fire({element: this, type: 'paragraph_translator_inline', data:{ paragraph:this } });
+        this.updateHTML()
       }catch(e){ console.error(e) } // continue when inlining failed
     };
 
     this.toDataURL = async function(url){
-      const fullUrl  = this.room.getFullRoomURL(url)
+      let finalUrl  = this.room.getFullRoomURL(url)
       if( this.use_proxy && elation.engine.assets.corsproxy ){
         finalUrl= elation.engine.assets.corsproxy + url
       }
@@ -293,9 +294,19 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       )
     }
 
+    this.loading = function(){
+      this.html = `<br><br><br><br><center>
+      <h2>loading RSS/ATOM feed<br><br>please wait ☕...</h2>
+      <br><br><br>once its loaded, click to see next item.
+      </center>
+      `
+      this.updateTexture()
+    }
+
     this.fetchSource = async function(){
       if( this.url && this.fetchSource.last == this.url ) return // avoid fake updates
       this.fetchSource.last = this.url || this.fetchSource.last
+      if( this.url ) setTimeout( () => this.loading(), 1)
 
       let translator = {  // fallback translator for non-url content
         translate: async (html) => [html],
@@ -358,6 +369,9 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         this.htmlLast = this.html
         this.autoRotateIndex()
         this.updateTexture()
+        // match clickable area 
+        this.collision_id = 'plane'
+        this.collision_scale  = `${this.scale.x} ${this.scale.y} ${this.scale.z}` 
       }
     }
 

@@ -24,20 +24,21 @@
     },
     translate: async function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
       if( !this.html ) return [""]
-      let source   = this.html.replace(/<\?.*\?>/g,"").trim()
-      let selector = this.selector
+      let source = this.html
+      .replace(/<\?.*\?>/g,"")
+      .trim()
 
-      source = source.replace(/<([\/])?([a-zA-Z0-9_]+:)/gi,'<$1') // strip namespaces (<media:content> =>  <content> )
+      let selector = this.selector
 
       const selectContent = (selector) => {
         if( selector && typeof this.index != 'undefined' ){
-          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, "text/html")
+          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, "text/xml")
           let paragraphs  = [ ...xmlDoc.querySelectorAll(selector) ] // KiSS JML: CSS selectors level 1
           if( !paragraphs.length ){
             console.error(`paragraph: level1 css selector '${selector}' not matching anything`)
           }
           let data = {
-            items:  paragraphs.map( (p) => selector.match("description") || p.innerHTML.match(/&lt;/) ? p.textContent : p.innerHTML ),
+            items:  paragraphs.map( (p) => p.textContent ),
             paragraph: this
           }
           // dont exceed maxitems
@@ -55,16 +56,26 @@
 
       if( !selector && source.match(/^<(feed|rss)[ >]/) ){
         let fallbackSelectors = [
-          "item content",     // RSS2 (html)
-          "entry content",    // atom (html)
-          "item description", // RSS1 (textonly)
+          // --- RSS 2.0 & RSS 1.0 (Namespaced Content) ---
+          "item content\\:encoded",    // Standard RSS 2.0 with Namespaces (wordpress)
+          "item encoded\\:content",    // Common browser "cleanup" of content:encoded
+          // --- Atom (Standard) ---
+          "entry content",             // Standard Atom
+          "entry summary",             // Atom fallback if full content isn't provided
+          // --- RSS 2.0 (Standard & Fallbacks) ---
+          "item description",          // Standard RSS 2.0 (often contains HTML)
+          "item fulltext",             // Used by some custom RSS generators
+          // --- RSS 1.0 (Legacy/Specific) ---
+          "item description",          // Standard for RSS 1.0
         ]
-        fallbackSelectors.map( (selector) => {
+        while( fallbackSelectors.length ){
+          const selector = fallbackSelectors.shift()
           let sitems = selectContent(selector) 
-          if( sitems.length ){
+          if( sitems.length && sitems[0] ){
             items = sitems
+            break;
           }
-        })
+        }
       }
       return items 
     }
