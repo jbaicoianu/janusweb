@@ -237,6 +237,12 @@ elation.elements.define('app-rsshub', class extends elation.elements.base {
       })
       if( i == 7 ) break;
     }
+    room.createObject('text',{
+      pos: '-2.18 0 0.49',
+      scale: '4 4 1',
+      text: 'rsshub.app example feeds',
+      rotation: '-90 0 90'
+    })
   }
 
   // we don't know when we are included so we're betting on multiple horses
