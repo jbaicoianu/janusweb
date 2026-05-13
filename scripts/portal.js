@@ -20,7 +20,7 @@ elation.require(['janusweb.janusbase'], function() {
         'draw_text': { type: 'boolean', default: true, set: this.updateTitle },
         'draw_glow': { type: 'boolean', default: true, refreshGeometry: true},
         'auto_load': { type: 'boolean', default: false, set: this.updateAutoload },
-        'auto_load_delay': { type: 'integer', default: 1000 },
+        'auto_load_delay': { type: 'integer', default: 1000, set: this.updateAutoload },
         'thumb_id': { type: 'string', set: this.updateMaterial },
         'shader_id': { type: 'string', set: this.updateMaterial, default: 'lava' },
         'mirror': { type: 'boolean', default: false, set: this.updateGeometry },
@@ -62,7 +62,8 @@ elation.require(['janusweb.janusbase'], function() {
 
     this.updateAutoload = function(){
       if( this.auto_load && !this.open && !this.room.nested ){       // prevent recursion
-        setTimeout( () => this.activate(), this.auto_load_delay ) // give 1 sec headroom 
+        if( this.delay ) clearTimeout(this.delay)
+        this.delay = setTimeout( () => this.activate(), this.auto_load_delay ) // give 1 sec headroom 
       }
     }
 
@@ -291,6 +292,14 @@ elation.require(['janusweb.janusbase'], function() {
       //this.openPortal();
     }
     this.activate = function(ev) {
+      const stopBubbleUpward = () => {
+        if( ev ){
+          ev.preventDefault()   // do not bubble up any/portal click 
+          ev.stopPropagation()  // in nested room  
+        }
+      }
+      if( ev && ev?.element?.id != this.id ) return stopBubbleUpward()
+
       let now = Date.now();
       if (now - this.lastactivatetime < this.cooldown) {
         return;
@@ -344,10 +353,7 @@ elation.require(['janusweb.janusbase'], function() {
         }
         elation.events.fire({element: this, type: 'janusweb_portal_click'});
       }
-      if( ev ){ 
-        ev.preventDefault()   // do not bubble up portal click 
-        ev.stopPropagation()  // in nested room  
-      }
+      if( ev ) stopBubbleUpward()
       return false
     }
     this.useFocus = function(ev) {
