@@ -96,7 +96,9 @@ elation.require([], function() {
       opts = opts ? {...opts, url, hash} : {url,hash} 
       console.log("hyperlink: "+href)
       elation.events.fire({element: this, type: 'href', data: {href,opts}});
-      if( room.url != url.origin+url.pathname ) return this.executeExternal(href,opts)
+      if( String(url).replace(/#.*/,'') != room.getFullRoomURL(room.url) ){
+        return this.executeExternal(href,opts)
+      }
       hash.forEach( (v,k) => {
         const {operator,param} = this.getOperators(k)
         switch( param ){
@@ -166,11 +168,11 @@ elation.require([], function() {
 
     getUrlObject = function(href){
       const urlExpanded = href[0] == '#'                                                    
-                    ? room.url+href                                                   
-                    : href.match(/:\//) ? href : room.baseurl+href                                 
+                    ? room.getFullRoomURL( room.url )+href
+                    : href.match(/:\//) ? href : room.getFullRoomURL(room.baseurl)+href                                 
       const url  = new URL( urlExpanded )
       const hash = new URLSearchParams( String(url.hash).substr(1) ) 
-      return {url,hash}
+      return {url,hash,href}
     }
 
     getOperators = function(k){
@@ -225,7 +227,7 @@ elation.require([], function() {
 });
 
 xrf_install_hyperlinks = function(){
-  if( !room.objects?.scene?.modelasset?.loaded ) {
+  if( !room || !room?.objects?.scene?.modelasset?.loaded ) {
     return setTimeout( xrf_install_hyperlinks, 300 ) 
   }
   if( !room.hyperlink     ){

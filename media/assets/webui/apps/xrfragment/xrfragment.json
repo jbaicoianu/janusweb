@@ -5,8 +5,7 @@
     "./level2-hyperlink.js",
     "./level0-sidecarfile.js",
     "./level7-engine-prefixes.import.js",
-    "./level7-engine-prefixes.export.js",
-    "./patch/metaquest-fix-flickering.js"
+    "./level7-engine-prefixes.export.js"
   ],
   "css":      []
 }
