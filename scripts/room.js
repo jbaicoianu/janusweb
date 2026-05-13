@@ -585,23 +585,28 @@ elation.require([
       this.debugwindow.show();
       this.debugwindow.center();
     }
-    this.load = function(url, baseurloverride) {
-      if (!url) {
-        url = this.properties.url;
-      } else {
-        this.properties.url = url;
-      }
-      var baseurl = baseurloverride;
+
+    this.getBaseUrl = function(url, baseurloverride){
+      let baseurl = baseurloverride;
       if (!baseurl) {
         if (url && url.match("://") && !this.baseurl) {
           baseurl = url.split('/');
           if (baseurl.length > 3) baseurl.pop();
           baseurl = baseurl.join('/') + '/';
         }
-        this.baseurl = baseurl || "";
+        return baseurl || document.location.origin + document.location.pathname;
       } else {
-        this.baseurl = baseurl;
+        return baseurl;
       }
+    }
+
+    this.load = function(url, baseurloverride) {
+      if (!url) {
+        url = this.properties.url;
+      } else {
+        this.properties.url = url;
+      }
+      this.baseurl = this.getBaseUrl(url,baseurloverride)
 
       this.jsobjects = {};
       this.cookies = {};
@@ -612,14 +617,7 @@ elation.require([
       this.setTitle('loading...');
 
       var proxyurl = this.corsproxy || '';
-
-      var fullurl = url;
-      if (fullurl[0] == '/' && fullurl[1] != '/') fullurl = this.baseurl + fullurl;
-      if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
-        fullurl = self.location.origin + (fullurl[0] == '/' ? '' :'/') + fullurl;
-      } else if (!fullurl.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) && fullurl.indexOf(document.location.origin) != 0) {
-        fullurl = proxyurl + fullurl;
-      }
+      var fullurl = this.getFullRoomURL(url, proxyurl )
 
       elation.events.fire({element: this, type: 'room_load_queued'});
 
@@ -2147,7 +2145,7 @@ elation.require([
       }
       var urls = [this.url];
       for (var i = 0; i < assets.length; i++) {
-        var url = assets[i].getFullURL();
+        var url = assets[i].getFullRoomURL();
         urls.push(url);
       }
       return urls;
@@ -2872,14 +2870,22 @@ console.log('dispatch to parent', event, this, event.target);
     this.handleDelayedSound = function(ev) {
       // TODO - implement some visual indicator that this room is trying to play sound but was temporarily blocked
     }
-    this.getFullRoomURL = function(url) {
-      if (!url) url = this.url;
-      if (url[0] == '/') {
-        url = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + url;
-      } else if (!url.match(/:\/\//i)) {
-        url = this.baseurl + url;
+    this.getFullRoomURL = function(url, proxyurl) {
+      let fullurl = url;
+      if (fullurl[0] == '/' && fullurl[1] != '/'){ 
+        fullurl = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + fullurl;
+      }else if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
+        fullurl = this.baseurl + (
+                    fullurl.match(/^\.\//) ? fullurl.replace(/^\.\//,'')  // './index.html' e.g.
+                                           : fullurl 
+                  )
+      } else if (proxyurl && !this.isLocal(fullurl) ){
+        fullurl = proxyurl + fullurl;
       }
-      return url;
+      return fullurl
+    }
+    this.isLocal = function(url){
+      return url.match(/^https?:\/\/(localhost|127\.0\.0\.1)/) || url.indexOf(document.location.origin) == 0
     }
     this.dispose = function() {
       if (this.assetpack) {

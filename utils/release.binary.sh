@@ -24,11 +24,12 @@ download(){
 configure(){
   cd $BUILD
   ln -fs media/images/icons/janusweb-256x256.ico favicon.ico
-  sed -i 's|<janus-viewer src.*|<janus-viewer src="https://www.janusxr.org"></janus-viewer>|g' index.html
-  zip -r janusxr.com *
+  sed -i 's|<janus-viewer src.*|<janus-viewer src="./index.html"></janus-viewer>|g' index.html
+  zip -r janusxr.com * -x janusweb.min.js
+  set -e
   set -x
   cd ../../janusxr.com
-  zip -r ../$BUILD/janusxr.com .* *
+  zip -r ../$BUILD/janusxr.com .args .init.lua *
 }
 
 download

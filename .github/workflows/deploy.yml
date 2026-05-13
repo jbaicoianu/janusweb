@@ -1,0 +1,71 @@
+name: Build and Deploy to Pages
+
+on:
+  push:
+    # Monitor all branches so we can catch '#deploy' in commit messages
+    branches: ["**"]
+    tags:
+      - "v*.*.*"
+
+permissions: write-all
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    # Run only on the master branch OR if the commit message contains '#deploy'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Change to your preferred version
+          cache: 'npm'       # Only works if you have a package-lock.json
+
+      - name: Install dependencies
+        # Only runs if package.json exists; avoids errors if it doesn't
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Run build script
+        run: |
+          chmod +x ./utils/build.sh
+          ./utils/build.sh
+          ./utils/release.binary.sh
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            build/janusweb-*.tar.gz 
+            build/*/janusxr.com
+        #env: # only needed when creating a release in other repo
+        #  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Organize build artifacts
+        # Creates a clean 'www' folder and copies your build/sub/folders into it
+        run: |
+          mkdir -p www
+          cp -r build/*/* www/ 2>/dev/null || cp -r build/* www/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'www'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+

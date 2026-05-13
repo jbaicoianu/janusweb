@@ -353,6 +353,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           jsid:     ['property', 'js_id'],
           pos:      ['property', 'position'],
           rotation: ['property', 'rotation'],
+          angular:  ['property', 'angular'],
           scale:    ['property', 'scale'],
           //rotation_order: ['property', 'rotation_order'],
           col:      ['property', 'color'],

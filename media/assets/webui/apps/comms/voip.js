@@ -681,35 +681,37 @@ console.log('[voip-remoteuser] got a remote voip user', data);
       this.audio = audio;
       this.appendChild(audio);
 
-      audio.play()
-        .then(() => {
-          console.log('[voip-remoteuser] remote user audio playing', audio, this);
-          this.hasaudio = true;
-        });
+      room.getAudioNodes().then(() => {
+        audio.play()
+          .then(() => {
+            console.log('[voip-remoteuser] remote user audio playing', audio, this);
+            this.hasaudio = true;
+          });
 
-      let listener = player.engine.systems.sound.getRealListener();
-      let context = listener.context;
-      let analyser = context.createAnalyser();
-      let source = context.createMediaStreamSource(audio.srcObject);
-      source.connect(analyser);
+        let listener = player.engine.systems.sound.getRealListener();
+        let context = listener.context;
+        let analyser = context.createAnalyser();
+        let source = context.createMediaStreamSource(audio.srcObject);
+        source.connect(analyser);
 
-      analyser.fftSize = 32;
-      this.analyser = analyser;
-      this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
+        analyser.fftSize = 32;
+        this.analyser = analyser;
+        this.audiobuffer = new Uint8Array(analyser.frequencyBinCount);
 
-      if (this.updateVolumeInterval) {
-        clearInterval(this.updateVolumeInterval);
-        this.updateVolumeInterval = false;
-      }
-      this.updateVolumeInterval = setInterval(() => {
-        analyser.getByteFrequencyData(this.audiobuffer);
-        let sum = 0;
-        for (let i = 0; i < this.audiobuffer.length; i++) {
-          sum += this.audiobuffer[i];
+        if (this.updateVolumeInterval) {
+          clearInterval(this.updateVolumeInterval);
+          this.updateVolumeInterval = false;
         }
-        let avg = sum / this.audiobuffer.length;
-        this.updateVolume(avg / 100);
-      }, 20);
+        this.updateVolumeInterval = setInterval(() => {
+          analyser.getByteFrequencyData(this.audiobuffer);
+          let sum = 0;
+          for (let i = 0; i < this.audiobuffer.length; i++) {
+            sum += this.audiobuffer[i];
+          }
+          let avg = sum / this.audiobuffer.length;
+          this.updateVolume(avg / 100);
+        }, 20);
+      });
     }
 
     let remoteuser = janus.network.remoteplayers[this.id];
