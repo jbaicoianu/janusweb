@@ -6,8 +6,7 @@
     "./level2-hyperlink.js",
     "./level4-operators.js",
     "./level7-engine-prefixes.import.js",
-    "./level7-engine-prefixes.export.js",
-    "./patch/audiofix.js"
+    "./level7-engine-prefixes.export.js"
   ],
   "css":      []
 }

@@ -376,6 +376,16 @@ elation.require([
       return this.load(dataurl, makeactive, baseurl)
     }
     this.setActiveRoom = function(url, referrer, skipURLUpdate) {
+      // skip sameroom urls (otherwise it restarts audio when 
+      // activating portals to internal/sameroom objects like '#locationB' e.g.)
+      if( room && url.replace(/#.*/,'') == room.url ){ 
+        // XR Fragments spec (Level1: URL) https://xrfragment.org/#teleport%20camera
+        // update hash or assume 'spawn' as default spawn objectlocation
+        room.urlhash = url.match('#') ? url.replace(/.*#/,'') : 'spawn'
+        room.setPlayerPosition()
+        return 
+      }
+
       var oldroom = this.currentroom;
 
       var room = false;
