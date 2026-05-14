@@ -28,11 +28,11 @@
   <fireboxroom>
     <assets>
     </assets>
-    <room pos="0 -1 -2">
-      <paragraph js_id="p1" lighting="false" scale="0.4 0.2 1" width="400" height="200" url="https://janusxr.org" selector=".infoText" rotation="0 180 0" position="-1 0 0"/>
-      <paragraph js_id="p2" lighting="false" scale="0.4 0.2 1" width="400" height="200" url="https://mastodon.online/@lvk.rss" selector="item description" rotation="0 180 0" pos="0 0 0"/>
-      <paragraph js_id="p3" lighting="false" scale="0.4 0.2 1" width="400" height="200" selector=".section" rotation="0 180 0" pos="1 0 0"/>
-      <paragraph js_id="p4" lighting="false" scale="0.4 0.2 1" width="400" height="200" selector=".info" rotation="0 180 0" pos="2 0 0" css=".paragraphcontainer{background:black;color:#A5F; border-radius:10px}" indexrotate="1700">
+    <room>
+      <paragraph js_id="p1" lighting="false" scale="0.4 0.2 1" width="400" height="200" url="https://janusxr.org" selector=".infoText" pos="-1 1 -2"/>
+      <paragraph js_id="p2" lighting="false" scale="0.4 0.2 1" width="400" height="200" url="https://mastodon.online/@lvk.rss" selector="item description" pos="1 1 -2"/>
+      <paragraph js_id="p3" lighting="false" scale="0.4 0.2 1" width="400" height="200" selector=".section" pos="0 1 -2"/>
+      <paragraph js_id="p4" lighting="false" scale="0.4 0.2 1" width="400" height="200" selector=".info" pos="2 1 -2" css=".paragraphcontainer{background:black;color:#A5F; border-radius:10px}" indexrotate="1700">
         <![CDATA[
         <div class="info">Clicking this &lt;div&gt; will cycle</div>
           <div class="info">through all divs</div>
