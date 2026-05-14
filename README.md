@@ -78,7 +78,7 @@ Run a **local-first** viewer locally on your desktop, raspberry pi (ARM64) or se
 
 | executable    | platforms |
 |-|-|
-| [janusxr.com](releases/latest/download/janusxr.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
+| [janusxr.com](https://github.com/jbaicoianu/janusweb/releases/latest/download/janusxr.com) | <img src="https://i.imgur.com/v7cYVq1.png"/> |
 
 Run `janusxr.com` from anywhere, or put it into a folder with your 3D models or JanusXR rooms:
 
