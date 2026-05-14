@@ -20,7 +20,7 @@ elation.require([
       '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
       '^error$': elation.janusweb.translators.error({janus: janus}),
       '.*\.(gltf|glb|dae)$': elation.janusweb.translators.xrfragments({janus: janus}),
-      '.*\.(xml|rss|atom)$': elation.janusweb.translators.rss({janus}),
+      '.*\.(rss|atom)$': elation.janusweb.translators.rss({janus}),
       '^aframe$': elation.janusweb.translators.aframe({janus: janus}),
       '^default$': elation.janusweb.translators.default({janus: janus}),
     }
