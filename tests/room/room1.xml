@@ -1,0 +1,10 @@
+<fireboxroom>
+  <assets>
+  </assets>
+  <room use_local_asset="room_plane">
+    <object pos="0 0.05 0" scale="74 74 1" col="0.6039 0.6 0.5882" opacity="0.5" transparent="true" collision_id="plane" id="plane" rotation="-90 0 0" />
+    <object collision_id="room1_collision" shadows="true" id="room3" rotation="180 0 0" pos="0 38.1 0"/>
+     <object pos="0 65 0" scale="5 5 74" collision_id="cube" id="cube" />
+      <object pos="0 65 0" scale="5 5 74" collision_id="cube" id="cube" rotation="0 90 0"/>
+  </room>
+</fireboxroom>

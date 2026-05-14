@@ -13,7 +13,10 @@
   let XMLTranslator = {
     fetch: async function(uri){
       const uriExFragment = String(uri).replace(/#.*/,'')
-      const finalUrl = `${elation.engine.assets.corsproxy||''}${uriExFragment||''}`
+      let finalUrl = `${uriExFragment||''}`
+      if( this.use_proxy && elation.engine.assets.corsproxy ){
+        finalUrl = elation.engine.assets.corsproxy + finalUrl
+      }
       return await this.useCache( finalUrl, async () => 
         await fetch( finalUrl )
         .then( (res) => res.text() )
@@ -21,17 +24,60 @@
     },
     translate: async function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
       if( !this.html ) return [""]
-      if( this.selector && typeof this.index != 'undefined' ){
-        const type      = this.html.match(/<(rss|feed)/) ? "text/xml" : "text/html"
-        const parser    = new DOMParser()
-        const xmlDoc    = parser.parseFromString( this.html, type)
-        let paragraphs  = [ ...xmlDoc.querySelectorAll(this.selector) ] // KiSS JML: CSS selectors level 1
-        if( !paragraphs.length ){
-          console.error(`paragraph: level1 css selector '${this.selector}' not matching anything`)
+      let source = this.html
+      .replace(/<\?.*\?>/g,"")
+      .trim()
+
+      let selector = this.selector
+
+      const selectContent = (selector) => {
+        if( selector && typeof this.index != 'undefined' ){
+          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, "text/xml")
+          let paragraphs  = [ ...xmlDoc.querySelectorAll(selector) ] // KiSS JML: CSS selectors level 1
+          if( !paragraphs.length ){
+            console.error(`paragraph: level1 css selector '${selector}' not matching anything`)
+          }
+          let data = {
+            items:  paragraphs.map( (p) => p.textContent ),
+            paragraph: this
+          }
+          // dont exceed maxitems
+          data.items = data.items.slice( 
+            this.maxindex > 0 ? 0             : this.maxindex*-1,  
+            this.maxindex > 0 ? this.maxindex : null 
+          )
+          return data.items 
         }
-        return paragraphs.map( (p) => type == 'text/xml' ? p.textContent : p.outerHTML )
+        return []
       }
-      return [this.html]
+      // lets do it!
+      let items = [this.html]
+      if( selector ) items = selectContent(selector)
+
+      if( !selector && source.match(/^<(feed|rss)[ >]/) ){
+        let fallbackSelectors = [
+          // --- RSS 2.0 & RSS 1.0 (Namespaced Content) ---
+          "item content\\:encoded",    // Standard RSS 2.0 with Namespaces (wordpress)
+          "item encoded\\:content",    // Common browser "cleanup" of content:encoded
+          // --- Atom (Standard) ---
+          "entry content",             // Standard Atom
+          "entry summary",             // Atom fallback if full content isn't provided
+          // --- RSS 2.0 (Standard & Fallbacks) ---
+          "item description",          // Standard RSS 2.0 (often contains HTML)
+          "item fulltext",             // Used by some custom RSS generators
+          // --- RSS 1.0 (Legacy/Specific) ---
+          "item description",          // Standard for RSS 1.0
+        ]
+        while( fallbackSelectors.length ){
+          const selector = fallbackSelectors.shift()
+          let sitems = selectContent(selector) 
+          if( sitems.length && sitems[0] ){
+            items = sitems
+            break;
+          }
+        }
+      }
+      return items 
     }
   }
 

@@ -1,0 +1,9 @@
+{
+  "templates": {
+  },
+  "scripts":  [ "./rsshub.js" ],
+  "css":      ["./rsshub.css"],
+  "components":["app-rsshub"]
+}
+
+

@@ -3,7 +3,7 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube', 'janusweb.translators.rss', 'janusweb.translators.aframe'
   ], function() {
   let roomTranslators = false;
   function initRoomTranslators(room) {
@@ -20,6 +20,8 @@ elation.require([
       '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
       '^error$': elation.janusweb.translators.error({janus: janus}),
       '.*\.(gltf|glb|dae)$': elation.janusweb.translators.xrfragments({janus: janus}),
+      '.*\.(rss|atom)$': elation.janusweb.translators.rss({janus}),
+      '^aframe$': elation.janusweb.translators.aframe({janus: janus}),
       '^default$': elation.janusweb.translators.default({janus: janus}),
     }
   }
@@ -43,6 +45,7 @@ elation.require([
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
+        'nested': { type: 'boolean', default: false, set: this.setNested },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
         'skybox_intensity': { type: 'float', set: this.setSkybox, default: 1.0 },
@@ -209,6 +212,7 @@ elation.require([
       };
     }
     this.updateLights = function() {
+      if( this.nested ) return
       if (!this.roomlights) {
         this.createLights();
       }
@@ -232,17 +236,18 @@ elation.require([
     }
     this.setActive = function() {
       this.active = true;
-      this.setSkybox();
-      this.setFog();
-      this.updateBloom();
-      this.updateToneMapping();
-      this.setNearFar();
-      this.setPlayerPosition();
-      if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
-        player.setCameraView(this.defaultview);
+      if( !this.nested ){ 
+        this.setSkybox();
+        this.setFog();
+        this.updateBloom();
+        this.updateToneMapping();
+        this.setNearFar();
+        this.setPlayerPosition();
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+          player.setCameraView(this.defaultview);
+        }
+        this.updateAvatarVisibility();
       }
-      this.updateAvatarVisibility();
-
       elation.events.fire({element: this, type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
@@ -326,10 +331,16 @@ elation.require([
       }
       return spawnpoint;
     }
+    this.setNested = function(){
+      if( this.nested ){
+        this.skybox = false 
+        this.use_local_asset = false 
+      }
+    }
     this.setSkybox = function() {
-      if (!this.loaded) return;
+      if (!this.loaded ) return;
 
-      if (!this.skybox) {
+      if (!this.skybox ) {
         this.engine.systems.render.renderer.setClearAlpha(0);
         return;
       } else {
@@ -902,7 +913,7 @@ elation.require([
       }
       
       if (room && !parent) {
-        if (room.use_local_asset) {
+        if (room.use_local_asset && !this.nested) {
           var modelid = (room.visible !== false ? room.use_local_asset : undefined),
               collisionid = room.use_local_asset + '_collision',
               collisionscale = V(1,1,1),
@@ -972,7 +983,7 @@ elation.require([
             });
           }
         }
-        if (this.active) {
+        if (this.active && !this.nested) {
           setTimeout(() => this.setPlayerPosition(), 0);
         }
 
@@ -1027,7 +1038,7 @@ elation.require([
         this.defaultview = elation.utils.any(room.defaultview, null);
         this.showavatar = elation.utils.any(room.showavatar, true);
         if ('spawnradius' in room) this.spawnradius = room.spawnradius;
-        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview && !this.nested) {
           player.setCameraView(this.defaultview);
         }
         //if (room.col) this.properties.col = room.col;
@@ -1103,6 +1114,7 @@ elation.require([
       });
     }
     this.getTranslator = function(url) {
+      url = url.replace(/#.*/,'')
       var keys = Object.keys(roomTranslators);
       for (var i = 0; i < keys.length; i++) {
         var re = new RegExp(keys[i]);
@@ -1114,13 +1126,10 @@ elation.require([
       return false;
     }
     this.enable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.start) {
-          obj.start();
-        }
-      }
+      this.getObjectsDeep()
+          .filter( (obj) => obj.start   )
+          .map(    (obj) => obj.start() )
+
       if (!this.enabled) {
         this.enabled = true;
         this.engine.systems.ai.add(this);
@@ -1154,13 +1163,10 @@ elation.require([
       //this.showDebug();
     }
     this.disable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.stop) {
-          obj.stop();
-        }
-      }
+      this.getObjectsDeep()
+          .filter( (obj) => obj.stop   )
+          .map(    (obj) => obj.stop() )
+
       if (this.enabled) {
         this.engine.systems.ai.remove(this);
         elation.events.fire({type: 'room_disable', data: this});
@@ -1983,10 +1989,33 @@ elation.require([
 */
 
     }
-    this.getObjectByDeepName = function(name) {
+    this.getObjectsDeep = function() {
+      let result = []
+      // search direct childern 
+      const collectChildren = (room) => {
+        var keys = Object.keys(room.children);
+        for (var i = 0; i < keys.length; i++) {
+          const obj = room.children[keys[i]] 
+          result.push( obj );
+        }
+      }
+      collectChildren(this.janus.currentroom)
+      // search deep for janusobjects (in nested rooms too)
+      this.janus.currentroom.objects['3d'].traverse( (o) => {
+        if( o?.userData?.thing?.type == "janusroom" && o.userData.thing.id != this.id ){
+          collectChildren( o.userData.thing )
+        }
+      })
+      return result
+    }
+    this.getObjectByDeepName = function(name,fuzzy) {
       if( !this.janus.currentroom ) return
       let obj = this.janus.currentroom.objects['3d'].getObjectByName(name)
-      if( obj ){ // return polyglot THREE/janusweb object for convenience
+      if( !obj && fuzzy ){
+        obj = this.getObjectById( name)        || 
+              this.players[ name ]             
+      }
+      if( obj && !obj.objects ){ // return polyglot THREE/janusweb object for convenience
         return new Proxy(obj,{
           set(me,k,v){ obj[k] = v; return true;    },
           get(me,k){ 
@@ -3099,7 +3128,15 @@ console.log('unknown material', mat);
           if (player.ghost.head) player.ghost.head.visible = false;
         }
       }
+    },
+
+    this.reparent = function(obj, parentId, searchRoom ){
+      searchRoom = searchRoom || this
+      let target = searchRoom.getObjectByDeepName( parentId, true )
+      if( !target && parentId == 'player' ) target = player
+      if( target ) target.add( obj ) // reparent !
     }
+
   }, elation.engine.things.generic);
 });
 

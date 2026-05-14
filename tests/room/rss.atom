@@ -1,0 +1,54 @@
+<feed xmlns="http://www.w3.org/2005/Atom" xml:base="https://nlnet.nl">
+  <title type="text">NLnet news</title>
+  <updated>2025-11-19T00:00:00Z</updated>
+  <id>https://nlnet.nl/feed.atom</id>
+  <link rel="self" type="application/atom+xml" href="https://nlnet.nl/feed.atom"/>
+  <entry>
+    <id>https://nlnet.nl/news/2025/20251119-fosdem-funding-foss.html</id>
+    <author>
+      <name>NLnet</name>
+    </author>
+    <title type="text">FOSDEM CfP: Submit Talks for the Funding FOSS Devroom</title>
+    <link href="/news/2025/20251119-fosdem-funding-foss.html"/>
+    <updated>2025-11-19T00:00:00Z</updated>
+    <content type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <div class="thumbright">
+          <a href="https://fosdem.org">
+            <img src="/image/hex/fosdem.hex.svg" alt="FOSDEM logo in hexagon sticker format."/>
+          </a>
+        </div>
+        <p class="paralead">Do you have ideas about funding Free and Open Source technologies? Consider participating in the second edition of the Funding the FOSS Ecosystem devroom at <a href="https://fosdem.org">FOSDEM 2026</a>. The <a href="https://lists.fosdem.org/pipermail/fosdem/2025q4/003656.html">Call for Participation</a> is open until December 1, 2025.</p>
+        <p>We bring together developers, maintainers, policymakers, entrepreneurs, donors and funders to explore various funding models and mechanisms that support the longevity and security of FOSS projects. The goal of this devroom is for developers to gain insights into funding strategies, their feasibility, and communication with end-users, while companies, governments, inter-governmental and social organisations as well as individual donors are encouraged to better understand and support developer needs in FOSS projects.</p>
+        <h2>Possible topics</h2>
+        <p>The topic of your submission must be related to the topic of the devroom. We want to cover a wide range of perspectives on the topic, for example:<ul>
+            <li>What are strategies for positioning FOSS projects to clarify their value and unique offerings?</li>
+            <li>How to access grants, investments, and alternative funding models for FOSS projects?</li>
+            <li>What is/should be the roles of public and private sectors in FOSS funding?</li>
+            <li>What is the impact of funding on developer well-being, project security, scalability, and innovation?</li>
+            <li>How can we expand funding sources for FOSS?</li>
+            <li>How can we engage more stakeholders in FOSS funding, such as industry, governments, and intergovernmental organizations?</li>
+          </ul>For more details and the criteria for accepted talks, see the CfP linked above.</p>
+        <p>And of course come and join the devroom at FOSDEM on Saturday January 31, 2026.</p>
+        <p>The devroom is organized by:<ul>
+            <li>
+              <a href="https://fsfe.org/">FSFE</a>
+            </li>
+            <li>
+              <a href="https://www.linuxfoundation.org/">Linux Foundation</a>
+            </li>
+            <li>
+              <a href="/">NLnet</a>
+            </li>
+            <li>
+              <a href="https://prototypefund.de/en/">Prototype Fund</a>
+            </li>
+            <li>
+              <a href="https://www.sovereign.tech/">Sovereign Tech Agency</a>
+            </li>
+          </ul>
+        </p>
+      </div>
+    </content>
+  </entry>
+</feed>

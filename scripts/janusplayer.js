@@ -7,9 +7,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.defaultavatar = `
     <FireBoxRoom>
       <assets>
-        <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
-        <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
-        <assetobject id="avatar_animations_sit" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations-sit.glb" />
+        <assetobject id="body" src="/media/assets/janus-avatar-base.glb" />
+        <assetobject id="avatar_animations" src="/media/assets/janus-avatar-animations.glb" />
+        <assetobject id="avatar_animations_sit" src="/media/asset/janus-avatar-animations-sit.glb" />
       </assets>
       <room>
         <ghost scale=".01 .01 .01" col="#e0d5a1" body_id="body" bone_head="head" animation_extras="avatar_animations_sit" />
@@ -510,6 +510,7 @@ document.body.dispatchEvent(click);
         };
       }
       newroom.appendChild(this.getProxyObject());
+      if( newroom.nested ) this.position.sub(newroom.position)
       if (this.ghost) {
         this.ghost.setRoom(newroom);
       } else if (!this.ghost) { // && this.room.selfavatar) {
@@ -873,6 +874,7 @@ document.body.dispatchEvent(click);
     this.updateCursorStyle = function(ev) {
       var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
       var obj = ev.element;
+      if( !obj?.getProxyObject ) return
       var proxyobj = (obj.getProxyObject ? obj.getProxyObject() : obj);
 
       if (obj && proxyobj && (ev.type == 'mouseover' || ev.type == 'mousemove') && (
