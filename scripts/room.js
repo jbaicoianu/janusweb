@@ -3,7 +3,7 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube', 'janusweb.translators.rss'
   ], function() {
   let roomTranslators = false;
   function initRoomTranslators(room) {
@@ -20,6 +20,7 @@ elation.require([
       '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
       '^error$': elation.janusweb.translators.error({janus: janus}),
       '.*\.(gltf|glb|dae)$': elation.janusweb.translators.xrfragments({janus: janus}),
+      '.*\.(xml|rss|atom)$': elation.janusweb.translators.rss({janus}),
       '^default$': elation.janusweb.translators.default({janus: janus}),
     }
   }

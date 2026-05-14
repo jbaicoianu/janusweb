@@ -1,0 +1,192 @@
+<rss version="2.0" xmlns:webfeeds="http://webfeeds.org/rss/1.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Léon van Kammen</title>
+    <description>Public posts from @lvk@mastodon.online</description>
+    <link>https://mastodon.online/@lvk</link>
+    <image>
+      <url>https://files.mastodon.online/accounts/avatars/000/057/503/original/6eeaa88e79c3a56d.jpg</url>
+      <title>Léon van Kammen</title>
+      <link>https://mastodon.online/@lvk</link>
+    </image>
+    <lastBuildDate>Mon, 04 May 2026 21:50:22 +0000</lastBuildDate>
+    <webfeeds:icon>https://files.mastodon.online/accounts/avatars/000/057/503/original/6eeaa88e79c3a56d.jpg</webfeeds:icon>
+    <generator>Mastodon v4.6.0-nightly.2026-05-05</generator>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116518513696890977</guid>
+      <link>https://mastodon.online/@lvk/116518513696890977</link>
+      <pubDate>Mon, 04 May 2026 21:50:22 +0000</pubDate>
+      <description>&lt;p&gt;todays link with awesome GIF art :&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.cameronsworld.net" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://www.&lt;/span&gt;&lt;span class=""&gt;cameronsworld.net&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/518/512/542/005/542/original/d7c1f9647b583cda.jpg" type="image/jpeg" fileSize="225906" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116493974628478859</guid>
+      <link>https://mastodon.online/@lvk/116493974628478859</link>
+      <pubDate>Thu, 30 Apr 2026 13:49:45 +0000</pubDate>
+      <description>&lt;p&gt;Lua has many dialects, and I love them all ❤️ &lt;br&gt;But how to write one lua-file and target them all?&lt;br&gt;Answer: metaprogramming&lt;/p&gt;&lt;p&gt;Here's a small ~700 bytes gpp-ish metaprogramming awk script 🎉&lt;/p&gt;&lt;p&gt;&lt;a href="https://mastodon.online/tags/lua" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;lua&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/teal" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;teal&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/nelua" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;nelua&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/redbean" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;redbean&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/esp32" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;esp32&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/wasm" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;wasm&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/love2D" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;love2D&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/awk" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;awk&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;ps. its not limited to lua &lt;img rel="emoji" draggable="false" width="16" height="16" class="emojione" style="height: 1.1em; margin: -.2ex .15em .2ex; object-fit: contain; vertical-align: middle; width: 1.1em;" alt=":coolcat:" title=":coolcat:" src="https://files.mastodon.online/custom_emojis/images/000/027/312/original/38315895234cfee8.png"&gt; &lt;br&gt; &lt;br&gt;&lt;a href="https://codeberg.org/coderofsalvation/meta.awk" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;codeberg.org/coderofsalvation/&lt;/span&gt;&lt;span class="invisible"&gt;meta.awk&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/493/971/041/812/098/original/feb785cf61959cd4.png" type="image/png" fileSize="45851" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+      <category>lua</category>
+      <category>teal</category>
+      <category>nelua</category>
+      <category>redBean</category>
+      <category>esp32</category>
+      <category>wasm</category>
+      <category>love2d</category>
+      <category>awk</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116489244975141003</guid>
+      <link>https://mastodon.online/@lvk/116489244975141003</link>
+      <pubDate>Wed, 29 Apr 2026 17:46:57 +0000</pubDate>
+      <description>&lt;p&gt;This RSS-translator will be in the next release of janusweb.&lt;br /&gt;Link/surf to any RSS-URL in your 3D space, and it&amp;#39;ll give you a portal to this room ♥️&lt;/p&gt;&lt;p&gt;&lt;a href="https://mastodon.online/tags/janusweb" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;janusweb&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/webxr" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;webxr&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/hypermedia" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;hypermedia&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/rss" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;rss&lt;/span&gt;&lt;/a&gt; &lt;/p&gt;&lt;p&gt;&lt;a href="https://coderofsalvation.github.io/janus-guide" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;coderofsalvation.github.io/jan&lt;/span&gt;&lt;span class="invisible"&gt;us-guide&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://xrhf.isvery.ninja" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;xrhf.isvery.ninja&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/489/260/194/042/838/original/250c3b0c888c2027.mp4" type="video/mp4" fileSize="806370" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+      <category>janusweb</category>
+      <category>webxr</category>
+      <category>hypermedia</category>
+      <category>rss</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116481723675141816</guid>
+      <link>https://mastodon.online/@lvk/116481723675141816</link>
+      <pubDate>Tue, 28 Apr 2026 09:54:11 +0000</pubDate>
+      <description>&lt;p&gt;while most green tech initiatives focus on buying new, energy-efficient hardware, the retrogaming community has spent decades perfecting the art of extreme hardware longevity.&lt;/p&gt;&lt;p&gt;paradoxically, retrogaming has everything and nothing to do with consumerism, nostalgia and permacomputing.&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/481/722/532/343/227/original/ba528d683ae0130a.png" type="image/png" fileSize="1728700" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116453572814033086</guid>
+      <link>https://mastodon.online/@lvk/116453572814033086</link>
+      <pubDate>Thu, 23 Apr 2026 10:35:03 +0000</pubDate>
+      <description>&lt;p&gt;awkward fact: my (client) websites keep breaking..since the 90s 😅 &lt;/p&gt;&lt;p&gt;With more and more devices in different forms and shapes..&lt;br /&gt;These days NETSURF seems to be the middleground for testing webpages.&lt;br /&gt;Just enough CSS, just enough javascript, bit of webdev tooling ❤️ &lt;br /&gt;If it works there, then it works on smartwatch (textmode) browsers &amp;amp; chrome too.&lt;/p&gt;&lt;p&gt;&lt;a href="https://www.netsurf-browser.org" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://www.&lt;/span&gt;&lt;span class=""&gt;netsurf-browser.org&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://mastodon.online/tags/designfordescent" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;designfordescent&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/permacomputing" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;permacomputing&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/453/561/326/762/845/original/165d5e259bc53180.png" type="image/png" fileSize="118934" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+      <category>designfordescent</category>
+      <category>permacomputing</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116447740359666655</guid>
+      <link>https://mastodon.online/@lvk/116447740359666655</link>
+      <pubDate>Wed, 22 Apr 2026 09:51:46 +0000</pubDate>
+      <description>&lt;p&gt;&lt;span class="h-card" translate="no"&gt;&lt;a href="https://mastodon.pirateparty.be/@utopiah" class="u-url mention"&gt;@&lt;span&gt;utopiah&lt;/span&gt;&lt;/a&gt;&lt;/span&gt; &lt;br /&gt;Didn&amp;#39;t know about this:&lt;/p&gt;&lt;p&gt;&lt;a href="https://github.com/indigo-dc/udocker" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;github.com/indigo-dc/udocker&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Hm..termux + udocker in quest 2&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116443346890478386</guid>
+      <link>https://mastodon.online/@lvk/116443346890478386</link>
+      <pubDate>Tue, 21 Apr 2026 15:14:27 +0000</pubDate>
+      <description>&lt;p&gt;🍄🥑🥔🥕🌽🌶️🫑🥒🥬🥦🧄🧅🥜&lt;/p&gt;&lt;p&gt;It doesn&amp;#39;t matter whether you&amp;#39;re running a potato 3D engine, or a pumpkin game engine..we love you all! ❤️ &lt;/p&gt;&lt;p&gt;Engine prefixes will progressively enhance your 3D files.&lt;br /&gt;It even comes with a blender addon!&lt;/p&gt;&lt;p&gt;&lt;a href="https://xrfragment.org/#%F0%9F%93%9Clevel7%3A%20engine%20prefixes" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;xrfragment.org/#%F0%9F%93%9Cle&lt;/span&gt;&lt;span class="invisible"&gt;vel7%3A%20engine%20prefixes&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116441003929871348</guid>
+      <link>https://mastodon.online/@lvk/116441003929871348</link>
+      <pubDate>Tue, 21 Apr 2026 05:18:37 +0000</pubDate>
+      <description>&lt;p&gt;it&amp;#39;s your lucky day!&lt;br /&gt;Here are some cool bookmarks regarding frugal / permacomputing 💚🌱🌿🌳🍃&lt;/p&gt;&lt;p&gt;&lt;a href="https://tinyurl.com/permacomputing1" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;tinyurl.com/permacomputing1&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116422199875730182</guid>
+      <link>https://mastodon.online/@lvk/116422199875730182</link>
+      <pubDate>Fri, 17 Apr 2026 21:36:30 +0000</pubDate>
+      <description>&lt;p&gt;naive redo (makefile alternative) in ~18 lines of shellscript &lt;a href="https://mastodon.online/tags/permaculture" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;permaculture&lt;/span&gt;&lt;/a&gt;  &lt;a href="https://mastodon.online/tags/minimalist" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;minimalist&lt;/span&gt;&lt;/a&gt; &lt;/p&gt;&lt;p&gt;&lt;a href="https://codeberg.org/coderofsalvation/redo" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;codeberg.org/coderofsalvation/&lt;/span&gt;&lt;span class="invisible"&gt;redo&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <category>minimalist</category>
+      <category>permaculture</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116407951231982780</guid>
+      <link>https://mastodon.online/@lvk/116407951231982780</link>
+      <pubDate>Wed, 15 Apr 2026 09:12:53 +0000</pubDate>
+      <description>&lt;p&gt;why computing?&lt;br /&gt;because it makes our life easier.&lt;br /&gt;But does it really?&lt;br /&gt;Moore&amp;#39;s law would allow us to do more with less right?&lt;br /&gt;What would &amp;#39;does it scale down&amp;#39; look like?&lt;/p&gt;&lt;p&gt;&lt;a href="https://permacomputing.net/permacomputing" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;permacomputing.net/permacomput&lt;/span&gt;&lt;span class="invisible"&gt;ing&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;(img by 100r.co)&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/407/954/390/314/690/original/75c7a042cf1c8ffe.png" type="image/png" fileSize="44980" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116334419997407887</guid>
+      <link>https://mastodon.online/@lvk/116334419997407887</link>
+      <pubDate>Thu, 02 Apr 2026 09:32:55 +0000</pubDate>
+      <description>&lt;p&gt;Devices these days are basically read+write TV.&lt;br /&gt;We are witnessing technology&amp;#39;s exponential atomization of monoculture.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116302612343748036</guid>
+      <link>https://mastodon.online/@lvk/116302612343748036</link>
+      <pubDate>Fri, 27 Mar 2026 18:43:49 +0000</pubDate>
+      <description>&lt;p&gt;.vtt subtitle support for .glTF files (with spatial XR Fragment anchors) is getting there..&lt;br /&gt;ps. this scene is 100kb and works supernice on potato  XR devices 😍&lt;/p&gt;&lt;p&gt;&lt;a href="https://xrfragment.org/#WebVTT%20subtitles" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;xrfragment.org/#WebVTT%20subti&lt;/span&gt;&lt;span class="invisible"&gt;tles&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://mastodon.online/tags/janusweb" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;janusweb&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/janusxr" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;janusxr&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/302/606/296/315/044/original/46505b5f06c7a405.mp4" type="video/mp4" fileSize="44167434" medium="video">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+      <category>janusweb</category>
+      <category>janusxr</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116289446065865914</guid>
+      <link>https://mastodon.online/@lvk/116289446065865914</link>
+      <pubDate>Wed, 25 Mar 2026 10:55:27 +0000</pubDate>
+      <description>&lt;p&gt;🔥we dont need billions of dollars and gigabytes.&lt;br /&gt;This janusxr room is a 100kilobytes glTF file.&lt;br /&gt;Blender techniques used:&lt;br /&gt;* tiny jpg (highlighy compressed) jpg textures&lt;br /&gt;* roughness/metallic PBR-params + gpu instancing&lt;br /&gt;* XR Fragments HUDLUT extension: &lt;a href="https://xrfragment.org/#camera%20HUDLUT" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;xrfragment.org/#camera%20HUDLUT&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;br /&gt;* XR Fragments engine prefixes: &lt;a href="https://xrfragment.org/#%F0%9F%93%9Clevel7%3A%20engine%20prefixes" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;xrfragment.org/#%F0%9F%93%9Cle&lt;/span&gt;&lt;span class="invisible"&gt;vel7%3A%20engine%20prefixes&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;glTF browser used: &lt;a href="https://github.com/jbaicoianu/janusweb" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;github.com/jbaicoianu/janusweb&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;br /&gt;what is janusxr: &lt;a href="https://coderofsalvation.github.io/janus-guide/" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;coderofsalvation.github.io/jan&lt;/span&gt;&lt;span class="invisible"&gt;us-guide/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/289/444/748/434/180/original/0a9493f571a85171.mp4" type="video/mp4" fileSize="16270469" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+        <media:description type="plain">VR tour</media:description>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116286377531002321</guid>
+      <link>https://mastodon.online/@lvk/116286377531002321</link>
+      <pubDate>Tue, 24 Mar 2026 21:55:05 +0000</pubDate>
+      <description>&lt;p&gt;today played around with the HUDLUT extension.&lt;br /&gt;Embed supercheap colorgrading (8x8 pixels texture) in your 3D file &lt;a href="https://xrfragment.org/#camera%20HUDLUT" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;xrfragment.org/#camera%20HUDLUT&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt; &lt;/p&gt;&lt;p&gt;Will soon push the implementation for janusweb / janusxr &lt;a href="https://coderofsalvation.github.io/janus-guide/#/" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;coderofsalvation.github.io/jan&lt;/span&gt;&lt;span class="invisible"&gt;us-guide/#/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/286/369/506/936/126/original/9630d2ada8ed9c26.png" type="image/png" fileSize="913066" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116271075106216395</guid>
+      <link>https://mastodon.online/@lvk/116271075106216395</link>
+      <pubDate>Sun, 22 Mar 2026 05:03:29 +0000</pubDate>
+      <description>&lt;p&gt;w̶e̶ ̶n̶e̶e̶d̶ ̶b̶e̶t̶t̶e̶r̶ ̶s̶t̶a̶n̶d̶a̶r̶d̶s̶&lt;br /&gt;we need useroperated specs&lt;/p&gt;&lt;p&gt;Standardisation paradox: calling for &amp;#39;better standards&amp;#39; tends to gravitate to centralised policy (so bigcorp eventually capture the seats, vote according to anti-competition strategy, yadayada).&lt;br /&gt;People/devs with a tunnelvision on order &amp;amp; structure and &amp;#39;best practices&amp;#39; are extremely vulnerable to such top-down political games.&lt;br /&gt;Valueing &amp;amp; protecting personal computing requires clutter &amp;amp; plurality.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116261528007783207</guid>
+      <link>https://mastodon.online/@lvk/116261528007783207</link>
+      <pubDate>Fri, 20 Mar 2026 12:35:31 +0000</pubDate>
+      <description>&lt;p&gt;uploaded last weekend&amp;#39;s djset to peertube, thanks popcafe!&lt;/p&gt;&lt;p&gt;&lt;a href="https://makertube.net/w/7DghU8YeS7B6n93Twazev7" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;makertube.net/w/7DghU8YeS7B6n9&lt;/span&gt;&lt;span class="invisible"&gt;3Twazev7&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116249565413048670</guid>
+      <link>https://mastodon.online/@lvk/116249565413048670</link>
+      <pubDate>Wed, 18 Mar 2026 09:53:17 +0000</pubDate>
+      <description>&lt;p&gt;🪦RIP Meta Horizon worlds&lt;br /&gt;Looking for a decentralized home for your Horizon world?&lt;br /&gt;Move it to Janus, just add a textsnippet in your blog etc and YOU OWN YOUR data.&lt;br /&gt;&lt;a href="https://mastodon.online/tags/noblockchain" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;noblockchain&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/enshiffitication" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;enshiffitication&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/decentralized" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;decentralized&lt;/span&gt;&lt;/a&gt; &lt;a href="https://mastodon.online/tags/janusweb" class="mention hashtag" rel="tag"&gt;#&lt;span&gt;janusweb&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;p&gt;&lt;a href="https://github.com/jbaicoianu/janusweb" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class=""&gt;github.com/jbaicoianu/janusweb&lt;/span&gt;&lt;span class="invisible"&gt;&lt;/span&gt;&lt;/a&gt;&lt;br /&gt;&lt;a href="https://coderofsalvation.github.io/janus-guide/" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;coderofsalvation.github.io/jan&lt;/span&gt;&lt;span class="invisible"&gt;us-guide/&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/249/565/115/802/625/original/91c463f56ed704de.png" type="image/png" fileSize="242210" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+      <category>NoBlockChain</category>
+      <category>enshiffitication</category>
+      <category>decentralized</category>
+      <category>janusweb</category>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116238371495904946</guid>
+      <link>https://mastodon.online/@lvk/116238371495904946</link>
+      <pubDate>Mon, 16 Mar 2026 10:26:31 +0000</pubDate>
+      <description>&lt;p&gt;Hm many people know Mastodon but not its enabling layer: ActivityPub/Webfinger.&lt;/p&gt;&lt;p&gt;The irony is that (de)federation/banning-features can re-enshittify open protocols (serving dictator-admins-first, users later).&lt;/p&gt;&lt;p&gt;Perhaps it indicates a personal confusion: maybe what interests me about the Fediverse is Webfinger, then ActivityPub, then platforms (Mastodon/Peertube/Lemmy e.g.)&lt;/p&gt;</description>
+      <media:content url="https://files.mastodon.online/media_attachments/files/116/238/371/153/591/662/original/9b02db4df12922ee.png" type="image/png" fileSize="201424" medium="image">
+        <media:rating scheme="urn:simple">nonadult</media:rating>
+      </media:content>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116233962867677564</guid>
+      <link>https://mastodon.online/@lvk/116233962867677564</link>
+      <pubDate>Sun, 15 Mar 2026 15:45:21 +0000</pubDate>
+      <description>&lt;p&gt;̶f̶i̶g̶h̶t̶ ̶b̶i̶g̶ ̶t̶e̶c̶h̶ ̶w̶i̶t̶h̶ ̶m̶o̶r̶e̶ ̶t̶e̶c̶h̶ ̶ ̶&lt;br /&gt; use less tech, practice JOMO&lt;/p&gt;</description>
+    </item>
+    <item>
+      <guid isPermaLink="true">https://mastodon.online/@lvk/116233443222195365</guid>
+      <link>https://mastodon.online/@lvk/116233443222195365</link>
+      <pubDate>Sun, 15 Mar 2026 13:33:12 +0000</pubDate>
+      <description>&lt;p&gt;case for less global tech and  more cosmolocalism &amp;amp; local-first approaches (&lt;a href="https://en.wikipedia.org/wiki/Cosmopolitan_localism" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invis100 25325  100 25325    0     0  47026      0 --:--:-- --:--:-- --:--:-- 46985
+ible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;en.wikipedia.org/wiki/Cosmopol&lt;/span&gt;&lt;span class="invisible"&gt;itan_localism&lt;/span&gt;&lt;/a&gt;)&lt;/p&gt;&lt;p&gt;&amp;quot;You can&amp;#39;t reach the $700b break-even point at $60b/year in two years, three years, or five years.&amp;quot;&lt;/p&gt;&lt;p&gt;&lt;a href="https://pluralistic.net/2026/03/12/normal-technology/#bubble-exceptionalism" target="_blank" rel="nofollow noopener" translate="no"&gt;&lt;span class="invisible"&gt;https://&lt;/span&gt;&lt;span class="ellipsis"&gt;pluralistic.net/2026/03/12/nor&lt;/span&gt;&lt;span class="invisible"&gt;mal-technology/#bubble-exceptionalism&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+const fs = require("fs")
+
+let output = {}
+
+
+fetch('https://docs.rsshub.app/routes.json')
+.then( (res) => res.json() )
+.then( (json) => {
+  for( let domain in json ){
+    output[ domain ] = {routes:{}}
+    for( let route in json[domain].routes ){
+      // necessary tapdance to prevent codebase from being flagged
+      let safe = true
+      if( String(domain+route).match(/[p][o][r][n]/) ) safe = false 
+      if( json[domain].routes[route].features && json[domain].routes[route].features.nsfw ) safe = false
+      if( safe ){
+        output[domain].routes[ route ] = {
+          example: json[domain].routes[route].example,
+          features: json[domain].routes[route].features || undefined
+        }
+      }
+    }
+  }
+  fs.writeFile('./routes.json', JSON.stringify(output), err => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log("[v] updated routes.json")
+    }
+  });
+})
