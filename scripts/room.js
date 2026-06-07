@@ -2634,6 +2634,24 @@ elation.require([
 
       return roomsrc;
     }
+    // Per-object serialization of the persistent top-level objects, for editors
+    // that reconcile an authored source against the live scene without
+    // regenerating the whole document.
+    this.getObjectSummaries = function() {
+      var out = [];
+      for (let k in this.children) {
+        var object = this.children[k];
+        if (object.persist && object.janus && typeof object.summarizeXML == 'function' && object.tag) {
+          out.push({
+            js_id: object.js_id,
+            id: object.id,
+            name: String(object.tag).toLowerCase(),
+            xml: object.summarizeXML().replace(/\s+$/, '')
+          });
+        }
+      }
+      return out;
+    }
 
     // FIXME - room should inherit from janusbase and get this automatically
     this.addEventListenerProxy = function(name, handler, bubble) {

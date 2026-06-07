@@ -1629,6 +1629,77 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
   }
 });
+// Reconcile an authored JanusML source string against the live scene, changing
+// only what differs: patch attributes, insert created objects, remove deleted
+// ones. Comments, formatting, and unmodelled attributes are left untouched.
+function fseScanElements(src) {
+  var els = [], stack = [];
+  var re = /<!--[\s\S]*?-->|<\/([A-Za-z][\w.-]*)\s*>|<([A-Za-z][\w.-]*)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/g;
+  var m;
+  while ((m = re.exec(src)) !== null) {
+    if (m[0].indexOf('<!--') === 0) continue;
+    if (m[1]) {
+      for (var i = stack.length - 1; i >= 0; i--) { if (stack[i].name === m[1]) { stack[i].fullEnd = m.index + m[0].length; stack.length = i; break; } }
+      continue;
+    }
+    var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
+    while ((a = ar.exec(m[3])) !== null) attrs[a[1]] = a[2];
+    var el = { name: m[2], attrs: attrs, start: m.index, openEnd: m.index + m[0].length,
+               parent: stack.length ? stack[stack.length - 1].name : null, selfclose: m[4] === '/' };
+    el.fullEnd = el.openEnd;
+    els.push(el);
+    if (!el.selfclose) stack.push(el);
+  }
+  return els;
+}
+function fseParseAttrs(tag) {
+  var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
+  while ((a = ar.exec(tag)) !== null) attrs[a[1]] = a[2];
+  return attrs;
+}
+function fseSetAttr(tag, attr, value) {
+  var re = new RegExp('(\\s' + attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=\\s*")[^"]*(")');
+  if (re.test(tag)) return tag.replace(re, '$1' + value + '$2');
+  return tag.replace(/\s*\/?>$/, function (mm) { return ' ' + attr + '="' + value + '"' + mm; });
+}
+function fseReconcileSource(src, summaries) {
+  var els = fseScanElements(src);
+  var objEls = els.filter(function (e) { return e.parent && e.parent.toLowerCase() === 'room'; });
+  var usedEl = [], usedLive = [], matched = [];
+  objEls.forEach(function (el) { if (el.attrs.js_id) {
+    for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].js_id === el.attrs.js_id) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
+  }});
+  objEls.forEach(function (el) { if (usedEl.indexOf(el) !== -1) return;
+    for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].id === el.attrs.id && summaries[i].name === el.name) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
+  });
+  var deleted = objEls.filter(function (e) { return usedEl.indexOf(e) === -1; });
+  var created = summaries.filter(function (o, i) { return usedLive.indexOf(i) === -1; });
+  var edits = [];
+  matched.forEach(function (pair) {
+    var el = pair[0], live = fseParseAttrs(pair[1].xml);
+    var tag = src.slice(el.start, el.openEnd), changed = false;
+    for (var k in live) { if (k === 'js_id' || k === 'jsid') continue; if (el.attrs[k] !== live[k]) { tag = fseSetAttr(tag, k, live[k]); changed = true; } }
+    if (changed) edits.push({ start: el.start, end: el.openEnd, text: tag });
+  });
+  deleted.forEach(function (el) {
+    var end = el.fullEnd, nl = src.indexOf('\n', end); if (nl !== -1 && src.slice(end, nl).trim() === '') end = nl + 1;
+    var start = el.start, ls = src.lastIndexOf('\n', start - 1); if (ls !== -1 && src.slice(ls + 1, start).trim() === '') start = ls + 1;
+    edits.push({ start: start, end: end, text: '' });
+  });
+  if (created.length) {
+    var close = src.search(/<\/room\s*>/i);
+    if (close !== -1) {
+      var lineStart = src.lastIndexOf('\n', close - 1) + 1;
+      var indent = (src.slice(lineStart, close).match(/^\s*/)[0] || '') + '  ';
+      var text = created.map(function (o) { return indent + o.xml + '\n'; }).join('');
+      edits.push({ start: lineStart, end: lineStart, text: text });
+    }
+  }
+  edits.sort(function (a, b) { return b.start - a.start; });
+  var out = src;
+  edits.forEach(function (e) { out = out.slice(0, e.start) + e.text + out.slice(e.end); });
+  return out;
+}
 elation.elements.define('janus.ui.editor.source', class extends elation.elements.base {
   async create() {
     await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
@@ -1644,11 +1715,25 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
 
     this.tabs = elation.elements.create('ui-tabs', { append: this });
     //let roomtab = elation.elements.create('ui-tab', { append: this.tabs, label: 'Room Markup' });
-    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: room.getRoomSource(), hints: this.jmlhints });
+    // Edit the authored markup (room.roomsrc) rather than a regenerated copy,
+    // so comments and formatting are preserved.
+    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: (room.roomsrc || room.getRoomSource()), hints: this.jmlhints });
+
+    // Bring the markup view in line with the live scene: when the room exposes
+    // per-object summaries, edit the authored text in place (preserving comments
+    // and formatting); otherwise regenerate the whole document.
+    let syncFromScene = () => {
+      let src = roomedit.codemirror ? roomedit.codemirror.getValue() : roomedit.source;
+      let next = null;
+      try {
+        if (typeof room.getObjectSummaries === 'function') next = fseReconcileSource(src, room.getObjectSummaries());
+      } catch (e) { console.error('[editor] source reconcile failed', e); }
+      return (next != null) ? next : room.getRoomSource();
+    };
 
     let refreshbutton = elation.elements.create('ui-button', { append: this, label: '↻', title: "Refresh room source", name: "refresh" });
     refreshbutton.addEventListener('click', ev => {
-      roomedit.source = room.getRoomSource();
+      roomedit.source = syncFromScene();
     });
 
     // Keep the markup view current with edits made elsewhere (gizmo, inspector,
@@ -1658,7 +1743,7 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
       if (roomedit.dirty) return;
       let cm = roomedit.codemirror;
       if (cm && cm.hasFocus()) return;
-      roomedit.source = room.getRoomSource();
+      roomedit.source = syncFromScene();
     };
     elation.events.add(room, 'scene_changed', refreshFromScene);
 
