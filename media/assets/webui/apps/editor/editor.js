@@ -1588,6 +1588,8 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
   handleEditorChange(ev, attrname, attrdef) {
     //console.log('the editor changed', ev.target.value, ev, attrname, attrdef);
     this.object[attrname] = ev.target.value;
+    // Flag the object dirty so the change is broadcast to other clients.
+    this.object.sync = true;
     this.object.refresh();
   }
   handleEditorSelect(ev, attrname, attrdef) {
@@ -1648,6 +1650,17 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
     refreshbutton.addEventListener('click', ev => {
       roomedit.source = room.getRoomSource();
     });
+
+    // Keep the markup view current with edits made elsewhere (gizmo, inspector,
+    // remote peers). Held back while the user is editing here so their text and
+    // cursor aren't disturbed; the ↻ button forces a refresh.
+    let refreshFromScene = () => {
+      if (roomedit.dirty) return;
+      let cm = roomedit.codemirror;
+      if (cm && cm.hasFocus()) return;
+      roomedit.source = room.getRoomSource();
+    };
+    elation.events.add(room, 'scene_changed', refreshFromScene);
 
     if (room.roomassets.script) {
       for (let k in room.roomassets.script) {
@@ -1990,6 +2003,9 @@ console.log('editor hints', this.hints);
     this.label = this.filename;
   }
   handleEditContentChange(ev) {
+    // setValue() from a programmatic refresh (scene -> source) also fires
+    // 'change'; ignore it so it isn't treated as a user edit and re-applied.
+    if (this.applyingExternal) return;
     //console.log('it changed', ev);
     let newsource = this.codemirror.getValue();
     this.dirty = (newsource != this.source);
@@ -2008,7 +2024,9 @@ console.log('editor hints', this.hints);
   }
   updateSource() {
     if (this.source != this.codemirror.getValue()) {
+      this.applyingExternal = true;
       this.codemirror.setValue(this.source);
+      this.applyingExternal = false;
     }
   }
 });

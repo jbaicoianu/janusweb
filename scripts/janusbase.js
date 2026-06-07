@@ -278,6 +278,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.refresh();
     } 
     this.summarizeXML = function() {
+      // Without a tag there's no valid element to emit; returning markup here
+      // would produce a malformed nameless tag (e.g. "< />").
+      if (!this.tag) return '';
       let proxy = this.getProxyObject(),
 
           propdefs = this._thingdef.properties,
@@ -287,7 +290,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       for (let k in proxydefs) {
         let proxydef = proxydefs[k],
             propdef = elation.utils.arrayget(propdefs, proxydef[1]);
-        if ( k != 'room' && k != 'tagName' && k != 'classList' && proxydef[0] == 'property' && propdef) {
+        // jsid / classname are read-aliases of js_id / class; emitting them too
+        // would duplicate the attribute on every element.
+        if ( k != 'room' && k != 'tagName' && k != 'classList' && k != 'jsid' && k != 'classname' && proxydef[0] == 'property' && propdef) {
           let val = elation.utils.arrayget(this.properties, proxydef[1]);
           let defaultval = propdef.default;
           if (val instanceof THREE.Vector2) {

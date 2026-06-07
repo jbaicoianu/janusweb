@@ -824,8 +824,16 @@ elation.require([
             let roomobj = room.objects[objdata.js_id];
             if (roomobj) {
               for (let k in objdata) {
+                // `orientation` is derived by the parser from xdir/ydir/zdir and
+                // defaults to identity when only `rotation` is authored, so it
+                // disagrees with `rotation`. Applying both fights; the authored
+                // rotation / direction attributes are what drive orientation.
+                if (k === 'orientation') continue;
                 let val = objdata[k];
                 if (roomobj[k] != objdata[k] && val !== null) {
+                  // Flag dirty so source edits broadcast to other clients; set
+                  // per change because onThingChange clears sync once tracked.
+                  roomobj.sync = true;
                   roomobj[k] = val;
                 }
               }
@@ -836,6 +844,8 @@ elation.require([
           }
         }
       }
+      // Editor surfaces (scene tree, inspector, source view) refresh from this.
+      this.notifySceneChanged();
     }
 
     this.loadRoomAssets = function(roomdata) {
@@ -1282,6 +1292,9 @@ elation.require([
       this.applyingEdits = false;
       this.appliedchanges = {};
 
+      // Editor surfaces reflect remote edits (onThingChange is gated out while
+      // applyingEdits, so signal here instead).
+      this.notifySceneChanged();
     }
     this.applyDeleteXML = function(deletexml) {
       var del = elation.utils.parseXML(deletexml);
@@ -1913,6 +1926,18 @@ elation.require([
         soundsystem.enableSound();
       }
     }
+    // Room-level "scene changed" signal that editor surfaces subscribe to
+    // (source-view auto-refresh, scene-tree/inspector reflect). Trailing-
+    // debounced so a gizmo drag or burst of edits coalesces into one fire on
+    // settle. Only the edit paths call it, so animation/physics ticks never
+    // reach here; structural changes are signalled via thing_add/thing_remove.
+    this.notifySceneChanged = function() {
+      clearTimeout(this._sceneChangedTimer);
+      this._sceneChangedTimer = setTimeout(elation.bind(this, function() {
+        // Fire on the proxy (window.room) since editor surfaces listen there.
+        elation.events.fire({type: 'scene_changed', element: this.getProxyObject()});
+      }), 150);
+    }
     this.onThingChange = function(ev) {
       if (this.applyingEdits) return;
 
@@ -1928,6 +1953,7 @@ elation.require([
             this.changes[js_id] = proxy;
           }
           thing.properties.sync = proxy.autosync;
+          this.notifySceneChanged();  // a real edit (sync set) -> refresh editor surfaces
         }
       }
     }
@@ -1945,6 +1971,7 @@ elation.require([
       if (this.jsobjects[thing.js_id]) {
         delete this.jsobjects[thing.js_id];
       }
+      this.notifySceneChanged();
     }
     this.onRoomEdit = function(ev) {
       var thing = ev.data;
@@ -2590,7 +2617,11 @@ elation.require([
       //for (var k in this.jsobjects) {
       for (let k in this.children) {
         var object = this.children[k];
-        if (object.janus && typeof object.summarizeXML == 'function') {
+        // Only persistent room objects belong in the source. Transient children
+        // (the local player, remote-player ghosts, cursors) are not part of the
+        // room markup and have no JanusML tag, so serializing them would emit
+        // malformed nameless tags.
+        if (object.persist && object.janus && typeof object.summarizeXML == 'function') {
           var markup = '    ' + object.summarizeXML().replace(/\n/g, '\n    ').replace(/\s*$/, '\n');
           objectsrc += markup;
         }
