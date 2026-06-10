@@ -969,7 +969,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else {
               m.vertexColors = false
             }
-            m.fog = this.fog;
+            if (!(m instanceof THREE.ShaderMaterial)) {
+              m.fog = this.fog;
+            }
             m.wireframe = this.wireframe;
           }
         } else if (n instanceof THREE.Light && !this.lights) {
