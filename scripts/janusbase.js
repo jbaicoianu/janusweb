@@ -325,7 +325,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           }
         }
       }
-      let xml = '<' + this.tag.toLowerCase();
+      let tagname = this.tag.toLowerCase();
+      // A property whose name matches the tag is the element's content, not an
+      // attribute (<text>foo</text>, never <text text="foo" />). This mirrors the
+      // network serializer (getChanges) so source, save, and wire formats agree.
+      let content = null;
+      if (tagname in attrs) {
+        content = attrs[tagname];
+        delete attrs[tagname];
+      }
+      let xml = '<' + tagname;
       for (let k in attrs) {
         xml += ' ' + k + '="' + attrs[k] + '"';
       }
@@ -335,13 +344,17 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           children.push(k);
         }
       }
+      let hascontent = (content !== null && content !== '');
       if (children.length > 0) {
         xml += '>\n';
+        if (hascontent) xml += '  ' + content + '\n';
         for (let i = 0; i < children.length; i++) {
           let k = children[i];
           xml += '  ' + this.children[k].summarizeXML().replace(/\n/g, '\n  ').replace(/\s*$/, '\n');
         }
-        xml += '</' + this.tag.toLowerCase() + '>\n';
+        xml += '</' + tagname + '>\n';
+      } else if (hascontent) {
+        xml += '>' + content + '</' + tagname + '>\n';
       } else {
         xml += ' />\n';
       }

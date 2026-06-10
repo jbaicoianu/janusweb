@@ -818,9 +818,16 @@ elation.require([
             room[k] = val;
           }
         }
-        if (roomdata.object) {
-          for (let i = 0; i < roomdata.object.length; i++) {
-            let objdata = roomdata.object[i];
+        // Apply edits to every element type, not just <Object>. The parser groups
+        // <text>, <image>, <link>, etc. under their own keys, so iterating only
+        // `roomdata.object` silently dropped source edits to all other elements.
+        var skiptypes = ['assets', 'room', 'source'];
+        for (let type in roomdata) {
+          if (skiptypes.indexOf(type) != -1) continue;
+          let objs = roomdata[type];
+          if (!elation.utils.isArray(objs)) objs = [objs];
+          for (let i = 0; i < objs.length; i++) {
+            let objdata = objs[i];
             let roomobj = room.objects[objdata.js_id];
             if (roomobj) {
               for (let k in objdata) {
@@ -828,18 +835,25 @@ elation.require([
                 // defaults to identity when only `rotation` is authored, so it
                 // disagrees with `rotation`. Applying both fights; the authored
                 // rotation / direction attributes are what drive orientation.
-                if (k === 'orientation') continue;
+                if (k === 'orientation' || k === '_content') continue;
                 let val = objdata[k];
-                if (roomobj[k] != objdata[k] && val !== null) {
+                if (roomobj[k] != val && val !== null) {
                   // Flag dirty so source edits broadcast to other clients; set
                   // per change because onThingChange clears sync once tracked.
                   roomobj.sync = true;
                   roomobj[k] = val;
                 }
               }
+              // Elements that carry their value as tag content (<text>foo</text>)
+              // parse to `_content`; the receiving property is named after the tag.
+              if (objdata._content != null && roomobj[type] != objdata._content) {
+                roomobj.sync = true;
+                roomobj[type] = objdata._content;
+              }
             } else {
               objdata.persist = true;
-              this.createObject('object', objdata);
+              if (objdata._content != null && objdata[type] == null) objdata[type] = objdata._content;
+              this.createObject(type, objdata);
             }
           }
         }
