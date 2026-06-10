@@ -386,9 +386,10 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         this.style.overflow = 'hidden';
       }
       getClientArgs() {
-        var fullsize = this.fullsize,
-            width = (this.fullsize ? window.innerWidth : this.width),
-            height = (this.fullsize ? window.innerHeight : this.height);
+        // Resolution hint is the configured width/height. When fullsize, the engine
+        // view sizes itself to its container, so we don't assume the window here.
+        var width = this.width,
+            height = this.height;
         var args = {
           url: this.getRoomURL(),
           homepage: this.homepage || this.src,
