@@ -19,8 +19,9 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
       }
       let inventory = inventorypanel.querySelector('janus-ui-inventory');
       if (!inventory) {
+        // The inventory wires its own selection to the editor controller (see
+        // inventory.js), so it works both here and when placed standalone.
         inventory = elation.elements.create('janus-ui-inventory', { append: inventorypanel });
-        elation.events.add(inventory, 'assetselect', (ev) => editorpanel.handleInventorySelect(ev));
       }
     }
     let editpanel = document.querySelector('ui-panel[name="topright"]');
@@ -1185,11 +1186,9 @@ console.log('change color', obj.col, vec);
       }
     }
     this.history.push({type: 'addobjects', objects: objects});
-    /*
-    if (janus.engine.systems.admin.hidden) {
-      janus.engine.systems.controls.requestPointerLock();
-    }
-    */
+    // Enter pointer-lock placement so the dropped object follows the cursor until
+    // it's clicked into position — same as click-to-place from the inventory.
+    janus.engine.systems.controls.requestPointerLock();
   }
   handleThingAdd(ev) {
     // defer one tick so the object is registered in room.objects and its
@@ -1448,6 +1447,9 @@ function getEditorController() {
   }
   return editorController;
 }
+// Expose for editor components defined in other files (e.g. the inventory app),
+// so they can reach the shared controller singleton without re-creating it.
+if (typeof window !== 'undefined') window.getEditorController = getEditorController;
 
 elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
   create() {
