@@ -134,9 +134,17 @@ janus-ui-inventory > h3 { margin: 0 0 .3em; }
 .inv-chip {
   font-size: .75em; padding: .15em .55em; border-radius: 999px; cursor: pointer;
   background: #1a1a1a; color: #bbb; border: 1px solid #333; text-transform: capitalize;
+  opacity: .6;
 }
-.inv-chip:hover { color: #fff; border-color: #555; }
-.inv-chip.active { background: #1DE9B6; color: #06241d; border-color: #1DE9B6; }
+.inv-chip:hover { color: #fff; border-color: #555; opacity: .85; }
+/* Two independent dimensions. A chip's background is its identity (source chips
+   carry their source color via .inv-badge-*; type chips stay neutral), and
+   selection is layered on top as a bright ring + full opacity — so a selected
+   chip keeps its own color instead of all turning teal and clashing with Room. */
+.inv-chip.active {
+  opacity: 1; color: #fff; border-color: #fff;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.2);
+}
 
 /* grid is now the main, growable element rather than a fixed-height tab body */
 ui-grid.inv-grid { flex: 1 1 auto; height: auto; min-height: 0; }
