@@ -14,7 +14,7 @@
   var SOURCE_LABEL = {};   // name -> label (for badges/chips)
 
   var TYPE_ICON = {
-    object: '▣', model: '▣', image: '\u{1F5BC}', video: '\u{1F39E}',
+    object: '▣', image: '\u{1F5BC}', video: '\u{1F39E}',
     sound: '\u{1F50A}', light: '\u{1F4A1}', text: '\u{1F1F9}', link: '\u{1F517}',
     particle: '✨', shader: '\u{1F308}', script: '\u{1F4DC}'
   };
@@ -40,9 +40,12 @@
 
   function normalizeItem(raw, srcname) {
     var url = (typeof raw.getInsertURL === 'function') ? raw.getInsertURL() : (raw.url || raw.href || '');
+    // 'model' (uploaded 3D files) and 'object' (primitives, room objects) are the
+    // same kind of placeable asset; collapse to one type so they share a filter.
+    var type = raw.type === 'model' ? 'object' : (raw.type || 'object');
     var rec = {
       key: raw.key || url || raw.title || raw.name,
-      type: raw.type || 'object',
+      type: type,
       title: raw.title || raw.name || raw.key || '',
       thumbnail: raw.thumbnail || raw.src || null,
       icon: raw.icon || null,
@@ -114,7 +117,7 @@
 
   // Per-type insert URL for an existing room asset (references it by id, so no
   // duplicate asset def is created).
-  var ROOM_REF = { object: 'object/id', model: 'object/id', image: 'image/image_id', sound: 'sound/sound_id', video: 'video/video_id' };
+  var ROOM_REF = { object: 'object/id', image: 'image/image_id', sound: 'sound/sound_id', video: 'video/video_id' };
   function roomItems() {
     var out = [], room = window.room;
     if (!room || !room.assetpack || !room.assetpack.assetmap) return out;
@@ -127,7 +130,7 @@
         parts = ref.split('/');
         out.push({
           key: src || (type + ':' + name),
-          type: (type === 'object' ? 'model' : type),
+          type: type,
           title: name,
           thumbnail: (type === 'image' ? src : null),
           url: 'janus:' + parts[0] + '/' + parts[1] + '=' + encodeURIComponent(name),
