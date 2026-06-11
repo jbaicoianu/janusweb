@@ -45,6 +45,7 @@
       type: raw.type || 'object',
       title: raw.title || raw.name || raw.key || '',
       thumbnail: raw.thumbnail || raw.src || null,
+      icon: raw.icon || null,
       tags: raw.tags ? raw.tags.slice() : [],
       url: url,
       sources: [srcname],
@@ -101,9 +102,13 @@
     { id: 'spotlight', label: 'Spot light', type: 'light', url: 'janus:light/light_cone_angle=0.8' },
     { id: 'dirlight', label: 'Directional light', type: 'light', url: 'janus:light/light_cone_angle=1' }
   ];
+  // Shape primitives that have a glyph in the engine object-icon sprite sheet
+  // (see .inv-prim-* in inventory.css). Others fall back to their type emoji.
+  var PRIM_ICON = { cube:1, sphere:1, cone:1, cylinder:1, pyramid:1, torus:1, capsule:1, pipe:1, plane:1 };
   function primitiveItems() {
     return PRIMITIVE_DEFS.map(function (p) {
-      return { key: 'primitive:' + p.id, type: p.type, title: p.label, url: p.url, tags: ['primitive'] };
+      return { key: 'primitive:' + p.id, type: p.type, title: p.label, url: p.url, tags: ['primitive'],
+               icon: PRIM_ICON[p.id] ? p.id : null };
     });
   }
 
@@ -309,6 +314,10 @@
       a.setAttribute('onclick', 'return false');
       if (v.thumbnail) {
         var img = document.createElement('img'); img.src = v.thumbnail; a.appendChild(img);
+      } else if (v.icon) {
+        var ic = document.createElement('span'); ic.className = 'inv-type-icon';
+        var sprite = document.createElement('span'); sprite.className = 'inv-prim-icon inv-prim-' + v.icon;
+        ic.appendChild(sprite); a.appendChild(ic);
       } else {
         var ic = document.createElement('span'); ic.className = 'inv-type-icon'; ic.textContent = TYPE_ICON[v.type] || '▩'; a.appendChild(ic);
       }
