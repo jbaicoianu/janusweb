@@ -159,10 +159,12 @@
       if (this.sourceChips) elation.events.add(this.sourceChips, 'click', (ev) => this.toggleChip(ev, this.activeSources));
       if (this.typeChips) elation.events.add(this.typeChips, 'click', (ev) => this.toggleChip(ev, this.activeTypes));
 
-      // Activation: select places via the editor; dragstart carries the insert
-      // URL so dropping into the scene works (independent of reorder).
+      // Activation: a full click places via the editor (NOT the list's `select`,
+      // which fires on mousedown — that spawned the object mid-press). dragstart
+      // carries the insert URL so dropping into the scene works (independent of
+      // reorder).
       if (this.grid) {
-        elation.events.add(this.grid, 'select', (ev) => this.handleSelect(ev));
+        elation.events.add(this.grid, 'click', (ev) => this.handleActivate(ev));
         elation.events.add(this.grid, 'dragstart', (ev) => this.handleDragStart(ev));
       }
 
@@ -264,8 +266,11 @@
       if (this.emptyEl) this.emptyEl.style.display = view.length ? 'none' : '';
     }
 
-    handleSelect(ev) {
-      var rec = ev && ev.target && ev.target.value;
+    handleActivate(ev) {
+      // Native click: resolve the card from the event target (the anchor/img/title
+      // inside it), so placement happens on click-release, not on mousedown.
+      var item = ev.target && ev.target.closest ? ev.target.closest('.inv-asset-item') : null;
+      var rec = item && item.value;
       if (!rec || !rec.url) return;
       elation.events.fire({ type: 'assetselect', element: this, data: rec.url });
       if (ev.preventDefault) ev.preventDefault();

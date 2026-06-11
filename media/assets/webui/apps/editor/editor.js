@@ -346,6 +346,12 @@ console.log('set translation snap', ev.data, ev);
         }
     } else if (ev.button == 0 && !this.roomedit.transforming) {
       if (this.roomedit.object) {
+        // Lost pointer lock mid-placement (Esc)? This click re-acquires it — don't
+        // also treat it as the placement-confirmation click.
+        if (this.roomedit.raycast && !janus.engine.systems.controls.pointerLockActive) {
+          janus.engine.systems.controls.requestPointerLock();
+          return;
+        }
         if (!this.roomedit.raycast) {
           // raycasting means this is an initial object placement, we don't need to log a change
           // FIXME - this is no longer the case, you can activate raycast mode by holding ctrl while clicking an object
@@ -386,8 +392,16 @@ console.log('set translation snap', ev.data, ev);
       console.log('update bbox', this.roomedit.objectBoundingBox);
     });
 
-    //object.pickable = false;
-    //console.log('set object unpickable', object);
+    // While raycast-placing (a fresh inventory object, or a ctrl+right-click move),
+    // make this object non-pickable so the placement ray lands on the scene behind it
+    // instead of snapping onto the object itself. Collision stays on so the object
+    // rests against other objects rather than interpenetrating them; holding Ctrl
+    // momentarily disables it (see editObjectKeydown/Keyup). Restored on stop.
+    if (this.roomedit.raycast) {
+      this.roomedit.objectPickableWas = object.pickable;
+      this.roomedit.objectCollidableWas = object.collidable;
+      object.pickable = false;
+    }
 
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
@@ -416,7 +430,9 @@ console.log('set translation snap', ev.data, ev);
     this.editObjectShowInfo(object);
     let manipulator = this.getManipulator();
     manipulator.attach(object.objects['3d']);
-    manipulator.enabled = true;
+    // During raycast placement the gizmo stays visible but inert (no mouse
+    // interaction); a normal edit makes it interactive.
+    manipulator.enabled = !this.roomedit.raycast;
     this.setMode('pos');
   }
 
@@ -587,10 +603,18 @@ console.log('set translation snap', ev.data, ev);
         this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
-    //this.roomedit.object.pickable = true;
+    // Restore pickability/collision suppressed for raycast placement.
+    if (this.roomedit.objectPickableWas !== undefined) {
+      this.roomedit.object.pickable = this.roomedit.objectPickableWas;
+      this.roomedit.object.collidable = this.roomedit.objectCollidableWas;
+      this.roomedit.objectPickableWas = undefined;
+      this.roomedit.objectCollidableWas = undefined;
+    }
     this.roomedit.object.sync = true;
     this.roomedit.object = false;
     this.roomedit.raycast = false;
+    // Done placing — hide the engine "click to focus" prompt.
+    try { janus.engine.systems.controls.pointerLockWanted = false; } catch (e) {}
     this.roomedit.parentObject = null;
     //this.editObjectRemoveWireframe();
     this.editObjectRemoveOutline();
@@ -795,9 +819,17 @@ obj.opacity = obj.opacity;
   }
   editObjectKeydown(ev) {
     this.updateEditConstraints(ev);
+    // While raycast-placing, holding Ctrl momentarily disables collision so the
+    // object can be placed overlapping others; reverts on keyup or placement.
+    if (this.roomedit.object && this.roomedit.raycast && ev.ctrlKey) {
+      this.roomedit.object.collidable = false;
+    }
   }
   editObjectKeyup(ev) {
     this.updateEditConstraints(ev);
+    if (this.roomedit.object && this.roomedit.raycast && !ev.ctrlKey) {
+      this.roomedit.object.collidable = this.roomedit.objectCollidableWas;
+    }
   }
   editObjectClick(ev) {
     if (this.roomedit.object) {
@@ -1650,18 +1682,17 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     if (!thing || !thing.js_id) return;
     let data = room.getObjectById(thing.js_id) || (thing.getProxyObject ? thing.getProxyObject() : thing);
     if (!data || !data.persist) return;
+    // Resolve the parent tvitem incrementally. A nested object's parent is keyed
+    // by js_id; a top-level object's parent is the room, which isn't reliably
+    // keyed (the root tvitem is keyed by room.url, not the room's js_id), so fall
+    // back to the root rather than refreshList() — a full rebuild collapses the
+    // whole tree. Only rebuild when the tree hasn't been built at all yet.
     let parentProxy = data.parent;
-    let parentEl;
-    if (!parentProxy || !parentProxy.js_id || parentProxy.js_id === room.url) {
-      parentEl = this.getRootTvitem();
-    } else {
-      parentEl = this.tree._itemsByKey && this.tree._itemsByKey[parentProxy.js_id];
-    }
-    if (!parentEl) {
-      // parent (or root) not in the tree yet - rebuild from scratch
-      this.refreshList();
-      return;
-    }
+    let parentEl = (parentProxy && parentProxy.js_id && this.tree._itemsByKey)
+                 ? this.tree._itemsByKey[parentProxy.js_id]
+                 : null;
+    if (!parentEl) parentEl = this.getRootTvitem();
+    if (!parentEl) { this.refreshList(); return; }
     this.tree.addItem(data, parentEl);
   }
   removeNode(thing) {
