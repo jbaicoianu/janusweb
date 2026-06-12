@@ -1839,10 +1839,11 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
     });
 
     // Keep the markup view current with edits made elsewhere (gizmo, inspector,
-    // remote peers). Held back while the user is editing here so their text and
-    // cursor aren't disturbed; the ↻ button forces a refresh.
+    // remote peers). The reconciler merges scene changes into the current buffer
+    // and preserves the user's hand edits (comments/formatting/custom attrs), so
+    // we only hold back while the editor is focused — i.e. actively being typed
+    // in — to avoid disturbing the caret. The ↻ button forces a full refresh.
     let refreshFromScene = () => {
-      if (roomedit.dirty) return;
       let cm = roomedit.codemirror;
       if (cm && cm.hasFocus()) return;
       roomedit.source = syncFromScene();
@@ -2210,9 +2211,16 @@ console.log('editor hints', this.hints);
     }, 500);
   }
   updateSource() {
-    if (this.source != this.codemirror.getValue()) {
+    let cm = this.codemirror;
+    if (this.source != cm.getValue()) {
+      // Preserve caret/selection and scroll across the programmatic refresh so a
+      // scene-driven source update doesn't jump the view back to the top.
+      let sels = cm.listSelections();
+      let scroll = cm.getScrollInfo();
       this.applyingExternal = true;
-      this.codemirror.setValue(this.source);
+      cm.setValue(this.source);
+      try { cm.setSelections(sels); } catch (e) {}
+      cm.scrollTo(scroll.left, scroll.top);
       this.applyingExternal = false;
     }
   }
