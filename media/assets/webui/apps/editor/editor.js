@@ -1781,7 +1781,15 @@ function jmlReconcileSource(src, summaries) {
     var close = src.search(/<\/room\s*>/i);
     if (close !== -1) {
       var lineStart = src.lastIndexOf('\n', close - 1) + 1;
-      var indent = (src.slice(lineStart, close).match(/^\s*/)[0] || '') + '  ';
+      // Indent new elements to match existing room-level objects rather than the
+      // </room> line + 2, which over-indents when the file's convention differs.
+      var indent;
+      if (objEls.length) {
+        var refStart = src.lastIndexOf('\n', objEls[0].start - 1) + 1;
+        indent = src.slice(refStart, objEls[0].start).match(/^\s*/)[0] || '';
+      } else {
+        indent = (src.slice(lineStart, close).match(/^\s*/)[0] || '') + '  ';
+      }
       var text = created.map(function (o) { return indent + o.xml + '\n'; }).join('');
       edits.push({ start: lineStart, end: lineStart, text: text });
     }
