@@ -1674,6 +1674,9 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
         getProxyObject: room.getProxyObject.bind(room),
       }
     });
+    // Start expanded so the room's top-level objects are visible without a click.
+    let root = this.getRootTvitem();
+    if (root) root.collapsed = false;
   }
   getRootTvitem() {
     return this.tree._itemsByKey && this.tree._itemsByKey[room.url];
