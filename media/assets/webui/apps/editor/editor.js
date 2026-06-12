@@ -1746,6 +1746,22 @@ function jmlSetAttr(tag, attr, value) {
   if (re.test(tag)) return tag.replace(re, '$1' + value + '$2');
   return tag.replace(/\s*\/?>$/, function (mm) { return ' ' + attr + '="' + value + '"' + mm; });
 }
+function jmlRemoveAttr(tag, attr) {
+  var re = new RegExp('\\s+' + attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=\\s*"[^"]*"');
+  return tag.replace(re, '');
+}
+// The attribute names an object's serializer manages, regardless of current
+// value — used so the reconciler can drop a managed attribute that dropped out
+// of the live summary (reverted to default, e.g. a boolean toggled off) without
+// touching custom/unknown attributes the engine never emits.
+function jmlObjManagedKeys(object) {
+  try {
+    var pd = object.getProxyObject()._proxydefs, names = [],
+        skip = { room: 1, tagName: 1, classList: 1, jsid: 1, classname: 1 };
+    for (var k in pd) { if (!skip[k] && pd[k] && pd[k][0] === 'property') names.push(k); }
+    return names;
+  } catch (e) { return null; }
+}
 function jmlReconcileSource(src, summaries) {
   var els = jmlScanElements(src);
   var objEls = els.filter(function (e) { return e.parent && e.parent.toLowerCase() === 'room'; });
@@ -1763,6 +1779,17 @@ function jmlReconcileSource(src, summaries) {
     var el = pair[0], live = jmlParseAttrs(pair[1].xml);
     var tag = src.slice(el.start, el.openEnd), changed = false;
     for (var k in live) { if (k === 'js_id' || k === 'jsid') continue; if (el.attrs[k] !== live[k]) { tag = jmlSetAttr(tag, k, live[k]); changed = true; } }
+    // Drop managed attributes the live object no longer emits (reverted to
+    // default — e.g. a boolean toggled back off). Identity attrs and custom /
+    // unknown attributes (absent from the managed set) are left untouched.
+    var keys = pair[1].keys;
+    if (keys) {
+      for (var ki = 0; ki < keys.length; ki++) {
+        var mk = keys[ki];
+        if (mk === 'js_id' || mk === 'jsid' || mk === 'id' || mk === 'class' || mk === 'classname') continue;
+        if ((mk in el.attrs) && !(mk in live)) { tag = jmlRemoveAttr(tag, mk); changed = true; }
+      }
+    }
     if (changed) edits.push({ start: el.start, end: el.openEnd, text: tag });
     // Reconcile tag content (<text>foo</text>). Only when both sides are plain
     // text (no nested elements) so child markup is never clobbered.
@@ -1828,7 +1855,13 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
       let src = roomedit.codemirror ? roomedit.codemirror.getValue() : roomedit.source;
       let next = null;
       try {
-        if (typeof room.getObjectSummaries === 'function') next = jmlReconcileSource(src, room.getObjectSummaries());
+        if (typeof room.getObjectSummaries === 'function') {
+          let summaries = room.getObjectSummaries();
+          // Tag each summary with its object's managed attribute names so the
+          // reconciler can drop attributes that reverted to default.
+          summaries.forEach(s => { let o = room.getObjectById(s.js_id); if (o) s.keys = jmlObjManagedKeys(o); });
+          next = jmlReconcileSource(src, summaries);
+        }
       } catch (e) { console.error('[editor] source reconcile failed', e); }
       return (next != null) ? next : room.getRoomSource();
     };
