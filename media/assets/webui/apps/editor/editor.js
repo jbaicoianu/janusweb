@@ -1656,6 +1656,9 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
       label: 'js_id',
       children: 'children',
       visible: 'persist',
+      // Leading type icon per row (rendered natively by ui.treeviewitem), from the
+      // object's janus tag. All primitives share the 'object' icon — not per-shape.
+      icon: (value) => { let t = this.sceneTreeType(value); return t ? 'st-typeicon st-type-' + t : null; },
     };
     elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
     setTimeout(() => {
@@ -1677,6 +1680,19 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     // Start expanded so the room's top-level objects are visible without a click.
     let root = this.getRootTvitem();
     if (root) root.collapsed = false;
+  }
+  // Map a scene object to its type-icon class (used by the tree's attrs.icon).
+  // All primitives share the 'object' tag, so they get one icon (not per-shape);
+  // custom elements fall back to the generic icon via st-typeicon's default.
+  sceneTreeType(value) {
+    let tag = value && (value.tag || value.tagName || value.type);
+    // The tree's item may be a proxy/representation without a tag; resolve the
+    // real object by js_id, which always carries one.
+    if (!tag && value && value.js_id && room.getObjectById) {
+      let real = room.getObjectById(value.js_id);
+      if (real) tag = real.tag || real.tagName || real.type;
+    }
+    return tag ? String(tag).toLowerCase().replace(/[^a-z0-9_-]/g, '') : null;
   }
   getRootTvitem() {
     return this.tree._itemsByKey && this.tree._itemsByKey[room.url];
