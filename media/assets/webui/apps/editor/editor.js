@@ -1831,6 +1831,13 @@ function jmlReconcileSource(src, summaries) {
 }
 elation.elements.define('janus.ui.editor.source', class extends elation.elements.base {
   async create() {
+    // CodeMirror core is loaded by the host page as a plain <script>; the hint
+    // addons below reference the global CodeMirror, so on a cold/slow load they
+    // can run before it's defined ("CodeMirror is not defined"). Wait for the
+    // core to finish loading before pulling the addons in.
+    for (let i = 0; typeof CodeMirror === 'undefined' && i < 200; i++) {
+      await new Promise(r => setTimeout(r, 25));
+    }
     await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
       './codemirror/addon/hint/show-hint.js',
       './codemirror/addon/hint/xml-hint.js',
