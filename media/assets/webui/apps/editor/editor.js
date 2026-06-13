@@ -2146,7 +2146,9 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
     this.filename = this.label;
 
     this.initCodemirror();
-    elation.events.add(this.parentNode, 'tabselect', ev => { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); });
+    // codemirror is created asynchronously (mode scripts load on demand); guard so a
+    // tab switch before it's ready doesn't throw.
+    elation.events.add(this.parentNode, 'tabselect', ev => { if (this.codemirror) { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); } });
   }
   async initCodemirror() {
     if (!CodeMirror.modes[this.mode]) {
@@ -2154,7 +2156,10 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
     }
 
     this.codemirror = CodeMirror(this, {
-      value: this.source,
+      // CodeMirror needs a string; a script tab whose asset code hasn't loaded
+      // yet has an undefined source, which throws inside CodeMirror (it tries to
+      // set modeOption on a missing doc). The source setter fills it in later.
+      value: this.source || '',
       mode: this.mode,
       lineNumbers: true,
       extraKeys: {
@@ -2245,6 +2250,9 @@ console.log('editor hints', this.hints);
   }
   updateSource() {
     let cm = this.codemirror;
+    // The source attribute can be set before codemirror exists (initial value) or
+    // while it's still loading its mode; initCodemirror picks up this.source then.
+    if (!cm) return;
     if (this.source != cm.getValue()) {
       // Preserve caret/selection and scroll across the programmatic refresh so a
       // scene-driven source update doesn't jump the view back to the top.
