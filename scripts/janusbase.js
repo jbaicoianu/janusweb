@@ -278,6 +278,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       this.refresh();
     } 
     this.summarizeXML = function() {
+      // Without a tag there's no valid element to emit; returning markup here
+      // would produce a malformed nameless tag (e.g. "< />").
+      if (!this.tag) return '';
       let proxy = this.getProxyObject(),
 
           propdefs = this._thingdef.properties,
@@ -287,7 +290,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
       for (let k in proxydefs) {
         let proxydef = proxydefs[k],
             propdef = elation.utils.arrayget(propdefs, proxydef[1]);
-        if ( k != 'room' && k != 'tagName' && k != 'classList' && proxydef[0] == 'property' && propdef) {
+        // jsid / classname are read-aliases of js_id / class; emitting them too
+        // would duplicate the attribute on every element.
+        if ( k != 'room' && k != 'tagName' && k != 'classList' && k != 'jsid' && k != 'classname' && proxydef[0] == 'property' && propdef) {
           let val = elation.utils.arrayget(this.properties, proxydef[1]);
           let defaultval = propdef.default;
           if (val instanceof THREE.Vector2) {
@@ -320,7 +325,16 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           }
         }
       }
-      let xml = '<' + this.tag.toLowerCase();
+      let tagname = this.tag.toLowerCase();
+      // A property whose name matches the tag is the element's content, not an
+      // attribute (<text>foo</text>, never <text text="foo" />). This mirrors the
+      // network serializer (getChanges) so source, save, and wire formats agree.
+      let content = null;
+      if (tagname in attrs) {
+        content = attrs[tagname];
+        delete attrs[tagname];
+      }
+      let xml = '<' + tagname;
       for (let k in attrs) {
         xml += ' ' + k + '="' + attrs[k] + '"';
       }
@@ -330,13 +344,17 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           children.push(k);
         }
       }
+      let hascontent = (content !== null && content !== '');
       if (children.length > 0) {
         xml += '>\n';
+        if (hascontent) xml += '  ' + content + '\n';
         for (let i = 0; i < children.length; i++) {
           let k = children[i];
           xml += '  ' + this.children[k].summarizeXML().replace(/\n/g, '\n  ').replace(/\s*$/, '\n');
         }
-        xml += '</' + this.tag.toLowerCase() + '>\n';
+        xml += '</' + tagname + '>\n';
+      } else if (hascontent) {
+        xml += '>' + content + '</' + tagname + '>\n';
       } else {
         xml += ' />\n';
       }

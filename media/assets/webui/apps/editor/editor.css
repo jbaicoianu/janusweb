@@ -169,3 +169,30 @@ janus-ui-editor-source ui-button[name="refresh"] {
   top: 0;
   right: 0;
 }
+
+/* Scene-tree type icons (Blender-style): ui.treeviewitem renders an
+   <span class="st-typeicon st-type-<tag>"> in each row's label (via attrs.icon),
+   drawn from the engine object-icon sprite (20px cells). All primitives share the
+   'object' icon; unknown tags (custom elements) fall back to the generic icon.
+   Negative top/bottom margins keep the 20px glyph from inflating the row, and
+   vertical-align centres it with the label text. */
+.st-typeicon {
+  display: inline-block;
+  width: 21px;
+  height: 21px;
+  margin: -5px 2px -5px 0;
+  vertical-align: middle;
+  background-image: url(./objecticons-small.png);
+  background-repeat: no-repeat;
+  background-position: -21px -40px;   /* default / custom element: generic geometry */
+  opacity: .85;
+}
+.st-type-object   { background-position: -21px  -20px; }  /* cube */
+.st-type-light    { background-position: -251px -20px; }  /* point light */
+.st-type-text,
+.st-type-paragraph { background-position: -168px -40px; } /* text */
+.st-type-image    { background-position: -105px -20px; }  /* grid/plane */
+.st-type-video    { background-position: -126px -40px; }  /* camera */
+.st-type-sound    { background-position: -210px -40px; }  /* speaker */
+.st-type-link     { background-position: -189px -60px; }  /* portal */
+.st-type-particle { background-position: -84px  -40px; }  /* particles */
