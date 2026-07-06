@@ -1461,9 +1461,15 @@ elation.elements.define('janus-comms-invite', class extends elation.elements.ui.
     this.copybutton = elation.elements.create('ui-button', { append: menu, label: '🔗 Copy room link' });
     this.copybutton.addEventListener('click', (ev) => this.handleCopyLink(ev));
 
-    // Schedule a meetup: produce a shareable link stamped with a time. There is
-    // no backend yet — this fires a comms-schedule-request event as the seam a
-    // host app can hook to persist the invite and notify the invitee.
+    // "Schedule a meetup" is hidden for now: without a backend that persists the
+    // invite and emails/notifies the invitee it can't actually deliver anything.
+    // The seam (handleSchedule + buildRoomLink(time) + comms-schedule-request)
+    // stays below so it can be re-enabled once that backend lands.
+    // this.appendSchedule(menu);
+
+    return menu;
+  }
+  appendSchedule(menu) {
     let schedule = document.createElement('div');
     schedule.className = 'janus-comms-schedule';
     let label = document.createElement('label');
@@ -1476,8 +1482,6 @@ elation.elements.define('janus-comms-invite', class extends elation.elements.ui.
     schedule.appendChild(this.timeinput);
     schedule.appendChild(this.schedulebutton);
     menu.appendChild(schedule);
-
-    return menu;
   }
   buildRoomLink(opts) {
     opts = opts || {};
