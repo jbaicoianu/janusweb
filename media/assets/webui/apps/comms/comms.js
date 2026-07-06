@@ -126,13 +126,8 @@ elation.elements.define('janus-comms-userlist', class extends elation.elements.u
     this.userlist_room = this.userlist_room;
     this.userlist_online = this.userlist_online;
     this.userlist_friends = this.userlist_friends;
-    if (room.private) {
-      this.parentNode.elements.chat.open = false;
-      this.elements.userlist_details.open = false;
-    } else {
-      this.parentNode.elements.chat.open = true;
-      this.elements.userlist_details.open = true;
-    }
+    // The roster is a collapsed popover chip in the bar now; leave it closed
+    // by default rather than forcing it (and the chat) open on room load.
     this.updateUsers();
     elation.events.add(this.room, 'join', ev => {
       setTimeout(() => {
@@ -218,12 +213,35 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     });
     elation.events.add(janus._target, 'clientprint', (ev) => this.handleClientPrint(ev.data));
     elation.events.add(this.janusweb, 'room_load_start', (ev) => { this.updateRoom(ev.element); });
-    // FIXME - first element with the current design is a <detail> element, but this is fragile if that changes
-    this.elements[0].addEventListener('toggle', (ev) => this.elements.chatinput.focus());
-    this.updateRoom(room);
-    if (window.innerWidth < 760) {
-      this.elements.toggle.open = false;
+
+    // The transcript floats above the bar and fades in on activity. Clicking
+    // the unread badge pins it open so it can be read/scrolled at leisure.
+    if (this.elements.unread) {
+      this.elements.unread.addEventListener('click', (ev) => this.toggleLog());
     }
+    this.updateRoom(room);
+  }
+  showLog(duration = 6000) {
+    let panel = this.closest('janus-comms-panel');
+    if (!panel) return;
+    panel.classList.add('comms-log-visible');
+    if (this.logtimer) clearTimeout(this.logtimer);
+    if (this.logpinned) return;
+    this.logtimer = setTimeout(() => {
+      if (!this.matches(':focus-within')) panel.classList.remove('comms-log-visible');
+    }, duration);
+  }
+  toggleLog() {
+    let panel = this.closest('janus-comms-panel');
+    if (!panel) return;
+    this.logpinned = !this.logpinned;
+    if (this.logpinned) {
+      if (this.logtimer) clearTimeout(this.logtimer);
+      panel.classList.add('comms-log-visible');
+    } else {
+      panel.classList.remove('comms-log-visible');
+    }
+    this.updateUnread(0, true);
   }
   scrollToBottom() {
     setTimeout(() => {
@@ -279,6 +297,7 @@ if (!this.elements.chatmessages) return;
 
     this.scrollToBottom();
     this.updateUnread(1);
+    this.showLog();
   }
   sendMessage(msg) {
     if (msg && msg.length > 0) {
@@ -293,6 +312,7 @@ if (!this.elements.chatmessages) return;
       });
       this.elements.chatinput.value = '';
       this.scrollToBottom();
+      this.showLog();
     }
   }
   handleClientPrint(msg) {
@@ -316,7 +336,9 @@ if (!this.elements.chatmessages) return;
     this.elements.unread.count = this.numunread;
   }
   updateRoom(newroom) {
-    this.elements.toggle.open = !newroom.private;
+    // Retained for room_load_start wiring. The transcript now lives in a
+    // fade-in overlay rather than a <details> toggle, so there is no open
+    // state to sync here.
   }
 });
 

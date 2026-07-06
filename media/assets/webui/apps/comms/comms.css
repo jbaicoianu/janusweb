@@ -1,45 +1,204 @@
 @import url('https://fonts.googleapis.com/css?family=Inconsolata|Montserrat');
 
+/*
+ * Themeable slim comms bar. Consumers (e.g. a host app) restyle by setting
+ * these custom properties on janus-comms-panel rather than overriding rules.
+ */
 janus-comms-panel {
-  display: flex;
-  background: rgba(0,0,0,.5);
-  flex-direction: column;
+  --comms-bar-bg: rgba(0,0,0,.5);
+  --comms-accent: #4cb96f;              /* usernames, active states, scrollbar */
+  --comms-text: #eee;
+  --comms-muted: #aaa;
+  --comms-font: Inconsolata, monospace;
+  --comms-radius: .5em;
+  --comms-log-width: 22em;
+  --comms-log-max-height: 40vh;
+  --comms-show-presence: block;        /* set to none to hide join/part/disconnect lines */
+  --comms-status-connected: #0a0;
+  --comms-status-connecting: #cc0;
+  --comms-status-disconnecting: #999;
+  --comms-status-disconnected: #b00;
+  --comms-status-private: #aaa;
+
+  position: relative;
+  display: inline-block;
   z-index: 100;
-  padding-right: .5em;
-  width: 25vw;
-  min-width: 20em;
+  color: var(--comms-text);
+  font-family: var(--comms-font);
 }
-janus-comms-panel details>summary {
+
+.janus-comms-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: .25em;
+  padding: .2em .35em;
+  background: var(--comms-bar-bg);
+  border-radius: var(--comms-radius);
+  text-shadow: 0 0 3px #000, 0 0 1px #000;
+}
+
+/* Shared pill look for the interactive chips in the bar */
+.janus-comms-bar>janus-comms-userlist>.comms-roster>summary,
+.janus-comms-bar>janus-comms-invite {
   cursor: pointer;
   outline: 0;
+  border-radius: var(--comms-radius);
+  padding: .15em .4em;
+  white-space: nowrap;
+  transition: background 120ms linear;
 }
-janus-comms-chat ui-list[name="chatlist"] {
-  height: 10em;
-  overflow-y: scroll;
-  font-family: Inconsolata, monospace;
-  transform: rotate(0); /* Using an empty transform here forces the browser to composite this element, which fixes bugs which cause elements to disappear while scrolling */
-  width: 100%;
+.janus-comms-bar>janus-comms-userlist>.comms-roster>summary:hover,
+.janus-comms-bar>janus-comms-invite:hover,
+.janus-comms-bar>janus-comms-invite.state_active {
+  background: rgba(255,255,255,.15);
 }
-janus-comms-chat ui-list[name="chatlist"]>ui-item {
-  padding: 0;
-  text-shadow: 0 0 4px #000;
-  border: 0;
+
+/* ---- Connection status: a single dot in the bar ---- */
+janus-comms-status {
+  display: flex;
+  align-items: center;
+  font-size: .8em;
+}
+janus-comms-status>span {   /* the verbose "Connected as ..." label — hidden in bar mode */
+  display: none;
+}
+janus-comms-status .indicator {
+  display: inline-block;
+  width: .7em;
+  height: .7em;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #000;
+  background: var(--comms-status-disconnected);
+  margin: 0 .25em;
+}
+janus-comms-status .indicator.connecting   { background: var(--comms-status-connecting); }
+janus-comms-status .indicator.connected     { background: var(--comms-status-connected); }
+janus-comms-status .indicator.disconnecting { background: var(--comms-status-disconnecting); }
+janus-comms-status .indicator.private       { background: var(--comms-status-private); }
+
+/* ---- Roster: chip in the bar, roster list floats above ---- */
+janus-comms-userlist.comms-roster {
+  position: relative;
+  display: block;
+  font-size: .85em;
+}
+.comms-roster>summary {
+  list-style: none;
+}
+.comms-roster>summary::-webkit-details-marker { display: none; }
+.comms-roster>summary ui-indicator {
+  font-weight: bold;
+  color: var(--comms-accent);
+}
+.comms-roster-popover {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  margin-bottom: .4em;
+  min-width: 12em;
+  max-height: var(--comms-log-max-height);
+  overflow-y: auto;
+  padding: .4em .6em;
+  background: var(--comms-bar-bg, rgba(0,0,0,.85));
+  background-color: rgba(0,0,0,.85);
+  border-radius: var(--comms-radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+.comms-roster-popover p {
+  margin: 0;
+  font-size: .9em;
+  color: var(--comms-muted);
+  max-width: 16em;
+}
+ui-list[name="userlist_room"] {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9em, 1fr));
+  gap: .1em .6em;
+  font-size: .9em;
+}
+
+/* ---- Invite hub trigger ---- */
+janus-comms-invite {
+  display: inline-block;
+  font-size: 1.05em;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ---- Chat: input lives in the bar, transcript floats above and fades in ---- */
+janus-comms-chat {
+  position: relative;
+  display: flex;
+  flex: 1 1 12em;
+  min-width: 8em;
+}
+.comms-chat-input {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: .2em;
+}
+janus-comms-chat ui-notificationbutton[name="unread"] {
+  cursor: pointer;
+  font-size: 1em;
+  line-height: 1;
 }
 janus-comms-chat ui-input {
-  width: 100%;
+  flex: 1;
   display: flex;
 }
 janus-comms-chat ui-input>input {
   flex: 1 1;
-  background: rgba(64,64,64,.6);
-  color: white;
-  padding: .25em;
+  background: rgba(0,0,0,.25);
+  color: var(--comms-text);
+  font-family: var(--comms-font);
+  padding: .25em .5em;
   border: 0;
-  border-top: 1px solid #666;
+  border-radius: var(--comms-radius);
 }
-janus-comms-chat ui-input>input:hover {
-  background: rgba(64,64,64,.8);
+janus-comms-chat ui-input>input:focus {
+  background: rgba(0,0,0,.45);
+  outline: 1px solid var(--comms-accent);
 }
+
+/* The transcript: absolutely positioned above the bar, hidden until active */
+janus-comms-chat .comms-log {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  margin-bottom: .4em;
+  width: var(--comms-log-width);
+  max-width: 60vw;
+  max-height: var(--comms-log-max-height);
+  overflow-y: auto;
+  padding: .4em .6em;
+  background: rgba(0,0,0,.75);
+  border-radius: var(--comms-radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,.5);
+  font-family: var(--comms-font);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(.4em);
+  transition: opacity 180ms ease, transform 180ms ease;
+  /* Force compositing so items don't disappear while scrolling */
+  transform: translateY(.4em) rotate(0);
+}
+janus-comms-panel.comms-log-visible janus-comms-chat .comms-log,
+janus-comms-chat:hover .comms-log,
+janus-comms-chat:focus-within .comms-log {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+janus-comms-chat .comms-log>ui-item {
+  padding: 0;
+  text-shadow: 0 0 4px #000;
+  border: 0;
+}
+
+/* ---- Message rows ---- */
 janus-comms-chat .message {
   display: block;
   text-indent: -1em;
@@ -48,7 +207,8 @@ janus-comms-chat .message {
 janus-comms-chat .join,
 janus-comms-chat .part,
 janus-comms-chat .disconnect {
-  color: #999;
+  display: var(--comms-show-presence);
+  color: var(--comms-muted);
   font-weight: normal;
   font-style: italic;
   font-size: .7em;
@@ -57,80 +217,81 @@ janus-comms-chat .join .userid::before,
 janus-comms-chat .part .userid::before,
 janus-comms-chat .disconnect .userid::before {
   content: "-!- ";
-  color: #999;
+  color: var(--comms-muted);
 }
-janus-comms-chat .join .userid {
-  color: #9ff;
-}
+janus-comms-chat .join .userid { color: #9ff; }
 janus-comms-chat .disconnect .userid,
-janus-comms-chat .part .userid {
-  color: #099;
-}
+janus-comms-chat .part .userid { color: #099; }
 janus-comms-chat .chat,
-janus-comms-chat .selfchat {
-  color: #aaa;
-  font-weight: normal;
-}
-janus-comms-chat .userid {
-  color: #4cb96f;
-  font-weight: 900;
-}
-janus-comms-chat .selfchat .userid {
-  color: #fff;
-  font-weight: bold;
-}
-/*
-janus-comms-chat .chat .userid::before,
-janus-comms-chat .selfchat .userid::before {
-  content: '<';
-  color: #666;
-}
-*/
+janus-comms-chat .selfchat { color: var(--comms-text); font-weight: normal; }
+janus-comms-chat .userid { color: var(--comms-accent); font-weight: 900; }
+janus-comms-chat .selfchat .userid { color: #fff; font-weight: bold; }
 janus-comms-chat .chat .userid::after,
-janus-comms-chat .selfchat .userid::after {
-  content: ':';
-  color: #666;
+janus-comms-chat .selfchat .userid::after { content: ':'; color: #666; }
+janus-comms-chat .print .userid { display: none; }
+janus-comms-chat .print { color: white; }
+
+/* Log scrollbar */
+janus-comms-chat .comms-log::-webkit-scrollbar,
+.comms-roster-popover::-webkit-scrollbar { width: 6px; }
+janus-comms-chat .comms-log::-webkit-scrollbar-track,
+.comms-roster-popover::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+janus-comms-chat .comms-log::-webkit-scrollbar-thumb,
+.comms-roster-popover::-webkit-scrollbar-thumb { background: var(--comms-accent); border-radius: 3px; }
+
+/* Narrow screens: keep only the essentials */
+@media (max-width: 48em) {
+  janus-comms-chat { flex-basis: 7em; }
+  janus-comms-chat .comms-log { width: 80vw; }
 }
-janus-comms-chat .print .userid {
-  display: none;
-}
-janus-comms-chat .print {
-  color: white;
-}
-janus-comms-status {
+
+/* ---- Invite popup menu (rendered at document root, outside the panel) ---- */
+ui-content.janus-comms-invite-menu {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+  gap: .25em;
+  min-width: 14em;
+  padding: .3em;
 }
-janus-comms-status {
+ui-content.janus-comms-invite-menu ui-button,
+ui-content.janus-comms-invite-menu janus-voip-client-callbutton {
+  display: block;
+  text-align: left;
+  padding: .5em .6em;
+  border-radius: .4em;
+  cursor: pointer;
+  font-weight: normal;
+  background: transparent;
+  transition: background 120ms linear;
+}
+ui-content.janus-comms-invite-menu ui-button:hover,
+ui-content.janus-comms-invite-menu janus-voip-client-callbutton:hover {
+  background: rgba(255,255,255,.12);
+}
+ui-content.janus-comms-invite-menu janus-voip-client-callbutton ui-button {
+  padding: 0;
+  background: transparent;
+}
+ui-content.janus-comms-invite-menu .janus-comms-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: .3em;
+  padding: .4em .6em 0;
+  border-top: 1px solid rgba(255,255,255,.15);
+  margin-top: .1em;
+}
+ui-content.janus-comms-invite-menu .janus-comms-schedule label {
   font-size: .8em;
+  opacity: .8;
 }
-janus-comms-status .indicator {
-  border: 1px solid black;
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  border-radius: .5em;
-  box-shadow: 0 0 5px black;
-  background: #900;
-  margin: .2em .4em .2em .2em;
+ui-content.janus-comms-invite-menu .janus-comms-schedule input {
+  padding: .3em;
+  border-radius: .3em;
+  border: 1px solid #666;
+  background: #222;
+  color: #eee;
 }
-janus-comms-status .indicator.connecting {
-  background: #990;
-}
-janus-comms-status .indicator.connected {
-  background: #090;
-}
-janus-comms-status .indicator.disconnecting {
-  background: #999;
-}
-janus-comms-status .indicator.private {
-  background: #aaa;
-}
-ui-list[name="userlist_room"] {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10em, 1fr));
-  font-size: .75em;
-}
+
 janus-voip-picker>ul li {
   display: flex;
   xflex: 1;

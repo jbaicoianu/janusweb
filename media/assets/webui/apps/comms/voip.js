@@ -1387,7 +1387,9 @@ elation.elements.define('janus-voip-client-callbutton', class extends elation.el
     this.detached = true;
     this.button = elation.elements.create('ui-button', {
       append: this,
-      label: '📞',
+      // buttonlabel lets a host (e.g. the invite menu) relabel the action;
+      // set as an attribute so it survives the deferred create() lifecycle.
+      label: this.getAttribute('buttonlabel') || '📞',
     });
     this.button.addEventListener('click', ev => this.handleClick(ev));
 super.create();
@@ -1414,6 +1416,102 @@ super.create();
     chat.sendMessage('📞 ring ring');
     if (!this.isVoipActive()) {
     }
+  }
+});
+/**
+ * The invite hub in the comms bar. A popup button that gathers the ways to
+ * bring people together: invite people already here into voice, copy a link
+ * that pulls in someone who isn't here, or schedule a meetup at a set time.
+ * Replaces the bare 📞 call button, which it reuses internally for the voice
+ * path so the existing "ring" chat-signaling flow is unchanged.
+ */
+elation.elements.define('janus-comms-invite', class extends elation.elements.ui.popupbutton {
+  create() {
+    this.label = '&#10133; Invite';
+    this.title = 'Invite people / meet up';
+    super.create();
+    this.popupcontent = this.buildMenu();
+  }
+  buildMenu() {
+    let menu = elation.elements.create('ui-content');
+    menu.classList.add('janus-comms-invite-menu');
+
+    // Invite people already in the room into voice chat. Reuses the existing
+    // call button element, so the mic picker + "ring ring" chat signaling and
+    // the accept/decline card all keep working exactly as before.
+    this.callbutton = elation.elements.create('janus-voip-client-callbutton', {
+      append: menu,
+      buttonlabel: '🎙 Invite to voice',
+    });
+
+    // Copy a link that brings someone who isn't here into this room.
+    this.copybutton = elation.elements.create('ui-button', { append: menu, label: '🔗 Copy room link' });
+    this.copybutton.addEventListener('click', (ev) => this.handleCopyLink(ev));
+
+    // Schedule a meetup: produce a shareable link stamped with a time. There is
+    // no backend yet — this fires a comms-schedule-request event as the seam a
+    // host app can hook to persist the invite and notify the invitee.
+    let schedule = document.createElement('div');
+    schedule.className = 'janus-comms-schedule';
+    let label = document.createElement('label');
+    label.innerHTML = '&#128197; Schedule a meetup';
+    this.timeinput = document.createElement('input');
+    this.timeinput.type = 'datetime-local';
+    this.schedulebutton = elation.elements.create('ui-button', { label: 'Copy invite link' });
+    this.schedulebutton.addEventListener('click', (ev) => this.handleSchedule(ev));
+    schedule.appendChild(label);
+    schedule.appendChild(this.timeinput);
+    schedule.appendChild(this.schedulebutton);
+    menu.appendChild(schedule);
+
+    return menu;
+  }
+  buildRoomLink(opts) {
+    opts = opts || {};
+    let base = (typeof janus != 'undefined' && janus.currentroom && janus.currentroom.url)
+             || location.href.replace(/#.*/, '');
+    let url = new URL(base, location.href);
+    if (opts.time) url.searchParams.set('t', Math.floor(opts.time / 1000));
+    // Position anchoring is object-based: a #<js_id> fragment teleports the
+    // arriving player to a named room object. Only meaningful when one exists.
+    if (opts.anchor) url.hash = opts.anchor;
+    return url.toString();
+  }
+  copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(() => this.copyFallback(text));
+    }
+    this.copyFallback(text);
+    return Promise.resolve();
+  }
+  copyFallback(text) {
+    let ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  flashLabel(button, text, revert) {
+    button.setLabel(text);
+    setTimeout(() => button.setLabel(revert), 1500);
+  }
+  handleCopyLink(ev) {
+    let link = this.buildRoomLink();
+    this.copyToClipboard(link);
+    this.flashLabel(this.copybutton, '✓ Link copied', '🔗 Copy room link');
+  }
+  handleSchedule(ev) {
+    let val = this.timeinput.value;
+    let time = val ? new Date(val).getTime() : null;
+    let link = this.buildRoomLink({ time: time });
+    this.copyToClipboard(link);
+    this.flashLabel(this.schedulebutton, '✓ Invite copied', 'Copy invite link');
+    document.dispatchEvent(new CustomEvent('comms-schedule-request', {
+      detail: { time: time, url: link },
+    }));
   }
 });
 elation.elements.define('janus-voip-client-incomingcall', class extends elation.elements.base {
