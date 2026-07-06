@@ -6,9 +6,14 @@ proxies = [
 ]
 elation.config.set('engine.assets.corsproxy',   proxies[0]); // CORS proxy URL
 elation.config.set('engine.assets.corsproxies', []        ); // rotate **online** proxies only
-proxies.map( (url) => 
+proxies.map( (url) =>
   fetch(url,{method:'HEAD'})
-  .then( (res) => res.ok && elation.config.get("engine.assets.corsproxies").push(url) )
+  .then( (res) => {
+    // online defaults join the rotation unless an explicit set was configured
+    // (e.g. the viewer's corsproxy attribute)
+    let corsproxies = elation.config.get("engine.assets.corsproxies");
+    if (res.ok && !corsproxies.explicit) corsproxies.push(url);
+  })
 )
 
 elation.config.set('engine.assets.workers', 'auto'); // Number of workers to use for asset parsing
