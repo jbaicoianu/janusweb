@@ -1432,6 +1432,19 @@ elation.elements.define('janus-comms-invite', class extends elation.elements.ui.
     super.create();
     this.popupcontent = this.buildMenu();
   }
+  createPopup() {
+    super.createPopup();
+    // Class hook for the opaque, high-z popup styling in comms.css. Without an
+    // opaque backdrop the popup (rendered at document root) lets the scene and
+    // the chat transcript bleed through.
+    if (this.popup) this.popup.classList.add('janus-comms-invite-popup');
+    // The menu's custom-element rows upgrade asynchronously, so at first
+    // measurement the popup is short and gets placed low; once the rows lay
+    // out it must be re-placed or it grows off the bottom of the page (and
+    // spawns a scrollbar). Reposition once they've settled.
+    setTimeout(() => this.positionPopup(), 0);
+    setTimeout(() => this.positionPopup(), 90);
+  }
   buildMenu() {
     let menu = elation.elements.create('ui-content');
     menu.classList.add('janus-comms-invite-menu');

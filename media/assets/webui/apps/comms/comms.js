@@ -199,7 +199,7 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
       player.disable();
       this.updateUnread(0, true);
     }
-    this.elements.chatinput.onblur = (ev) => this.elements.chatinput.placeholder = 'Press T for text chat';
+    this.elements.chatinput.onblur = (ev) => this.elements.chatinput.placeholder = 'Press T to chat…';
 
     window.addEventListener('keydown', (ev) => {
       // FIXME - this should set up a bindable context in the engine's control system
@@ -217,31 +217,25 @@ elation.elements.define('janus-comms-chat', class extends elation.elements.base 
     // The transcript floats above the bar and fades in on activity. Clicking
     // the unread badge pins it open so it can be read/scrolled at leisure.
     if (this.elements.unread) {
-      this.elements.unread.addEventListener('click', (ev) => this.toggleLog());
+      this.elements.unread.addEventListener('click', (ev) => this.togglePin());
     }
     this.updateRoom(room);
   }
-  showLog(duration = 6000) {
+  flashLog(duration = 6000) {
+    // Transient reveal on activity. Fades after `duration` unless the log is
+    // pinned or the input is focused (both handled purely in CSS).
     let panel = this.closest('janus-comms-panel');
     if (!panel) return;
-    panel.classList.add('comms-log-visible');
-    if (this.logtimer) clearTimeout(this.logtimer);
-    if (this.logpinned) return;
-    this.logtimer = setTimeout(() => {
-      if (!this.matches(':focus-within')) panel.classList.remove('comms-log-visible');
-    }, duration);
+    panel.classList.add('comms-log-flash');
+    if (this.flashtimer) clearTimeout(this.flashtimer);
+    this.flashtimer = setTimeout(() => panel.classList.remove('comms-log-flash'), duration);
   }
-  toggleLog() {
+  togglePin() {
+    // Explicit sticky show/hide — clicking the badge keeps the transcript up
+    // until clicked again, independent of the transient flash.
     let panel = this.closest('janus-comms-panel');
     if (!panel) return;
-    this.logpinned = !this.logpinned;
-    if (this.logpinned) {
-      if (this.logtimer) clearTimeout(this.logtimer);
-      panel.classList.add('comms-log-visible');
-    } else {
-      panel.classList.remove('comms-log-visible');
-    }
-    this.updateUnread(0, true);
+    if (panel.classList.toggle('comms-log-pinned')) this.updateUnread(0, true);
   }
   scrollToBottom() {
     setTimeout(() => {
@@ -297,7 +291,7 @@ if (!this.elements.chatmessages) return;
 
     this.scrollToBottom();
     this.updateUnread(1);
-    this.showLog();
+    this.flashLog();
   }
   sendMessage(msg) {
     if (msg && msg.length > 0) {
@@ -312,7 +306,7 @@ if (!this.elements.chatmessages) return;
       });
       this.elements.chatinput.value = '';
       this.scrollToBottom();
-      this.showLog();
+      this.flashLog();
     }
   }
   handleClientPrint(msg) {
