@@ -1,22 +1,15 @@
 {?room.private}
-<details name="userlist_details">
-        <summary>No online users</summary>
-        <p>This room is marked as private.  You are not broadcasting your location while here - others can't see you, and you can't see them.</p>
+<details name="userlist_details" class="comms-roster">
+  <summary title="Private room">&#128100; <ui-indicator name="roomusers" value="0"></ui-indicator></summary>
+  <div class="comms-roster-popover">
+    <p>This room is private. You're not broadcasting your location while here &mdash; others can't see you, and you can't see them.</p>
+  </div>
 </details>
 {:else}
-<details open name="userlist_details">
-   <summary>Online Users (<ui-indicator name="roomusers" value="0"></ui-indicator>)</summary>
-      <ui-list name="userlist_room" emptycontent="No other users in this room"></ui-list>
-      <!-- ui-tabs showcounts="true">
-        <ui-tab name="roomusers" label="Room">
-          <ui-list name="userlist_room" emptycontent="No other users in this room"></ui-list>
-        </ui-tab>
-        <ui-tab name="globalusers" label="Online">
-          <ui-list name="userlist_online" emptycontent="No users online"></ui-list>
-        </ui-tab>
-        <ui-tab name="friends" label="Friends">
-          <ui-list name="userlist_friends" emptycontent="No friends online"></ui-list>
-        </ui-tab>
-      </ui-tabs -->
+<details name="userlist_details" class="comms-roster">
+  <summary title="People in this room">&#128100; <ui-indicator name="roomusers" value="0"></ui-indicator></summary>
+  <div class="comms-roster-popover">
+    <ui-list name="userlist_room" emptycontent="No other users in this room"></ui-list>
+  </div>
 </details>
 {/room.private}

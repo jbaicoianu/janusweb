@@ -1,62 +1,17 @@
     <h3>Inventory</h3>
-    <collection-jsonapi id="models"
-      host="https://poly.googleapis.com"
-      endpoint="/v1/assets"
-      itempath="assets"
-      apiargs.keywords=""
-      apiargs.format="gltf2"
-      apiargs.key="AIzaSyC9ngd4hqQ9YmaBpUAQP4R9KJEY3dIZ4hM">
-    </collection-jsonapi>
-
-    <ui-tabs>
-      <ui-tab label="Primitives"> 
-        <ui-grid name="primitives" class="models" draggable="true" selectable="true">
-          <ui-item><a href="janus:object/id=cube">cube</a></ui-item>
-          <ui-item><a href="janus:object/id=sphere">sphere</a></ui-item>
-          <ui-item><a href="janus:object/id=cone">cone</a></ui-item>
-          <ui-item><a href="janus:object/id=cylinder">cylinder</a></ui-item>
-          <ui-item><a href="janus:object/id=pyramid">pyramid</a></ui-item>
-          <ui-item><a href="janus:object/id=torus">torus</a></ui-item>
-          <ui-item><a href="janus:object/id=capsule">capsule</a></ui-item>
-          <ui-item><a href="janus:object/id=pipe">pipe</a></ui-item>
-          <ui-item><a href="janus:object/id=plane">plane</a></ui-item>
-
-          <ui-item><a href="janus:image">image</a></ui-item>
-          <ui-item><a href="janus:link">link</a></ui-item>
-          <ui-item><a href="janus:paragraph">paragraph</a></ui-item>
-          <ui-item><a href="janus:particle">particle</a></ui-item>
-          <ui-item><a href="janus:sound">sound</a></ui-item>
-          <ui-item><a href="janus:text/text=Text/col=red/roughness=0.3/metalness=0">text</a></ui-item>
-          <ui-item><a href="janus:video">video</a></ui-item>
-
-          <ui-item><a href="janus:light/light_cone_angle=0">point light</a></ui-item>
-          <ui-item><a href="janus:light/light_cone_angle=0.8">spot light</a></ui-item>
-          <ui-item><a href="janus:light/light_cone_angle=1">directional light</a></ui-item>
-        </ui-grid>
-      </ui-tab>
-      <ui-tab label="Room Assets">
-        <janus-ui-inventory-roomassets></janus-ui-inventory-roomassets>
-      </ui-tab>
-      <!-- Disabled Google Poly - maybe one day ICOSA Gallery or someone else will offer the old Google Blocks API again
-      <ui-tab label="Google Poly"> 
-        <ui-flexpanel id="poly" vertical>
-          <ui-input noflex placeholder="Search for Google Poly models" onaccept="let models = document.getElementById('models'); models.apiargs.keywords = this.value; delete models.apiargs.pageToken; document.getElementById('itemlist').clear(); models.load(); pagination.disabled = false;"></ui-input>
-          <ui-grid name="polyobjects" scrollable-y flex="1" class="models" id="itemlist" itemcomponent="janus.ui.inventory.item.poly" collection="models" selectable="true"></ui-grid>
-          <ui-button noflex id="pagination" onclick="let models = document.getElementById('models'); if (models.rawdata.nextPageToken) { models.apiargs.pageToken = models.rawdata.nextPageToken; models.append(); } else { this.disabled = true; }">Load More</ui-button>
-        </ui-flexpanel>
-      </ui-tab>
-      -->
-      <ui-tab label="Vesta">
-          <h3>Vesta integration coming soon!</h3>
-          <p>When it's ready, you'll be able to access assets you've stored on your Vesta account, and bring them with you anywhere you go.</p>
-          <p><a href="https://vesta.janusvr.com/">Sign up for a vesta account today</a></p>
-      </ui-tab>
-      <ui-tab label="Import">
-        <div>
-          <h3>Did you know!?</h3>
-          <p>You can drag 3d models, images, videos, and sounds into Janus rooms from other websites, or even your local hard drive!</p>
-          <p>Just select the files, drag them over, and drop them into the world.  Then use our in-world editing tools to place it where you want it to be.</p>
-        </div>
-      </ui-tab>
-    </ui-tabs>
-
+    <div class="inv-controls">
+      <input type="text" name="search" class="inv-search" placeholder="Search assets…" />
+      <select name="sortselect" class="inv-sort">
+        <option value="title">Name</option>
+        <option value="type">Type</option>
+        <option value="source">Source</option>
+      </select>
+    </div>
+    <div class="inv-chips" name="sourcefilters"></div>
+    <div class="inv-chips" name="typefilters"></div>
+    <ui-grid name="assetgrid" class="models inv-grid" selectable="true" draggable="true"
+             itemcomponent="janus.ui.inventory.item.asset"></ui-grid>
+    <div class="inv-empty" name="empty">
+      No assets yet. Drag 3D models, images, videos or sounds in from another site or
+      your desktop, or pick a primitive above.
+    </div>

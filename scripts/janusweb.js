@@ -61,7 +61,7 @@ elation.require([
       this.defineProperties({
         url:            { type: 'string', default: false },
         homepage:       { type: 'string', default: "" },
-        corsproxy:      { type: 'string', default: '' },
+        corsproxy:      { type: 'string', default: false },
         showui:         { type: 'boolean', default: true },
         shownavigation: { type: 'boolean', default: true },
         showchat:       { type: 'boolean', default: true },
@@ -81,8 +81,19 @@ elation.require([
         this.bookmarks = elation.collection.indexed({index: 'url', storagekey: 'janusweb.bookmarks'});
       }
 
-      if (this.corsproxy != '') {
-        elation.engine.assets.setCORSProxy(this.corsproxy);
+      if (this.corsproxy !== false && this.corsproxy !== null && typeof this.corsproxy != 'undefined') {
+        // An explicit corsproxy attribute defines the full proxy set: a
+        // space-separated list becomes the rotation array, and the singular
+        // corsproxy is its first entry. The set is closed - the built-in
+        // proxy availability checks won't extend it. An empty or "false"
+        // value disables proxying entirely; omitting the attribute keeps
+        // the built-in defaults.
+        let corsproxies = (this.corsproxy === '' || this.corsproxy == 'false')
+          ? []
+          : String(this.corsproxy).split(' ').filter(url => url);
+        corsproxies.explicit = true;
+        elation.config.set('engine.assets.corsproxies', corsproxies);
+        elation.engine.assets.setCORSProxy(corsproxies[0] || '');
       }
       this.assetpack = elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
 

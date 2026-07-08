@@ -1,25 +1,20 @@
 elation.config.set('janusweb.network.host', 'wss://presence.janusxr.org:5567');        // Default presence server
 
-proxies = ([
+proxies = [
   'https://p.janusxr.org/',
   'https://cors.xrforge.isvery.ninja/'
-])
-// SHUFFLE PROXIES
-//.map(value => ({ value, sort: Math.random() }))             
-//.sort((a, b) => a.sort - b.sort)                            
-//.map(({ value }) => value)                                  
-//.map( (url) => {
-//  if( !elation.config.get('engine.assets.corsproxy') ){
-//    fetch(url,{method:'HEAD'})
-//    .then( (res) => {
-//      if( res.ok ){
-//        elation.config.set('engine.assets.corsproxy', url ) // set active proxy 
-//      }
-//    })
-//  }
-//  return url
-//})
-elation.config.set('engine.assets.corsproxy', proxies[0] ) 
+]
+elation.config.set('engine.assets.corsproxy',   proxies[0]); // CORS proxy URL
+elation.config.set('engine.assets.corsproxies', []        ); // rotate **online** proxies only
+proxies.map( (url) =>
+  fetch(url,{method:'HEAD'})
+  .then( (res) => {
+    // online defaults join the rotation unless an explicit set was configured
+    // (e.g. the viewer's corsproxy attribute)
+    let corsproxies = elation.config.get("engine.assets.corsproxies");
+    if (res.ok && !corsproxies.explicit) corsproxies.push(url);
+  })
+)
 
 elation.config.set('engine.assets.workers', 'auto'); // Number of workers to use for asset parsing
 //elation.config.set('engine.assets.image.maxsize', 16384); 

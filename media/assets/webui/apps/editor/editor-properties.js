@@ -75,10 +75,41 @@ elation.elements.define('janus-ui-editor-property', class extends elation.elemen
     });
 
     if (this.label) {
-      elation.elements.create('ui-text', {
+      let labelobj = elation.elements.create('ui-text', {
         text: this.label,
         append: this
       });
+      // Clicking the label activates the editor's control, like a standard <label>.
+      elation.events.add(labelobj, 'click', (ev) => this.activateControl(ev));
+    }
+  }
+  mousedown(ev) {
+    // Always (re)fire selection on click, even when this property is already the
+    // selected one — the base ui.item suppresses re-selection, which made
+    // re-clicking a property (to re-assert its edit mode) a no-op.
+    if (this.selectable) {
+      this.select(ev);
+      ev.stopPropagation();
+    }
+  }
+  activateControl(ev) {
+    // Mirror a native <label>: clicking the label activates the editor's control
+    // (the first non-label child; the label is a ui-text we create). Prefer the
+    // element's own focus() — ui-input.focus() focuses its field, ui-toggle.focus()
+    // flips it — and fall back to forwarding the click for controls without focus().
+    let control = null;
+    for (let i = 0; i < this.children.length; i++) {
+      let child = this.children[i];
+      if (child.tagName && child.tagName.toLowerCase() != 'ui-text') { control = child; break; }
+    }
+    if (!control) return;
+    if (typeof control.focus == 'function') {
+      control.focus();
+    } else {
+      control.dispatchEvent(new MouseEvent(ev.type, {
+        bubbles: true, cancelable: true, view: window,
+        clientX: ev.clientX, clientY: ev.clientY, button: ev.button
+      }));
     }
   }
   updateValue(value) {
@@ -381,10 +412,11 @@ elation.elements.define('janus-ui-editor-property-boolean', class extends elatio
       value: { type: 'boolean' },
     });
     if (this.label) {
-      elation.elements.create('ui-text', {
+      let labelobj = elation.elements.create('ui-text', {
         text: this.label,
         append: this
       });
+      elation.events.add(labelobj, 'click', (ev) => this.activateControl(ev));
     }
     this.elements = elation.elements.fromString(`
       <ui-toggle name="toggle"></ui-toggle>

@@ -19,8 +19,9 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
       }
       let inventory = inventorypanel.querySelector('janus-ui-inventory');
       if (!inventory) {
+        // The inventory wires its own selection to the editor controller (see
+        // inventory.js), so it works both here and when placed standalone.
         inventory = elation.elements.create('janus-ui-inventory', { append: inventorypanel });
-        elation.events.add(inventory, 'assetselect', (ev) => editorpanel.handleInventorySelect(ev));
       }
     }
     let editpanel = document.querySelector('ui-panel[name="topright"]');
@@ -46,27 +47,13 @@ elation.elements.define('janus.ui.editor.button', class extends elation.elements
     janus.engine.systems.render.setdirty();
   }
 });
-elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
+elation.elements.define('janus.ui.editor.controller', class extends elation.elements.base {
   create() {
-    //this.innerHTML = elation.template.get('janus.ui.editor.panel');
-    let elements = elation.elements.fromTemplate('janus.ui.editor.panel', this);
-/*
-    elation.events.add(elements.transformtype, 'change', (ev) => this.handleTransformTypeChange(ev));
-    elation.events.add(elements.transformspace, 'change', (ev) => this.handleTransformSpaceChange(ev));
-    //elements.transformglobal.addEventListener('deactivate', (ev) => this.handleTransformGlobalDeactivate(ev));
-
-    elation.events.add(elements.translatesnap, 'change', (ev) => this.handleTranslateSnapChange(ev));
-    elation.events.add(elements.rotatesnap, 'change', (ev) => this.handleRotateSnapChange(ev));
-*/
-
-    elation.events.add(elements.debugview, 'click', (ev) => this.handleDebugviewClick(ev));
-    elation.events.add(elements.viewsource, 'click', (ev) => this.handleViewSourceClick(ev));
-    elation.events.add(elements.export, 'click', (ev) => this.handleExportClick(ev));
-
+    // this.objectinfo / this.scenetree are populated by the view elements when they
+    // register (getEditorController().objectinfo = this). Don't initialize them here —
+    // this create() runs AFTER those registrations, so assigning would wipe them.
     // If we've made any changes and the user tries to leave, prompt them to verify that they want to throw the changes away
     window.addEventListener('beforeunload', (ev) => { if (this.history.length > 0) { ev.returnValue = false; ev.preventDefault(); return "You've made changes to this room, do you really want to leave?"; } });
-
-    this.elements = elements;
 
     this.roomedit = {
       snap: .01,
@@ -121,11 +108,6 @@ elation.elements.define('janus.ui.editor.panel', class extends elation.elements.
     janus.engine.systems.controls.activateContext('roomedit_paste');
 
     this.initialized = new Set();
-
-    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
-    this.scenetree = elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
-    elation.events.add(this.scenetree, 'select', (ev) => { this.editObject(ev.data); });
-    this.objectinfo = elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
 
     if (typeof room != 'undefined') {
       this.initRoomEvents(room);
@@ -364,6 +346,12 @@ console.log('set translation snap', ev.data, ev);
         }
     } else if (ev.button == 0 && !this.roomedit.transforming) {
       if (this.roomedit.object) {
+        // Lost pointer lock mid-placement (Esc)? This click re-acquires it — don't
+        // also treat it as the placement-confirmation click.
+        if (this.roomedit.raycast && !janus.engine.systems.controls.pointerLockActive) {
+          janus.engine.systems.controls.requestPointerLock();
+          return;
+        }
         if (!this.roomedit.raycast) {
           // raycasting means this is an initial object placement, we don't need to log a change
           // FIXME - this is no longer the case, you can activate raycast mode by holding ctrl while clicking an object
@@ -404,8 +392,16 @@ console.log('set translation snap', ev.data, ev);
       console.log('update bbox', this.roomedit.objectBoundingBox);
     });
 
-    //object.pickable = false;
-    //console.log('set object unpickable', object);
+    // While raycast-placing (a fresh inventory object, or a ctrl+right-click move),
+    // make this object non-pickable so the placement ray lands on the scene behind it
+    // instead of snapping onto the object itself. Collision stays on so the object
+    // rests against other objects rather than interpenetrating them; holding Ctrl
+    // momentarily disables it (see editObjectKeydown/Keyup). Restored on stop.
+    if (this.roomedit.raycast) {
+      this.roomedit.objectPickableWas = object.pickable;
+      this.roomedit.objectCollidableWas = object.collidable;
+      object.pickable = false;
+    }
 
     room.addEventListener('mousemove', (ev) => this.editObjectMousemove(ev));
     elation.events.add(this, 'mousedown', this.editObjectClick);
@@ -434,19 +430,24 @@ console.log('set translation snap', ev.data, ev);
     this.editObjectShowInfo(object);
     let manipulator = this.getManipulator();
     manipulator.attach(object.objects['3d']);
-    manipulator.enabled = true;
+    // During raycast placement the gizmo stays visible but inert (no mouse
+    // interaction); a normal edit makes it interactive.
+    manipulator.enabled = !this.roomedit.raycast;
     this.setMode('pos');
   }
 
   editObjectShowInfo(object) {
     //let content = elation.template.get('janus.ui.editor.object.info', {object: object, editmode: this.roomedit.modes[this.roomedit.modeid]});
     let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
-    this.objectinfo.updateObject(object);
-
-    if (this.objectinfo.hidden) {
-      this.objectinfo.show();
+    if (this.objectinfo) {
+      this.objectinfo.updateObject(object);
+      if (this.objectinfo.hidden) {
+        this.objectinfo.show();
+      }
     }
-    inventorypanel.refresh();
+    if (inventorypanel) {
+      inventorypanel.refresh();
+    }
   }
 
   editObjectShowOutline() {
@@ -602,10 +603,18 @@ console.log('set translation snap', ev.data, ev);
         this.roomedit.object.dispatchEvent({type: 'edit', bubbles: true});
       }
     }
-    //this.roomedit.object.pickable = true;
+    // Restore pickability/collision suppressed for raycast placement.
+    if (this.roomedit.objectPickableWas !== undefined) {
+      this.roomedit.object.pickable = this.roomedit.objectPickableWas;
+      this.roomedit.object.collidable = this.roomedit.objectCollidableWas;
+      this.roomedit.objectPickableWas = undefined;
+      this.roomedit.objectCollidableWas = undefined;
+    }
     this.roomedit.object.sync = true;
     this.roomedit.object = false;
     this.roomedit.raycast = false;
+    // Done placing — hide the engine "click to focus" prompt.
+    try { janus.engine.systems.controls.pointerLockWanted = false; } catch (e) {}
     this.roomedit.parentObject = null;
     //this.editObjectRemoveWireframe();
     this.editObjectRemoveOutline();
@@ -810,9 +819,17 @@ obj.opacity = obj.opacity;
   }
   editObjectKeydown(ev) {
     this.updateEditConstraints(ev);
+    // While raycast-placing, holding Ctrl momentarily disables collision so the
+    // object can be placed overlapping others; reverts on keyup or placement.
+    if (this.roomedit.object && this.roomedit.raycast && ev.ctrlKey) {
+      this.roomedit.object.collidable = false;
+    }
   }
   editObjectKeyup(ev) {
     this.updateEditConstraints(ev);
+    if (this.roomedit.object && this.roomedit.raycast && !ev.ctrlKey) {
+      this.roomedit.object.collidable = this.roomedit.objectCollidableWas;
+    }
   }
   editObjectClick(ev) {
     if (this.roomedit.object) {
@@ -1201,22 +1218,19 @@ console.log('change color', obj.col, vec);
       }
     }
     this.history.push({type: 'addobjects', objects: objects});
-    /*
-    if (janus.engine.systems.admin.hidden) {
-      janus.engine.systems.controls.requestPointerLock();
-    }
-    */
+    // Enter pointer-lock placement so the dropped object follows the cursor until
+    // it's clicked into position — same as click-to-place from the inventory.
+    janus.engine.systems.controls.requestPointerLock();
   }
   handleThingAdd(ev) {
-console.log('[editor] scene added a thing', ev);
+    // defer one tick so the object is registered in room.objects and its
+    // parent/children proxies resolve before we map it into the tree
     setTimeout(() => {
-      this.scenetree.refreshList();
+      if (this.scenetree) this.scenetree.addNode(ev.data.thing);
     }, 0);
   }
   handleThingRemove(ev) {
-    setTimeout(() => {
-      this.scenetree.refreshList();
-    }, 0);
+    if (this.scenetree) this.scenetree.removeNode(ev.data.thing);
   }
   loadObjectFromURIList(list) {
     var urls = list.split('\n');
@@ -1457,6 +1471,37 @@ console.log('pastey!', ev.clipboardData.items[0], ev);
   }
 });
 
+let editorController = null;
+function getEditorController() {
+  if (!editorController) {
+    editorController = elation.elements.create('janus-ui-editor-controller', { append: document.body });
+    editorController.style.display = 'none';
+  }
+  return editorController;
+}
+// Expose for editor components defined in other files (e.g. the inventory app),
+// so they can reach the shared controller singleton without re-creating it.
+if (typeof window !== 'undefined') window.getEditorController = getEditorController;
+
+elation.elements.define('janus.ui.editor.panel', class extends elation.elements.base {
+  create() {
+    this.controller = getEditorController();
+
+    let elements = elation.elements.fromTemplate('janus.ui.editor.panel', this);
+    this.elements = elements;
+    elation.events.add(elements.debugview, 'click', (ev) => this.controller.handleDebugviewClick(ev));
+    elation.events.add(elements.viewsource, 'click', (ev) => this.controller.handleViewSourceClick(ev));
+    elation.events.add(elements.export, 'click', (ev) => this.controller.handleExportClick(ev));
+
+    let inventorypanel = document.querySelector('ui-collapsiblepanel[name="right"]');
+    elation.elements.create('janus-ui-editor-scenetree', { append: inventorypanel });
+    elation.elements.create('janus-ui-editor-objectinfo', { append: inventorypanel });
+  }
+  handleInventorySelect(ev) {
+    this.controller.handleInventorySelect(ev);
+  }
+});
+
 elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elements.base {
   create() {
     this.handleThingChange = elation.bind(this, this.handleThingChange);
@@ -1489,6 +1534,7 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
       //itemtemplate: 'janus.ui.editor.property',
     });
     this.setMode('pos');
+    getEditorController().objectinfo = this;
   }
   setMode(mode) {
     if (this.list) {
@@ -1588,10 +1634,13 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
   handleEditorChange(ev, attrname, attrdef) {
     //console.log('the editor changed', ev.target.value, ev, attrname, attrdef);
     this.object[attrname] = ev.target.value;
+    // Flag the object dirty so the change is broadcast to other clients.
+    this.object.sync = true;
     this.object.refresh();
   }
   handleEditorSelect(ev, attrname, attrdef) {
     //console.log('selected it', attrname);
+    getEditorController().setMode(attrname);
     this.setMode(attrname);
   }
 });
@@ -1607,11 +1656,17 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
       label: 'js_id',
       children: 'children',
       visible: 'persist',
+      // Leading type icon per row (rendered natively by ui.treeviewitem), from the
+      // object's janus tag. All primitives share the 'object' icon — not per-shape.
+      icon: (value) => { let t = this.sceneTreeType(value); return t ? 'st-typeicon st-type-' + t : null; },
     };
     elation.events.add(this.tree, 'ui_treeview_select', (ev) => this.handleTreeviewSelect(ev));
     setTimeout(() => {
       this.refreshList();
     }, 0);
+    let c = getEditorController();
+    c.scenetree = this;
+    elation.events.add(this, 'select', (ev) => c.editObject(ev.data));
   }
   refreshList() {
     this.tree.setItems({
@@ -1622,13 +1677,183 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
         getProxyObject: room.getProxyObject.bind(room),
       }
     });
+    // Start expanded so the room's top-level objects are visible without a click.
+    let root = this.getRootTvitem();
+    if (root) root.collapsed = false;
+  }
+  // Map a scene object to its type-icon class (used by the tree's attrs.icon).
+  // All primitives share the 'object' tag, so they get one icon (not per-shape);
+  // custom elements fall back to the generic icon via st-typeicon's default.
+  sceneTreeType(value) {
+    let tag = value && (value.tag || value.tagName || value.type);
+    // The tree's item may be a proxy/representation without a tag; resolve the
+    // real object by js_id, which always carries one.
+    if (!tag && value && value.js_id && room.getObjectById) {
+      let real = room.getObjectById(value.js_id);
+      if (real) tag = real.tag || real.tagName || real.type;
+    }
+    return tag ? String(tag).toLowerCase().replace(/[^a-z0-9_-]/g, '') : null;
+  }
+  getRootTvitem() {
+    return this.tree._itemsByKey && this.tree._itemsByKey[room.url];
+  }
+  addNode(thing) {
+    if (!thing || !thing.js_id) return;
+    let data = room.getObjectById(thing.js_id) || (thing.getProxyObject ? thing.getProxyObject() : thing);
+    if (!data || !data.persist) return;
+    // Resolve the parent tvitem incrementally. A nested object's parent is keyed
+    // by js_id; a top-level object's parent is the room, which isn't reliably
+    // keyed (the root tvitem is keyed by room.url, not the room's js_id), so fall
+    // back to the root rather than refreshList() — a full rebuild collapses the
+    // whole tree. Only rebuild when the tree hasn't been built at all yet.
+    let parentProxy = data.parent;
+    let parentEl = (parentProxy && parentProxy.js_id && this.tree._itemsByKey)
+                 ? this.tree._itemsByKey[parentProxy.js_id]
+                 : null;
+    if (!parentEl) parentEl = this.getRootTvitem();
+    if (!parentEl) { this.refreshList(); return; }
+    this.tree.addItem(data, parentEl);
+  }
+  removeNode(thing) {
+    if (!thing || !thing.js_id) return;
+    this.tree.removeItem(thing.js_id);
   }
   handleTreeviewSelect(ev) {
     elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
   }
 });
+// Reconcile an authored JanusML source string against the live scene, changing
+// only what differs: patch attributes, insert created objects, remove deleted
+// ones. Comments, formatting, and unmodelled attributes are left untouched.
+function jmlScanElements(src) {
+  var els = [], stack = [];
+  var re = /<!--[\s\S]*?-->|<\/([A-Za-z][\w.-]*)\s*>|<([A-Za-z][\w.-]*)((?:\s+[\w:.-]+\s*=\s*"[^"]*")*)\s*(\/?)>/g;
+  var m;
+  while ((m = re.exec(src)) !== null) {
+    if (m[0].indexOf('<!--') === 0) continue;
+    if (m[1]) {
+      for (var i = stack.length - 1; i >= 0; i--) { if (stack[i].name === m[1]) { stack[i].fullEnd = m.index + m[0].length; stack[i].contentStart = stack[i].openEnd; stack[i].contentEnd = m.index; stack.length = i; break; } }
+      continue;
+    }
+    var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
+    while ((a = ar.exec(m[3])) !== null) attrs[a[1]] = a[2];
+    var el = { name: m[2], attrs: attrs, start: m.index, openEnd: m.index + m[0].length,
+               parent: stack.length ? stack[stack.length - 1].name : null, selfclose: m[4] === '/' };
+    el.fullEnd = el.openEnd;
+    els.push(el);
+    if (!el.selfclose) stack.push(el);
+  }
+  return els;
+}
+function jmlParseAttrs(tag) {
+  var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
+  while ((a = ar.exec(tag)) !== null) attrs[a[1]] = a[2];
+  return attrs;
+}
+// For an element serialized in content form (<tag ...>value</tag>) return the
+// inner text; for self-closing/attribute-only markup return null.
+function jmlExtractContent(xml) {
+  var open = xml.indexOf('>'), close = xml.lastIndexOf('</');
+  if (open === -1 || close === -1 || close <= open || xml.charAt(open - 1) === '/') return null;
+  return xml.slice(open + 1, close).trim();
+}
+function jmlSetAttr(tag, attr, value) {
+  var re = new RegExp('(\\s' + attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=\\s*")[^"]*(")');
+  if (re.test(tag)) return tag.replace(re, '$1' + value + '$2');
+  return tag.replace(/\s*\/?>$/, function (mm) { return ' ' + attr + '="' + value + '"' + mm; });
+}
+function jmlRemoveAttr(tag, attr) {
+  var re = new RegExp('\\s+' + attr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*=\\s*"[^"]*"');
+  return tag.replace(re, '');
+}
+// The attribute names an object's serializer manages, regardless of current
+// value — used so the reconciler can drop a managed attribute that dropped out
+// of the live summary (reverted to default, e.g. a boolean toggled off) without
+// touching custom/unknown attributes the engine never emits.
+function jmlObjManagedKeys(object) {
+  try {
+    var pd = object.getProxyObject()._proxydefs, names = [],
+        skip = { room: 1, tagName: 1, classList: 1, jsid: 1, classname: 1 };
+    for (var k in pd) { if (!skip[k] && pd[k] && pd[k][0] === 'property') names.push(k); }
+    return names;
+  } catch (e) { return null; }
+}
+function jmlReconcileSource(src, summaries) {
+  var els = jmlScanElements(src);
+  var objEls = els.filter(function (e) { return e.parent && e.parent.toLowerCase() === 'room'; });
+  var usedEl = [], usedLive = [], matched = [];
+  objEls.forEach(function (el) { if (el.attrs.js_id) {
+    for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].js_id === el.attrs.js_id) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
+  }});
+  objEls.forEach(function (el) { if (usedEl.indexOf(el) !== -1) return;
+    for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].id === el.attrs.id && summaries[i].name === el.name) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
+  });
+  var deleted = objEls.filter(function (e) { return usedEl.indexOf(e) === -1; });
+  var created = summaries.filter(function (o, i) { return usedLive.indexOf(i) === -1; });
+  var edits = [];
+  matched.forEach(function (pair) {
+    var el = pair[0], live = jmlParseAttrs(pair[1].xml);
+    var tag = src.slice(el.start, el.openEnd), changed = false;
+    for (var k in live) { if (k === 'js_id' || k === 'jsid') continue; if (el.attrs[k] !== live[k]) { tag = jmlSetAttr(tag, k, live[k]); changed = true; } }
+    // Drop managed attributes the live object no longer emits (reverted to
+    // default — e.g. a boolean toggled back off). Identity attrs and custom /
+    // unknown attributes (absent from the managed set) are left untouched.
+    var keys = pair[1].keys;
+    if (keys) {
+      for (var ki = 0; ki < keys.length; ki++) {
+        var mk = keys[ki];
+        if (mk === 'js_id' || mk === 'jsid' || mk === 'id' || mk === 'class' || mk === 'classname') continue;
+        if ((mk in el.attrs) && !(mk in live)) { tag = jmlRemoveAttr(tag, mk); changed = true; }
+      }
+    }
+    if (changed) edits.push({ start: el.start, end: el.openEnd, text: tag });
+    // Reconcile tag content (<text>foo</text>). Only when both sides are plain
+    // text (no nested elements) so child markup is never clobbered.
+    if (el.contentStart != null) {
+      var liveContent = jmlExtractContent(pair[1].xml);
+      var srcContent = src.slice(el.contentStart, el.contentEnd);
+      if (liveContent != null && liveContent.indexOf('<') === -1 &&
+          srcContent.indexOf('<') === -1 && srcContent.trim() !== liveContent) {
+        edits.push({ start: el.contentStart, end: el.contentEnd, text: liveContent });
+      }
+    }
+  });
+  deleted.forEach(function (el) {
+    var end = el.fullEnd, nl = src.indexOf('\n', end); if (nl !== -1 && src.slice(end, nl).trim() === '') end = nl + 1;
+    var start = el.start, ls = src.lastIndexOf('\n', start - 1); if (ls !== -1 && src.slice(ls + 1, start).trim() === '') start = ls + 1;
+    edits.push({ start: start, end: end, text: '' });
+  });
+  if (created.length) {
+    var close = src.search(/<\/room\s*>/i);
+    if (close !== -1) {
+      var lineStart = src.lastIndexOf('\n', close - 1) + 1;
+      // Indent new elements to match existing room-level objects rather than the
+      // </room> line + 2, which over-indents when the file's convention differs.
+      var indent;
+      if (objEls.length) {
+        var refStart = src.lastIndexOf('\n', objEls[0].start - 1) + 1;
+        indent = src.slice(refStart, objEls[0].start).match(/^\s*/)[0] || '';
+      } else {
+        indent = (src.slice(lineStart, close).match(/^\s*/)[0] || '') + '  ';
+      }
+      var text = created.map(function (o) { return indent + o.xml + '\n'; }).join('');
+      edits.push({ start: lineStart, end: lineStart, text: text });
+    }
+  }
+  edits.sort(function (a, b) { return b.start - a.start; });
+  var out = src;
+  edits.forEach(function (e) { out = out.slice(0, e.start) + e.text + out.slice(e.end); });
+  return out;
+}
 elation.elements.define('janus.ui.editor.source', class extends elation.elements.base {
   async create() {
+    // CodeMirror core is loaded by the host page as a plain <script>; the hint
+    // addons below reference the global CodeMirror, so on a cold/slow load they
+    // can run before it's defined ("CodeMirror is not defined"). Wait for the
+    // core to finish loading before pulling the addons in.
+    for (let i = 0; typeof CodeMirror === 'undefined' && i < 200; i++) {
+      await new Promise(r => setTimeout(r, 25));
+    }
     await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
       './codemirror/addon/hint/show-hint.js',
       './codemirror/addon/hint/xml-hint.js',
@@ -1642,12 +1867,44 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
 
     this.tabs = elation.elements.create('ui-tabs', { append: this });
     //let roomtab = elation.elements.create('ui-tab', { append: this.tabs, label: 'Room Markup' });
-    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: room.getRoomSource(), hints: this.jmlhints });
+    // Edit the authored markup (room.roomsrc) rather than a regenerated copy,
+    // so comments and formatting are preserved.
+    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: (room.roomsrc || room.getRoomSource()), hints: this.jmlhints });
+
+    // Bring the markup view in line with the live scene: when the room exposes
+    // per-object summaries, edit the authored text in place (preserving comments
+    // and formatting); otherwise regenerate the whole document.
+    let syncFromScene = () => {
+      let src = roomedit.codemirror ? roomedit.codemirror.getValue() : roomedit.source;
+      let next = null;
+      try {
+        if (typeof room.getObjectSummaries === 'function') {
+          let summaries = room.getObjectSummaries();
+          // Tag each summary with its object's managed attribute names so the
+          // reconciler can drop attributes that reverted to default.
+          summaries.forEach(s => { let o = room.getObjectById(s.js_id); if (o) s.keys = jmlObjManagedKeys(o); });
+          next = jmlReconcileSource(src, summaries);
+        }
+      } catch (e) { console.error('[editor] source reconcile failed', e); }
+      return (next != null) ? next : room.getRoomSource();
+    };
 
     let refreshbutton = elation.elements.create('ui-button', { append: this, label: '↻', title: "Refresh room source", name: "refresh" });
     refreshbutton.addEventListener('click', ev => {
-      roomedit.source = room.getRoomSource();
+      roomedit.source = syncFromScene();
     });
+
+    // Keep the markup view current with edits made elsewhere (gizmo, inspector,
+    // remote peers). The reconciler merges scene changes into the current buffer
+    // and preserves the user's hand edits (comments/formatting/custom attrs), so
+    // we only hold back while the editor is focused — i.e. actively being typed
+    // in — to avoid disturbing the caret. The ↻ button forces a full refresh.
+    let refreshFromScene = () => {
+      let cm = roomedit.codemirror;
+      if (cm && cm.hasFocus()) return;
+      roomedit.source = syncFromScene();
+    };
+    elation.events.add(room, 'scene_changed', refreshFromScene);
 
     if (room.roomassets.script) {
       for (let k in room.roomassets.script) {
@@ -1912,7 +2169,9 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
     this.filename = this.label;
 
     this.initCodemirror();
-    elation.events.add(this.parentNode, 'tabselect', ev => { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); });
+    // codemirror is created asynchronously (mode scripts load on demand); guard so a
+    // tab switch before it's ready doesn't throw.
+    elation.events.add(this.parentNode, 'tabselect', ev => { if (this.codemirror) { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); } });
   }
   async initCodemirror() {
     if (!CodeMirror.modes[this.mode]) {
@@ -1920,7 +2179,10 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
     }
 
     this.codemirror = CodeMirror(this, {
-      value: this.source,
+      // CodeMirror needs a string; a script tab whose asset code hasn't loaded
+      // yet has an undefined source, which throws inside CodeMirror (it tries to
+      // set modeOption on a missing doc). The source setter fills it in later.
+      value: this.source || '',
       mode: this.mode,
       lineNumbers: true,
       extraKeys: {
@@ -1990,6 +2252,9 @@ console.log('editor hints', this.hints);
     this.label = this.filename;
   }
   handleEditContentChange(ev) {
+    // setValue() from a programmatic refresh (scene -> source) also fires
+    // 'change'; ignore it so it isn't treated as a user edit and re-applied.
+    if (this.applyingExternal) return;
     //console.log('it changed', ev);
     let newsource = this.codemirror.getValue();
     this.dirty = (newsource != this.source);
@@ -2007,8 +2272,20 @@ console.log('editor hints', this.hints);
     }, 500);
   }
   updateSource() {
-    if (this.source != this.codemirror.getValue()) {
-      this.codemirror.setValue(this.source);
+    let cm = this.codemirror;
+    // The source attribute can be set before codemirror exists (initial value) or
+    // while it's still loading its mode; initCodemirror picks up this.source then.
+    if (!cm) return;
+    if (this.source != cm.getValue()) {
+      // Preserve caret/selection and scroll across the programmatic refresh so a
+      // scene-driven source update doesn't jump the view back to the top.
+      let sels = cm.listSelections();
+      let scroll = cm.getScrollInfo();
+      this.applyingExternal = true;
+      cm.setValue(this.source);
+      try { cm.setSelections(sels); } catch (e) {}
+      cm.scrollTo(scroll.left, scroll.top);
+      this.applyingExternal = false;
     }
   }
 });
