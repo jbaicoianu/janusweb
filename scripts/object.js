@@ -1105,18 +1105,62 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         }
         */
 
-        if (this.shader_chunk_replace) {
-          let chunkreplace = (elation.utils.isString(this.shader_chunk_replace) ? JSON.parse(this.shader_chunk_replace) : this.shader_chunk_replace);
+        let chunkreplace = (this.shader_chunk_replace ? (elation.utils.isString(this.shader_chunk_replace) ? JSON.parse(this.shader_chunk_replace) : this.shader_chunk_replace) : null);
+        // Parallax-corrected (box-projected) envmap reflections: opt-in per room via
+        // envmap_parallax + envmap_box_center/size. Anchors reflections to a box (e.g.
+        // the box bottom = floor) rather than the default infinite/camera-centered
+        // projection, so a reflective floor mirrors the walls at the right world
+        // position. Box uniforms are shared per-room objects, so live edits to the box
+        // update every reflection without a recompile. Default off => stock behavior.
+        let parallax = (this.isUsingPBR() && this.room && this.room.envmap_parallax) ? this.room.getEnvmapParallaxUniforms() : null;
+        if (parallax) this.registerParallaxChunk();
+        if (chunkreplace || parallax) {
           m.onBeforeCompile = function(shader) {
-            for (let oldchunkname in chunkreplace) {
-              let newchunkname = chunkreplace[oldchunkname];
-              shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
-              shader.fragmentShader = shader.fragmentShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+            if (chunkreplace) {
+              for (let oldchunkname in chunkreplace) {
+                let newchunkname = chunkreplace[oldchunkname];
+                shader.vertexShader = shader.vertexShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+                shader.fragmentShader = shader.fragmentShader.replace('#include <' + oldchunkname + '>', '#include <' + newchunkname + '>');
+              }
+            }
+            if (parallax) {
+              shader.uniforms.boxProjMin = parallax.boxProjMin;
+              shader.uniforms.boxProjMax = parallax.boxProjMax;
+              shader.uniforms.boxProjCenter = parallax.boxProjCenter;
+              shader.vertexShader = 'varying vec3 vParallaxWorldPos;\n' + shader.vertexShader.replace(
+                '#include <project_vertex>',
+                '#include <project_vertex>\n\tvParallaxWorldPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;'
+              );
+              shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <envmap_physical_pars_fragment>',
+                '#include <envmap_physical_pars_fragment_parallax>'
+              );
             }
           };
         }
       }
       return m;
+    }
+    this.registerParallaxChunk = function() {
+      // A box-projected variant of three's envmap_physical_pars_fragment: after the
+      // reflection vector is put into world space it's intersected with the box
+      // (boxProjMin..boxProjMax) and re-based on boxProjCenter, so the CubeUV/PMREM
+      // sample is parallax-corrected. Built by patching the stock chunk so it tracks
+      // the exact r150 source; if the source ever changes and the anchor line isn't
+      // found, this degrades to the stock (infinite) chunk rather than breaking.
+      if (THREE.ShaderChunk['envmap_physical_pars_fragment_parallax']) return;
+      let anchor = 'reflectVec = inverseTransformDirection( reflectVec, viewMatrix );';
+      let patched = THREE.ShaderChunk['envmap_physical_pars_fragment']
+        .replace('#if defined( USE_ENVMAP )',
+          '#if defined( USE_ENVMAP )\n\tuniform vec3 boxProjMin;\n\tuniform vec3 boxProjMax;\n\tuniform vec3 boxProjCenter;\n\tvarying vec3 vParallaxWorldPos;')
+        .replace(anchor, anchor +
+          '\n\t\t\t{ vec3 nrd = normalize( reflectVec );' +
+          '\n\t\t\t  vec3 rbmax = ( boxProjMax - vParallaxWorldPos ) / nrd;' +
+          '\n\t\t\t  vec3 rbmin = ( boxProjMin - vParallaxWorldPos ) / nrd;' +
+          '\n\t\t\t  vec3 rbmm = vec3( ( nrd.x > 0.0 ) ? rbmax.x : rbmin.x, ( nrd.y > 0.0 ) ? rbmax.y : rbmin.y, ( nrd.z > 0.0 ) ? rbmax.z : rbmin.z );' +
+          '\n\t\t\t  float fa = min( min( rbmm.x, rbmm.y ), rbmm.z );' +
+          '\n\t\t\t  reflectVec = ( vParallaxWorldPos + nrd * fa ) - boxProjCenter; }');
+      THREE.ShaderChunk['envmap_physical_pars_fragment_parallax'] = patched;
     }
     this.updateSkybox = function() {
       let envMap = (this.isUsingPBR() ? this.getEnvmap() : null);

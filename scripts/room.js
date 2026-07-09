@@ -55,6 +55,13 @@ elation.require([
         'skybox_back_id': { type: 'string', set: this.setSkybox },
         'cubemap_irradiance_id': { type: 'string' },
         'cubemap_radiance_id': { type: 'string' },
+        // Envmap reflection projection. Default off = infinite (camera-centered)
+        // projection. When on, reflections are box-projected (parallax-corrected) to
+        // the box defined by envmap_box_center/size -- put the box bottom at the floor
+        // for clean floor reflections of the walls.
+        'envmap_parallax': { type: 'boolean', default: false, set: this.updateParallax },
+        'envmap_box_center': { type: 'vector3', default: new THREE.Vector3(0, 0, 0), set: this.updateParallax },
+        'envmap_box_size': { type: 'vector3', default: new THREE.Vector3(10, 10, 10), set: this.updateParallax },
         'fog': { type: 'boolean', default: false, set: this.setFog },
         'fog_mode': { type: 'string', default: 'exp', set: this.setFog },
         'fog_density': { type: 'float', default: 1.0, set: this.setFog },
@@ -325,6 +332,35 @@ elation.require([
         if( obj ) elation.events.fire({element: this, type: 'href', data: {href,opts}});
       }
       return spawnpoint;
+    }
+    // Shared box-projection uniforms for parallax-corrected envmap reflections. One
+    // set of THREE uniform objects per room; every PBR material's parallax shader
+    // references these same objects, so live edits to envmap_box_center/size update
+    // all reflections in place (no material recompile). See object.registerParallaxChunk.
+    this.getEnvmapParallaxUniforms = function() {
+      if (!this._parallaxUniforms) {
+        this._parallaxUniforms = {
+          boxProjMin: { value: new THREE.Vector3() },
+          boxProjMax: { value: new THREE.Vector3() },
+          boxProjCenter: { value: new THREE.Vector3() },
+        };
+      }
+      this.updateParallaxUniforms();
+      return this._parallaxUniforms;
+    }
+    this.updateParallaxUniforms = function() {
+      if (!this._parallaxUniforms) return;
+      let c = this.envmap_box_center || new THREE.Vector3();
+      let s = this.envmap_box_size || new THREE.Vector3(10, 10, 10);
+      this._parallaxUniforms.boxProjCenter.value.copy(c);
+      this._parallaxUniforms.boxProjMin.value.set(c.x - s.x / 2, c.y - s.y / 2, c.z - s.z / 2);
+      this._parallaxUniforms.boxProjMax.value.set(c.x + s.x / 2, c.y + s.y / 2, c.z + s.z / 2);
+    }
+    this.updateParallax = function() {
+      // Live box edits mutate the shared uniforms in place -> all reflections follow
+      // without a recompile. (Enabling/disabling envmap_parallax itself is applied at
+      // material-build time / room load.)
+      this.updateParallaxUniforms();
     }
     this.setSkybox = function() {
       if (!this.loaded) return;
@@ -1012,7 +1048,17 @@ elation.require([
 
         if (room.cubemap_radiance_id) this.properties.cubemap_radiance_id = room.cubemap_radiance_id;
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
-    
+
+        let parseVec3 = (v) => {
+          if (v instanceof THREE.Vector3) return v;
+          if (typeof v == 'string') { let p = v.trim().split(/[\s,]+/).map(parseFloat); if (p.length >= 3 && p.every(n => !isNaN(n))) return new THREE.Vector3(p[0], p[1], p[2]); }
+          if (v && typeof v == 'object' && 'x' in v) return new THREE.Vector3(v.x, v.y, v.z);
+          return undefined;
+        };
+        if (typeof room.envmap_parallax != 'undefined') this.properties.envmap_parallax = (room.envmap_parallax === true || room.envmap_parallax === 'true');
+        let ebc = parseVec3(room.envmap_box_center); if (ebc) this.properties.envmap_box_center = ebc;
+        let ebs = parseVec3(room.envmap_box_size); if (ebs) this.properties.envmap_box_size = ebs;
+
         this.setSkybox();
 
         if (room.server) this.properties.server = room.server;
@@ -2225,6 +2271,9 @@ elation.require([
           skybox_down_id: ['property', 'skybox_down_id'],
           skybox_front_id:['property', 'skybox_front_id'],
           skybox_back_id: ['property', 'skybox_back_id'],
+          envmap_parallax: ['property', 'envmap_parallax'],
+          envmap_box_center: ['property', 'envmap_box_center'],
+          envmap_box_size: ['property', 'envmap_box_size'],
 
           pendingScripts: ['property', 'pendingScripts'],
           pendingCustomElements: ['property', 'pendingCustomElements'],
