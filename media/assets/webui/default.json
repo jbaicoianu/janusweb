@@ -12,6 +12,7 @@
     "buttons": "./apps/buttons/buttons.json",
     "xrmenu": "./apps/xrmenu/xrmenu.json",
     "xrfragment": "./apps/xrfragment/xrfragment.json",
+    "rsshub": "./apps/rsshub/rsshub.json",
     "vfs": "./apps/vfs/vfs.json"
   },
   "includes": [

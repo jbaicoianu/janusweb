@@ -2,8 +2,9 @@
   "templates": {
   },
   "scripts":  [
-    "./level2-hyperlink.js",
     "./level0-sidecarfile.js",
+    "./level2-hyperlink.js",
+    "./level4-operators.js",
     "./level7-engine-prefixes.import.js",
     "./level7-engine-prefixes.export.js"
   ],

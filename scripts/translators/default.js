@@ -36,6 +36,7 @@ elation.require(['elation.collection'], function() {
     }
     this.translate = function(args, ev) {
       var room = args.room;
+      room.translator = "default"
       var source = room.parseSource(this.roomsource);
       var datapath = elation.config.get('janusweb.datapath', '/media/janusweb');
       var fullpath = datapath + 'assets/translator/web/';
