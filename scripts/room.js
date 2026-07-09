@@ -1049,15 +1049,9 @@ elation.require([
         if (room.cubemap_radiance_id) this.properties.cubemap_radiance_id = room.cubemap_radiance_id;
         if (room.cubemap_irradiance_id) this.properties.cubemap_irradiance_id = room.cubemap_irradiance_id;
 
-        let parseVec3 = (v) => {
-          if (v instanceof THREE.Vector3) return v;
-          if (typeof v == 'string') { let p = v.trim().split(/[\s,]+/).map(parseFloat); if (p.length >= 3 && p.every(n => !isNaN(n))) return new THREE.Vector3(p[0], p[1], p[2]); }
-          if (v && typeof v == 'object' && 'x' in v) return new THREE.Vector3(v.x, v.y, v.z);
-          return undefined;
-        };
-        if (typeof room.envmap_parallax != 'undefined') this.properties.envmap_parallax = (room.envmap_parallax === true || room.envmap_parallax === 'true');
-        let ebc = parseVec3(room.envmap_box_center); if (ebc) this.properties.envmap_box_center = ebc;
-        let ebs = parseVec3(room.envmap_box_size); if (ebs) this.properties.envmap_box_size = ebs;
+        if (typeof room.envmap_parallax != 'undefined') this.envmap_parallax = room.envmap_parallax;
+        if (room.envmap_box_center) this.envmap_box_center = room.envmap_box_center;
+        if (room.envmap_box_size) this.envmap_box_size = room.envmap_box_size;
 
         this.setSkybox();
 
