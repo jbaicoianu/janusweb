@@ -1152,7 +1152,7 @@ elation.require([
     this.enable = function() {
       this.getObjectsDeep()
           .filter( (obj) => obj.start   )
-          .map(    (obj) => obj.start() )
+          .map(    (obj) => { if( !obj.started ) obj.start() })
 
       if (!this.enabled) {
         this.enabled = true;
@@ -1189,7 +1189,7 @@ elation.require([
     this.disable = function() {
       this.getObjectsDeep()
           .filter( (obj) => obj.stop   )
-          .map(    (obj) => obj.stop() )
+          .map(    (obj) => { if( obj.started ) obj.stop() })
 
       if (this.enabled) {
         this.engine.systems.ai.remove(this);

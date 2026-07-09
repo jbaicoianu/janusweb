@@ -14,7 +14,6 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
       this.camera = this.spawn('camera', this.name + '_camera', { position: [0,0,0] } );
 
       this.teleporter = player.createObject('locomotion_teleporter', { xrplayer: this.getProxyObject() });
-
       if (this.session) {
         console.log('xr player got a new session', this.session);
         this.setSession(this.session, this.xrview);
@@ -126,7 +125,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.trackedobjects[handid].handleSelectEnd(ev);
       }
       // FIXME - probably need to fake a mouse event instead of passing through a select event
-      elation.events.fire({type: 'janus_room_mouseup', element: room._target, event: ev});
+      //elation.events.fire({type: 'janus_room_mouseup', element: room._target, event: ev});
     }
     this.handleSelect = function(ev) {
       console.log('selected', ev);
@@ -135,9 +134,9 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
         this.trackedobjects[handid].handleSelect(ev);
       }
       // FIXME - probably need to fake a mouse event instead of passing through a select event
-      if (room.onClick) {
-        room.onClick(ev);
-      }
+      //if (room.onClick) {
+      //  room.onClick(ev);
+      //}
       elation.events.fire({type: 'click', element: room._target, event: ev});
     }
     this.getProxyObject = function(classdef) {

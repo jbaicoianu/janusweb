@@ -326,6 +326,7 @@ elation.require([
       this.refresh();      
     }
     this.load = function(url, makeactive, baseurl, stripreferrer, portal) {
+      debugger
       let roomname = url
       if( portal ){ 
         if( url.match(/#$/) )  url = room.url           // # = self

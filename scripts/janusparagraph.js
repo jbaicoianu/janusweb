@@ -34,7 +34,7 @@
  *  7. various events are fired to extend default behaviours
  */
 
-elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-rss'], function() {
+elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-rss', 'janusweb.translators.paragraph.markdown'], function() {
   elation.component.add('engine.things.janusparagraph', function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
@@ -102,8 +102,10 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       return mesh;
     }
     this.createForces = function() {
-      this.setCollider('box', { min: V(-.8, -.8, -.01), max: V(.8, .8, .01) });
-      //this.collision_id = 'cube';
+      this.setCollider('box', { 
+        min: V(-this.scale.x, -this.scale.y, -.01), 
+        max: V( this.scale.x,  this.scale.y, .01) 
+      });
     }
     this.updateColliderFromGeometry = function() { }
     this.createMaterial = function() {
@@ -185,7 +187,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       styletag +=  '</style>';
 
 
-      var data = '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">' +
+      var data = `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}">` +
                  '<foreignObject width="100%" height="100%">' +
                   styletag +
                  '<div xmlns="http://www.w3.org/1999/xhtml" class="paragraphcontainer">' +
@@ -197,7 +199,6 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       var img = new Image();
       img.crossOrigin = 'anonymous';
       var url = 'data:image/svg+xml,' + encodeURIComponent(data);
-
       var timer;
       img.onload = () => {
         if (img === this.currentImage) {
@@ -256,15 +257,15 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
           let url = match[1]
           if( url[0] == '/' )           url = room.baseurl.replace(/\/$/,'') + url
           else if( !url.match('://') )  url = room.baseurl + url
-          matches.push(url)
+          matches.push({src: match[1], url})
         }
         matches = matches.slice(0,6) // limit (national geographic rss tanks performance)
         // fill array with base64 image-strings
-        const dataURLs = await Promise.all( matches.map(src => this.toDataURL(src)) );
+        const dataURLs = await Promise.all( matches.map( match => this.toDataURL(match.url)) );
         // Replace each src in the html with the corresponding data URL
         let updatedHtml = html;
-        matches.forEach((src, i) => {
-          updatedHtml = updatedHtml.replace( `src="${src}"`, `src="${dataURLs[i]}"`)
+        matches.forEach((match, i) => {
+          updatedHtml = updatedHtml.replace( `src="${match.src}"`, `src="${dataURLs[i]}"`)
         });
         return updatedHtml
       }
@@ -274,7 +275,9 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         this.paragraphs = await Promise.all(p)
         elation.events.fire({element: this, type: 'paragraph_translator_inline', data:{ paragraph:this } });
         this.updateHTML()
-      }catch(e){ console.error(e) } // continue when inlining failed
+      }catch(e){ 
+        console.error(e) 
+      } // continue when inlining failed
     };
 
     this.toDataURL = async function(url){
@@ -370,8 +373,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         this.autoRotateIndex()
         this.updateTexture()
         // match clickable area 
-        this.collision_id = 'plane'
-        this.collision_scale  = `${this.scale.x} ${this.scale.y} ${this.scale.z}` 
+        this.createForces()
       }
     }
 

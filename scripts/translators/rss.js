@@ -135,7 +135,7 @@ elation.require([], function() {
     // here we are extending scripts/translators/paragraph/html-xml-rss.js
     this.onParagraph = function(e){
       const {paragraph} = e.data
-      if( !paragraph.xmlDoc ) return // only for rss 
+      if( !room.objects.rss || !paragraph?.xmlDoc ) return // only for rss rooms
       // patch HTML items
       let index = 1;
       let opts  = this.getPageInfo(paragraph)
@@ -150,6 +150,7 @@ elation.require([], function() {
             ${item}
           ` 
       )
+
       setTimeout( () => {
         // lazyload media assets after room is initialized
         this.loadMediaAssets(paragraph.paragraphs)
