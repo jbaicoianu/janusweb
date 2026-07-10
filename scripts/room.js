@@ -1150,12 +1150,13 @@ elation.require([
       return false;
     }
     this.enable = function() {
-      this.getObjectsDeep()
-          .filter( (obj) => obj.start   )
-          .map(    (obj) => obj.start() )
-
       if (!this.enabled) {
+        this.getObjectsDeep()
+            .filter( (obj) => obj.start   )
+            .map(    (obj) => { if( !obj.started ) obj.start() })
+
         this.enabled = true;
+
         this.engine.systems.ai.add(this);
 
         elation.events.add(window, 'click', this.onClick);
@@ -1187,11 +1188,11 @@ elation.require([
       //this.showDebug();
     }
     this.disable = function() {
-      this.getObjectsDeep()
-          .filter( (obj) => obj.stop   )
-          .map(    (obj) => obj.stop() )
-
       if (this.enabled) {
+        this.getObjectsDeep()
+            .filter( (obj) => obj.stop   )
+            .map(    (obj) => { if( obj.started ) obj.stop() })
+
         this.engine.systems.ai.remove(this);
         elation.events.fire({type: 'room_disable', data: this});
         this.enabled = false;
@@ -2011,12 +2012,20 @@ elation.require([
       }
 */
       // FIXME - hack to disable XR rendering while room is still loading. this can be handled better.
-      if (this.engine.systems.render.views.xr && this.engine.systems.render.renderer.xr.isPresenting) {
-        this.engine.systems.render.views.xr.enabled = this.completed;
+      const XRRenderChange = !this.nested && 
+                             !this.completed &&
+                             this.engine.systems.render.views.xr && 
+                             this.engine.systems.render.renderer.xr.isPresenting
+      if( XRRenderChange ){
+        this.engine.systems.render.views.xr.enabled = false 
+        clearTimeout( this.XRRenderChangeWait )
+        this.XRRenderChangeWait = setTimeout( () => this.engine.systems.render.views.xr.enabled = true, 300 )
       }
-      this.janus.scriptframeargs[0] = ev.data.delta * 1000;
-      elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
-      elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
+      if( this.completed ){
+        this.janus.scriptframeargs[0] = ev.data.delta * 1000;
+        elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
+        elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
+      }
     }
     this.onCollide = function(ev) { 
       //console.log('objects collided', ev.target, ev.data.other);

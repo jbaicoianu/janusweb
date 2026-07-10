@@ -578,7 +578,7 @@ document.body.dispatchEvent(click);
         this.started = true;
       }
       for (var k in this.children) {
-        if (this.children[k].start) {
+        if (this.children[k].start && !this.children[k].started) {
           this.children[k].start();
         }
       }

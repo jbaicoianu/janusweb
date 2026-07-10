@@ -7,7 +7,7 @@ elation.require(['janusweb.janusbase'], function() {
         'url_scale':    { type: 'vector3', default: null },
         'url_rotation': { type: 'vector3', default: null },
         'title': { type: 'string', set: this.updateTitle },
-        'title_col': { type: 'color', default: new THREE.Color(0x00FFFF), set: this.updateTitle },
+        'title_col': { type: 'color', default: new THREE.Color(0x008888), set: this.updateTitle },
         'janus': { type: 'object' },
         'room': { type: 'object' },
         'col': { type: 'color', default: new THREE.Color(0xffffff), set: this.updateMaterial },
@@ -292,19 +292,21 @@ elation.require(['janusweb.janusbase'], function() {
       //this.openPortal();
     }
     this.activate = function(ev) {
+      let now = Date.now();
+      if (now - this.lastactivatetime < this.cooldown) {
+        return;
+      }
+      this.lastactivatetime = now;
+
+      console.log("portal activate")
       const stopBubbleUpward = () => {
         if( ev ){
           ev.preventDefault()   // do not bubble up any/portal click 
           ev.stopPropagation()  // in nested room  
         }
       }
-      if( ev && ev?.element?.id != this.id ) return stopBubbleUpward()
+      if( !ev || (ev?.element?.id != this.id) ) return stopBubbleUpward()
 
-      let now = Date.now();
-      if (now - this.lastactivatetime < this.cooldown) {
-        return;
-      }
-      this.lastactivatetime = now;
       if (this.frame) {
         this.frame.material.emissive.setHex(0x662222);
         setTimeout(elation.bind(this, function() { this.frame.material.emissive.setHex(0x222222); }), 250);
@@ -325,10 +327,8 @@ elation.require(['janusweb.janusbase'], function() {
               this.closePortal();
             }
           } else if (this.url) {
-            // force preload to prevent flickering on Quest (2) devices 
-            this.preload = janus.engine.client?.xrsession?.mode ? true : this.preload 
             const embed = this.url_pos || this.url_scale || this.url_rotation
-            if (this.preload || embed ){
+            if ( embed ){
               if( embed ){
                 // hide portal children if any
                 if( this.open_collapse ){
