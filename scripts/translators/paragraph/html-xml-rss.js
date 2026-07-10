@@ -22,9 +22,9 @@
         .then( (res) => res.text() )
       )
     },
-    translate: async function(){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
-      if( !this.html ) return [""]
-      let source = this.html
+    translate: async function(html){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
+      if( !html ) return [""]
+      let source = html
       .replace(/<\?.*\?>/g,"")
       .trim()
 
@@ -32,7 +32,8 @@
 
       const selectContent = (selector) => {
         if( selector && typeof this.index != 'undefined' ){
-          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, "text/xml")
+          const mimetype  = source.match(/<(html|body|div|a|b|i|h1|h2|h3|h4|h5)[ >]/i) ? "text/html" : "text/xml"
+          const xmlDoc    = this.xmlDoc =  (new DOMParser()).parseFromString( source, mimetype )
           let paragraphs  = [ ...xmlDoc.querySelectorAll(selector) ] // KiSS JML: CSS selectors level 1
           if( !paragraphs.length ){
             console.error(`paragraph: level1 css selector '${selector}' not matching anything`)
@@ -51,7 +52,7 @@
         return []
       }
       // lets do it!
-      let items = [this.html]
+      let items = [html]
       if( selector ) items = selectContent(selector)
 
       if( !selector && source.match(/^<(feed|rss)[ >]/) ){
