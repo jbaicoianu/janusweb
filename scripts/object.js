@@ -83,6 +83,9 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         emissive_intensity: { type: 'float', default: 1, set: this.updateMaterial, comment: 'Intensity of material emissive color' },
         roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Material roughness value' },
         metalness: { type: 'float', default: null, set: this.updateMaterial, comment: 'Material metalness value' },
+        sheen: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Sheen intensity (velvet/fabric); MeshPhysicalMaterial only' },
+        sheen_color: { type: 'color', default: null, set: this.updateMaterial, comment: 'Sheen tint colour' },
+        sheen_roughness: { type: 'float', default: null, min: 0, max: 1, set: this.updateMaterial, comment: 'Sheen roughness' },
         transmission: { type: 'float', default: 0, set: this.updateMaterial, comment: 'Material transmission value' },
         usevertexcolors: { type: 'boolean', default: true, set: this.updateMaterial },
         gain: { type: 'float', default: 1.0, set: this.updateAudioNodes },
@@ -900,6 +903,17 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (this.transmission !== null) {
               m.transmission = this.transmission;
+            }
+            // Sheen (velvet/fabric). MeshPhysicalMaterial only; m.sheen is undefined on other
+            // material types, so these are no-ops there. Attributes default to null (unset).
+            if (this.sheen !== null && m.sheen !== undefined) {
+              m.sheen = this.sheen;
+            }
+            if (this.sheen_roughness !== null && m.sheenRoughness !== undefined) {
+              m.sheenRoughness = this.sheen_roughness;
+            }
+            if (this.sheen_color && m.sheenColor) {
+              m.sheenColor.copy(this.sheen_color);
             }
 
             if (this.isUsingPBR() && !this.isUsingToonShader()) {
