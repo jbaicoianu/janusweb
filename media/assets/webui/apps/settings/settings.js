@@ -4,6 +4,29 @@ elation.elements.define('janus.ui.settings', class extends elation.elements.base
   }
   reload() {
     this.innerHTML = elation.template.get('janus.ui.settings');
+    this.persistSettings()
+  }
+  persistSettings() {
+    this.store = {
+      "webui.settings.vr.gaze_control": {localStorage:true}
+      // here you can define config-paths which should be reflected in elation.config/localStorage
+      // example value: "webui.settings.vr.gaze_control": {localStorage:true}
+      // this will look for  <ui-toggle label="foo" config="webui.settings.vr.gaze_control"/> 
+      // in settings.html and automatically store/initialize its value e.g.
+    }
+    elation.events.fire({type: 'webui_settings_store_init', element: this});
+    this.addEventListener('change', function(e){
+      let src = e.originalTarget || {}
+      let cfgpath = src.getAttribute("config") || src.parentElement.getAttribute("config")
+      if( cfgpath ){
+        debugger
+        elation.config.set( cfgpath, src.value, {localStorage: true} )
+      }
+    })
+    // initialize webui form values from elation/localstorage config
+    for( let k in this.store ){
+      this.querySelector(`[config='${k}']`).value = elation.config.get(k)
+    }
   }
 });
 elation.elements.define('janus.ui.settings.button', class extends elation.elements.ui.button {
