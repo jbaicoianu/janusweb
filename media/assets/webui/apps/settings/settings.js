@@ -8,11 +8,19 @@ elation.elements.define('janus.ui.settings', class extends elation.elements.base
   }
   persistSettings() {
     this.store = {
-      "webui.settings.vr.gaze_control": {localStorage:true}
       // here you can define config-paths which should be reflected in elation.config/localStorage
       // example value: "webui.settings.vr.gaze_control": {localStorage:true}
       // this will look for  <ui-toggle label="foo" config="webui.settings.vr.gaze_control"/> 
       // in settings.html and automatically store/initialize its value e.g.
+      "webui.settings.mouse.click_left": {localStorage:true},
+      "webui.settings.mouse.click_middle": {localStorage:true},
+      "webui.settings.mouse.click_right": {localStorage:true},
+      "webui.settings.mouse.move_up": {localStorage:true},
+      "webui.settings.mouse.move_down": {localStorage:true},
+      "webui.settings.mouse.scroll_up": {localStorage:true},
+      "webui.settings.mouse.scroll_down": {localStorage:true},
+      "webui.settings.keyboard.space": {localStorage:true},
+      "webui.settings.keyboard.escape": {localStorage:true},
     }
     elation.events.fire({type: 'webui_settings_store_init', element: this});
     this.addEventListener('change', function(e){
