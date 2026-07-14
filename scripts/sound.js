@@ -16,6 +16,7 @@ elation.require(['janusweb.janusbase'], function() {
         gain: { type: 'float', default: 1.0, set: this.updateSound },
         starttime: { type: 'float', default: 0.0, set: this.updateSound },
         distancemodel: { type: 'string', default: 'inverse', set: this.updateSound },
+        panningmodel: { type: 'string', default: 'HRTF', set: this.updateSound },
         rolloff: { type: 'float', default: 1.0, set: this.updateSound },
         rect: { type: 'string', set: this.updateSound },
         stream: { type: 'boolean', default: false}
@@ -69,7 +70,7 @@ elation.require(['janusweb.janusbase'], function() {
           } else {
             //this.audio.panner.distanceModel = 'linear';
           }
-          this.audio.panner.panningModel = 'HRTF';
+          this.audio.panner.panningModel = this.properties.panningmodel || 'HRTF';
         }
         if (audionodes.gain) {
           // Route object's audio through the room's gain element
@@ -194,6 +195,7 @@ elation.require(['janusweb.janusbase'], function() {
           this.audio.setRolloffFactor(this.rolloff);
           this.audio.setRefDistance(this.dist);
           this.audio.setDistanceModel(this.distancemodel);
+          this.audio.panner.panningModel = this.panningmodel || 'HRTF';
         }
       }
       if (this.rect) {
