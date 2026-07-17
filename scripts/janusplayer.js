@@ -344,7 +344,8 @@ document.body.dispatchEvent(click);
           // Show system cursor when the mouse is unlocked and we're not in VR
           // Otherwise, we'll render one in the 3d scene
 
-          var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+          var vrdisplay = this.engine.systems.render.views.main.vrdisplay ||
+                          this.engine.systems.render.views.xr 
           var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay));
           if (useSystemCursor) {
             this.cursor.visible = false;

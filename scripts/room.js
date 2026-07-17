@@ -100,7 +100,7 @@ elation.require([
         'voipserver': { type: 'string', default: 'voip.janusxr.org' },
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
-        'gazetime': { type: 'float', default: 1000 },
+        'gazetime': { type: 'float', default: 2000 },
         'selfavatar': { type: 'boolean', default: false },
         'requires': { type: 'string' },
         'onload': { type: 'string' },

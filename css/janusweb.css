@@ -316,3 +316,19 @@ janus-ui-main.fadeout ui-panel {
   opacity: 0;
   transition: opacity 2s ease-out;
 }
+
+/* Show the div only when viewport width is less than height */
+.landscape_hint{
+  display:none;
+  position: fixed;
+  top: 80px;
+  left: 30%;
+  z-index: 100;
+  background:radial-gradient(#FFFc 30%,#F000,#0000);
+  width: 50%;  
+}
+@media (orientation: portrait) {
+  .landscape_hint {
+    display: block; /* or flex, grid, etc. */
+  }
+}

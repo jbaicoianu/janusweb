@@ -67,14 +67,6 @@ WebVRConfig = {
   BUFFER_SCALE: 0.5
 };
 
-// source webui configs from localStorage if any ('webui.settings.vr.gaze_control' e.g.)
-if( window.localStorage ){
-  for( let i = 0; i < localStorage.length; i++ ){
-    const k = localStorage.key(i)
-    if( k.match(/^webui\./) ) elation.config.set( k, localStorage.getItem(k) )
-  }
-}
-
 // wrap elation.config.set so webui-settings can get saved into localstorage 
 // (one could argue moving this to elation codebase itself, but perhaps it might 
 // be better to not bloat that codebase with opiniated storage-adapters)
