@@ -16,6 +16,123 @@
         <ui-formgroup>
           <ui-slider label="Sensitivity" min="0" max="500"></ui-slider>
           <ui-toggle label="Invert Y"></ui-toggle>
+          <hr>
+          <div style="text-align:right">
+          configure your bluetooth mouse / remote / ringmouse below
+          </div>
+          <ui-select label="Mouseclick left" config="webui.settings.mouse.click_left">
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="teleport">Hold to teleport</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+          <ui-select label="Mouseclick middle" config="webui.settings.mouse.click_middle">
+            <ui-option value="teleport">Hold to teleport</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="none">None</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+          </ui-select>
+          <ui-select label="Mouseclick right" config="webui.settings.mouse.click_right">
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="teleport">Hold to teleport</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+          <ui-select label="Mouse move up" config="webui.settings.mouse.move_up">
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+          <ui-select label="Mouse move down" config="webui.settings.mouse.move_down">
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+          <ui-select label="Scrollwheel up" config="webui.settings.mouse.scroll_up">
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+          <ui-select label="Scrollwheel down" config="webui.settings.mouse.scroll_down">
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="none">None</ui-option>
+          </ui-select>
+        </ui-formgroup>
+      </ui-tab>
+      <ui-tab label="Keyboard">
+        <ui-formgroup>
+          <ui-select label="Space" config="webui.settings.keyboard.space">
+            <ui-option value="jump">Jump</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="exitxr">Exit immersive / Fullscreen</ui-option>
+          </ui-select>
+          <ui-select label="Escape / B-button" config="webui.settings.keyboard.escape">
+            <ui-option value="exitxr">Exit immersive / Fullscreen</ui-option>
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+          </ui-select>
+          <table style="font-size:14px; margin-top:20px">
+            <thead>
+              <tr>
+                <td style="border-bottom:1px solid #888">
+                  <b>Key</b>
+                </td>
+                <td style="border-bottom:1px solid #888">
+                  <b>Function</b>
+                </td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>W A S D    </td> <td>Move forward, left, backward, right</td>
+              </tr>
+              <tr>
+                <td>Shift      </td> <td>Hold to run</td>
+              </tr>
+              <tr>
+                <td>Backspace  </td> <td>Teleport to last room</td>
+              </tr>
+              <tr>
+                <td>F          </td> <td>Flying mode</td> 
+              </tr>
+              <tr>
+                <td>V          </td> <td>Avatar visibility toggle</td>
+              </tr>
+              <tr>
+                <td>T          </td> <td>Enter chatmessage</td> 
+              </tr>
+              <tr>
+            </tbody>
+          </table> 
         </ui-formgroup>
       </ui-tab>
       <ui-tab label="Gamepad">

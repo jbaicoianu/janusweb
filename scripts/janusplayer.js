@@ -344,7 +344,8 @@ document.body.dispatchEvent(click);
           // Show system cursor when the mouse is unlocked and we're not in VR
           // Otherwise, we'll render one in the 3d scene
 
-          var vrdisplay = this.engine.systems.render.views.main.vrdisplay;
+          var vrdisplay = this.engine.systems.render.views.main.vrdisplay ||
+                          this.engine.systems.render.views.xr 
           var useSystemCursor = !(this.engine.systems.controls.pointerLockActive || (vrdisplay));
           if (useSystemCursor) {
             this.cursor.visible = false;
@@ -406,24 +407,6 @@ document.body.dispatchEvent(click);
         v.head_pos.setFromMatrixPosition(this.head.objects['3d'].matrixWorld);
       }
 
-      if (this.gaze && this.gaze.object) {
-        var now = performance.now();
-        var gazetime = 1000;
-        if (this.gaze.object.gazetime) {
-          gazetime = this.gaze.object.gazetime;
-        } else if (this.gaze.object.room && this.gaze.object.room.gazetime) {
-          gazetime = this.gaze.object.room.gazetime;
-        }
-        var diff = now - this.gaze.start;
-        var percent = diff / gazetime;
-        if (percent < 1) {
-          this.gaze.object.dispatchEvent({type: 'gazeprogress', data: percent});
-        } else if (!this.gaze.fired) {
-          this.gaze.object.dispatchEvent({type: 'gazeprogress', data: 1});
-          this.gaze.object.dispatchEvent({type: 'gazeactivate', data: null});
-          this.gaze.fired = true;
-        }
-      }
       if (this.controlstate.jump && !this.jumping) {
         let jumptime = 1;
         if (this.ghost && this.ghost.body && this.ghost.body.animations && this.ghost.body.animations.jump) {
@@ -484,18 +467,6 @@ document.body.dispatchEvent(click);
       this.room = newroom;
       this.room.join();
 
-/*
-      if (!this.gazecaster) {
-        this.gazecaster = newroom.createObject('raycaster', {persist: false});
-        this.head.add(this.gazecaster._target);
-        //this.gazecaster = this.head.spawn('raycaster', null, {room: this.room, janus: this.janus});
-        elation.events.add(this.gazecaster._target, 'raycastenter', elation.bind(this, this.handleGazeEnter));
-        elation.events.add(this.gazecaster._target, 'raycastleave', elation.bind(this, this.handleGazeLeave));
-        elation.events.add(this.gazecaster._target, 'raycastmove', elation.bind(this, this.handleGazeMove));
-      } else {
-        this.gazecaster.setRoom(newroom);
-      }
-*/
       let newroomproxy = newroom.getProxyObject();
       newroomproxy.addEventListener('mouseover', this.updateCursorStyle);
       newroomproxy.addEventListener('mouseout', this.updateCursorStyle);
@@ -539,6 +510,7 @@ document.body.dispatchEvent(click);
 
       //room.add(this);
       this.updateGravity();
+      elation.events.fire({type: 'player_setroom', element: this, data: room});
     }
     this.updateGravity = function(gravity) {
       // FIXME - gravity is currently disabled, pending ongoing work with mesh colliders
@@ -981,43 +953,7 @@ document.body.dispatchEvent(click);
         return this.room.raycast(_dir, _pos, classname, maxdist);
       };
     })();
-    this.cancelGaze = function() {
-      //this.gaze.object.dispatchEvent({type: 'gazecancel'});
-      this.gaze = false;
-    }
-    this.handleGazeEnter = function(ev) {
-      var obj = ev.data.object;
-      if (obj && obj.dispatchEvent && ev.data.intersection) {
-        obj.dispatchEvent({type: 'gazeenter', data: ev.data.intersection});
-        this.cursor_object = obj;
 
-        if (this.gaze) {
-          this.cancelGaze();
-        }
-        this.gaze = {
-          start: performance.now(),
-          object: obj,
-          fired: false
-        };
-      }
-    }
-    this.handleGazeLeave = function(ev) {
-      var obj = ev.data.object;
-      if (obj && obj.dispatchEvent) {
-        this.cursor_object = '';
-        obj.dispatchEvent({type: 'gazeleave', data: ev.data.intersection});
-      }
-    }
-    this.handleGazeMove = function(ev) {
-      var obj = ev.data.object;
-      if (obj && obj.dispatchEvent) {
-        this.cursor_object = obj.js_id || '';
-
-        if (ev.data.intersection.point) {
-          this.vectors.cursor_pos.copy(ev.data.intersection.point);
-        }
-      }
-    }
     this.handleTouchStart = function(ev) {
       //if (!this.enabled) return;
       if (!room.pointerlock) return;

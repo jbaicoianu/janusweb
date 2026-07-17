@@ -97,9 +97,6 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           this.trackedobjects[id].visible = false;
         }
       }
-      if (player.gazecaster) {
-        player.gazecaster.enabled = !hasControllers;
-      }
       //this.position.copy(player.pos);
       //player.orientation.copy(this.orientation);
       player.head.orientation.copy(this.trackedobjects['head'].orientation);

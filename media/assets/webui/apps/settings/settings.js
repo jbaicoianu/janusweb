@@ -4,6 +4,48 @@ elation.elements.define('janus.ui.settings', class extends elation.elements.base
   }
   reload() {
     this.innerHTML = elation.template.get('janus.ui.settings');
+    this.persistSettings()
+  }
+  persistSettings() {
+    // source webui configs from localStorage if any ('webui.settings.vr.gaze_control' e.g.)
+    if( window.localStorage ){
+      for( let i = 0; i < localStorage.length; i++ ){
+        const k = localStorage.key(i)
+        if( k.match(/^webui\./) ) elation.config.set( k, localStorage.getItem(k) )
+      }
+    }
+
+    this.store = {
+      // here you can define config-paths which should be reflected in elation.config/localStorage
+      // example value: "webui.settings.vr.gaze_control": {localStorage:true}
+      // this will look for  <ui-toggle label="foo" config="webui.settings.vr.gaze_control"/> 
+      // in settings.html and automatically store/initialize its value e.g.
+      "webui.settings.mouse.click_left": {localStorage:true},
+      "webui.settings.mouse.click_middle": {localStorage:true},
+      "webui.settings.mouse.click_right": {localStorage:true},
+      "webui.settings.mouse.move_up": {localStorage:true},
+      "webui.settings.mouse.move_down": {localStorage:true},
+      "webui.settings.mouse.scroll_up": {localStorage:true},
+      "webui.settings.mouse.scroll_down": {localStorage:true},
+      "webui.settings.keyboard.space": {localStorage:true},
+      "webui.settings.keyboard.escape": {localStorage:true},
+    }
+    elation.events.fire({type: 'webui_settings_store_init', element: this});
+    const updateConfig = (e) => {
+      let src = e.originalTarget || {}
+      let cfgpath = src.getAttribute("config") || src.parentElement.getAttribute("config")
+      if( cfgpath ){
+        debugger
+        elation.config.set( cfgpath, src.value, {localStorage: true} )
+      }else{ debugger }
+    }
+    // *TODO* why does ui-toggle not emit 'toggle' or 'change'?
+    this.addEventListener('change', updateConfig ) 
+
+    // initialize webui form values from elation/localstorage config
+    for( let k in this.store ){
+      this.querySelector(`[config='${k}']`).value = elation.config.get(k)
+    }
   }
 });
 elation.elements.define('janus.ui.settings.button', class extends elation.elements.ui.button {

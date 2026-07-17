@@ -67,3 +67,12 @@ WebVRConfig = {
   BUFFER_SCALE: 0.5
 };
 
+// wrap elation.config.set so webui-settings can get saved into localstorage 
+// (one could argue moving this to elation codebase itself, but perhaps it might 
+// be better to not bloat that codebase with opiniated storage-adapters)
+elation.config.set = (
+  (set) => (k,v,opts) => {
+    set(k,v)
+    if( opts?.localStorage) localStorage.setItem(k,v)
+  }
+)( elation.config.set.bind(elation.config) )

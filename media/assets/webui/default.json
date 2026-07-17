@@ -12,6 +12,8 @@
     "buttons": "./apps/buttons/buttons.json",
     "xrmenu": "./apps/xrmenu/xrmenu.json",
     "xrfragment": "./apps/xrfragment/xrfragment.json",
+    "gazecontrol": "./apps/gazecontrol/gazecontrol.json",
+    "xdgsoundtheme": "./apps/xdgsoundtheme/xdgsoundtheme.json",
     "vfs": "./apps/vfs/vfs.json"
   },
   "includes": [
