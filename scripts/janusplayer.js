@@ -7,9 +7,9 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
     this.defaultavatar = `
     <FireBoxRoom>
       <assets>
-        <assetobject id="body" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-base.glb" />
-        <assetobject id="avatar_animations" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations.glb" />
-        <assetobject id="avatar_animations_sit" src="http://www.baicoianu.com/~bai/janusweb/test/janus-avatar-animations-sit.glb" />
+        <assetobject id="body" src="/media/assets/janus-avatar-base.glb" />
+        <assetobject id="avatar_animations" src="/media/assets/janus-avatar-animations.glb" />
+        <assetobject id="avatar_animations_sit" src="/media/assets/janus-avatar-animations-sit.glb" />
       </assets>
       <room>
         <ghost scale=".01 .01 .01" col="#e0d5a1" body_id="body" bone_head="head" animation_extras="avatar_animations_sit" />
@@ -57,11 +57,33 @@ elation.require(['engine.things.player', 'janusweb.external.JanusVOIP', 'ui.butt
 
       this.controlstate2 = this.engine.systems.controls.addContext('janusplayer', {
         'toggle_view': ['keyboard_nomod_v,keyboard_shift_v', ev => { if (ev.value == 1) this.toggleCamera() }],
-        'zoom_out': ['mouse_wheel_down', ev => this.zoomView(-1, ev)],
-        'zoom_in': ['mouse_wheel_up', ev => this.zoomView(1, ev)],
-        //'browse_back': ['gamepad_any_button_4', elation.bind(this, this.browseBack)],
-        //'browse_forward': ['gamepad_any_button_5', elation.bind(this, this.browseForward)],
+        'map_mouse_wheel_down': ['mouse_wheel_down', ev => {
+          const mapping = elation.config.get('webui.settings.mouse.scroll_down') || 
+                          this.cameraview == 'thirdperson' ? 'zoomoutview' : 'stepbackward'
+          this.mappingExecute(mapping,ev)
+        }],
+        'map_mouse_wheel_up': ['mouse_wheel_up', ev => {
+          const mapping = elation.config.get('webui.settings.mouse.scroll_up') || 
+                          this.cameraview == 'thirdperson' ? 'zoominview' : 'stepforward'
+          this.mappingExecute(mapping,ev)
+        }],
+        'enter_key': ['keyboard_nomod_enter', ev => {
+          const mapping = elation.config.get('webui.settings.keyboard.enter') || 'confirm'
+          debugger
+          this.mappingExecute(mapping,ev)
+        }],
+        'map_mouse_delta_y': ['mouse_delta_y', ev => {
+          if( this.velocity.length() > 0.1 || ev.value == 0 ) return // ignore
+          const mapping = ev.value > 0 ? elation.config.get('webui.settings.vr.mouse_move_up') || 'stepforward'
+                                       : elation.config.get('webui.settings.vr.mouse_move_down') || 'stepbackward'
+          var vrdisplay = this.engine.systems.render.views.main.vrdisplay ||
+                          this.engine.systems.render.views.xr 
+          if( vrdisplay ) this.mappingExecute(mapping,ev)
+        }],
+        'browse_back': ['keyboard_nomod_backspace',    (e) => history.go(-1)],
+        'browse_forward': ['keyboard_shift_backspace', (e) => history.go(1) ]
       });
+
       this.vectors = {
         xdir: new THREE.Vector3(1, 0, 0),
         ydir: new THREE.Vector3(0, 1, 0),
@@ -1293,6 +1315,22 @@ document.body.dispatchEvent(click);
         return obj;
       }
       return false;
+    }
+    this.triggerState = function(state,ms){
+      ms = ms || 200
+      this.controlstate[state] = 1
+      setTimeout( () => this.controlstate[state] = 0, ms)
+    },
+    this.mappingExecute = function(mapping,ev){
+      switch(mapping){
+        case 'zoomoutview':   this.zoomView(-1, ev); break;
+        case 'stepbackward':  this.triggerState('move_forward',500); break;
+        case 'zoominview':    this.zoomView(1, ev); break;
+        case 'stepforward':   this.triggerState('move_backward',500); break;
+        case 'confirm':       if (room.onClick) { room.onClick(ev); }
+                              elation.events.fire({type: 'click', element: ev?.data?._target || this, ev})
+                              break;
+      }
     }
   }, elation.engine.things.player);
 });

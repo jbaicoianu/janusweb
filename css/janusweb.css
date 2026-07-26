@@ -325,6 +325,7 @@ janus-ui-main.fadeout ui-panel {
   left: 30%;
   z-index: 100;
   background:radial-gradient(#FFFc 30%,#F000,#0000);
+  pointer-events:none;
   width: 50%;  
 }
 @media (orientation: portrait) {

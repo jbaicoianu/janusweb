@@ -47,28 +47,14 @@
             <ui-option value="teleport">Hold to teleport</ui-option>
             <ui-option value="none">None</ui-option>
           </ui-select>
-          <ui-select label="Mouse move up" config="webui.settings.mouse.move_up">
-            <ui-option value="stepforward">Step forward</ui-option>
-            <ui-option value="navback">Teleport last room</ui-option>
-            <ui-option value="navforward">Teleport next room</ui-option>
-            <ui-option value="click">Confirm</ui-option>
-            <ui-option value="stepbackward">Step backward</ui-option>
-            <ui-option value="none">None</ui-option>
-          </ui-select>
-          <ui-select label="Mouse move down" config="webui.settings.mouse.move_down">
-            <ui-option value="stepbackward">Step backward</ui-option>
-            <ui-option value="stepforward">Step forward</ui-option>
-            <ui-option value="navback">Teleport last room</ui-option>
-            <ui-option value="navforward">Teleport next room</ui-option>
-            <ui-option value="click">Confirm</ui-option>
-            <ui-option value="none">None</ui-option>
-          </ui-select>
           <ui-select label="Scrollwheel up" config="webui.settings.mouse.scroll_up">
             <ui-option value="stepforward">Step forward</ui-option>
             <ui-option value="click">Confirm</ui-option>
             <ui-option value="navback">Teleport last room</ui-option>
             <ui-option value="navforward">Teleport next room</ui-option>
             <ui-option value="stepbackward">Step backward</ui-option>
+            <ui-option value="zoominview">Zoom-in Avatar view</ui-option>
+            <ui-option value="zoomoutview">Zoom-out Avatar view</ui-option>
             <ui-option value="none">None</ui-option>
           </ui-select>
           <ui-select label="Scrollwheel down" config="webui.settings.mouse.scroll_down">
@@ -92,7 +78,15 @@
             <ui-option value="stepbackward">Step backward</ui-option>
             <ui-option value="exitxr">Exit immersive / Fullscreen</ui-option>
           </ui-select>
-          <ui-select label="Escape / B-button" config="webui.settings.keyboard.escape">
+          <ui-select label="Enter" config="webui.settings.keyboard.escape">
+            <ui-option value="click">Confirm</ui-option>
+            <ui-option value="exitxr">Exit immersive / Fullscreen</ui-option>
+            <ui-option value="navback">Teleport last room</ui-option>
+            <ui-option value="navforward">Teleport next room</ui-option>
+            <ui-option value="stepforward">Step forward</ui-option>
+            <ui-option value="stepbackward">Step backward</ui-option>
+          </ui-select>
+          <ui-select label="Escape / B-button" config="webui.settings.keyboard.enter">
             <ui-option value="exitxr">Exit immersive / Fullscreen</ui-option>
             <ui-option value="click">Confirm</ui-option>
             <ui-option value="navback">Teleport last room</ui-option>

@@ -4,32 +4,38 @@ elation.require([], function() {
     constructor(object) {
       this.init()
       this.teleporting = false
+      this.distance = 15
       elation.events.add(null, 'janusweb_script_frame', (e) => this.update(e) )
       elation.events.add(null, 'player_setroom', (e) => this.init(e) )
       elation.events.add(null, 'webui_settings_store_init', this.extendSettingsUI )
-      elation.events.add(null, 'room_load_complete', (e) => setTimeout( () => this.teleporting = false, 5000 ))
+      elation.events.add(null, 'room_load_complete', (e) => { setTimeout( () => this.teleporting = false, 5000 ) })
       elation.events.add(null, 'gazeenter', (ev) => { 
         const obj = this.cursor_object
-        if( this.cursor && this.isClickable(obj) ){
+        if( this.gazecaster.enabled && this.cursor && this.isClickable(obj) ){
           this.cursor.setImage('hover')
-          this.cursor.fuseid = setTimeout( () => this.cursor.setImage('fuse'), 1000)
           elation.events.fire({type: 'action-item-selected', data: this}); // XDG Sound
+
+          const maxDistance = elation.config.get('webui.settings.vr.gaze_maxdistance') 
+                              || this.distance 
+          if( this.isClickable(obj, maxDistance) ){
+            this.cursor.fuseid = setTimeout( () => this.cursor.setImage('fuse'), 1000)
+          }
         }
       })
       elation.events.add(null, 'gazeleave', (ev) => { 
-        if( this.cursor ) this.cursor.setImage('idle')
+        if( this.gazecaster.enabled && this.cursor ) this.cursor.setImage('idle')
       })
       elation.events.add(null, 'gazeactivate', (ev) => {
-        if( this.cooldown > 0 || this.teleporting) return
-
+        if( this.cooldown > 0 || this.teleporting || !this.gazecaster.enabled || player.velocity.length() > 0.1 ) return // debounce false positives 
+        const maxDistance = elation.config.get('webui.settings.vr.gaze_maxdistance') 
+                            || this.distance
         this.cooldown = 1000 
         if( this.cursor ){ 
           this.cursor.setImage('idle')
           const obj = ev.data 
-          if( this.isClickable(obj) && elation.config.get('webui.settings.vr.gaze_click') !== false ){
-            if (room.onClick) { room.onClick(ev); }
-            elation.events.fire({type: 'click', element: obj._target, ev})
-            // this minimizes activating/gazing at another portal after teleporting
+          if( this.isClickable(obj,maxDistance) && elation.config.get('webui.settings.vr.gaze_click') !== false ){
+            player.mappingExecute('confirm', ev )
+            // re-enable: to minimize activating/gazing at another portal after teleporting
             if( String(obj.componentname).match(/janusportal/) ) this.teleporting = true 
             elation.events.fire({type: 'action-link-released', data: this}); // XDG Sound
           }
@@ -41,8 +47,10 @@ elation.require([], function() {
     extendSettingsUI(e){
       const settings = e.element
       if( !settings.store['webui.settings.vr.gaze_control'] ){
-        settings.store['webui.settings.vr.gaze_control'] = {localStorage:true}
-        settings.store['webui.settings.vr.gaze_click'] = {localStorage:true}
+        settings.store['webui.settings.vr.gaze_control']    = {localStorage:true}
+        settings.store['webui.settings.vr.gaze_click']      = {localStorage:true}
+        settings.store["webui.settings.vr.mouse_move_up"]   = {localStorage:true}
+        settings.store["webui.settings.vr.mouse_move_down"] = {localStorage:true}
       }
       const vrtab = settings.querySelector("ui-tab[label='VR'] ui-formgroup")
       vrtab.innerHTML += `
@@ -52,6 +60,23 @@ elation.require([], function() {
           <ui-option value="never">Never</ui-option>
         </ui-select>
         <ui-toggle label="Gaze auto-click" checked config="webui.settings.vr.gaze_click"></ui-toggle>
+        <ui-slider label="Gaze max distance" min="0" max="150" value="15"></ui-slider>
+        <ui-select label="Mouse move up" config="webui.settings.vr.mouse_move_up">
+          <ui-option value="stepforward">Step forward</ui-option>
+          <ui-option value="navback">Teleport last room</ui-option>
+          <ui-option value="navforward">Teleport next room</ui-option>
+          <ui-option value="click">Confirm</ui-option>
+          <ui-option value="stepbackward">Step backward</ui-option>
+          <ui-option value="none">None</ui-option>
+        </ui-select>
+        <ui-select label="Mouse move down" config="webui.settings.vr.mouse_move_down">
+          <ui-option value="stepbackward">Step backward</ui-option>
+          <ui-option value="stepforward">Step forward</ui-option>
+          <ui-option value="navback">Teleport last room</ui-option>
+          <ui-option value="navforward">Teleport next room</ui-option>
+          <ui-option value="click">Confirm</ui-option>
+          <ui-option value="none">None</ui-option>
+        </ui-select>
       `
     }
 
@@ -166,7 +191,8 @@ elation.require([], function() {
       }
     }
 
-    isClickable(obj){
+    isClickable(obj,maxDistance){
+      if( obj && maxDistance && obj.position.distanceTo( player.position ) > maxDistance ) return false 
       return this.cursor && 
              obj?.pickable && 
              obj?.collidable && 

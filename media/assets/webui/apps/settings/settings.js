@@ -23,11 +23,10 @@ elation.elements.define('janus.ui.settings', class extends elation.elements.base
       "webui.settings.mouse.click_left": {localStorage:true},
       "webui.settings.mouse.click_middle": {localStorage:true},
       "webui.settings.mouse.click_right": {localStorage:true},
-      "webui.settings.mouse.move_up": {localStorage:true},
-      "webui.settings.mouse.move_down": {localStorage:true},
       "webui.settings.mouse.scroll_up": {localStorage:true},
       "webui.settings.mouse.scroll_down": {localStorage:true},
       "webui.settings.keyboard.space": {localStorage:true},
+      "webui.settings.keyboard.enter": {localStorage:true},
       "webui.settings.keyboard.escape": {localStorage:true},
     }
     elation.events.fire({type: 'webui_settings_store_init', element: this});

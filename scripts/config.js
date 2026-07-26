@@ -1,20 +1,22 @@
 elation.config.set('janusweb.network.host', 'wss://presence.janusxr.org:5567');        // Default presence server
 
-proxies = [
+elation.config.set('engine.assets.corsproxy',   '')  // CORS proxy URL (decided by room.determineProxy)
+elation.config.set('engine.assets.corsproxies', [
   'https://p.janusxr.org/',
   'https://cors.xrforge.isvery.ninja/'
-]
-elation.config.set('engine.assets.corsproxy',   proxies[0]); // CORS proxy URL
-elation.config.set('engine.assets.corsproxies', []        ); // rotate **online** proxies only
-proxies.map( (url) =>
+])
+// remove offline proxies
+elation.config.get('engine.assets.corsproxies') 
+.map( (url) => 
   fetch(url,{method:'HEAD'})
-  .then( (res) => {
-    // online defaults join the rotation unless an explicit set was configured
-    // (e.g. the viewer's corsproxy attribute)
-    let corsproxies = elation.config.get("engine.assets.corsproxies");
-    if (res.ok && !corsproxies.explicit) corsproxies.push(url);
+  .catch( () => {
+    elation.config.set(
+      "engine.assets.corsproxies", 
+      elation.config.get("engine.assets.corsproxies").filter( (u) => url != u )
+    )
   })
 )
+
 
 elation.config.set('engine.assets.workers', 'auto'); // Number of workers to use for asset parsing
 //elation.config.set('engine.assets.image.maxsize', 16384); 
@@ -67,9 +69,8 @@ WebVRConfig = {
   BUFFER_SCALE: 0.5
 };
 
+// in the future elation engine might support storage-adapters but for now we
 // wrap elation.config.set so webui-settings can get saved into localstorage 
-// (one could argue moving this to elation codebase itself, but perhaps it might 
-// be better to not bloat that codebase with opiniated storage-adapters)
 elation.config.set = (
   (set) => (k,v,opts) => {
     set(k,v)
