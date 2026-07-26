@@ -627,7 +627,7 @@ elation.require([
       }
     }
 
-    this.load = function(url, baseurloverride) {
+    this.load = async function(url, baseurloverride) {
       if (!url) {
         url = this.properties.url;
       } else {
@@ -2951,13 +2951,15 @@ console.log('dispatch to parent', event, this, event.target);
     }
     this.getFullRoomURL = function(url, proxyurl) {
       let fullurl = url;
-      if (fullurl[0] == '/' && fullurl[1] != '/'){ 
-        fullurl = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + fullurl;
+      const relativeURL = /^(\.|\/)[a-zA-Z0-9-_]/ 
+      if ( fullurl.match(relativeURL) ){
+        if( fullurl[0] == '/' ){
+          fullurl = new URL(this.baseurl).origin + fullurl
+        }else{
+          fullurl = this.baseurl.substr( 0, this.baseurl.lastIndexOf('/') ) + fullurl.replace(/^\./,'')
+        }
       }else if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
-        fullurl = this.baseurl + (
-                    fullurl.match(/^\.\//) ? fullurl.replace(/^\.\//,'')  // './index.html' e.g.
-                                           : fullurl 
-                  )
+        fullurl = this.baseurl + fullurl 
       } else if (proxyurl && !this.isLocal(fullurl) ){
         fullurl = proxyurl + fullurl;
       }
