@@ -1,10 +1,10 @@
 elation.config.set('janusweb.network.host', 'wss://presence.janusxr.org:5567');        // Default presence server
 
-elation.config.set('engine.assets.corsproxy',   '')  // CORS proxy URL (decided by room.determineProxy)
 elation.config.set('engine.assets.corsproxies', [
   'https://p.janusxr.org/',
   'https://cors.xrforge.isvery.ninja/'
 ])
+elation.config.set('engine.assets.corsproxy',   'https://p.janusxr.org/')  // CORS proxy URL (decided by room.determineProxy)
 // remove offline proxies
 elation.config.get('engine.assets.corsproxies') 
 .map( (url) => 
