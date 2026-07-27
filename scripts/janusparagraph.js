@@ -167,6 +167,13 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       content = content.replace(/<hr\s*\/?>/g, '<div class="hr"></div>');
       content = content.replace(/<img(.*?)>/g, "<img$1 />");
 
+      // Raw CSS may contain characters that are illegal inside an XML <style>
+      // element ('&' and '<' — even in comments); escape them. The XML parser
+      // decodes the entities back before the CSS engine sees the text.
+      var xmlSafeCss = function(text) {
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+      };
+
       var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
       styletag    += 'a { color:unset; text-decoration: none; }' // dont confuse users with nonclickable links
 
@@ -176,13 +183,16 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       styletag += [ ...(new DOMParser)
                        .parseFromString(this.room.fullsource,"text/html")
                        .querySelectorAll("style[type=\"text/css\"]") 
+      styletag += xmlSafeCss([ ...(new DOMParser)
+                       .parseFromString(room.fullsource,"text/html")
+                       .querySelectorAll("style[type=\"text/css\"]")
                   ]
                   .map( (el) => el.innerText )
-                  .join("\n")
+                  .join("\n"))
 
 
       if (this.css) {
-        styletag += this.css;
+        styletag += xmlSafeCss(this.getStylesheet());
       }
       styletag +=  '</style>';
 
@@ -207,11 +217,30 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
           this.refresh();
         }
       };
+      img.onerror = () => {
+        console.warn('paragraph: texture SVG failed to render (malformed markup or CSS?)', this);
+      };
       this.currentImage = img;
       img.src = url;
       this.refresh();
       return texture;
     }
+    // The css attribute accepts either inline CSS text or a URL to a stylesheet.
+    // URLs are fetched (and cached) and their text inlined into the render, since
+    // the SVG rasterizer can't load external resources. The first render happens
+    // unstyled; we re-render when the stylesheet arrives.
+    this.getStylesheet = function() {
+      var isurl = /^(https?:)?\/\//.test(this.css) || /\.css([?#]|$)/.test(this.css);
+      if (!isurl) return this.css;
+      if (this.cssText !== undefined) return this.cssText;
+      this.cssText = '';
+      var url = this.room.getFullRoomURL(this.css);
+      this.useCache('css:' + url, () => window.fetch(url).then((r) => r.text()))
+        .then((text) => { this.cssText = text; this.updateTexture(); })
+        .catch(() => {});
+      return '';
+    }
+
     this.updateMaterial = function() {
       if (this.objects['3d']) {
         this.objects['3d'].castShadow = this.shadow && this.shadow_cast;

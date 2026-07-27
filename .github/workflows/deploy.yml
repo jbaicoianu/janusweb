@@ -40,7 +40,8 @@ jobs:
         run: |
           chmod +x ./utils/build.sh
           ./utils/build.sh
-          ./utils/release.binary.sh
+          # Temporary disabled - redbean.dev's SSL cert is expired
+          #./utils/release.binary.sh 
 
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v3
