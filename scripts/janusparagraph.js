@@ -180,15 +180,12 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
 
 
       // hybrid 2D/3D styling: apply styles from container HTML if any
-      styletag += [ ...(new DOMParser)
-                       .parseFromString(this.room.fullsource,"text/html")
-                       .querySelectorAll("style[type=\"text/css\"]") 
       styletag += xmlSafeCss([ ...(new DOMParser)
-                       .parseFromString(room.fullsource,"text/html")
-                       .querySelectorAll("style[type=\"text/css\"]")
-                  ]
-                  .map( (el) => el.innerText )
-                  .join("\n"))
+                 .parseFromString(room.fullsource,"text/html")
+                 .querySelectorAll("style[type=\"text/css\"]")
+            ]
+            .map( (el) => el.innerText )
+            .join("\n"))
 
 
       if (this.css) {

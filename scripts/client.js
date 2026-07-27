@@ -9,7 +9,7 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
     var rootdir = elation.utils.any(args.rootdir, elation.config.get('dependencies.rootdir'), document.location.pathname);
     var path = elation.utils.any(args.path, elation.config.get('dependencies.path'), '/');
     var homepage = elation.utils.any(args.homepage, elation.config.get('janusweb.homepage'), document.location.href);
-    var corsproxy = elation.utils.any(args.corsproxy && args.corsproxy != 'false', elation.config.get('engine.assets.corsproxy'), document.location.href);
+    var corsproxy = elation.utils.any(args.corsproxy && args.corsproxy != 'false' ? args.corsproxy : false, elation.config.get('engine.assets.corsproxy'), '');
     var container = elation.utils.any(args.container, document.body);
     var fullsize = elation.utils.any(args.fullsize && args.fullsize != 'false', container == document.body);
     var thirdperson = elation.utils.any(args.thirdperson && args.thirdperson != 'false', false);

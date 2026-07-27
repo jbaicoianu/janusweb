@@ -13,6 +13,8 @@
     "xrmenu": "./apps/xrmenu/xrmenu.json",
     "xrfragment": "./apps/xrfragment/xrfragment.json",
     "rsshub": "./apps/rsshub/rsshub.json",
+    "gazecontrol": "./apps/gazecontrol/gazecontrol.json",
+    "xdgsoundtheme": "./apps/xdgsoundtheme/xdgsoundtheme.json",
     "vfs": "./apps/vfs/vfs.json"
   },
   "includes": [

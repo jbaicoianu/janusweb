@@ -103,7 +103,7 @@ elation.require([
         'voipserver': { type: 'string', default: 'voip.janusxr.org' },
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
-        'gazetime': { type: 'float', default: 1000 },
+        'gazetime': { type: 'float', default: 2000 },
         'selfavatar': { type: 'boolean', default: false },
         'requires': { type: 'string' },
         'onload': { type: 'string' },
@@ -343,6 +343,7 @@ elation.require([
         this.skybox = false 
         this.use_local_asset = false 
       }
+    }
     // Shared box-projection uniforms for parallax-corrected envmap reflections. One
     // set of THREE uniform objects per room; every PBR material's parallax shader
     // references these same objects, so live edits to envmap_box_center/size update
@@ -637,7 +638,7 @@ elation.require([
       }
     }
 
-    this.load = function(url, baseurloverride) {
+    this.load = async function(url, baseurloverride) {
       if (!url) {
         url = this.properties.url;
       } else {
@@ -2988,13 +2989,15 @@ console.log('dispatch to parent', event, this, event.target);
     }
     this.getFullRoomURL = function(url, proxyurl) {
       let fullurl = url;
-      if (fullurl[0] == '/' && fullurl[1] != '/'){ 
-        fullurl = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + fullurl;
+      const relativeURL = /^(\.|\/)[a-zA-Z0-9-_]/ 
+      if ( fullurl.match(relativeURL) ){
+        if( fullurl[0] == '/' ){
+          fullurl = new URL(this.baseurl).origin + fullurl
+        }else{
+          fullurl = this.baseurl.substr( 0, this.baseurl.lastIndexOf('/') ) + fullurl.replace(/^\./,'')
+        }
       }else if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
-        fullurl = this.baseurl + (
-                    fullurl.match(/^\.\//) ? fullurl.replace(/^\.\//,'')  // './index.html' e.g.
-                                           : fullurl 
-                  )
+        fullurl = this.baseurl + fullurl 
       } else if (proxyurl && !this.isLocal(fullurl) ){
         fullurl = proxyurl + fullurl;
       }
