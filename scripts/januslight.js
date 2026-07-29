@@ -16,6 +16,7 @@ elation.require(['janusweb.janusbase'], function() {
         light_shadow_near: { type: 'float', default: .1, set: this.updateLight },
         light_shadow_far: { type: 'float', set: this.updateLight },
         light_shadow_bias: { type: 'float', default: .0001, set: this.updateLight },
+        light_shadow_normalbias: { type: 'float', default: 0, set: this.updateLight, comment: 'Offset along surface normal for shadow depth comparison; reduces shadow acne on lit slopes' },
         light_shadow_radius: { type: 'float', default: 2.5, set: this.updateLight },
         light_shadow_size: { type: 'int', default: 512, set: this.updateLight },
         light_helper: { type: 'boolean', default: false, set: this.updateLightHelper },
@@ -101,10 +102,13 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.light_target && !this.targetIsSet) {
         this.updateLightTarget();
       }
-      if (this.light_directional || this.light_cone_angle == 1) {
-        //this.light.position.subVectors(this.light.position, this.light.target.position).add(player.pos).sub(this.pos);
-        this.light.position.subVectors(this.position, this.light.target.position).normalize().multiplyScalar(this.light_range / 2).add(player.pos).sub(this.pos);
+      if ((this.light_directional || this.light_cone_angle == 1) && !this.targetIsSet) {
+        // The light's configured pos is its fixed bearing (direction the light
+        // comes from). Recenter the shadow volume on the player each frame
+        // without altering that bearing — shadow angles must not change as
+        // the player moves.
         this.light.target.position.copy(player.pos).sub(this.pos);
+        this.light.position.copy(this.position).normalize().multiplyScalar(this.light_range / 2).add(this.light.target.position);
       }
       if (this.light_style != '') {
         let idx = Math.floor(Date.now() / (1000 / this.light_style_fps)) % this.light_style.length;
@@ -197,6 +201,7 @@ elation.require(['janusweb.janusbase'], function() {
       this.light.shadow.camera.fov = 90;
       this.light.shadow.mapSize.set(shadowSize, shadowSize);
       this.light.shadow.bias = this.light_shadow_bias;
+      this.light.shadow.normalBias = this.light_shadow_normalbias;
       this.light.shadow.mapSize.set(this.light_shadow_size, this.light_shadow_size);
 
       // directional light shadow parameters
@@ -257,6 +262,7 @@ elation.require(['janusweb.janusbase'], function() {
           light_shadow_near:   [ 'property', 'light_shadow_near'],
           light_shadow_far:    [ 'property', 'light_shadow_far'],
           light_shadow_bias:   [ 'property', 'light_shadow_bias'],
+          light_shadow_normalbias: [ 'property', 'light_shadow_normalbias'],
           light_shadow_radius: [ 'property', 'light_shadow_radius'],
           light_shadow_size:   [ 'property', 'light_shadow_size'],
           color_temperature:   [ 'property', 'color_temperature'],
