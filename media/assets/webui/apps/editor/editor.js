@@ -424,6 +424,8 @@ console.log('set translation snap', ev.data, ev);
 
     // activate context
     janus.engine.systems.controls.activateContext('roomedit', this);
+    // Tab cycles manipulation modes while editing; keep the browser from tabbing focus away
+    janus.engine.systems.controls.enableKeyboardCapture('keyboard_tab');
 
     //this.editObjectShowWireframe();
     this.editObjectShowOutline();
@@ -633,6 +635,7 @@ console.log('set translation snap', ev.data, ev);
 
     // deactivate context
     janus.engine.systems.controls.deactivateContext('roomedit', this);
+    janus.engine.systems.controls.disableKeyboardCapture('keyboard_tab');
     if (!this.roomedit.moving) {
       this.roomedit.moving = true;
       janus.engine.systems.controls.deactivateContext('roomedit_togglemove', this);
@@ -1129,9 +1132,11 @@ console.log('change color', obj.col, vec);
     if (ev.value == 1) {
       roomedit.moving = true;
       this.engine.systems.controls.activateContext('roomedit', this);
+      this.engine.systems.controls.enableKeyboardCapture('keyboard_tab');
     } else if (ev.value == 0) {
       roomedit.moving = false;
       this.engine.systems.controls.deactivateContext('roomedit', this);
+      this.engine.systems.controls.disableKeyboardCapture('keyboard_tab');
     }
   }
   editObjectHandlePointerlock(ev) {
