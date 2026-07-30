@@ -1495,6 +1495,12 @@ elation.require([
       if (proxyobj && objectargs.js_id && !objectargs.isinternal && (parentobj == this || 'js_id' in args)) {
         this.jsobjects[objectargs.js_id] = proxyobj;
       }
+      // thing_add only fires on the direct parent, so listeners on the room
+      // (scene tree, scripts) never heard about objects created inside child
+      // groups; announce those at the room level as well
+      if (parentobj !== this) {
+        elation.events.fire({type: 'thing_add', element: this, data: {thing: object}});
+      }
 
       if (realtype == 'janussound') {
         this.sounds[objectargs.sound_id] = object;

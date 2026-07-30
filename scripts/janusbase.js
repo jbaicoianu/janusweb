@@ -245,7 +245,14 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
     this.updateRotationSpeed = function() {
       var rotate_axis = this.properties.rotate_axis,
           rotate_speed = this.properties.rotate_deg_per_sec || 0;
+      // rotate_axis has a non-empty default, so writing axis * speed
+      // unconditionally would clobber an `angular` attribute with zeroes
+      // (the rigidbody shares its angular vector with the property). Only
+      // write when a speed is in play; after one applies, zero still goes
+      // through so a spinner can be stopped by setting the speed back to 0.
+      if (rotate_speed == 0 && !this._rotationSpeedApplied) return;
       if (this.objects.dynamics && rotate_axis) {
+        this._rotationSpeedApplied = (rotate_speed != 0);
         var speed = (rotate_speed * Math.PI/180);
         var axisparts = (rotate_axis instanceof THREE.Vector3 ? rotate_axis.toArray() : rotate_axis.split(' '));
         var axis = new THREE.Vector3().set(axisparts[0], axisparts[1], axisparts[2]);
@@ -371,12 +378,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           jsid:     ['property', 'js_id'],
           pos:      ['property', 'position'],
           rotation: ['property', 'rotation'],
-          angular:  ['property', 'angular'],
           scale:    ['property', 'scale'],
           //rotation_order: ['property', 'rotation_order'],
           col:      ['property', 'color'],
 
           vel:      ['property', 'velocity'],
+          angular:  ['property', 'angular'],
           accel:    ['property', 'acceleration'],
           mass:     ['property', 'mass'],
           restitution:['property', 'restitution'],
@@ -388,6 +395,7 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           sync:     ['property', 'sync'],
           autosync: ['property', 'autosync'],
           locked:   ['property', 'locked'],
+          persist:  ['property', 'persist'],
           visible:  ['property', 'visible'],
           //tagName:  ['property', 'tag'],
           billboard: ['property', 'billboard'],
@@ -999,6 +1007,12 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           if (this.room.objects[obj.js_id]) {
             delete this.room.objects[obj.js_id];
           }
+          // thing_remove fires only on the direct parent; announce on the
+          // room as well so the scene tree and sync ledger hear removals of
+          // objects nested inside groups (mirror of the thing_add fix)
+          if (this.room && this.room !== this) {
+            elation.events.fire({type: 'thing_remove', element: this.room, data: {thing: realobj}});
+          }
         }
       }
     }
@@ -1342,12 +1356,21 @@ console.log('its null', k, this[k], prop);
           props['rotation'][1] *= THREE.MathUtils.RAD2DEG;
           props['rotation'][2] *= THREE.MathUtils.RAD2DEG;
 */
-        } else if (realkey == 'color') {
-          if (!this.colorIsDefault) {
-            props['col'] = this.col.toArray();
-          }
         }
         //if (this[k] !== prop.default && this[k] !== null && this[k] !== undefined) {
+      }
+
+      // color sits in skipprops, so the loop's special-case never ran for it
+      // and every clone came out default gray; carry it over here instead
+      if (!this.colorIsDefault && this.col && this.col.toArray) {
+        props['col'] = this.col.toArray();
+      }
+
+      // engine-level flags live under properties.*, not as flat accessors,
+      // so the loop above can't see them: carry persistence explicitly so a
+      // clone of a scene object is a scene object too (scene tree, saves)
+      if (this.properties && this.properties.persist) {
+        props['persist'] = true;
       }
 
       if (!parent) parent = this.parent || room;
