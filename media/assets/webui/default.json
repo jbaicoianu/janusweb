@@ -5,7 +5,7 @@
     "avatar": "./apps/avatar/avatar.json",
     "settings": "./apps/settings/settings.json",
     "inventory": "./apps/inventory/inventory.json",
-    "editor": "./apps/editor/editor.json",
+    "editor": "./apps/editor/editor.json?v=7",
     "transporter": "./apps/transporter/transporter.json",
     "locomotion": "./apps/locomotion/locomotion.json",
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",

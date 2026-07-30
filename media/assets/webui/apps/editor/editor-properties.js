@@ -436,3 +436,288 @@ elation.elements.define('janus-ui-editor-property-boolean', class extends elatio
     }
   }
 });
+
+/* ---- floating 3D property UIs ---------------------------------------
+   Registry of in-world editors keyed by property TYPE. The editor
+   controller consults window.JanusEditorPropertyUIs when the edit mode
+   lands on a non-transform property (Tab cycling or a 2D inspector
+   click); transform properties keep TransformControls. Rigs follow the
+   TransformControls idiom: raw THREE meshes on camera layer 10 (the
+   editor overlay layer), our own raycaster, nothing persisted or
+   synced. */
+window.JanusEditorPropertyUIs = window.JanusEditorPropertyUIs || {};
+
+window.JanusEditorPropertyUIs.color = class JanusColorPicker3D {
+  constructor(controller) {
+    this.controller = controller;
+    this.object = null;
+    this.propname = null;
+    this.hsv = { h: 0.33, s: 1, v: 1 };
+    this.dragging = false;
+    this.built = false;
+    this.raycaster = new THREE.Raycaster();
+    if (this.raycaster.layers && this.raycaster.layers.enableAll) this.raycaster.layers.enableAll();
+    this.handleMouseDown = (ev) => this.pointerDown(ev);
+    this.handleMouseMove = (ev) => this.pointerMove(ev);
+    this.handleMouseUp = (ev) => this.pointerUp(ev);
+    this.handleFrame = () => this.updateBillboard();
+    this.handleObjectChange = () => { if (!this.dragging) this.readColor(); };
+  }
+
+  // color math: HSV (THREE.Color only speaks HSL natively)
+  hsv2rgb(h, s, v) {
+    let f = (n) => {
+      let k = (n + h * 6) % 6;
+      return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+    };
+    return { r: f(5), g: f(3), b: f(1) };
+  }
+  rgb2hsv(r, g, b) {
+    let max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min, h = 0;
+    if (d > 0) {
+      if (max == r) h = ((g - b) / d) % 6;
+      else if (max == g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+      if (h < 0) h += 1;
+    }
+    return { h: h, s: max > 0 ? d / max : 0, v: max };
+  }
+
+  build() {
+    let rig = this.rig = new THREE.Group();
+    let flat = { depthTest: false, depthWrite: false, side: THREE.DoubleSide };
+
+    // hue wheel: annulus painted on a transparent plane (r 0.26-0.36 of a 0.72 plane)
+    this.wheelcanvas = document.createElement('canvas');
+    this.wheelcanvas.width = this.wheelcanvas.height = 256;
+    this.drawWheel();
+    this.wheeltex = new THREE.CanvasTexture(this.wheelcanvas);
+    this.wheel = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.72, 0.72),
+      new THREE.MeshBasicMaterial(Object.assign({ map: this.wheeltex, transparent: true }, flat)));
+    this.wheel.renderOrder = 1000;
+    rig.add(this.wheel);
+
+    // saturation/value square inside the wheel
+    this.svcanvas = document.createElement('canvas');
+    this.svcanvas.width = this.svcanvas.height = 256;
+    this.svtex = new THREE.CanvasTexture(this.svcanvas);
+    this.sv = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.34, 0.34),
+      new THREE.MeshBasicMaterial(Object.assign({ map: this.svtex }, flat)));
+    this.sv.position.z = 0.002;
+    this.sv.renderOrder = 1001;
+    rig.add(this.sv);
+
+    // live swatch under the wheel
+    this.swatch = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.2, 0.07),
+      new THREE.MeshBasicMaterial(Object.assign({}, flat)));
+    this.swatch.position.set(0, -0.45, 0);
+    this.swatch.renderOrder = 1000;
+    rig.add(this.swatch);
+
+    // markers: a ring on the wheel for hue, a ring on the square for S/V
+    this.huemarker = new THREE.Mesh(
+      new THREE.RingGeometry(0.016, 0.026, 16),
+      new THREE.MeshBasicMaterial(Object.assign({ color: 0xffffff }, flat)));
+    this.huemarker.position.z = 0.004;
+    this.huemarker.renderOrder = 1002;
+    rig.add(this.huemarker);
+    this.svmarker = new THREE.Mesh(
+      new THREE.RingGeometry(0.012, 0.02, 16),
+      new THREE.MeshBasicMaterial(Object.assign({ color: 0xffffff }, flat)));
+    this.svmarker.position.z = 0.004;
+    this.svmarker.renderOrder = 1002;
+    rig.add(this.svmarker);
+
+    // editor overlay layer: only renders while the editor is active
+    rig.traverse((o) => { if (o.layers) o.layers.set(10); });
+    this.built = true;
+  }
+  drawWheel() {
+    let ctx = this.wheelcanvas.getContext('2d'),
+        s = this.wheelcanvas.width, c = s / 2,
+        rOuter = c, rInner = c * (0.26 / 0.36);
+    ctx.clearRect(0, 0, s, s);
+    // wedges drawn at canvas angle -i so a hit's uv-space atan2 IS the hue
+    for (let i = 0; i < 360; i++) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'hsl(' + i + ',100%,50%)';
+      ctx.lineWidth = rOuter - rInner;
+      ctx.arc(c, c, (rInner + rOuter) / 2, -(i + 1.4) * Math.PI / 180, -(i - 0.4) * Math.PI / 180);
+      ctx.stroke();
+    }
+  }
+  drawSV() {
+    let ctx = this.svcanvas.getContext('2d'), s = this.svcanvas.width;
+    let rgb = this.hsv2rgb(this.hsv.h, 1, 1);
+    let hue = 'rgb(' + ((rgb.r * 255) | 0) + ',' + ((rgb.g * 255) | 0) + ',' + ((rgb.b * 255) | 0) + ')';
+    let gx = ctx.createLinearGradient(0, 0, s, 0);
+    gx.addColorStop(0, '#ffffff');
+    gx.addColorStop(1, hue);
+    ctx.fillStyle = gx;
+    ctx.fillRect(0, 0, s, s);
+    let gy = ctx.createLinearGradient(0, 0, 0, s);
+    gy.addColorStop(0, 'rgba(0,0,0,0)');
+    gy.addColorStop(1, '#000000');
+    ctx.fillStyle = gy;
+    ctx.fillRect(0, 0, s, s);
+    this.svtex.needsUpdate = true;
+  }
+
+  attach(object, propname, propdef) {
+    if (!this.built) this.build();
+    this.object = object;
+    this.propname = propname;
+    let parent = room._target.objects['3d'];
+    if (this.rig.parent !== parent) parent.add(this.rig);
+    this.rig.visible = true;
+    this.readColor();
+    this.place();
+    let view = janus.engine.client.view;
+    this.canvas = view.canvas;
+    this.canvas.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mouseup', this.handleMouseUp);
+    object.addEventListener('objectchange', this.handleObjectChange);
+    elation.events.add(janus.engine, 'engine_frame', this.handleFrame);
+    janus.engine.systems.render.setdirty();
+  }
+  detach() {
+    if (!this.built) return;
+    this.rig.visible = false;
+    this.dragging = false;
+    if (this.canvas) {
+      this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+      window.removeEventListener('mousemove', this.handleMouseMove);
+      window.removeEventListener('mouseup', this.handleMouseUp);
+    }
+    if (this.object) this.object.removeEventListener('objectchange', this.handleObjectChange);
+    elation.events.remove(janus.engine, 'engine_frame', this.handleFrame);
+    this.object = null;
+    this.propname = null;
+    janus.engine.systems.render.setdirty();
+  }
+
+  place() {
+    // float above the object; billboarding keeps it facing the player
+    let anchor = new THREE.Vector3(0, 1, 0);
+    try { this.object._target.objects['3d'].getWorldPosition(anchor); } catch (e) {}
+    let top = anchor.y + 0.8;
+    let bbox = this.controller.roomedit.objectBoundingBox;
+    if (bbox && bbox.max && isFinite(bbox.max.y)) top = Math.max(top, bbox.max.y + 0.55);
+    let target = new THREE.Vector3(anchor.x, top, anchor.z);
+    if (this.rig.parent) this.rig.parent.worldToLocal(target);
+    this.rig.position.copy(target);
+    this.updateBillboard();
+  }
+  updateBillboard() {
+    if (!this.rig || !this.rig.visible) return;
+    let cam = janus.engine.client.view.actualcamera;
+    if (!cam) return;
+    let q = cam.getWorldQuaternion(new THREE.Quaternion());
+    if (this.rig.parent) {
+      let pq = this.rig.parent.getWorldQuaternion(new THREE.Quaternion());
+      q.premultiply(pq.invert());
+    }
+    this.rig.quaternion.copy(q);
+  }
+
+  pointerNDC(ev) {
+    if (document.pointerLockElement) return new THREE.Vector2(0, 0);
+    let rect = this.canvas.getBoundingClientRect();
+    return new THREE.Vector2(
+      ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+      -((ev.clientY - rect.top) / rect.height) * 2 + 1);
+  }
+  pickPart(ev) {
+    let cam = janus.engine.client.view.actualcamera;
+    this.raycaster.setFromCamera(this.pointerNDC(ev), cam);
+    let hits = this.raycaster.intersectObjects([this.sv, this.wheel], false);
+    for (let i = 0; i < hits.length; i++) {
+      let hit = hits[i];
+      if (hit.object === this.sv) return 'sv';
+      if (hit.object === this.wheel && hit.uv) {
+        let px = hit.uv.x - 0.5, py = hit.uv.y - 0.5;
+        let rn = Math.sqrt(px * px + py * py) / 0.5;
+        if (rn >= 0.66 && rn <= 1.02) return 'wheel';
+      }
+    }
+    return null;
+  }
+  dragPoint(ev) {
+    // intersect the rig's plane so drags keep tracking even off the part
+    let cam = janus.engine.client.view.actualcamera;
+    this.raycaster.setFromCamera(this.pointerNDC(ev), cam);
+    let normal = new THREE.Vector3(0, 0, 1).applyQuaternion(this.rig.getWorldQuaternion(new THREE.Quaternion()));
+    let plane = new THREE.Plane().setFromNormalAndCoplanarPoint(normal, this.rig.getWorldPosition(new THREE.Vector3()));
+    let pt = new THREE.Vector3();
+    if (!this.raycaster.ray.intersectPlane(plane, pt)) return null;
+    return this.rig.worldToLocal(pt);
+  }
+  applyDrag(ev) {
+    let local = this.dragPoint(ev);
+    if (!local) return;
+    let clamp = (x) => Math.max(0, Math.min(1, x));
+    if (this.dragging == 'wheel') {
+      let a = Math.atan2(local.y, local.x);
+      let h = a / (Math.PI * 2);
+      if (h < 0) h += 1;
+      this.setHSV(h, this.hsv.s, this.hsv.v);
+    } else if (this.dragging == 'sv') {
+      this.setHSV(this.hsv.h, clamp(local.x / 0.34 + 0.5), clamp(local.y / 0.34 + 0.5));
+    }
+  }
+  pointerDown(ev) {
+    if (!this.rig || !this.rig.visible || ev.button !== 0) return;
+    let part = this.pickPart(ev);
+    if (!part) return;
+    this.dragging = part;
+    // same trick TransformControls uses: a click that lands after this drag
+    // must not be treated as the edit-confirm click
+    this.controller.roomedit.transforming = true;
+    this.applyDrag(ev);
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+  pointerMove(ev) {
+    if (!this.dragging) return;
+    this.applyDrag(ev);
+  }
+  pointerUp(ev) {
+    if (!this.dragging) return;
+    this.dragging = false;
+    setTimeout(() => { this.controller.roomedit.transforming = false; }, 0);
+  }
+
+  setHSV(h, s, v) {
+    this.hsv = { h: h, s: s, v: v };
+    let rgb = this.hsv2rgb(h, s, v);
+    this.object[this.propname] = new THREE.Color(rgb.r, rgb.g, rgb.b);
+    this.object.sync = true;
+    if (this.object.refresh) this.object.refresh();
+    this.updateVisuals();
+    janus.engine.systems.render.setdirty();
+  }
+  readColor() {
+    if (!this.object) return;
+    let val = this.object[this.propname];
+    let color = (val && val.isColor) ? val : new THREE.Color(val != null ? val : '#ffffff');
+    let hsv = this.rgb2hsv(color.r, color.g, color.b);
+    // keep the hue stable when the color collapses to gray/black/white
+    if (hsv.s > 0.001 && hsv.v > 0.001) this.hsv.h = hsv.h;
+    this.hsv.s = hsv.s;
+    this.hsv.v = hsv.v;
+    this.updateVisuals();
+  }
+  updateVisuals() {
+    this.drawSV();
+    let rgb = this.hsv2rgb(this.hsv.h, this.hsv.s, this.hsv.v);
+    this.swatch.material.color.setRGB(rgb.r, rgb.g, rgb.b);
+    let a = this.hsv.h * Math.PI * 2, rmid = 0.31;
+    this.huemarker.position.set(Math.cos(a) * rmid, Math.sin(a) * rmid, 0.004);
+    this.svmarker.position.set((this.hsv.s - 0.5) * 0.34, (this.hsv.v - 0.5) * 0.34, 0.004);
+  }
+};

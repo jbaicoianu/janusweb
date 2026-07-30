@@ -206,6 +206,7 @@ this.outliner_hover.setLayers('10');
   }
   setMode(mode) {
     let manipulator = this.getManipulator();
+    let transform = true;
     switch (mode) {
       case 'pos':
         manipulator.setMode('translate');
@@ -216,9 +217,55 @@ this.outliner_hover.setLayers('10');
       case 'scale':
         manipulator.setMode('scale');
         break;
+      default:
+        transform = false;
+    }
+    if (transform) {
+      // back on a transform property: the gizmo returns, any floating property UI goes away
+      if (this.roomedit.object) {
+        manipulator.enabled = true;
+        manipulator.visible = true;
+      }
+      this.hidePropertyUI();
+    } else {
+      // non-transform property: park the gizmo and float a matching 3D UI if one is registered
+      manipulator.enabled = false;
+      manipulator.visible = false;
+      this.showPropertyUI(mode);
     }
     if (this.objectinfo) {
       this.objectinfo.setMode(mode);
+    }
+  }
+  getPropertyDef(object, propname) {
+    // same resolution updatePropertyList uses: proxy def name -> thingdef property
+    if (!object || !object._proxyobject || !object._thingdef) return null;
+    let defs = object._proxyobject._proxydefs,
+        def = defs ? defs[propname] : null;
+    if (def && def[0] == 'property') {
+      return object._thingdef.properties[def[1]];
+    }
+    return null;
+  }
+  showPropertyUI(propname) {
+    this.hidePropertyUI();
+    let object = this.roomedit.object;
+    if (!object) return;
+    let propdef = this.getPropertyDef(object, propname),
+        registry = window.JanusEditorPropertyUIs || {};
+    if (propdef && registry[propdef.type]) {
+      if (!this.propertyUIInstances) this.propertyUIInstances = {};
+      if (!this.propertyUIInstances[propdef.type]) {
+        this.propertyUIInstances[propdef.type] = new registry[propdef.type](this);
+      }
+      this.activePropertyUI = this.propertyUIInstances[propdef.type];
+      this.activePropertyUI.attach(object, propname, propdef);
+    }
+  }
+  hidePropertyUI() {
+    if (this.activePropertyUI) {
+      this.activePropertyUI.detach();
+      this.activePropertyUI = null;
     }
   }
   nextMode() {
@@ -424,6 +471,7 @@ console.log('set translation snap', ev.data, ev);
 
     // activate context
     janus.engine.systems.controls.activateContext('roomedit', this);
+    if (this.scenetree && this.scenetree.revealNode) this.scenetree.revealNode(object);
     // Tab cycles manipulation modes while editing; keep the browser from tabbing focus away
     janus.engine.systems.controls.enableKeyboardCapture('keyboard_tab');
 
@@ -624,6 +672,7 @@ console.log('set translation snap', ev.data, ev);
     let manipulator = this.getManipulator();
     manipulator.detach();
     manipulator.enabled = false;
+    this.hidePropertyUI();
     if (this.objectinfo) {
       //this.objectinfo.hide();
     }
@@ -1112,10 +1161,25 @@ console.log('change color', obj.col, vec);
   }
   editObjectDelete(ev) {
     if (ev.value) {
-      //ev.target.removeObject(ev.target.roomedit.object);
-      room.deletions.push(ev.target.roomedit.object);
-      this.history.push({type: 'addobjects', object: ev.target.roomedit.object});
+      let obj = ev.target.roomedit.object;
+      if (!obj) return;
+      this.history.push({type: 'addobjects', object: obj});
       ev.target.editObjectStop(true);
+      // actually remove the object locally; room.deletions is the outbound
+      // sync ledger and gets fed by onThingRemove when sync is set
+      obj.sync = true;
+      if (obj.parent && typeof obj.parent.removeChild == 'function') {
+        obj.parent.removeChild(obj);
+      } else if (obj.parent && typeof obj.parent.remove == 'function') {
+        obj.parent.remove(obj._target || obj);
+      } else if (typeof room.removeObject == 'function') {
+        room.removeObject(obj);
+      }
+      // drop the tree row directly rather than trusting event plumbing;
+      // removeItem is idempotent so a duplicate event-driven removal is fine
+      if (this.scenetree && this.scenetree.tree) this.scenetree.tree.removeItem(obj.js_id);
+      // the inspector was still showing the deleted object's properties
+      if (this.objectinfo && this.objectinfo.clear) this.objectinfo.clear();
     }
   }
   editObjectCancel(ev) {
@@ -1580,13 +1644,16 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
   }
   updateObject(object) {
     if (this.object !== object) {
-      if (this.object) {
+      // the object attribute survives null assignment as a truthy husk
+      // (attribute coercion), so guard on the method, not the value
+      if (this.object && typeof this.object.removeEventListener == 'function') {
         this.object.removeEventListener('objectchange', this.handleThingChange);
       }
       this.object = object;
       //console.log('new object set', object, this.object);
 
-      this.object.addEventListener('objectchange', this.handleThingChange);
+      if (this.object && typeof this.object.addEventListener == 'function')
+        this.object.addEventListener('objectchange', this.handleThingChange);
       this.updatePropertyList();
     }
     this.updateProperties();
@@ -1636,6 +1703,17 @@ elation.elements.define('janus.ui.editor.objectinfo', class extends elation.elem
     //console.log('thing changed!', ev, obj.changes, obj, this);
     this.updateProperties();
   }
+  clear() {
+    if (this.object && typeof this.object.removeEventListener == 'function') {
+      this.object.removeEventListener('objectchange', this.handleThingChange);
+    }
+    this.object = null;
+    this.propeditors = {};
+    if (this.list) {
+      this.list.clear();
+      this.list.innerHTML = '';
+    }
+  }
   handleEditorChange(ev, attrname, attrdef) {
     //console.log('the editor changed', ev.target.value, ev, attrname, attrdef);
     this.object[attrname] = ev.target.value;
@@ -1677,7 +1755,7 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     this.tree.setItems({
       room: {
         js_id: room.url,
-        children: room.objects,
+        children: this.getRootObjects(),
         persist: true,
         getProxyObject: room.getProxyObject.bind(room),
       }
@@ -1685,6 +1763,24 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
     // Start expanded so the room's top-level objects are visible without a click.
     let root = this.getRootTvitem();
     if (root) root.collapsed = false;
+  }
+  getRootObjects() {
+    // room.objects is a flat js_id registry, so objects nested inside other
+    // objects appear there too - feeding it to the tree root wholesale created
+    // a phantom root-level twin of every nested object, and since rows are
+    // keyed by js_id, selection sync scrolled to the wrong copy. Only direct
+    // children of the room belong at the root; everything else is reached
+    // through its parent's children.
+    let roots = {};
+    for (let k in room.objects) {
+      let obj = room.objects[k];
+      if (!obj) continue;
+      let p = obj.parent;
+      if (!p || p === room || !(p.js_id && room.objects[p.js_id])) {
+        roots[k] = obj;
+      }
+    }
+    return roots;
   }
   // Map a scene object to its type-icon class (used by the tree's attrs.icon).
   // All primitives share the 'object' tag, so they get one icon (not per-shape);
@@ -1705,7 +1801,10 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
   addNode(thing) {
     if (!thing || !thing.js_id) return;
     let data = room.getObjectById(thing.js_id) || (thing.getProxyObject ? thing.getProxyObject() : thing);
-    if (!data || !data.persist) return;
+    // read persistence from the proxy, falling back to the thing itself -
+    // an unexposed flag here silently barred every live object from the tree
+    let persist = (data && data.persist !== undefined) ? data.persist : thing.persist;
+    if (!data || !persist) return;
     // Resolve the parent tvitem incrementally. A nested object's parent is keyed
     // by js_id; a top-level object's parent is the room, which isn't reliably
     // keyed (the root tvitem is keyed by room.url, not the room's js_id), so fall
@@ -1725,6 +1824,34 @@ elation.elements.define('janus.ui.editor.scenetree', class extends elation.eleme
   }
   handleTreeviewSelect(ev) {
     elation.events.fire({type: 'select', element: this, data: ev.data.value.getProxyObject()});
+  }
+  revealNode(obj) {
+    // sync world selection into the tree: highlight the row and bring it
+    // into view. The treeview keys every row by js_id in _itemsByKey, so
+    // the lookup is exact. Highlighting uses the treeview's own selected
+    // bookkeeping WITHOUT firing its select event - that would re-enter
+    // editObject and loop.
+    if (!this.tree || !obj || !obj.js_id) return;
+    let row = this.tree._itemsByKey ? this.tree._itemsByKey[obj.js_id] : null;
+    if (!row) return;
+    if (this.tree.selected && this.tree.selected !== row) {
+      elation.html.removeclass(this.tree.selected, 'state_selected');
+    }
+    elation.html.addclass(row, 'state_selected');
+    this.tree.selected = row;
+    // expand every ancestor first - a row inside a collapsed group exists
+    // but is hidden, and scrolling to a hidden row goes nowhere
+    let p = obj.parent;
+    while (p && p.js_id && this.tree._itemsByKey && this.tree._itemsByKey[p.js_id]) {
+      this.tree._itemsByKey[p.js_id].collapsed = false;
+      p = p.parent;
+    }
+    let root = this.getRootTvitem();
+    if (root) root.collapsed = false;
+    // scroll after the expansion has laid out
+    requestAnimationFrame(() => {
+      if (row.scrollIntoView) row.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    });
   }
 });
 // Reconcile an authored JanusML source string against the live scene, changing

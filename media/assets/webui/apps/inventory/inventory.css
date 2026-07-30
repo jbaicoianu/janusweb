@@ -118,7 +118,6 @@ janus-ui-inventory {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: 100%;
 }
 janus-ui-inventory > h3 { margin: 0 0 .3em; }
 .inv-controls { display: flex; gap: .4em; margin-bottom: .4em; }

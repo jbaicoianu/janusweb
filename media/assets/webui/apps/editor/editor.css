@@ -100,7 +100,11 @@ janus-ui-editor-button[active] {
 }
 ui-collapsiblepanel>.container>.container-inner>janus-ui-inventory {
   order: 1;
-  flex: 0;
+  /* flex: 0 collapsed the box to zero height and its content overflowed
+     onto the scene tree below; give it a real share it can shrink within */
+  flex: 1 1 30%;
+  min-height: 0;
+  overflow: hidden;
 }
 ui-collapsiblepanel>.container>.container-inner>janus-ui-editor-scenetree::before {
   display: block;

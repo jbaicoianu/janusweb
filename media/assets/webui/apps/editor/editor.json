@@ -3,8 +3,8 @@
     "janus.ui.editor.panel": "./editor-panel.html",
     "janus.ui.editor.object.info": "./editor-object-info.html"
   },
-  "scripts":  ["./editor.js", "./editor-properties.js", "./codemirror/lib/codemirror.js"],
-  "css":      ["./editor.css", "./codemirror/lib/codemirror.css", "./codemirror/lib/jmldark.css"],
+  "scripts":  ["./editor.js?v=7", "./editor-properties.js?v=7", "./codemirror/lib/codemirror.js"],
+  "css":      ["./editor.css?v=7", "./codemirror/lib/codemirror.css", "./codemirror/lib/jmldark.css"],
   "components": [
     "janus-ui-editor-panel",
     "janus-ui-editor-objectinfo",
