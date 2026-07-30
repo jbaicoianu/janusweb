@@ -140,7 +140,11 @@ elation.require(['elements.elements', 'elements', 'engine.engine', 'engine.asset
         });
       }
       window.addEventListener('load', ev => {
-        window.scrollTo(0, 1);
+        // Nudge past the mobile URL bar — but never stomp an anchor link's
+        // landing position or an already-scrolled page
+        if (!document.location.hash && window.scrollY === 0) {
+          window.scrollTo(0, 1);
+        }
       });
       window.addEventListener('touchend', ev => {
         if (ev.target == this.engine.systems.render.renderer.domElement) {
