@@ -9453,7 +9453,11 @@
 
   TextareaInput.prototype.focus = function () {
     if (this.cm.options.readOnly != "nocursor" && (!mobile || activeElt() != this.textarea)) {
-      try { this.textarea.focus(); }
+      // preventScroll: the hidden textarea may sit at a stale position when
+      // focus arrives (e.g. focus-on-mousedown before the reposition), and
+      // the browser's scroll-into-view yanks the scroller several lines.
+      // CodeMirror manages cursor visibility with its own scrollIntoView.
+      try { this.textarea.focus({preventScroll: true}); }
       catch (e) {} // IE8 will throw if the textarea is display: none or not in DOM
     }
   };
