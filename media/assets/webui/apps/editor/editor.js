@@ -1870,7 +1870,11 @@ function jmlScanElements(src) {
     var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
     while ((a = ar.exec(m[3])) !== null) attrs[a[1]] = a[2];
     var el = { name: m[2], attrs: attrs, start: m.index, openEnd: m.index + m[0].length,
-               parent: stack.length ? stack[stack.length - 1].name : null, selfclose: m[4] === '/' };
+               parent: stack.length ? stack[stack.length - 1].name : null, selfclose: m[4] === '/',
+               // ancestry flags so the reconciler can scope to room content at
+               // any nesting depth without treating asset declarations as objects
+               inRoom: stack.some(function (s) { return /^room$/i.test(s.name); }),
+               inAssets: stack.some(function (s) { return /^assets$/i.test(s.name); }) };
     el.fullEnd = el.openEnd;
     els.push(el);
     if (!el.selfclose) stack.push(el);
@@ -1881,6 +1885,47 @@ function jmlParseAttrs(tag) {
   var attrs = {}, ar = /([\w:.-]+)\s*=\s*"([^"]*)"/g, a;
   while ((a = ar.exec(tag)) !== null) attrs[a[1]] = a[2];
   return attrs;
+}
+function jmlParseColorValue(v) {
+  var m = String(v).trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  if (!m) return null;
+  var h = m[1];
+  if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  return [parseInt(h.slice(0, 2), 16) / 255, parseInt(h.slice(2, 4), 16) / 255, parseInt(h.slice(4, 6), 16) / 255];
+}
+function jmlParseNums(v) {
+  var parts = String(v).trim().split(/\s+/);
+  var out = [];
+  for (var i = 0; i < parts.length; i++) {
+    var n = Number(parts[i]);
+    if (isNaN(n)) return null;
+    out.push(n);
+  }
+  return out.length ? out : null;
+}
+// Compare an authored attribute value against its serialized live twin
+// SEMANTICALLY - "0 -0.25 21" equals "0 -0.25 21.0000", "#43ff6e" equals its
+// float triple. Text comparison read every formatting difference as an edit
+// and rewrote the whole document into normalized form on the first sync.
+function jmlAttrEquals(a, b) {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  a = String(a).trim(); b = String(b).trim();
+  if (a === b) return true;
+  var an = jmlParseNums(a), bn = jmlParseNums(b);
+  if (an && bn) {
+    if (an.length !== bn.length) return false;
+    // 1.5e-3: covers 3-decimal authored values against the serializer's
+    // 4-decimal rounding plus normalization drift on direction vectors
+    for (var i = 0; i < an.length; i++) if (Math.abs(an[i] - bn[i]) > 1.5e-3) return false;
+    return true;
+  }
+  var ac = jmlParseColorValue(a) || an, bc = jmlParseColorValue(b) || bn;
+  if (ac && bc && ac.length === 3 && bc.length === 3) {
+    for (var j = 0; j < 3; j++) if (Math.abs(ac[j] - bc[j]) > 0.003) return false;
+    return true;
+  }
+  return false;
 }
 // For an element serialized in content form (<tag ...>value</tag>) return the
 // inner text; for self-closing/attribute-only markup return null.
@@ -1910,9 +1955,11 @@ function jmlObjManagedKeys(object) {
     return names;
   } catch (e) { return null; }
 }
-function jmlReconcileSource(src, summaries) {
+function jmlReconcileSource(src, summaries, liveIds) {
   var els = jmlScanElements(src);
-  var objEls = els.filter(function (e) { return e.parent && e.parent.toLowerCase() === 'room'; });
+  // Any element inside <Room> (at any depth, groups included) is an edit
+  // target; asset declarations are not.
+  var objEls = els.filter(function (e) { return e.inRoom && !e.inAssets; });
   var usedEl = [], usedLive = [], matched = [];
   objEls.forEach(function (el) { if (el.attrs.js_id) {
     for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].js_id === el.attrs.js_id) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
@@ -1920,21 +1967,60 @@ function jmlReconcileSource(src, summaries) {
   objEls.forEach(function (el) { if (usedEl.indexOf(el) !== -1) return;
     for (var i = 0; i < summaries.length; i++) { if (usedLive.indexOf(i) === -1 && summaries[i].id === el.attrs.id && summaries[i].name === el.name) { matched.push([el, summaries[i]]); usedEl.push(el); usedLive.push(i); break; } }
   });
-  var deleted = objEls.filter(function (e) { return usedEl.indexOf(e) === -1; });
+  // Only treat an unmatched source element as deleted when no live object
+  // with its js_id exists at all - an object that's alive but unsummarized
+  // (persist=false, no tag) must not have its markup stripped.
+  var deleted = objEls.filter(function (e) {
+    if (usedEl.indexOf(e) !== -1) return false;
+    if (!liveIds) return false;
+    return e.attrs.js_id ? !liveIds.has(e.attrs.js_id) : false;
+  });
   var created = summaries.filter(function (o, i) { return usedLive.indexOf(i) === -1; });
   var edits = [];
   matched.forEach(function (pair) {
-    var el = pair[0], live = jmlParseAttrs(pair[1].xml);
+    // Parse only the opening tag: a group's summary xml includes its whole
+    // serialized subtree, and scanning all of it would stamp every child's
+    // attributes onto the group element.
+    var el = pair[0], liveXml = pair[1].xml,
+        live = jmlParseAttrs(liveXml.slice(0, liveXml.indexOf('>') + 1));
     var tag = src.slice(el.start, el.openEnd), changed = false;
-    for (var k in live) { if (k === 'js_id' || k === 'jsid') continue; if (el.attrs[k] !== live[k]) { tag = jmlSetAttr(tag, k, live[k]); changed = true; } }
+    for (var k in live) {
+      // persist is an internal lifecycle flag - being in the markup at all
+      // implies it, so writing it back just sprays persist="true" everywhere.
+      // collision_trigger declares default true but constructs false on
+      // non-colliding things, so it "differs from default" on objects no
+      // author ever touched - never volunteer it into the markup.
+      if (k === 'js_id' || k === 'jsid' || k === 'persist') continue;
+      if (k === 'collision_trigger' && !(k in el.attrs)) continue;
+      if (jmlAttrEquals(el.attrs[k], live[k])) continue;
+      // Don't ADD runtime-derived payload attributes the author never wrote -
+      // a Paragraph's css property holds a whole stylesheet at runtime, and
+      // multi-line or huge values can't live on a markup attribute anyway.
+      if (!(k in el.attrs) && (live[k].length > 300 || live[k].indexOf('\n') !== -1)) continue;
+      // Orientation is expressible as fwd OR xdir/ydir/zdir; the serializer
+      // emits every member, but only update the form the author chose -
+      // adding the other is pure duplication.
+      if (!(k in el.attrs) && (k === 'fwd' || k === 'xdir' || k === 'ydir' || k === 'zdir') &&
+          (('fwd' in el.attrs) || ('xdir' in el.attrs) || ('ydir' in el.attrs) || ('zdir' in el.attrs))) continue;
+      tag = jmlSetAttr(tag, k, live[k]); changed = true;
+    }
     // Drop managed attributes the live object no longer emits (reverted to
     // default — e.g. a boolean toggled back off). Identity attrs and custom /
     // unknown attributes (absent from the managed set) are left untouched.
+    // Only prune reverted-to-default attributes on elements that actually
+    // changed: an untouched authored attr whose value IS the default (pos
+    // "0 0 0") isn't emitted by the serializer either, and stripping it from
+    // every such line rewrote most of the document on the first sync.
     var keys = pair[1].keys;
-    if (keys) {
+    if (keys && changed) {
       for (var ki = 0; ki < keys.length; ki++) {
         var mk = keys[ki];
         if (mk === 'js_id' || mk === 'jsid' || mk === 'id' || mk === 'class' || mk === 'classname') continue;
+        // persist: internal flag, presence in markup implies it. Orientation
+        // family: authored as input aliases (fwd) the serializer never
+        // re-emits - removing them would strip an object's facing from the
+        // source without replacing it.
+        if (mk === 'persist' || mk === 'fwd' || mk === 'xdir' || mk === 'ydir' || mk === 'zdir' || mk === 'rotation' || mk === 'orientation') continue;
         if ((mk in el.attrs) && !(mk in live)) { tag = jmlRemoveAttr(tag, mk); changed = true; }
       }
     }
@@ -1957,20 +2043,41 @@ function jmlReconcileSource(src, summaries) {
   });
   if (created.length) {
     var close = src.search(/<\/room\s*>/i);
-    if (close !== -1) {
-      var lineStart = src.lastIndexOf('\n', close - 1) + 1;
-      // Indent new elements to match existing room-level objects rather than the
-      // </room> line + 2, which over-indents when the file's convention differs.
-      var indent;
-      if (objEls.length) {
-        var refStart = src.lastIndexOf('\n', objEls[0].start - 1) + 1;
-        indent = src.slice(refStart, objEls[0].start).match(/^\s*/)[0] || '';
-      } else {
-        indent = (src.slice(lineStart, close).match(/^\s*/)[0] || '') + '  ';
+    var indentOf = function (pos) {
+      var ls = src.lastIndexOf('\n', pos - 1) + 1;
+      return (src.slice(ls, pos).match(/^\s*/) || [''])[0];
+    };
+    created.forEach(function (o) {
+      // Oversized serializations are runtime machinery (script-built UI
+      // surfaces and the like), not something to write into the document.
+      if (o.xml.length > 1200) return;
+      // New objects that live inside a group belong inside that group's
+      // markup - their serialized transforms are parent-relative, so
+      // appending them at room level would place them wrong.
+      if (o.parent_js_id) {
+        var parentEl = null;
+        for (var i = 0; i < els.length; i++) {
+          if (els[i].attrs.js_id === o.parent_js_id && els[i].contentEnd != null) { parentEl = els[i]; break; }
+        }
+        if (parentEl) {
+          var closeLine = src.lastIndexOf('\n', parentEl.contentEnd - 1) + 1;
+          var at = (src.slice(closeLine, parentEl.contentEnd).trim() === '') ? closeLine : parentEl.contentEnd;
+          edits.push({ start: at, end: at, text: indentOf(parentEl.start) + '  ' + o.xml + '\n' });
+          return;
+        }
+        // parent exists live but has no container markup yet (self-closed or
+        // itself brand new this pass) - fall through to room level rather
+        // than dropping the object entirely.
       }
-      var text = created.map(function (o) { return indent + o.xml + '\n'; }).join('');
-      edits.push({ start: lineStart, end: lineStart, text: text });
-    }
+      if (close !== -1) {
+        var lineStart = src.lastIndexOf('\n', close - 1) + 1;
+        // Indent new elements to match existing room-level objects rather than
+        // the </room> line + 2, which over-indents when the file's convention
+        // differs.
+        var indent = objEls.length ? indentOf(objEls[0].start) : (indentOf(close) + '  ');
+        edits.push({ start: lineStart, end: lineStart, text: indent + o.xml + '\n' });
+      }
+    });
   }
   edits.sort(function (a, b) { return b.start - a.start; });
   var out = src;
@@ -2015,7 +2122,7 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
           // Tag each summary with its object's managed attribute names so the
           // reconciler can drop attributes that reverted to default.
           summaries.forEach(s => { let o = room.getObjectById(s.js_id); if (o) s.keys = jmlObjManagedKeys(o); });
-          next = jmlReconcileSource(src, summaries);
+          next = jmlReconcileSource(src, summaries, new Set(Object.keys(room.objects)));
         }
       } catch (e) { console.error('[editor] source reconcile failed', e); }
       return (next != null) ? next : room.getRoomSource();
@@ -2034,6 +2141,9 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
     let refreshFromScene = () => {
       let cm = roomedit.codemirror;
       if (cm && cm.hasFocus()) return;
+      // A hand edit sitting in the apply debounce hasn't reached the scene
+      // yet - refreshing now would silently revert it.
+      if (roomedit.updatetimer) return;
       roomedit.source = syncFromScene();
     };
     elation.events.add(room, 'scene_changed', refreshFromScene);

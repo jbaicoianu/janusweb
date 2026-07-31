@@ -315,7 +315,9 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
           } else if (val instanceof THREE.Color) {
             if (defaultval instanceof THREE.Color) defaultval = defaultval.toArray();
             if (!('default' in propdef) || defaultval === null || ('default' in propdef && !(val.r == defaultval[0] && val.g == defaultval[1] && val.b == defaultval[2]))) {
-              attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
+              // hex is the form people author; emitting float triples made the
+              // source view rewrite every authored #rrggbb on first reconcile
+              attrs[k] = '#' + val.getHexString();
             }
           } else if (val instanceof THREE.Euler) {
             if (defaultval instanceof THREE.Euler) defaultval = defaultval.toArray();
@@ -327,7 +329,11 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
             if (!('default' in propdef) || ('default' in propdef && !(val.x == defaultval[0] && val.y == defaultval[1] && val.z == defaultval[2] && val.w == defaultval[3]))) {
               attrs[k] = val.toArray().map(n => Math.round(n * 10000) / 10000).join(' ');
             }
-          } else if (val !== propdef.default && val !== null && val !== '') {
+          } else if (val !== propdef.default && val !== null && val !== '' &&
+                     // an explicit false with no declared default is
+                     // indistinguishable from "unset" - emitting it sprays
+                     // attr="false" over elements that never authored it
+                     !(val === false && propdef.default == null)) {
             attrs[k] = val;
           }
         }
@@ -341,9 +347,24 @@ elation.require(['engine.things.generic', 'utils.template', 'janusweb.parts'], f
         content = attrs[tagname];
         delete attrs[tagname];
       }
+      // The output has to be well-formed markup no matter what a property
+      // holds - a css string full of quotes serialized raw truncates its own
+      // attribute and poisons the whole document.
+      let escapeattr = function(v) {
+        return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/\r?\n/g, '&#10;');
+      };
       let xml = '<' + tagname;
       for (let k in attrs) {
-        xml += ' ' + k + '="' + attrs[k] + '"';
+        // Runtime payload (a paragraph's fetched stylesheet and the like) is
+        // not authorable markup - emitting it turns a one-line element into
+        // pages of attribute soup. The whitespace test keeps legitimately
+        // long single-token values (data URIs, long URLs) serializable.
+        let attrstr = String(attrs[k]);
+        if (attrstr.length > 1000 && /\s/.test(attrstr)) continue;
+        xml += ' ' + k + '="' + escapeattr(attrs[k]) + '"';
+      }
+      if (content !== null && content !== '') {
+        content = String(content).replace(/&/g, '&amp;').replace(/</g, '&lt;');
       }
       let children = [];
       for (let k in this.children) {

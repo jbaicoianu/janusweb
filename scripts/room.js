@@ -844,13 +844,21 @@ elation.require([
       try {
         var roomdata = this.janus.parser.parse(source, this.baseurl, datapath);
       } catch (e) {
+        // A half-typed edit is often momentarily unparseable - not fatal,
+        // but never swallow it silently or real breakage looks like no-op sync.
+        console.warn('[room] updateSource: source parse failed, edits not applied', e);
       }
-      console.log('updated roomdata!', roomdata);
       if (roomdata && roomdata.room) {
+        // The <Room> tag's pos/fwd are LOAD-TIME spawn directives (where you
+        // appear, facing which way) - assigning them to the live room thing
+        // rotates the entire world around the player. fwd="0 0 -1" reapplied
+        // mid-session reads as "face the room -Z" and flips everything 180°,
+        // which the player experiences as inverted movement controls.
+        var roomskipprops = ['pos', 'fwd', 'up', 'orientation', 'rotation', 'xdir', 'ydir', 'zdir', '_children'];
         for (let k in roomdata.room) {
+          if (roomskipprops.indexOf(k) != -1 || k.charAt(0) == '#') continue;
           let val = roomdata.room[k];
           if (val !== null && room[k] != val) {
-            console.log('update room value', k, room[k], val);
             room[k] = val;
           }
         }
@@ -858,39 +866,59 @@ elation.require([
         // <text>, <image>, <link>, etc. under their own keys, so iterating only
         // `roomdata.object` silently dropped source edits to all other elements.
         var skiptypes = ['assets', 'room', 'source'];
+        // Recursive apply: the parser nests grouped elements under _children,
+        // and the old flat loop only ever touched top-level objects - edits to
+        // anything inside a group parsed fine and applied to nothing.
+        var applyObjectData = elation.bind(this, function(type, objdata, parentobj) {
+          let roomobj = room.objects[objdata.js_id];
+          if (roomobj) {
+            for (let k in objdata) {
+              // `orientation` is derived by the parser from xdir/ydir/zdir and
+              // defaults to identity when only `rotation` is authored, so it
+              // disagrees with `rotation`. Applying both fights; the authored
+              // rotation / direction attributes are what drive orientation.
+              if (k === 'orientation' || k === '_content' || k === '_children') continue;
+              let val = objdata[k];
+              if (roomobj[k] != val && val !== null) {
+                // Flag dirty so source edits broadcast to other clients; set
+                // per change because onThingChange clears sync once tracked.
+                roomobj.sync = true;
+                roomobj[k] = val;
+              }
+            }
+            // Elements that carry their value as tag content (<text>foo</text>)
+            // parse to `_content`; the receiving property is named after the tag.
+            if (objdata._content != null && roomobj[type] != objdata._content) {
+              roomobj.sync = true;
+              roomobj[type] = objdata._content;
+            }
+            if (objdata._children) {
+              for (let childtype in objdata._children) {
+                let kids = objdata._children[childtype];
+                if (!elation.utils.isArray(kids)) kids = [kids];
+                for (let i = 0; i < kids.length; i++) {
+                  applyObjectData(childtype, kids[i], roomobj);
+                }
+              }
+            }
+          } else {
+            objdata.persist = true;
+            if (objdata._content != null && objdata[type] == null) objdata[type] = objdata._content;
+            // createObject handles _children itself, so no recursion here -
+            // descending too would double-create the subtree.
+            if (parentobj && typeof parentobj.createObject == 'function') {
+              parentobj.createObject(type, objdata);
+            } else {
+              this.createObject(type, objdata);
+            }
+          }
+        });
         for (let type in roomdata) {
-          if (skiptypes.indexOf(type) != -1) continue;
+          if (skiptypes.indexOf(type) != -1 || type.charAt(0) == '#') continue;
           let objs = roomdata[type];
           if (!elation.utils.isArray(objs)) objs = [objs];
           for (let i = 0; i < objs.length; i++) {
-            let objdata = objs[i];
-            let roomobj = room.objects[objdata.js_id];
-            if (roomobj) {
-              for (let k in objdata) {
-                // `orientation` is derived by the parser from xdir/ydir/zdir and
-                // defaults to identity when only `rotation` is authored, so it
-                // disagrees with `rotation`. Applying both fights; the authored
-                // rotation / direction attributes are what drive orientation.
-                if (k === 'orientation' || k === '_content') continue;
-                let val = objdata[k];
-                if (roomobj[k] != val && val !== null) {
-                  // Flag dirty so source edits broadcast to other clients; set
-                  // per change because onThingChange clears sync once tracked.
-                  roomobj.sync = true;
-                  roomobj[k] = val;
-                }
-              }
-              // Elements that carry their value as tag content (<text>foo</text>)
-              // parse to `_content`; the receiving property is named after the tag.
-              if (objdata._content != null && roomobj[type] != objdata._content) {
-                roomobj.sync = true;
-                roomobj[type] = objdata._content;
-              }
-            } else {
-              objdata.persist = true;
-              if (objdata._content != null && objdata[type] == null) objdata[type] = objdata._content;
-              this.createObject(type, objdata);
-            }
+            applyObjectData(type, objs[i], null);
           }
         }
       }
@@ -2701,17 +2729,30 @@ elation.require([
     // that reconcile an authored source against the live scene without
     // regenerating the whole document.
     this.getObjectSummaries = function() {
+      // Recursive: objects nested inside groups are first-class edit targets
+      // (the editor reconciles the source view per-object by js_id), so a
+      // flat walk over direct children silently dropped every grouped object
+      // from scene->source sync. parent_js_id lets the reconciler insert
+      // newly-created objects inside the right container element.
       var out = [];
-      for (let k in this.children) {
-        var object = this.children[k];
+      var visit = function(object, parent_js_id) {
         if (object.persist && object.janus && typeof object.summarizeXML == 'function' && object.tag) {
           out.push({
             js_id: object.js_id,
             id: object.id,
             name: String(object.tag).toLowerCase(),
+            parent_js_id: parent_js_id || null,
             xml: object.summarizeXML().replace(/\s+$/, '')
           });
         }
+        for (let k in object.children) {
+          var child = object.children[k];
+          if (child && child.janus) visit(child, object.js_id);
+        }
+      };
+      for (let k in this.children) {
+        var object = this.children[k];
+        if (object && object.janus) visit(object, null);
       }
       return out;
     }
