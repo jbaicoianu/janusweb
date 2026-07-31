@@ -201,6 +201,21 @@ janus.registerElement('xrmenu-popup', {
   height: 512,
   depth_test: true,
   renderorder: 0,
+  // false: a pickable button surface that never captures the keyboard.
+  // true: clicking engages websurface-style - outline, pointer lock
+  // released, player parked, keyboard focused into the hidden DOM until
+  // the user clicks anywhere that isn't the panel.
+  focusable: false,
+  outlinecol: '#88ccff',
+  // EXPERIMENTAL: project the live element to the panel's screen quad so
+  // the browser hit-tests real events against it. Off by default: widgets
+  // that measure their own geometry (CodeMirror) read transformed rects
+  // while the projection is applied and their coordinate caches corrupt -
+  // giant cursors, typed text landing at the wrong position. Synthetic
+  // picking delivers correct coordinates for locked AND free cursors, and
+  // native keyboard/IME already work through real focus, so the transform
+  // only ever bought wheel momentum and context menus.
+  nativepointer: false,
 
   create() {
 
@@ -264,10 +279,25 @@ janus.registerElement('xrmenu-popup', {
       renderorder: this.renderorder,
     });
     this.element = element;
+    if (this.focusable) {
+      // engaged-state outline: a slightly larger plane behind the panel
+      this.outline = this.createObject('object', {
+        id: 'plane',
+        col: this.outlinecol,
+        lighting: false,
+        scale: V(1.04, (this.height / this.width) * 1.04, 1),
+        pos: V(0, 0, -0.004),
+        pickable: false,
+        collidable: false,
+        visible: false,
+        depth_test: this.depth_test,
+        renderorder: this.renderorder,
+      });
+    }
     // Native input mode delivers REAL events straight to the content, so
-    // focus can arrive without handleMouse ever running - park the player
-    // from the focus event itself (idempotent with the synthetic path).
-    element.addEventListener('focusin', ev => this.manageFocus(ev.target));
+    // focus can arrive without handleMouse ever running - engage from the
+    // focus event itself (idempotent with the synthetic path).
+    element.addEventListener('focusin', ev => this.engageFocus(ev.target));
     this.plane.addEventListener('mousemove', ev => this.handleMouse(ev));
     this.plane.addEventListener('mousedown', ev => this.handleMouse(ev));
     this.plane.addEventListener('wheel', ev => this.handleMouse(ev));
@@ -376,6 +406,12 @@ setTimeout(() => {
         metaKey: !!src.metaKey,
         view: window,
       };
+      if (ev.type == 'mousemove' && init.buttons && document.pointerLockElement) {
+        // pointer-locked mouselook with a held button sweeps the center pick
+        // across the panel - without a visible cursor that's never a
+        // deliberate drag, so don't let it extend selections
+        init.buttons = 0;
+      }
       if (ev.type == 'wheel') {
         init.deltaX = src.deltaX || 0;
         init.deltaY = src.deltaY || 0;
@@ -387,9 +423,13 @@ setTimeout(() => {
       }
       let fakeev = new EventClass(ev.type, init);
       // svg backend stages in a shadow root; element backend's staging
-      // canvas children are plain document elements
+      // canvas children are plain document elements. The staging surface is
+      // pointer-events none at rest (so it never swallows real input) -
+      // make it hit-testable just for this synchronous lookup.
       let root = this.shadowdom || document;
+      this.elementcontainer.style.pointerEvents = 'auto';
       let target = root.elementFromPoint(mousexy[0], mousexy[1]) || this.element;
+      this.elementcontainer.style.pointerEvents = 'none';
       if (this.usenativecanvas && target && !this.element.contains(target) && target !== this.element) {
         // hit something that isn't ours (another overlay at this z) - fall
         // back to our element so events never leak to unrelated UI
@@ -398,17 +438,14 @@ setTimeout(() => {
 
       target.dispatchEvent(fakeev);
 
-      if (ev.type == 'mousedown' || ev.type == 'click') {
-        // If the content focused one of its own inputs in response (the way
-        // CodeMirror focuses its hidden textarea on mousedown), keep that
-        // focus so keyboard input flows to the panel. Deferred a task:
-        // widgets defer the focus call themselves (CodeMirror wraps its
-        // ensureFocus in a setTimeout on webkit), so checking synchronously
-        // sees nothing.
-        setTimeout(() => {
-          let active = this.getContentActiveElement();
-          if (active) this.manageFocus(active);
-        }, 0);
+      if (this.focusable && ev.type == 'click') {
+        // Clicking a focusable panel engages it - on click, never mousedown:
+        // engaging releases pointer lock, and doing that mid-gesture makes
+        // the real cursor materialize at screen center with the button still
+        // held, which reads as a drag and yanks the selection. Deferred a
+        // task so widgets that focus their own inputs in response
+        // (CodeMirror defers its ensureFocus) have done so first.
+        setTimeout(() => this.engageFocus(this.getContentActiveElement()), 0);
       }
 
       if (ev.type == 'wheel') {
@@ -455,25 +492,26 @@ setTimeout(() => {
     }
   },
   handleMouseOver(ev) {
-    // raise the staging container so elementFromPoint hit-tests our content
+    // Raise the staging container so elementFromPoint can see our content.
+    // Its pointer-events stay none - the invisible top-left staging surface
+    // must NEVER swallow real (unlocked) mouse input meant for the 3D
+    // scene; synthetic hit-testing flips it on only for the duration of
+    // the lookup, and native mode makes the transformed element itself
+    // interactive instead.
     this.hovering = true;
     this.elementcontainer.style.zIndex = 1000;
-    this.elementcontainer.style.pointerEvents = 'auto';
     if (!this.elementcontainer.parentNode) {
       document.body.appendChild(this.elementcontainer);
     }
-    this.enterNativeInput();
+    if (this.nativepointer) this.enterNativeInput();
   },
   handleMouseOut(ev) {
-    // Sink and disable the container, but NEVER detach it: pulling it out
-    // of the DOM destroys layout, which zeroes every scroll position and
-    // makes any re-render while detached serialize to a blank panel.
-    // pointer-events none keeps the invisible overlay from intercepting
-    // real page input while parked.
+    // Sink the container, but NEVER detach it: pulling it out of the DOM
+    // destroys layout, which zeroes every scroll position and makes any
+    // re-render while detached serialize to a blank panel.
     this.hovering = false;
     this.exitNativeInput();
     this.elementcontainer.style.zIndex = -1000;
-    this.elementcontainer.style.pointerEvents = 'none';
   },
   // ---- native desktop input (element backend only) --------------------
   // While the 3D pointer is on the plane, project the panel's quad into
@@ -491,6 +529,9 @@ setTimeout(() => {
     } catch (e) {}
     this.nativemode = true;
     this.element.style.transformOrigin = '0 0';
+    // the staging surface is pointer-events none; the transformed element
+    // opts back in so real input reaches it at its projected position
+    this.element.style.pointerEvents = 'auto';
     if (!this.nativeleavehandler) {
       this.nativeleavehandler = ev => this.exitNativeInput();
       this.nativelockhandler = ev => { if (document.pointerLockElement) this.exitNativeInput(); };
@@ -520,6 +561,7 @@ setTimeout(() => {
       this.element.removeEventListener(type, this.nativemouseshim, true);
     }
     this.element.style.transform = 'none';
+    this.element.style.pointerEvents = '';
     this.nativeH = null;
   },
   handleNativeMouse(ev) {
@@ -549,6 +591,9 @@ setTimeout(() => {
       ev.target.dispatchEvent(new MouseEvent(ev.type, init));
     } finally {
       this.element.style.transform = transform;
+    }
+    if (this.focusable && ev.type == 'click') {
+      setTimeout(() => this.engageFocus(this.getContentActiveElement()), 0);
     }
   },
   unprojectPoint(x, y) {
@@ -637,36 +682,72 @@ setTimeout(() => {
     if (active && this.element && (active === this.element || this.element.contains(active))) return active;
     return null;
   },
-  manageFocus(focusable) {
-    // The engine view refocuses itself after processing every click, so
-    // take focus back on a fresh task - and park the player while we hold
-    // it, or WASD would move the world under the typist (the controls
-    // system listens on window; focus alone doesn't shield it).
+  // ---- focusable panels: explicit engage/disengage cycle ---------------
+  // Two interaction modes. A plain panel (focusable false, the default) is
+  // a pickable button surface: proxied mouse events, live rerendering,
+  // never the keyboard. A focusable panel works like a websurface:
+  // clicking it ENGAGES - outline on, pointer lock released, player
+  // parked, keyboard focused into the hidden DOM - and a click anywhere
+  // that isn't the panel DISENGAGES and hands everything back.
+  engageFocus(focusable) {
+    if (!this.focusable) return;
     clearTimeout(this.focustimer);
-    this.focustimer = setTimeout(() => focusable.focus({ preventScroll: true }), 0);
-    if (!this.contentfocused) {
-      this.contentfocused = true;
-      if (typeof player != 'undefined' && player.enabled) {
-        this.shouldreenableplayer = true;
-        player.disable();
-      }
-      if (!this.releasefocushandler) {
-        // a real mousedown anywhere while the 3D pointer isn't on our plane
-        // means the user clicked away - hand everything back
-        this.releasefocushandler = ev => {
-          if (!this.hovering && this.contentfocused && ev.isTrusted) this.releaseFocus();
-        };
-      }
-      document.addEventListener('mousedown', this.releasefocushandler, true);
+    if (focusable) {
+      // the engine view refocuses itself after processing every click, so
+      // take focus back on a fresh task
+      this.focustimer = setTimeout(() => focusable.focus({ preventScroll: true }), 0);
     }
+    if (this.focused) return;
+    this.focused = true;
+    if (this.outline) this.outline.visible = true;
+    // Disable pointer-lock acquisition entirely while engaged (this also
+    // releases a held lock) - just exiting isn't enough, because the same
+    // click that engaged us would immediately re-lock through the engine's
+    // click handler, undoing the engagement.
+    let controls = this.engine.systems.controls;
+    if (controls && typeof controls.enablePointerLock == 'function') {
+      this.prevpointerlock = controls.pointerLockEnabled;
+      controls.enablePointerLock(false);
+    }
+    if (typeof player != 'undefined' && player.enabled) {
+      this.shouldreenableplayer = true;
+      player.disable();
+    }
+    // The lock release is async; once the real cursor exists, native input
+    // can take over if the pointer is still on the panel
+    if (this.nativepointer) {
+      setTimeout(() => {
+        if (this.focused && !document.pointerLockElement && this.hovering) this.enterNativeInput();
+      }, 150);
+    }
+    if (!this.disengagehandler) {
+      this.disengagehandler = ev => {
+        if (!ev.isTrusted || !this.focused) return;
+        // clicks that land on our panel (its staging container, its
+        // element, or - synthetic path - while the 3D pointer is on the
+        // plane) keep the engagement; anything else is a click-away
+        let t = ev.target;
+        let ours = this.hovering ||
+                   (this.elementcontainer && (t === this.elementcontainer || this.elementcontainer.contains(t))) ||
+                   (this.element && (t === this.element || this.element.contains(t)));
+        if (!ours) this.disengageFocus();
+      };
+    }
+    document.addEventListener('mousedown', this.disengagehandler, true);
   },
-  releaseFocus() {
-    if (!this.contentfocused) return;
-    this.contentfocused = false;
+  disengageFocus() {
+    if (!this.focused) return;
+    this.focused = false;
     clearTimeout(this.focustimer);
-    document.removeEventListener('mousedown', this.releasefocushandler, true);
+    document.removeEventListener('mousedown', this.disengagehandler, true);
+    if (this.outline) this.outline.visible = false;
     let active = this.getContentActiveElement();
     if (active) active.blur();
+    let controls = this.engine.systems.controls;
+    if (controls && typeof controls.enablePointerLock == 'function' && typeof this.prevpointerlock != 'undefined') {
+      controls.enablePointerLock(this.prevpointerlock);
+      this.prevpointerlock = undefined;
+    }
     if (this.shouldreenableplayer) {
       this.shouldreenableplayer = false;
       if (typeof player != 'undefined') player.enable();
