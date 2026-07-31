@@ -2085,6 +2085,14 @@ function jmlReconcileSource(src, summaries, liveIds) {
   return out;
 }
 elation.elements.define('janus.ui.editor.source', class extends elation.elements.base {
+  init() {
+    super.init();
+    this.defineAttributes({
+      readonly: { type: 'boolean', default: false },
+      theme: { type: 'string' },
+      embedded: { type: 'boolean', default: false },
+    });
+  }
   async create() {
     // CodeMirror core is loaded by the host page as a plain <script>; the hint
     // addons below reference the global CodeMirror, so on a cold/slow load they
@@ -2093,22 +2101,34 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
     for (let i = 0; typeof CodeMirror === 'undefined' && i < 200; i++) {
       await new Promise(r => setTimeout(r, 25));
     }
-    await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
-      './codemirror/addon/hint/show-hint.js',
-      './codemirror/addon/hint/xml-hint.js',
-      './codemirror/addon/hint/javascript-hint.js',
-      './codemirror/keymap/vim.js',
-    ], [
-      './codemirror/addon/hint/show-hint.css',
-    ]);
-    await room.loadComponentList();
-    this.jmlhints = this.buildJMLMap();
+    if (!this.readonly) {
+      await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([
+        './codemirror/addon/hint/show-hint.js',
+        './codemirror/addon/hint/xml-hint.js',
+        './codemirror/addon/hint/javascript-hint.js',
+        './codemirror/keymap/vim.js',
+      ], [
+        './codemirror/addon/hint/show-hint.css',
+      ]);
+      await room.loadComponentList();
+      this.jmlhints = this.buildJMLMap();
+    }
 
     this.tabs = elation.elements.create('ui-tabs', { append: this });
     //let roomtab = elation.elements.create('ui-tab', { append: this.tabs, label: 'Room Markup' });
     // Edit the authored markup (room.roomsrc) rather than a regenerated copy,
     // so comments and formatting are preserved.
-    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: (room.roomsrc || room.getRoomSource()), hints: this.jmlhints });
+    let roomedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: 'Room Markup', source: (room.roomsrc || room.getRoomSource()), hints: this.jmlhints, readonly: this.readonly ? 1 : 0, theme: this.theme, embedded: this.embedded ? 1 : 0 });
+    this.roomedit = roomedit;
+    if (this.embedded) {
+      // embedded surfaces (3D panels) mount into a laid-out but hidden
+      // container; give CodeMirror a measure pass once it exists
+      let tries = 0;
+      let iv = setInterval(() => {
+        if (roomedit.codemirror) { roomedit.codemirror.refresh(); clearInterval(iv); }
+        else if (++tries > 100) clearInterval(iv);
+      }, 100);
+    }
 
     // Bring the markup view in line with the live scene: when the room exposes
     // per-object summaries, edit the authored text in place (preserving comments
@@ -2128,10 +2148,12 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
       return (next != null) ? next : room.getRoomSource();
     };
 
-    let refreshbutton = elation.elements.create('ui-button', { append: this, label: '↻', title: "Refresh room source", name: "refresh" });
-    refreshbutton.addEventListener('click', ev => {
-      roomedit.source = syncFromScene();
-    });
+    if (!this.embedded) {
+      let refreshbutton = elation.elements.create('ui-button', { append: this, label: '↻', title: "Refresh room source", name: "refresh" });
+      refreshbutton.addEventListener('click', ev => {
+        roomedit.source = syncFromScene();
+      });
+    }
 
     // Keep the markup view current with edits made elsewhere (gizmo, inspector,
     // remote peers). The reconciler merges scene changes into the current buffer
@@ -2152,7 +2174,7 @@ elation.elements.define('janus.ui.editor.source', class extends elation.elements
       for (let k in room.roomassets.script) {
         let scriptasset = room.roomassets.script[k];
         //let scripttab = elation.elements.create('ui-tab', { append: this.tabs, label: k });
-        let scriptedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: k, source: scriptasset.code, mode: 'javascript' });
+        let scriptedit = elation.elements.create('janus-ui-editor-source-file', { append: this.tabs, label: k, source: scriptasset.code, mode: 'javascript', readonly: this.readonly ? 1 : 0, theme: this.theme, embedded: this.embedded ? 1 : 0 });
       }
     }
   }
@@ -2405,6 +2427,9 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
       filename: { type: 'string', default: 'New File' },
       mode: { type: 'string', default: 'xml' },
       hints: { type: 'object' },
+      readonly: { type: 'boolean', default: false },
+      theme: { type: 'string' },
+      embedded: { type: 'boolean', default: false },
     });
   }
   create() {
@@ -2412,24 +2437,33 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
 
     this.initCodemirror();
     // codemirror is created asynchronously (mode scripts load on demand); guard so a
-    // tab switch before it's ready doesn't throw.
-    elation.events.add(this.parentNode, 'tabselect', ev => { if (this.codemirror) { this.codemirror.refresh(); setTimeout(() => { this.codemirror.focus(); }, 0); } });
+    // tab switch before it's ready doesn't throw. Read-only views shouldn't
+    // grab focus on tab switches - the engine owns the keyboard there.
+    elation.events.add(this.parentNode, 'tabselect', ev => { if (this.codemirror) { this.codemirror.refresh(); if (!this.readonly) setTimeout(() => { this.codemirror.focus(); }, 0); } });
   }
   async initCodemirror() {
     if (!CodeMirror.modes[this.mode]) {
       await janus.ui.apps.default.apps.editor.loadScriptsAndCSS([`./codemirror/mode/${this.mode}/${this.mode}.js`]);
     }
 
-    this.codemirror = CodeMirror(this, {
+    let options = {
       // CodeMirror needs a string; a script tab whose asset code hasn't loaded
       // yet has an undefined source, which throws inside CodeMirror (it tries to
       // set modeOption on a missing doc). The source setter fills it in later.
       value: this.source || '',
       mode: this.mode,
       lineNumbers: true,
-      extraKeys: {
+    };
+    if (this.theme) options.theme = this.theme;
+    if (this.readonly) {
+      // read-only but interactive: clicks place the cursor and drags select,
+      // the buffer just can't be edited. ('nocursor' would also suppress
+      // focus and selection, which the 3D panel needs.)
+      options.readOnly = true;
+    } else {
+      options.extraKeys = {
         'Ctrl-S': () => this.handleSave(),
-        'Ctrl-Space':(cm) => {  CodeMirror.showHint(cm, CodeMirror.hint[this.mode]); }, 
+        'Ctrl-Space':(cm) => {  CodeMirror.showHint(cm, CodeMirror.hint[this.mode]); },
         'Ctrl-Alt-V':(cm) => {
           if (cm.state.keyMaps.indexOf(CodeMirror.keyMap.vim) != -1) {
             // FIXME - removing the keymap doesn't actually work, the bindings stay active
@@ -2438,17 +2472,29 @@ elation.elements.define('janus.ui.editor.source.file', class extends elation.ele
             cm.addKeyMap(CodeMirror.keyMap.vim);
           }
           cm.refresh();
-        }, 
-      },
-      hintOptions: {
+        },
+      };
+      options.hintOptions = {
         autohint: true,
         schemaInfo: this.hints,
         matchInMiddle: true,
-      },
-    });
-console.log('editor hints', this.hints);
-    this.codemirror.on('change', (ev) => this.handleEditContentChange(ev));
-    this.codemirror.on('change', (ev) => this.handleEditContentChange(ev));
+      };
+      // The hint popup defaults to document.body, which an embedded (3D
+      // panel) editor can't show - it lives in a shadow staging container
+      // and only that subtree reaches the texture. show-hint honors a
+      // container option; resolve it lazily since the element isn't in its
+      // final tree yet when these options are built.
+      let hintself = this;
+      Object.defineProperty(options.hintOptions, 'container', {
+        configurable: true,
+        get() {
+          let root = hintself.getRootNode();
+          return (root && root.querySelector) ? (root.querySelector('body') || null) : null;
+        },
+      });
+    }
+    this.codemirror = CodeMirror(this, options);
+    if (!this.readonly) this.codemirror.on('change', (ev) => this.handleEditContentChange(ev));
 
     let skipKeyCodes = [
       8, // backspace
@@ -2481,7 +2527,7 @@ console.log('editor hints', this.hints);
     } else if (this.mode == 'xml') {
       skipKeyCodes.push(190); // . and  >
     }
-    this.codemirror.on("keyup", function (cm, event) {
+    if (!this.readonly) this.codemirror.on("keyup", function (cm, event) {
       if ((!cm.state.completionActive && /*Enables keyboard navigation in autocomplete list*/
           !event.ctrlKey && !event.altKey &&
           skipKeyCodes.indexOf(event.keyCode) == -1)) {        /*Enter - do not open autocomplete list just after item has been selected in it*/ 
