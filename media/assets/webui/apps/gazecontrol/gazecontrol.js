@@ -213,9 +213,9 @@ elation.require([], function() {
     createReticle(){
       const scale = 0.28
       this.cursors = {
-        idle:  { name: 'idle', src: document.location.origin+'/media/assets/webui/apps/gazecontrol/images/reticle-idle.png', scale},
-        hover: { name: 'hover', src: document.location.origin+'/media/assets/webui/apps/gazecontrol/images/reticle-hover.png', scale},
-        fuse:  { name: 'fuse', src: document.location.origin+'/media/assets/webui/apps/gazecontrol/images/reticle-hover.png',  scale, scaleKeep:true},
+        idle:  { name: 'idle', src: elation.config.get('janusweb.datapath') + 'assets/webui/apps/gazecontrol/images/reticle-idle.png', scale},
+        hover: { name: 'hover', src: elation.config.get('janusweb.datapath') + 'assets/webui/apps/gazecontrol/images/reticle-hover.png', scale},
+        fuse:  { name: 'fuse', src: elation.config.get('janusweb.datapath') + 'assets/webui/apps/gazecontrol/images/reticle-hover.png',  scale, scaleKeep:true},
       }
       this.cursor = player.createObject('object', {
         pos: V(0,0,-3),
