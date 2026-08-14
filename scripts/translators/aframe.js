@@ -87,9 +87,10 @@ elation.require([], function() {
 
       "a-gltf-model":     (el,assets,room) => {
                             let src = this.getAndRemoveAttribute(el,"src") 
-                            src     = this.getFullURL(src,room)
                             if( src[0] == '#' ) { // reference to asset
                               el.setAttribute("_id", src.substr(1) ) // *WEIRD* id is immutable!
+                            }else{
+                              src = this.getFullURL(src,room)
                             }
                             this.transformTo("a-gltf-model", "object" )(el,assets)
                           },
