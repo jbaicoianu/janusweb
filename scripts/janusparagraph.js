@@ -39,7 +39,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
       this.defineProperties({
-        text: {type: 'string', default: '', set: this.updateHTML },
+        text: {type: 'string', default: '', set: this.fetchSource },
         font_size: {type: 'integer', default: 16, set: this.updateTexture},
         text_col: {type: 'color', default: 0x000000, set: this.updateTexture},
         back_col: {type: 'color', default: 0xffffff, set: this.updateTexture},
@@ -47,7 +47,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         css: {type: 'string', set: this.updateTexture },
         depth_write: { type: 'boolean', default: true },
-        transparent: {type: 'boolean', set: this.updateTexture },
+        transparent: {type: 'boolean', default: false, set: this.updateTexture },
         depth_test: { type: 'boolean', default: true },
         collision_id: { type: 'string', default: 'cube' },
         collision_scale: { type: 'vector3', default: V(.5, .5, .02) },
@@ -118,7 +118,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       var matargs = {
         color: 0xffffff,
         map: texture,
-        transparent: true,
+        transparent: this.transparent,
         side: sidemap[this.cull_face],
         depthWrite: this.depth_write,
         depthTest: this.depth_test,
@@ -147,7 +147,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       this.canvas.height = this.height;
 
       var text_col = '#' + this.text_col.getHexString(),
-          back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + this.back_alpha + ')';
+          back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + (this.transparent ? this.back_alpha : 1) + ')';
       var basestyle = 'font-family: sans-serif;' +
                       'font-size: ' + this.font_size + 'px;' +
                       'box-sizing: border-box;'  +
@@ -174,7 +174,8 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
       };
 
-      var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+      var styletag = '<style>*, *:before, *:after { box-sizing: border-box; } .paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+          
       styletag    += 'a { color:unset; text-decoration: none; }' // dont confuse users with nonclickable links
 
 

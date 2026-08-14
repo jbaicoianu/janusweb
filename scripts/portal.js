@@ -299,13 +299,11 @@ elation.require(['janusweb.janusbase'], function() {
       this.lastactivatetime = now;
 
       console.log("portal activate")
-      const stopBubbleUpward = () => {
-        if( ev ){
-          ev.preventDefault()   // do not bubble up any/portal click 
-          ev.stopPropagation()  // in nested room  
-        }
+      if( ev ){
+        ev.preventDefault()   // never bubble up any/portal click 
+        ev.stopPropagation()  // as they can go from nested room to parent room 
+        if( ev?.element?.id != this.id ) return // ignore clicks from nested rooms
       }
-      if( !ev || (ev?.element?.id != this.id) ) return stopBubbleUpward()
 
       if (this.frame) {
         this.frame.material.emissive.setHex(0x662222);
