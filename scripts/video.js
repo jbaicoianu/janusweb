@@ -64,7 +64,6 @@ elation.require(['janusweb.janusbase'], function() {
 
       this.texture.minFilter = THREE.LinearFilter;
       this.texture.magFilter = THREE.LinearFilter;
-      this.texture.format = THREE.RGBFormat;
       this.texture.generateMipmaps = false;
 
       var matargs = {

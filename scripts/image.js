@@ -66,6 +66,11 @@ elation.require(['janusweb.janusbase'], function() {
           elation.events.add(this.asset, 'asset_load_progress', (ev) => { this.dispatchEvent({type: 'loadprogress', data: ev.data}); });
           elation.events.add(this.texture, 'asset_load', elation.bind(this, this.imageloaded));
           elation.events.add(this.texture, 'update', elation.bind(this, this.refresh));
+          // Some loaders (basis/ktx2) replace the asset's texture instance on
+          // load rather than mutating the placeholder we grabbed above, so the
+          // per-texture asset_load listener never fires. Re-check the instance
+          // on the asset-level load event and swap if it changed.
+          elation.events.add(this.asset, 'asset_load', elation.bind(this, this.setMaterialDirty));
 
           matargs.transparent = this.asset.hasalpha;
           elation.events.add(this.asset, 'asset_load', ev => {
@@ -156,8 +161,10 @@ elation.require(['janusweb.janusbase'], function() {
       setTimeout(() => {
         this.adjustAspectRatio();
       }, 0);
-      this.sidetex.image = this.texture.image;
-      this.sidetex.needsUpdate = true;
+      if (!this.texture.isCompressedTexture) {
+        this.sidetex.image = this.texture.image;
+        this.sidetex.needsUpdate = true;
+      }
 
       this.frontmaterial.transparent = this.asset.hasalpha;
       this.sidematerial.transparent = this.asset.hasalpha;

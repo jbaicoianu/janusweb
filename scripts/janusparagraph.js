@@ -128,7 +128,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       this.canvas.width = this.width;
       this.canvas.height = this.height;
       this.texture = new THREE.Texture(this.canvas);
-      this.texture.encoding = THREE.sRGBEncoding;
+      this.texture.colorSpace = THREE.SRGBColorSpace;
       if( this.text ) this.updateTexture();
       return this.texture;
     }

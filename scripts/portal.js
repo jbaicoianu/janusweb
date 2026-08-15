@@ -126,7 +126,7 @@ elation.require(['janusweb.janusbase'], function() {
         var asset = this.getAsset('image', this.thumb_id);
         if (asset) var thumb = asset.getInstance();
         if (thumb) {
-          thumb.encoding = THREE.sRGBEncoding;
+          thumb.colorSpace = THREE.SRGBColorSpace;
           if (shader) {
             mat.uniforms.iChannel0.value = thumb;
           } else {

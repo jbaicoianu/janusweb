@@ -30,9 +30,11 @@ elation.require([
         'none': THREE.NoToneMapping,
         'linear': THREE.LinearToneMapping,
         'reinhard': THREE.ReinhardToneMapping,
-        'uncharted2': THREE.Uncharted2ToneMapping,
+        'uncharted2': THREE.CineonToneMapping, // Uncharted2 removed upstream; Cineon is the closest filmic curve
         'cineon': THREE.CineonToneMapping,
         'acesfilmic': THREE.ACESFilmicToneMapping,
+        'agx': THREE.AgXToneMapping,
+        'neutral': THREE.NeutralToneMapping,
       };
       this.defineProperties({
         'janus': { type: 'object' },
@@ -390,7 +392,7 @@ elation.require([
         if (equi.loaded) {
           this.skyboxtexture = equi.getInstance();
           this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
-          this.skyboxtexture.encoding = THREE.sRGBEncoding;
+          this.skyboxtexture.colorSpace = THREE.SRGBColorSpace;
           if (this.janus.currentroom === this) {
             this.skyboxobj.setTexture(this.skyboxtexture);
           }
@@ -399,7 +401,7 @@ elation.require([
           elation.events.add(equi, 'asset_load', ev => {
             this.skyboxtexture = ev.target._texture;
             this.skyboxtexture.mapping = THREE.EquirectangularReflectionMapping;
-            this.skyboxtexture.encoding = THREE.sRGBEncoding;
+            this.skyboxtexture.colorSpace = THREE.SRGBColorSpace;
             if (this.janus.currentroom === this) {
               this.skyboxobj.setTexture(this.skyboxtexture);
             }
@@ -504,7 +506,7 @@ elation.require([
           // flip skybox 180 degrees
           images = [images[1],images[0],images[2],images[3],images[5],images[4]];
           var texture = new THREE.CubeTexture( images );
-          texture.encoding = THREE.sRGBEncoding;
+          texture.colorSpace = THREE.SRGBColorSpace;
           texture.needsUpdate = true;
           this.skyboxtexture = texture;
           if (this.janus.currentroom === this) {
