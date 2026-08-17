@@ -347,7 +347,8 @@ elation.require([
       if (this.currentroom && !stripreferrer) {
         newroom.referrer = this.currentroom.url;
       } else {
-        newroom.referrer = null;
+        // to promote bidirectional links: extract referrer from room.url hash or janusweb hash (if any)
+        newroom.referrer = elation.url( url.match('janus.referrer=') ? url : null )['janus.referrer'] || null
       }
 
       elation.events.fire({element: this, type: 'room_load_start', data: newroom});

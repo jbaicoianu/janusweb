@@ -1032,7 +1032,7 @@ elation.require([
             //linkrot.x *= THREE.MathUtils.RAD2DEG;
             linkrot.y = linkrot.y + 180;
             //linkrot.z *= THREE.MathUtils.RAD2DEG;
-            let linkpos = this.spawnpoint.localToWorld(V(0,0,player.fatness/2));
+            let linkpos = this.spawnpoint.localToWorld(V(0,0,-player.fatness));
             this.createObject('link', {
               pos: linkpos,
               rotation: linkrot,
