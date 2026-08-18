@@ -139,7 +139,7 @@ elation.require(['engine.things.label'], function() {
 
       var geometry = new THREE.TextGeometry( text, {
         size: this.font_size,
-        height: this.properties.thickness || this.font_size / 8,
+        depth: this.properties.thickness || this.font_size / 8,
         curveSegments: this.segments,
 
         font: font,

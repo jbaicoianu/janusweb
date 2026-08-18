@@ -198,8 +198,9 @@ this.outliner_hover.setLayers('10');
         this.roomedit.object.sync = true;
       });
     }
-    if (this.manipulator.parent != room._target.objects['3d']) {
-      room._target.objects['3d'].add(this.manipulator);
+    let manipulatorhelper = this.manipulator.getHelper();
+    if (manipulatorhelper.parent != room._target.objects['3d']) {
+      room._target.objects['3d'].add(manipulatorhelper);
       this.manipulator.enabled = false;
     }
     return this.manipulator;
@@ -230,7 +231,7 @@ this.outliner_hover.setLayers('10');
     } else {
       // non-transform property: park the gizmo and float a matching 3D UI if one is registered
       manipulator.enabled = false;
-      manipulator.visible = false;
+      manipulator.getHelper().visible = false;
       this.showPropertyUI(mode);
     }
     if (this.objectinfo) {
@@ -480,6 +481,7 @@ console.log('set translation snap', ev.data, ev);
     this.editObjectShowInfo(object);
     let manipulator = this.getManipulator();
     manipulator.attach(object.objects['3d']);
+    manipulator.getHelper().visible = true;
     // During raycast placement the gizmo stays visible but inert (no mouse
     // interaction); a normal edit makes it interactive.
     manipulator.enabled = !this.roomedit.raycast;
@@ -671,6 +673,7 @@ console.log('set translation snap', ev.data, ev);
     this.editObjectRemoveParentWireframe();
     let manipulator = this.getManipulator();
     manipulator.detach();
+    manipulator.getHelper().visible = false;
     manipulator.enabled = false;
     this.hidePropertyUI();
     if (this.objectinfo) {

@@ -347,9 +347,8 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           let rename = {};
           let bonemap = this.body.modelasset.vrm.humanoid.humanBones;
           for (let k in bonemap) {
-            console.log(k, bonemap[k]);
-            if (bonemap[k].length > 0) {
-              rename[bonemap[k][0].node.name] = k;
+            if (bonemap[k] && bonemap[k].node) {
+              rename[bonemap[k].node.name] = k;
             }
           }
           let bones = [];
@@ -380,10 +379,10 @@ elation.require(['janusweb.janusbase', 'engine.things.leapmotion'], function() {
           let parts = track.name.split('.');
           console.log(parts, track.name);
           try {
-            let bone = vrm.humanoid.getBone(parts[0]);
+            let bone = vrm.humanoid.getRawBoneNode(parts[0]);
             if (bone) {
-              track.name = bone.node.name + '.' + parts[1];
-              let sourcebone = sourcemesh.skeleton.getBone(bone.node.name);
+              track.name = bone.name + '.' + parts[1];
+              let sourcebone = sourcemesh.skeleton.getBoneByName(bone.name);
               //console.log(track, bone);
             } else {
               //console.log('no bone!', parts, track);

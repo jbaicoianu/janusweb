@@ -919,6 +919,7 @@ elation.require(['engine.things.generic', 'janusweb.external.webxr-input-profile
           jointposes[jointname] = jointpose;
         }
         this.joints.instanceMatrix.needsUpdate = true;
+        this.joints.computeBoundingSphere(); // r151+: InstancedMesh is frustum-culled by default and needs a valid bounds after matrix updates
         //this.joints.computeBoundingSphere();
 
         if (jointposes['wrist']) this.localToWorld(this.handpos.copy(this.jointposes['wrist'].transform.position));

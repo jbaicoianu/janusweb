@@ -113,7 +113,7 @@ elation.require(['janusweb.janusbase'], function() {
       if (this.light_style != '') {
         let idx = Math.floor(Date.now() / (1000 / this.light_style_fps)) % this.light_style.length;
         let brightness = (this.light_style.charCodeAt(idx) - 97) / 13;
-        this.light.intensity = .1 * brightness;
+        this.light.intensity = (this.baseintensity !== undefined ? this.baseintensity : .1 * Math.PI) * brightness;
       }
     }
     this.createLight = function() {
@@ -138,11 +138,15 @@ elation.require(['janusweb.janusbase'], function() {
         if (this.light.parent !== this.objects['3d']) {
           this.objects['3d'].add(this.light);
         }
-        //this.light.intensity = this.light_intensity / 100;
         var avgscale = (this.scale.x + this.scale.y + this.scale.z) / 3;
-        //this.light.intensity = this.light_intensity / 100;
-        let brightness = 1;
-        this.light.intensity = .1;
+        // Brightness lives entirely in intensity; color stays normalized. The
+        // shader result (color * intensity) is identical to the old approach of
+        // oversaturating the color, but this keeps light.color meaningful for
+        // helpers, editors, and scripts. The .1 factor is the historical Janus
+        // brightness calibration; x PI bridges the r165 removal of legacy
+        // (non-physical) light mode.
+        this.baseintensity = .1 * Math.PI * this.light_intensity * avgscale * avgscale;
+        this.light.intensity = this.baseintensity;
         this.light.penumbra = this.light_penumbra;
         this.light.decay = this.light_decay;
         if (this.color_temperature) {
@@ -150,7 +154,6 @@ elation.require(['janusweb.janusbase'], function() {
         } else {
           this.light.color.copy(this.color);
         }
-        this.light.color.multiplyScalar(this.light_intensity * avgscale * avgscale);
         this.light.distance = this.light_range * avgscale;
         if (this.light_cone_angle > 0 && this.light_cone_angle < 1) {
           this.light.angle = Math.acos(this.light_cone_angle);

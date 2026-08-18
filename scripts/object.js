@@ -751,7 +751,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (texture) {
               //if (!color) m.color.setHex(0xffffff);
               m.map = texture;
-              texture.encoding = THREE.sRGBEncoding;
+              texture.colorSpace = THREE.SRGBColorSpace;
               if (false && !this.assetloadhandlers[texture.uuid]) {
                 this.assetloadhandlers[texture.uuid] = true;
                 elation.events.add(texture, 'asset_update', (ev) => {
@@ -771,7 +771,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
                   m.alphaTest = this.alphatest;
                 }
                 m.map = asset.getInstance();
-                m.map.encoding = THREE.sRGBEncoding;
+                m.map.colorSpace = THREE.SRGBColorSpace;
                 if (!this.assetloadhandlers[m.map.uuid]) {
                   this.assetloadhandlers[m.map.uuid] = true;
                   elation.events.add(m.map, 'asset_update', elation.bind(this, function(ev) {
@@ -846,21 +846,33 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
 
             if (textureLightmap && textureLightmap.image) {
               if (lightmaptextureasset.loaded) {
-                m.lightMap = textureLightmap; 
+                m.lightMap = textureLightmap;
+                m.lightMap.channel = 1;
+                m.lightMapIntensity = Math.PI; // r165 removed legacy mode's internal xPI on lightmap irradiance // lightmaps use the second UV set (pre-r152 'uv2', now 'uv1')
+                m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; // legacy lightmaps multiply in display space, sample raw like r150 did
                 if (!this.assetloadhandlers[m.lightMap.uuid]) {
                   this.assetloadhandlers[m.lightMap.uuid] = true;
-                  elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                  elation.events.add(textureLightmap, 'asset_update', elation.bind(m, function(ev) { m.lightMap = ev.data; m.lightMap.channel = 1; m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; m.lightMapIntensity = Math.PI; this.refresh(); }));
                 }
               }
             } else if (m.lightMap) {
               var imagesrc = m.lightMap.sourceFile;
+              // material-level legacy bridges, applied unconditionally: several
+              // materials can share one lightmap texture, and the uuid guard
+              // below only dedupes the texture-level handler registration
+              m.lightMap.channel = 1; // lightmaps use the second UV set (pre-r152 'uv2', now 'uv1')
+              m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; // legacy lightmaps multiply in display space, sample raw like r150 did
+              m.lightMapIntensity = Math.PI; // r165 removed legacy mode's internal xPI on lightmap irradiance
               if (!this.assetloadhandlers[m.lightMap.uuid]) {
                 this.assetloadhandlers[m.lightMap.uuid] = true;
-                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false});
+                var asset = this.getAsset('image', imagesrc, {id: imagesrc, src: imagesrc, hasalpha: false, srgb: false});
                 if (asset) {
                   m.lightMap = asset.getInstance();
-                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh();}));
-                  elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; this.refresh(); }));
+                  m.lightMap.channel = 1;
+                  m.lightMapIntensity = Math.PI; // r165 removed legacy mode's internal xPI on lightmap irradiance // lightmaps use the second UV set (pre-r152 'uv2', now 'uv1')
+                  m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; // legacy lightmaps multiply in display space, sample raw like r150 did
+                  elation.events.add(asset, 'asset_load', elation.bind(this, function(ev) { m.lightMap = ev.data; m.lightMap.channel = 1; m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; m.lightMapIntensity = Math.PI; this.refresh();}));
+                  elation.events.add(m.lightMap, 'asset_update', elation.bind(this, function(ev) { m.lightMap = ev.data; m.lightMap.channel = 1; m.lightMap.colorSpace = THREE.NoColorSpace; m.lightMap.needsUpdate = true; m.lightMapIntensity = Math.PI; this.refresh(); }));
                 }
               }
             }
@@ -871,10 +883,10 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             if (this.lighting) {
               if (textureEmissive) {
                 m.emissiveMap = textureEmissive;
-                textureEmissive.encoding = THREE.sRGBEncoding;
+                textureEmissive.colorSpace = THREE.SRGBColorSpace;
                 m.emissive = new THREE.Color(0xffffff);
               } else if (m.emissiveMap) {
-                m.emissiveMap.encoding = THREE.sRGBEncoding;
+                m.emissiveMap.colorSpace = THREE.SRGBColorSpace;
               } else if (this.emissive) {
                 //m.emissive = this.emissive.clone();
                 m.emissive.copy(this.emissive)
@@ -883,7 +895,7 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             } else {
               if (textureEmissive) {
                 m.map = textureEmissive;
-                textureEmissive.encoding = THREE.sRGBEncoding;
+                textureEmissive.colorSpace = THREE.SRGBColorSpace;
                 m.color = new THREE.Color(0xffffff);
               }
             }
@@ -977,7 +989,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
               }
             }
             //m.needsUpdate = true;
-            m.skinning = useSkinning;
             if (useVertexColors) {
               m.vertexColors = true;
             } else {
@@ -985,6 +996,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
             }
             if (!(m instanceof THREE.ShaderMaterial)) {
               m.fog = this.fog;
+            }
+            if (m.isMeshPhongMaterial && m.shininess < .01) {
+              // Exporters (especially Collada) emit shininess 0, which makes the
+              // blinn-phong term pow(0, 0) = NaN on silhouette pixels - visible
+              // as black/white speckles in the HDR pipeline. An epsilon floor is
+              // visually identical.
+              m.shininess = .01;
             }
             m.wireframe = this.wireframe;
           }
@@ -1075,7 +1093,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
         m.transmissionMap = oldmat.transmissionMap;
         m.transparent = oldmat.transparent || m.opacity < 1;
         m.alphaTest = oldmat.alphaTest;
-        m.skinning = oldmat.skinning;
 
         if (oldmat.metalness !== undefined) m.metalness = oldmat.metalness;
         if (oldmat.metalnessMap !== undefined) m.metalnessMap = oldmat.metalnessMap;
@@ -1160,13 +1177,13 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       // reflection vector is put into world space it's intersected with the box
       // (boxProjMin..boxProjMax) and re-based on boxProjCenter, so the CubeUV/PMREM
       // sample is parallax-corrected. Built by patching the stock chunk so it tracks
-      // the exact r150 source; if the source ever changes and the anchor line isn't
+      // the exact r185 source; if the source ever changes and the anchor line isn't
       // found, this degrades to the stock (infinite) chunk rather than breaking.
       if (THREE.ShaderChunk['envmap_physical_pars_fragment_parallax']) return;
-      let anchor = 'reflectVec = inverseTransformDirection( reflectVec, viewMatrix );';
+      let anchor = 'reflectVec = transformDirectionByInverseViewMatrix( reflectVec, viewMatrix );';
       let patched = THREE.ShaderChunk['envmap_physical_pars_fragment']
-        .replace('#if defined( USE_ENVMAP )',
-          '#if defined( USE_ENVMAP )\n\tuniform vec3 boxProjMin;\n\tuniform vec3 boxProjMax;\n\tuniform vec3 boxProjCenter;\n\tvarying vec3 vParallaxWorldPos;')
+        .replace('#ifdef USE_ENVMAP',
+          '#ifdef USE_ENVMAP\n\tuniform vec3 boxProjMin;\n\tuniform vec3 boxProjMax;\n\tuniform vec3 boxProjCenter;\n\tvarying vec3 vParallaxWorldPos;')
         .replace(anchor, anchor +
           '\n\t\t\t{ vec3 nrd = normalize( reflectVec );' +
           '\n\t\t\t  vec3 rbmax = ( boxProjMax - vParallaxWorldPos ) / nrd;' +
