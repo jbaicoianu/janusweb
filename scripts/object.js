@@ -1055,7 +1055,6 @@ elation.require(['janusweb.janusbase', 'janusweb.websurface'], function() {
       } else {
         var m = this.allocateMaterial();
         m.dithering = true;
-        m.anisotropy = 16;
         m.name = oldmat.name;
         m.map = oldmat.map;
         m.cloned = true;
