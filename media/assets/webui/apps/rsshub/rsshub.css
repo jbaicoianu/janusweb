@@ -1,0 +1,10 @@
+app-rss {
+  display: block;
+  border: 1px solid black;
+  background: #900;
+  padding: .5em;
+}
+
+app-rss[done] {
+  background: #090;
+}

@@ -1,0 +1,4 @@
+[
+  { "assettype": "image", "name": "reticle-idle", "src": "./images/reticle-idle.png", "hasalpha": true },
+  { "assettype": "image", "name": "reticle-hover", "src": "./images/reticle-hover.png", "hasalpha": true }
+]

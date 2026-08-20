@@ -3,7 +3,7 @@ elation.require([
      'engine.things.generic', 'engine.things.label', 'engine.things.skybox',
     'janusweb.object', 'janusweb.portal', 'janusweb.image', 'janusweb.video', 'janusweb.text', 'janusweb.janusparagraph',
     'janusweb.sound', 'janusweb.januslight', 'janusweb.janusparticle', 'janusweb.janusghost',
-    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube'
+    'janusweb.translators.bookmarks', 'janusweb.translators.reddit', 'janusweb.translators.error', 'janusweb.translators.blank', 'janusweb.translators.default', 'janusweb.translators.dat', 'janusweb.translators.janusvfs', 'janusweb.translators.xrfragments', 'janusweb.translators.peertube', 'janusweb.translators.rss', 'janusweb.translators.aframe'
   ], function() {
   let roomTranslators = false;
   function initRoomTranslators(room) {
@@ -20,6 +20,8 @@ elation.require([
       '^https?:\/\/(www\.)?reddit.com': elation.janusweb.translators.reddit({janus: janus}),
       '^error$': elation.janusweb.translators.error({janus: janus}),
       '.*\.(gltf|glb|dae)$': elation.janusweb.translators.xrfragments({janus: janus}),
+      '.*\.(rss|atom)$': elation.janusweb.translators.rss({janus}),
+      '^aframe$': elation.janusweb.translators.aframe({janus: janus}),
       '^default$': elation.janusweb.translators.default({janus: janus}),
     }
   }
@@ -45,6 +47,7 @@ elation.require([
         'roomid': { type: 'string' },
         'corsproxy': { type: 'string', default: false },
         'baseurl': { type: 'string', default: false },
+        'nested': { type: 'boolean', default: false, set: this.setNested },
         'source': { type: 'string' },
         'skybox': { type: 'boolean', default: true, set: this.toggleSkybox },
         'skybox_intensity': { type: 'float', set: this.setSkybox, default: 1.0 },
@@ -102,7 +105,7 @@ elation.require([
         'voipserver': { type: 'string', default: 'voip.janusxr.org' },
         'classList': { type: 'object', default: [] },
         'className': { type: 'string', default: '', set: this.setClassName },
-        'gazetime': { type: 'float', default: 1000 },
+        'gazetime': { type: 'float', default: 2000 },
         'selfavatar': { type: 'boolean', default: false },
         'requires': { type: 'string' },
         'onload': { type: 'string' },
@@ -218,6 +221,7 @@ elation.require([
       };
     }
     this.updateLights = function() {
+      if( this.nested ) return
       if (!this.roomlights) {
         this.createLights();
       }
@@ -241,17 +245,18 @@ elation.require([
     }
     this.setActive = function() {
       this.active = true;
-      this.setSkybox();
-      this.setFog();
-      this.updateBloom();
-      this.updateToneMapping();
-      this.setNearFar();
-      this.setPlayerPosition();
-      if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
-        player.setCameraView(this.defaultview);
+      if( !this.nested ){ 
+        this.setSkybox();
+        this.setFog();
+        this.updateBloom();
+        this.updateToneMapping();
+        this.setNearFar();
+        this.setPlayerPosition();
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+          player.setCameraView(this.defaultview);
+        }
+        this.updateAvatarVisibility();
       }
-      this.updateAvatarVisibility();
-
       elation.events.fire({element: this, type: 'room_active', data: this});
     }
     this.setPlayerPosition = function(pos, orientation) {
@@ -335,6 +340,12 @@ elation.require([
       }
       return spawnpoint;
     }
+    this.setNested = function(){
+      if( this.nested ){
+        this.skybox = false 
+        this.use_local_asset = false 
+      }
+    }
     // Shared box-projection uniforms for parallax-corrected envmap reflections. One
     // set of THREE uniform objects per room; every PBR material's parallax shader
     // references these same objects, so live edits to envmap_box_center/size update
@@ -365,9 +376,9 @@ elation.require([
       this.updateParallaxUniforms();
     }
     this.setSkybox = function() {
-      if (!this.loaded) return;
+      if (!this.loaded ) return;
 
-      if (!this.skybox) {
+      if (!this.skybox ) {
         this.engine.systems.render.renderer.setClearAlpha(0);
         return;
       } else {
@@ -629,7 +640,7 @@ elation.require([
       }
     }
 
-    this.load = function(url, baseurloverride) {
+    this.load = async function(url, baseurloverride) {
       if (!url) {
         url = this.properties.url;
       } else {
@@ -992,7 +1003,7 @@ elation.require([
       }
       
       if (room && !parent) {
-        if (room.use_local_asset) {
+        if (room.use_local_asset && !this.nested) {
           var modelid = (room.visible !== false ? room.use_local_asset : undefined),
               collisionid = room.use_local_asset + '_collision',
               collisionscale = V(1,1,1),
@@ -1051,7 +1062,7 @@ elation.require([
             //linkrot.x *= THREE.MathUtils.RAD2DEG;
             linkrot.y = linkrot.y + 180;
             //linkrot.z *= THREE.MathUtils.RAD2DEG;
-            let linkpos = this.spawnpoint.localToWorld(V(0,0,player.fatness/2));
+            let linkpos = this.spawnpoint.localToWorld(V(0,0,-player.fatness));
             this.createObject('link', {
               pos: linkpos,
               rotation: linkrot,
@@ -1062,7 +1073,7 @@ elation.require([
             });
           }
         }
-        if (this.active) {
+        if (this.active && !this.nested) {
           setTimeout(() => this.setPlayerPosition(), 0);
         }
 
@@ -1121,7 +1132,7 @@ elation.require([
         this.defaultview = elation.utils.any(room.defaultview, null);
         this.showavatar = elation.utils.any(room.showavatar, true);
         if ('spawnradius' in room) this.spawnradius = room.spawnradius;
-        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview) {
+        if (typeof player != 'undefined' && this.defaultview && this.defaultview != player.cameraview && !this.nested) {
           player.setCameraView(this.defaultview);
         }
         //if (room.col) this.properties.col = room.col;
@@ -1197,6 +1208,7 @@ elation.require([
       });
     }
     this.getTranslator = function(url) {
+      url = url.replace(/#.*/,'')
       var keys = Object.keys(roomTranslators);
       for (var i = 0; i < keys.length; i++) {
         var re = new RegExp(keys[i]);
@@ -1208,15 +1220,13 @@ elation.require([
       return false;
     }
     this.enable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.start) {
-          obj.start();
-        }
-      }
       if (!this.enabled) {
+        this.getObjectsDeep()
+            .filter( (obj) => obj.start   )
+            .map(    (obj) => { if( !obj.started ) obj.start() })
+
         this.enabled = true;
+
         this.engine.systems.ai.add(this);
 
         elation.events.add(window, 'click', this.onClick);
@@ -1248,14 +1258,11 @@ elation.require([
       //this.showDebug();
     }
     this.disable = function() {
-      var keys = Object.keys(this.children);
-      for (var i = 0; i < keys.length; i++) {
-        var obj = this.children[keys[i]];
-        if (obj.stop) {
-          obj.stop();
-        }
-      }
       if (this.enabled) {
+        this.getObjectsDeep()
+            .filter( (obj) => obj.stop   )
+            .map(    (obj) => { if( obj.started ) obj.stop() })
+
         this.engine.systems.ai.remove(this);
         elation.events.fire({type: 'room_disable', data: this});
         this.enabled = false;
@@ -2081,12 +2088,20 @@ elation.require([
       }
 */
       // FIXME - hack to disable XR rendering while room is still loading. this can be handled better.
-      if (this.engine.systems.render.views.xr && this.engine.systems.render.renderer.xr.isPresenting) {
-        this.engine.systems.render.views.xr.enabled = this.completed;
+      const XRRenderChange = !this.nested && 
+                             !this.completed &&
+                             this.engine.systems.render.views.xr && 
+                             this.engine.systems.render.renderer.xr.isPresenting
+      if( XRRenderChange ){
+        this.engine.systems.render.views.xr.enabled = false 
+        clearTimeout( this.XRRenderChangeWait )
+        this.XRRenderChangeWait = setTimeout( () => this.engine.systems.render.views.xr.enabled = true, 300 )
       }
-      this.janus.scriptframeargs[0] = ev.data.delta * 1000;
-      elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
-      elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
+      if( this.completed ){
+        this.janus.scriptframeargs[0] = ev.data.delta * 1000;
+        elation.events.fire({element: this, type: 'janusweb_script_frame', data: ev.data.delta});
+        elation.events.fire({element: this, type: 'janusweb_script_frame_end', data: ev.data.delta});
+      }
     }
     this.onCollide = function(ev) { 
       //console.log('objects collided', ev.target, ev.data.other);
@@ -2100,10 +2115,33 @@ elation.require([
 */
 
     }
-    this.getObjectByDeepName = function(name) {
+    this.getObjectsDeep = function() {
+      let result = []
+      // search direct childern 
+      const collectChildren = (room) => {
+        var keys = Object.keys(room.children);
+        for (var i = 0; i < keys.length; i++) {
+          const obj = room.children[keys[i]] 
+          result.push( obj );
+        }
+      }
+      collectChildren(this.janus.currentroom)
+      // search deep for janusobjects (in nested rooms too)
+      this.janus.currentroom.objects['3d'].traverse( (o) => {
+        if( o?.userData?.thing?.type == "janusroom" && o.userData.thing.id != this.id ){
+          collectChildren( o.userData.thing )
+        }
+      })
+      return result
+    }
+    this.getObjectByDeepName = function(name,fuzzy) {
       if( !this.janus.currentroom ) return
       let obj = this.janus.currentroom.objects['3d'].getObjectByName(name)
-      if( obj ){ // return polyglot THREE/janusweb object for convenience
+      if( !obj && fuzzy ){
+        obj = this.getObjectById( name)        || 
+              this.players[ name ]             
+      }
+      if( obj && !obj.objects ){ // return polyglot THREE/janusweb object for convenience
         return new Proxy(obj,{
           set(me,k,v){ obj[k] = v; return true;    },
           get(me,k){ 
@@ -3000,13 +3038,15 @@ console.log('dispatch to parent', event, this, event.target);
     }
     this.getFullRoomURL = function(url, proxyurl) {
       let fullurl = url;
-      if (fullurl[0] == '/' && fullurl[1] != '/'){ 
-        fullurl = this.baseurl.replace(/^(https?:\/\/[^\/]+)\/.*$/, '$1') + fullurl;
+      const relativeURL = /^(\.|\/)[a-zA-Z0-9-_]/ 
+      if ( fullurl.match(relativeURL) ){
+        if( fullurl[0] == '/' ){
+          fullurl = new URL(this.baseurl).origin + fullurl
+        }else{
+          fullurl = this.baseurl.substr( 0, this.baseurl.lastIndexOf('/') ) + fullurl.replace(/^\./,'')
+        }
       }else if (!fullurl.match(/^https?:/) && !fullurl.match(/^\/\//)) {
-        fullurl = this.baseurl + (
-                    fullurl.match(/^\.\//) ? fullurl.replace(/^\.\//,'')  // './index.html' e.g.
-                                           : fullurl 
-                  )
+        fullurl = this.baseurl + fullurl 
       } else if (proxyurl && !this.isLocal(fullurl) ){
         fullurl = proxyurl + fullurl;
       }
@@ -3254,7 +3294,15 @@ console.log('unknown material', mat);
           if (player.ghost.head) player.ghost.head.visible = false;
         }
       }
+    },
+
+    this.reparent = function(obj, parentId, searchRoom ){
+      searchRoom = searchRoom || this
+      let target = searchRoom.getObjectByDeepName( parentId, true )
+      if( !target && parentId == 'player' ) target = player
+      if( target ) target.add( obj ) // reparent !
     }
+
   }, elation.engine.things.generic);
 });
 

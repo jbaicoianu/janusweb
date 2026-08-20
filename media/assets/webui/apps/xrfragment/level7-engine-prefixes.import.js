@@ -43,9 +43,9 @@ xrf_engines = function(){
 
       case "-three-material.sides":    if( obj.material ){
                                          const modes = {
-                                           'THREE.FrontSide':  THREE.NoBlending,
-                                           'THREE.BackSide':   THREE.NormalBlending,
-                                           'THREE.DoubleSide': THREE.DoubleSide
+                                          'THREE.FrontSide':  THREE.FrontSide,
+                                          'THREE.BackSide':   THREE.BackSide,
+                                          'THREE.DoubleSide': THREE.DoubleSide
                                          }
                                          setTimeout( () => { // not sure why this only works in setTimeout
                                            if( modes[ obj.userData[key] ] ) obj.material.sides = modes[ obj.userData[key] ]
@@ -75,12 +75,15 @@ xrf_engines = function(){
                                        opts[ i.replace(/-janus-/,'') ] = obj.userData[i]
                                      }
 
+                                     opts.name = String(`-janus-${obj.name}_${obj.userData['-janus-tag']}`).replace(/.*janus-/,'-janus-')
+                                     opts.js_id = opts.js_id || opts.name
+                                     opts.id    = opts.id    || opts.name
+
                                      // create asset
                                      if( obj.userData['-janus-tag'].match(/^asset/) ){
                                        if( opts.src && !opts.src.match(/(^\.|:\/)/) ) opts.src = room.baseurl + opts.src
                                        room.loadNewAsset( opts['tag'].replace(/^asset/,''), opts )
                                      }else{
-                                       opts.js_id = opts.name = String(`-janus-${obj.name}_${obj.userData['-janus-tag']}`).replace(/.*janus-/,'-janus-')
                                        // create room object
                                        const jo = room.createObject( opts.tag, opts )
                                        jo.objects['3d'].name = opts.js_id

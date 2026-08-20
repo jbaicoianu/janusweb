@@ -1,23 +1,31 @@
 /*
- * <paragraph> text-to-texture translator. The builtin XMLtranslator allows:
+ * <paragraph> text-to-texture translator.
  *
  *  1. inline html             : <paragraph><![CDATA[ <b>hello world</b> ]]></paragraph>
  *  2. inline html (partial)   : <paragraph selector="span"><![CDATA[ <b>hello <span>world</span></b> ]]></paragraph>
- *  3. external url            : <paragraph url="https://janusxr.org"/>
- *  4. external url (partials) : <paragraph url="https://janusxr.org" selector=".infoText"/>
- *  5. janusroom container html: <paragraph selector=".someclass"/>
- *  6. janusroom container xml : <paragraph selector="tag subtag title"/>
- *  7. RSS                     : <paragraph url="https://my.org/foo.rss" selector="item description"/>
- *  8. XML                     : <paragraph url="https://my.org/bar.xml" selector="title"/>
- *  9. any data- or selector-format via 'paragraph_translator' event
+ *  3. custom translators: via 'paragraph_translator' event 
+ *
+ *  scripts/translators/paragraph/html-xml-rss.js:
+ *  4. external url            : <paragraph url="https://janusxr.org"/>
+ *  5. external url (partials) : <paragraph url="https://janusxr.org" selector=".infoText"/>
+ *  6. janusroom container html: <paragraph selector=".someclass"/>
+ *  7. janusroom container xml : <paragraph selector="tag subtag title"/>
+ *  8. RSS                     : <paragraph url="https://my.org/foo.rss" selector="item description"/>
+ *  9. XML                     : <paragraph url="https://my.org/bar.xml" selector="title"/>
+ *
+ *  scripts/translators/paragraph/markdown.js:
+ *  10. Markdown url           : <paragraph url="http://github.com/...../README.md"/>
+ *  10. Markdown url partials  : <paragraph url="http://github.com/...../README.md" selector="#hello"/>
+ *  11. Markdown inline        : <paragraph><![CDATA[# Hello World]]></paragraph>
  *
  *  EXAMPLE TRANSLATOR:
  *
+ *     // or elation.events.add(null, 'paragraph_translator', function(e){ 
  *     room.addEventListener("paragraph_translator", function(e){
  *       const {translator,paragraph} = e.detail
  *       // now you can override the default translator
- *       translator.fetch     = async (url) => this.text = "a response"    // my custom fetch function
- *       translator.translate = async (   ) => ["<h1>head</h1>",this.text] // my x2html translator
+ *       translator.fetch     = async (url) => this.text = "a response"         // my custom fetch function
+ *       translator.translate = async (   ) => ["<h1>head</h1>",paragraph.html] // my x2html translator
  *     }
  *
  *  NOTES:
@@ -30,14 +38,15 @@
  *  4. ttl-attributes allows finer control of webrequest-cache (default 2 mins)
  *  5. setting `rooms.object.myparagraph.selector = "#section2"' allows for statemanagement
  *  6. separation of `this.text` (for JML) and `this.html` (for texture) is necessary (to not break JML/glb exports)
+ *  7. various events are fired to extend default behaviours
  */
 
-elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-rss'], function() {
+elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-rss', 'janusweb.translators.paragraph.markdown'], function() {
   elation.component.add('engine.things.janusparagraph', function() {
     this.postinit = function() {
       elation.engine.things.janusparagraph.extendclass.postinit.call(this);
       this.defineProperties({
-        text: {type: 'string', default: '', set: this.textToHTML },
+        text: {type: 'string', default: '', set: this.fetchSource },
         font_size: {type: 'integer', default: 16, set: this.updateTexture},
         text_col: {type: 'color', default: 0x000000, set: this.updateTexture},
         back_col: {type: 'color', default: 0xffffff, set: this.updateTexture},
@@ -45,21 +54,25 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         cull_face: { type: 'string', default: 'back', set: this.updateMaterial },
         css: {type: 'string', set: this.updateTexture },
         depth_write: { type: 'boolean', default: true },
-        transparent: {type: 'boolean', set: this.updateTexture },
+        transparent: {type: 'boolean', default: false, set: this.updateTexture },
         depth_test: { type: 'boolean', default: true },
         collision_id: { type: 'string', default: 'cube' },
         collision_scale: { type: 'vector3', default: V(.5, .5, .02) },
+        use_proxy: { type: 'bool', default: true },
         shadow: { type: 'boolean', default: true, set: this.updateMaterial },
         shadow_receive: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Receive shadows from self and other objects' },
         shadow_cast: { type: 'boolean', default: true, set: this.updateMaterial, comment: 'Cast shadows onto self and other objects' },
         url: { type: 'string', default: '', set: this.fetchSource },
         selector: { type: 'string', default: '', set: this.fetchSource },
-        index: { type: 'integer', default: 0, set: this.updateHTML },
+        index: { type: 'integer', default: 0, set: this.updateIndex },
+        maxindex: { type: 'integer', default: 4, set: this.updateHTML },
         cycle: {type: 'integer', default: 0, set: this.updateHTML },
         width: { type: 'integer', default: 1024 },  
         height: { type: 'integer', default: 1024 }, 
         ttl: { type: 'integer', default: 120000, comment: 'expire texture/html after ms (default:2 mins)' }, 
       });
+      this.inited = true
+      this.fetchSource() // we manually trigger this (instead of premature triggers from proxies)
     }
 
     this.paragraphs = [] // for cycle / partial purposes
@@ -72,7 +85,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
           this.url   = this.selector = '' 
           this.cycle = this.indexes = 0;
         }
-        this.fetchSource() // expect 'selector' not being set here 
+        this.fetchSource({textToHTML:true}) // expect 'selector' not being set here 
       }else{
         this.html = ''
         this.updateTexture()
@@ -89,16 +102,19 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
      
       elation.events.add(this, 'click', () => {
         if( this.indexes ){
-          this.index++
+          this.index = (this.index+1) % this.indexes 
           this.cycle = 0 // disable
+          this.updateIndex()
         }
       })
 
       return mesh;
     }
     this.createForces = function() {
-      this.setCollider('box', { min: V(-.8, -.8, -.01), max: V(.8, .8, .01) });
-      //this.collision_id = 'cube';
+      this.setCollider('box', { 
+        min: V(-this.scale.x, -this.scale.y, -.01), 
+        max: V( this.scale.x,  this.scale.y, .01) 
+      });
     }
     this.updateColliderFromGeometry = function() { }
     this.createMaterial = function() {
@@ -111,7 +127,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       var matargs = {
         color: 0xffffff,
         map: texture,
-        transparent: true,
+        transparent: this.transparent,
         side: sidemap[this.cull_face],
         depthWrite: this.depth_write,
         depthTest: this.depth_test,
@@ -140,7 +156,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       this.canvas.height = this.height;
 
       var text_col = '#' + this.text_col.getHexString(),
-          back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + this.back_alpha + ')';
+          back_col = 'rgba(' + (this.back_col.r * 255) + ', ' + (this.back_col.g * 255) + ', ' + (this.back_col.b * 255) + ', ' + (this.transparent ? this.back_alpha : 1) + ')';
       var basestyle = 'font-family: sans-serif;' +
                       'font-size: ' + this.font_size + 'px;' +
                       'box-sizing: border-box;'  +
@@ -167,18 +183,19 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;');
       };
 
-      var styletag = '<style>.paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+      var styletag = '<style>*, *:before, *:after { box-sizing: border-box; } .paragraphcontainer { ' + basestyle + '} .br { height: 1em; } .hr { margin: .5em 0; border: 1px inset #ccc; height: 0px; }';
+          
       styletag    += 'a { color:unset; text-decoration: none; }' // dont confuse users with nonclickable links
 
 
 
       // hybrid 2D/3D styling: apply styles from container HTML if any
       styletag += xmlSafeCss([ ...(new DOMParser)
-                       .parseFromString(room.fullsource,"text/html")
-                       .querySelectorAll("style[type=\"text/css\"]")
-                  ]
-                  .map( (el) => el.innerText )
-                  .join("\n"))
+                 .parseFromString(room.fullsource,"text/html")
+                 .querySelectorAll("style[type=\"text/css\"]")
+            ]
+            .map( (el) => el.innerText )
+            .join("\n"))
 
 
       if (this.css) {
@@ -187,7 +204,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       styletag +=  '</style>';
 
 
-      var data = '<svg xmlns="http://www.w3.org/2000/svg" width="' + this.width + '" height="' + this.height + '">' +
+      var data = `<svg xmlns="http://www.w3.org/2000/svg" width="${this.width}" height="${this.height}">` +
                  '<foreignObject width="100%" height="100%">' +
                   styletag +
                  '<div xmlns="http://www.w3.org/1999/xhtml" class="paragraphcontainer">' +
@@ -199,7 +216,6 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       var img = new Image();
       img.crossOrigin = 'anonymous';
       var url = 'data:image/svg+xml,' + encodeURIComponent(data);
-
       var timer;
       img.onload = () => {
         if (img === this.currentImage) {
@@ -267,29 +283,66 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       return this._proxyobject;
     }
 
+    // this is the paragraph translator which can be overloaded/wrapped via events
+    this.defaultTranslator = function(){
+      return {
+        translate: async (html) => [html],
+        fetch:     async (uri)  => {
+          if( uri ){ 
+            const uriExFragment = String(uri).replace(/#.*/,'')
+            let finalUrl = `${uriExFragment||''}`
+            if( this.use_proxy && elation.engine.assets.corsproxy ){
+              finalUrl = elation.engine.assets.corsproxy + finalUrl
+            }
+            return await this.useCache( 
+              finalUrl, 
+              async () => await window.fetch( finalUrl ).then( (res) => res.text() )
+            )
+          }else{
+            return this.text || this.room.fullsource
+          }
+        }
+      }
+    }
+
     this.toInlineHTML = async function(){
-      try{
+      const inliner = async (html) => {
         // find all img tags and capture src attributes
         const imgRegex = /<img[^>]*src=["'](?!data:)([^"']+)["']/gi;
-        const matches = [];
+        let matches = [];
         let match;
-        while ((match = imgRegex.exec(this.html)) !== null) { // Collect all src values
-          matches.push(match[1]);
+        while ((match = imgRegex.exec(html)) !== null) { // Collect all src values
+          let url = match[1]
+          if( url[0] == '/' )           url = room.baseurl.replace(/\/$/,'') + url
+          else if( !url.match('://') )  url = room.baseurl + url
+          matches.push({src: match[1], url})
         }
+        matches = matches.slice(0,6) // limit (national geographic rss tanks performance)
         // fill array with base64 image-strings
-        const dataURLs = await Promise.all( matches.map(src => this.toDataURL(src)) );
+        const dataURLs = await Promise.all( matches.map( match => this.toDataURL(match.url)) );
         // Replace each src in the html with the corresponding data URL
-        let updatedHtml = this.html;
-        matches.forEach((src, i) => {
-          updatedHtml = updatedHtml.replace( `src="${src}"`, `src="${dataURLs[i]}"`)
+        let updatedHtml = html;
+        matches.forEach((match, i) => {
+          updatedHtml = updatedHtml.replace( `src="${match.src}"`, `src="${dataURLs[i]}"`)
         });
-        this.html = updatedHtml
-      }catch(e){ console.error(e) } // continue when inlining failed
+        return updatedHtml
+      }
+      try{
+        let p = []
+        this.paragraphs.map( (html) => p.push( inliner(html) ) )
+        this.paragraphs = await Promise.all(p)
+        elation.events.fire({element: this, type: 'paragraph_translator_inline', data:{ paragraph:this } });
+        this.updateHTML()
+      }catch(e){ 
+        console.error(e) 
+      } // continue when inlining failed
     };
 
     this.toDataURL = async function(url){
-      const fullUrl  = this.room.getFullRoomURL(url)
-      const finalUrl = this.room.isLocal( fullUrl) ? url : `${elation.engine.assets.corsproxy||''}${url}`
+      let finalUrl  = this.room.getFullRoomURL(url)
+      if( this.use_proxy && elation.engine.assets.corsproxy ){
+        finalUrl= elation.engine.assets.corsproxy + url
+      }
       return await this.useCache(url, async () => 
         await fetch(finalUrl)
         .then(response => response.blob())
@@ -302,29 +355,44 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       )
     }
 
-    this.fetchSource = async function(){
-      if( this.url && this.fetchSource.last == this.url ) return // avoid fake updates
-      this.fetchSource.last = this.url || this.fetchSource.last
+    this.loading = function(){
+      this.html = `<br><br><br><br><center>
+      <h2>loading URL<br><br>☕ please wait..</h2>
+      <br><br><br>once its loaded, click to see next item.
+      </center>
+      `
+      this.updateTexture()
+    }
 
-      let translator = {  // fallback translator for non-url content
-        translate: async ()    => [this.html],
-        fetch:     async (uri) => {
-          if( String(this.text).match(/^data:text/) ){  // support text data-uri's
-            return await window.fetch(this.text).then( (r) => r.text() )
-          }
-          return this.text || room.fullsource
-        }
+    this.fetchSource = async function(opts){
+      if( !this.inited ) return // ignore premature proxies from triggering 
+      opts = opts || {}
+      if( this.url ){
+        if( this.fetchSource.last == this.url ) return // avoid fake updates
+        this.fetchSource.last = this.url || this.fetchSource.last
+        setTimeout( () => this.loading(), 1)
       }
-      // allow (via event) other scripts to select different translator based on url 
-      room.dispatchEvent({type:'paragraph_translator', detail:{ paragraph:this, translator }})
-      this.html = await translator.fetch.call(this, this.url || ' ')
+
+      let translator = this.defaultTranslator()  // fallback translator for non-url content
+      // allow (via event) other scripts to swap/wrap translator functions (based on url e.g.)
+      room.dispatchEvent({element:this,type:'paragraph_translator', detail:{ paragraph:this, translator }})
+      this.html = await translator.fetch.call(this, this.url)
+      room.dispatchEvent({element: this, type: 'paragraph_translator_fetch', data:{ paragraph:this, translator } });
+      this.paragraphs = await translator.translate.call(this,this.html)
+      // just to be sure
+      this.paragraphs = this.paragraphs.slice( 
+                          this.maxindex > 0 ? 0             : this.maxindex*-1,  
+                          this.maxindex > 0 ? this.maxindex : null 
+                        )
+      // trigger post-event 
+      elation.events.fire({element: this, type: 'paragraph_translator_translate', data:{ paragraph:this } });
       await this.toInlineHTML()
-      this.paragraphs  = await translator.translate.apply(this)
       await this.updateHTML()
     }
 
+
     this.useCache = async function(url, myFetch) {
-      const cache = elation.janusweb.urlcache = elation.janusweb.urlcache || {}
+      const cache = (elation.janusweb.urlcache = (elation.janusweb.urlcache || {}) )
       if (cache[url]) return cache[url];
       const data = cache[url] = await myFetch();
       setTimeout(() => delete cache[url], this.ttl); // default 2 mins TTL cleanup
@@ -348,7 +416,10 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
 
     this.updateHTML = async function(html){
       // skip uninited url content
-      if( !this.html && this.url ) return 
+      if( !this.html ){
+        if( this.url ) return 
+        else this.html = this.text
+      }
       if( this.html ){ 
         this.indexes     = this.paragraphs.length > 1 ? this.paragraphs.length : 1
         this.html        = this.paragraphs[ this.index % this.indexes ]
@@ -356,7 +427,14 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         this.htmlLast = this.html
         this.autoRotateIndex()
         this.updateTexture()
+        // match clickable area 
+        this.createForces()
       }
+    }
+
+    this.updateIndex = function(){
+      elation.events.fire({element: this, type: 'paragraph_index_update', data:{ paragraph:this } });
+      this.updateHTML()
     }
 
   }, elation.engine.things.janusbase);

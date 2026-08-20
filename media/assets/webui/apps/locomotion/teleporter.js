@@ -111,11 +111,6 @@ janus.registerElement('locomotion_teleporter', {
     this.particles.particle_vel = V(-.4, 0, -.4); // FIXME - particle velocity isn't being set on spawn
 
     let locomotion = janus.ui.apps.default.apps.locomotion;
-    let asseturl = locomotion.resolveFullURL('./locomotion-assets.json');
-    fetch(asseturl).then(res => res.json()).then(assetlist => {
-      this.assetpack = elation.engine.assets.loadJSON(assetlist, locomotion.resolveFullURL('./'));
-      this.sound = room.createObject('Sound', { id: room.teleport_sound_id || 'button-teleport' }, this);
-    })
 
     this.disableCursor();
     window.addEventListener('mousemove', this.handleMouseMove);
@@ -288,10 +283,7 @@ janus.registerElement('locomotion_teleporter', {
     player.vel = V(0,0,.01); // "wake up" physics engine
     console.log('Teleport player', pos);
     this.showShroud();
-    if( this.sound ){
-      this.sound.pos = pos;
-      this.sound.play();
-    }
+    elation.events.fire({element: this, type: 'action-button-pressed', data: this});
     if( this.xrplayer && this.teleportangle && !mouse){
       player.angular.set(0,0,0);
       let playerangle = Math.atan2(this.pos.x, this.pos.z);

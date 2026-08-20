@@ -45,9 +45,11 @@
 - Build immersive 3D environments for desktop, mobile, and VR devices using HTML and JS
 - Rendering functionality provided by Three.js / WebGL
 - Separately host WebXR experiences via ([JML](https://madjin.github.io/janus-guide/#/examples/markup) in) any textfile.
+- Basic support for RSS/ATOM feed-URLs (project existing content into 3D)
 - Oculus Rift, Vive, GearVR, Daydream, and Cardboard support via WebVR API
 - [Realtime collaboration](https://madjin.github.io/janus-guide/#/home/usecases) across all devices via built-in networking
-- Import Collada, OBJ, glTF, and other popular 3d file formats
+- Import Collada, OBJ, glTF, AFRAME geometry, and other popular 3d file formats
+- Compose Hypergrids via URLs: render Janus worlds in worlds ([source](tests/room/overlay_worlds.xml) | [demo](https://web.janusxr.org/#janus.url=https://raw.githubusercontent.com/jbaicoianu/janusweb/refs/heads/master/tests/room/overlay_worlds.xml)), recursive worlds ([source](tests/room/overlay_recursive.xml) | [demo](https://web.janusxr.org/#janus.url=https://raw.githubusercontent.com/jbaicoianu/janusweb/refs/heads/master/tests/room/overlay_recursive.xml)) 
 - 3D positional audio
 - Gamepad support via the HTML5 Gamepad API
 - Supports hand tracking peripherals like Leap Motion, Oculus Touch, and Vive controllers
