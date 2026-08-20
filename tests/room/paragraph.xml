@@ -1,7 +1,7 @@
 <html>
   <body>
     <style type="text/css">
-      body > div,
+      body > div.section,
       .paragraphcontainer {
         background: linear-gradient(45deg,#73F7,#F377);
         color: #FFF;
@@ -30,7 +30,9 @@
     </assets>
     <room>
 
-      <paragraph js_id="p0" lighting="false" scale="0.4 0.8 1" width="400" height="800" pos="-3 1 -2" url="https://codeberg.org/coderofsalvation/janusweb-ui-arfirst/raw/branch/main/README.md"/>
+      <paragraph js_id="p-2" lighting="false" scale="1 0.8 1" width="1000" height="800" pos="-5 1 -2" url="https://codeberg.org/coderofsalvation/xrforge-v2/raw/branch/master/README.md" cycle="2000" selector=".p" css=".paragraphcontainer{min-height:100vh}"/>
+
+      <paragraph js_id="p-1" lighting="false" scale="0.4 0.8 1" width="400" height="800" pos="-3 1 -2" url="https://codeberg.org/coderofsalvation/janusweb-ui-arfirst/raw/branch/main/README.md"/>
 
       <paragraph js_id="p0" lighting="false" scale="0.4 0.5 1" width="400" height="500" pos="-2 1 -2">
         <![CDATA[

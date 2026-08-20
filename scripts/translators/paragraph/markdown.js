@@ -10,7 +10,8 @@
   let markdownTranslator = {
 
     trimLines: function(text){
-      return String(text || ' ')[0] == ' ' 
+      text = text || ''
+      return text.match(/[ \n]/) 
              ? text.split("\n")
                  .map( (line) => line.trim() )
                  .join("\n")
@@ -19,7 +20,7 @@
 
     isMarkdown: function(text){
       text = markdownTranslator.trimLines(text)
-      let match = text.match(/(^# |^> |^\`\`\`)/gm) // naive markdown check 
+      let match = text.match(/(^# |^## |^> |^\`\`\`)/gm) // naive markdown check 
       return match
     },
 
@@ -38,10 +39,10 @@
       .replace(/(<\/h[1-6]>)\n/g, "$1")
       .replace(/\n/g, "<br>")
       .replace(/\[([^\]]+)\]\(([^\)]*)\)/g, "<a href=\"$2\">$1</a>")
-      .replace(/(?<!``)`([^`]+)`(?!``)/g, "<pre style=\"display: inline;\">$1</pre>"); //` closing backtick for syntax highlighting
+      .replace(/```(?:[a-z]+)?\n?([\s\S]*?)```/gi, "<pre><code>$1</code></pre>");
     },
     
-    css: `
+    css: (paragraph) => `
       <style type="text/css">
         .paragraphcontainer blockquote {
           border-left: 4px solid #FFF7;
@@ -55,21 +56,22 @@
           white-space: pre-wrap;
           padding:0px 10px 5px 10px;
         }
+        .paragraphcontainer pre > code {
+          font-family: monospace;
+          font-size: `+paragraph.font_size+`px;
+          line-height: `+paragraph.font_size/2+`px;
+        }
       </style>
     `
 
   }
 
-  elation.events.add(null, 'paragraph_translator', function(e){
-    const {translator,paragraph} = e.detail
-    // wrap the default translator 
-    const translate = translator.translate
-    translator.translate = function(html){
-      if( markdownTranslator.isMarkdown(this.html) ){
-        html = markdownTranslator.css + markdownTranslator.markdownToHTML( this.html )
-      }
-      return translate.apply(this,[html])
-    }
+  elation.events.add(null, 'paragraph_translator_translate', function(e){
+    let paragraph = e.data.paragraph
+    paragraph.paragraphs = paragraph.paragraphs.map( (html) => 
+      markdownTranslator.isMarkdown(html) ? markdownTranslator.css(paragraph) + markdownTranslator.markdownToHTML( html )
+                                          : html
+    )
   })
 
 })();

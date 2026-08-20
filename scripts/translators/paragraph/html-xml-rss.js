@@ -11,17 +11,6 @@
 (function(){
 
   let XMLTranslator = {
-    fetch: async function(uri){
-      const uriExFragment = String(uri).replace(/#.*/,'')
-      let finalUrl = `${uriExFragment||''}`
-      if( this.use_proxy && elation.engine.assets.corsproxy ){
-        finalUrl = elation.engine.assets.corsproxy + finalUrl
-      }
-      return await this.useCache( finalUrl, async () => 
-        await fetch( finalUrl )
-        .then( (res) => res.text() )
-      )
-    },
     translate: async function(html){   // generic XML/RSS/HTML preprocessor [this.text to this.html]
       if( !html ) return [""]
       let source = html
@@ -84,11 +73,8 @@
 
   elation.events.add(null, 'paragraph_translator', function(e){
     const {translator,paragraph} = e.detail
-    // now you can override the default translator
-    if( String(paragraph.url).match(/^http/) ){
-      translator.fetch     = XMLTranslator.fetch 
-    }
-    translator.translate = XMLTranslator.translate // boldly always set ourselfs as default
+    // lets boldy set ourselves as the default translate function
+    translator.translate = XMLTranslator.translate
   })
 
 })();

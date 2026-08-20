@@ -1,15 +1,22 @@
 /*
- * <paragraph> text-to-texture translator. The builtin XMLtranslator allows:
+ * <paragraph> text-to-texture translator.
  *
  *  1. inline html             : <paragraph><![CDATA[ <b>hello world</b> ]]></paragraph>
  *  2. inline html (partial)   : <paragraph selector="span"><![CDATA[ <b>hello <span>world</span></b> ]]></paragraph>
- *  3. external url            : <paragraph url="https://janusxr.org"/>
- *  4. external url (partials) : <paragraph url="https://janusxr.org" selector=".infoText"/>
- *  5. janusroom container html: <paragraph selector=".someclass"/>
- *  6. janusroom container xml : <paragraph selector="tag subtag title"/>
- *  7. RSS                     : <paragraph url="https://my.org/foo.rss" selector="item description"/>
- *  8. XML                     : <paragraph url="https://my.org/bar.xml" selector="title"/>
- *  9. any data- or selector-format via 'paragraph_translator' event
+ *  3. custom translators: via 'paragraph_translator' event 
+ *
+ *  scripts/translators/paragraph/html-xml-rss.js:
+ *  4. external url            : <paragraph url="https://janusxr.org"/>
+ *  5. external url (partials) : <paragraph url="https://janusxr.org" selector=".infoText"/>
+ *  6. janusroom container html: <paragraph selector=".someclass"/>
+ *  7. janusroom container xml : <paragraph selector="tag subtag title"/>
+ *  8. RSS                     : <paragraph url="https://my.org/foo.rss" selector="item description"/>
+ *  9. XML                     : <paragraph url="https://my.org/bar.xml" selector="title"/>
+ *
+ *  scripts/translators/paragraph/markdown.js:
+ *  10. Markdown url           : <paragraph url="http://github.com/...../README.md"/>
+ *  10. Markdown url partials  : <paragraph url="http://github.com/...../README.md" selector="#hello"/>
+ *  11. Markdown inline        : <paragraph><![CDATA[# Hello World]]></paragraph>
  *
  *  EXAMPLE TRANSLATOR:
  *
@@ -64,6 +71,8 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
         height: { type: 'integer', default: 1024 }, 
         ttl: { type: 'integer', default: 120000, comment: 'expire texture/html after ms (default:2 mins)' }, 
       });
+      this.inited = true
+      this.fetchSource() // we manually trigger this (instead of premature triggers from proxies)
     }
 
     this.paragraphs = [] // for cycle / partial purposes
@@ -76,7 +85,7 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
           this.url   = this.selector = '' 
           this.cycle = this.indexes = 0;
         }
-        this.fetchSource() // expect 'selector' not being set here 
+        this.fetchSource({textToHTML:true}) // expect 'selector' not being set here 
       }else{
         this.html = ''
         this.updateTexture()
@@ -274,6 +283,28 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
       return this._proxyobject;
     }
 
+    // this is the paragraph translator which can be overloaded/wrapped via events
+    this.defaultTranslator = function(){
+      return {
+        translate: async (html) => [html],
+        fetch:     async (uri)  => {
+          if( uri ){ 
+            const uriExFragment = String(uri).replace(/#.*/,'')
+            let finalUrl = `${uriExFragment||''}`
+            if( this.use_proxy && elation.engine.assets.corsproxy ){
+              finalUrl = elation.engine.assets.corsproxy + finalUrl
+            }
+            return await this.useCache( 
+              finalUrl, 
+              async () => await window.fetch( finalUrl ).then( (res) => res.text() )
+            )
+          }else{
+            return this.text || this.room.fullsource
+          }
+        }
+      }
+    }
+
     this.toInlineHTML = async function(){
       const inliner = async (html) => {
         // find all img tags and capture src attributes
@@ -326,45 +357,42 @@ elation.require(['janusweb.janusbase','janusweb.translators.paragraph.html-xml-r
 
     this.loading = function(){
       this.html = `<br><br><br><br><center>
-      <h2>loading RSS/ATOM feed<br><br>please wait ☕...</h2>
+      <h2>loading URL<br><br>☕ please wait..</h2>
       <br><br><br>once its loaded, click to see next item.
       </center>
       `
       this.updateTexture()
     }
 
-    this.fetchSource = async function(){
-      if( this.url && this.fetchSource.last == this.url ) return // avoid fake updates
-      this.fetchSource.last = this.url || this.fetchSource.last
-      if( this.url ) setTimeout( () => this.loading(), 1)
-
-      let translator = {  // fallback translator for non-url content
-        translate: async (html) => [html],
-        fetch:     async (uri)  => {
-          if( String(this.text).match(/^data:text/) ){  // support text data-uri's
-            return await window.fetch(this.text).then( (r) => r.text() )
-          }
-          return this.text || this.room.fullsource
-        }
+    this.fetchSource = async function(opts){
+      if( !this.inited ) return // ignore premature proxies from triggering 
+      opts = opts || {}
+      if( this.url ){
+        if( this.fetchSource.last == this.url ) return // avoid fake updates
+        this.fetchSource.last = this.url || this.fetchSource.last
+        setTimeout( () => this.loading(), 1)
       }
-      // allow (via event) other scripts to select different translator based on url 
-      room.dispatchEvent({type:'paragraph_translator', detail:{ paragraph:this, translator }})
-      elation.events.fire({element: this, type: 'paragraph_translators', data:{ paragraph:this, translator } });
-      this.html = await translator.fetch.call(this, this.url || ' ')
-      elation.events.fire({element: this, type: 'paragraph_translator_fetch', data:{ paragraph:this, translator } });
-      this.paragraphs = await translator.translate.call(this, this.html)
+
+      let translator = this.defaultTranslator()  // fallback translator for non-url content
+      // allow (via event) other scripts to swap/wrap translator functions (based on url e.g.)
+      room.dispatchEvent({element:this,type:'paragraph_translator', detail:{ paragraph:this, translator }})
+      this.html = await translator.fetch.call(this, this.url)
+      room.dispatchEvent({element: this, type: 'paragraph_translator_fetch', data:{ paragraph:this, translator } });
+      this.paragraphs = await translator.translate.call(this,this.html)
       // just to be sure
       this.paragraphs = this.paragraphs.slice( 
                           this.maxindex > 0 ? 0             : this.maxindex*-1,  
                           this.maxindex > 0 ? this.maxindex : null 
                         )
+      // trigger post-event 
       elation.events.fire({element: this, type: 'paragraph_translator_translate', data:{ paragraph:this } });
       await this.toInlineHTML()
       await this.updateHTML()
     }
 
+
     this.useCache = async function(url, myFetch) {
-      const cache = elation.janusweb.urlcache = elation.janusweb.urlcache || {}
+      const cache = (elation.janusweb.urlcache = (elation.janusweb.urlcache || {}) )
       if (cache[url]) return cache[url];
       const data = cache[url] = await myFetch();
       setTimeout(() => delete cache[url], this.ttl); // default 2 mins TTL cleanup
