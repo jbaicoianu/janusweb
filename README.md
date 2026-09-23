@@ -251,6 +251,7 @@ $ zip janusxr.com index.html   # you can even update the binary
 </details>
 
 ### Pull our scripts into your page
+
 Using the above method, all of your links would go through community CORS-proxies. If you'd prefer to 
 link to your own servers, you can pull our JS into your page and use JanusWeb as a scriptable
 client via its API.  This looks something like this:
@@ -330,10 +331,12 @@ This will give you a full build of the latest verson of JanusWeb in your `build/
 can then modify `build/index.html` however you see fit, and host it as suggested above.
 
 ## Arguments
-JanusWeb supports several arguments at initialization time to control how it behaves.
+JanusWeb's `<janus-viewer>` supports several arguments at initialization time to control how it behaves.
 
 <table>
   <tr><th> Name           </th><th> Description                            </th><th> Default                  </th></tr>
+
+  <tr><td> corsproxy      </td><td> comma-separated cors-anywhere proxies (use `false` to disable). By Default requests go through a public proxies. </td><td> https://p.janusxr.org/           </td></tr>
 
   <tr><td> autostart      </td><td> call `elation.janusweb.init({..})` automatically or manually </td><td> true                     </td></tr>
 
