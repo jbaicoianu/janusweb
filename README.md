@@ -302,6 +302,40 @@ receives an instance of the client.  This client reference can be controlled via
 </html>
 ```
 
+<details>
+<summary><b>Usecase:</b> embedding janusweb as iframe</summary>
+<br>
+Some webpages are better off by <b>embedding janusweb as IFRAME</b> on your page: multiple webdomains e.g., avoid CSS-conflicts e.g.<br>
+<a href="https://xrforge.isvery.ninja">XRForge</a> (=janusxr.com + extra lua-scripts) does this for example:<br> 
+<br>
+
+```html
+<iframe border="0" frameborder="0" src="/janusweb/index.html#janus.url=https://my.org/myroom" id="viewer"></iframe>
+
+<script>
+  // Title- and URL-sync between parent/iframe to maintain addressibility 
+  // as well as back/forward navigation
+  const iframe = document.querySelector("#viewer")
+  iframe.addEventListener('load', () => {
+    const iframeWindow = iframe.contentWindow;
+    iframeWindow.addEventListener('hashchange', (event) => {
+      const params = new URLSearchParams( String(iframeWindow.location.hash).replace(/^#/,'?') )
+      let url      = params.get('janus.url')
+      const isFileWithExtension = url.replace( new RegExp('./','g'),"").match("\\.")
+        if( !isFileWithExtension ){ 
+        window.history.replaceState( url, iframe.contentDocument.title, url );
+      }
+      setTimeout( () => {
+        document.title = iframe.contentDocument.title
+      }, 1000 )
+    });
+  });
+</script>
+```
+
+</summary>
+</details>
+
 > **NOTE**: you can also update the `janusxr.com` binary to your likings: (`unzip janusxr.com index.html && vi index.html && zip janusxr.com index.html` see 'get the latest build files' above)
 
 See the sections on **Arguments** and **Scripting** below.
@@ -431,7 +465,7 @@ Platforms using JanusXR + JanusWeb:
 |    | URL | source / docker |
 |----|-----|------------|
 | <img src="https://imgur.com/JMYi81Z.png"/><br><br> | [vesta.janusxr.org](https://vesta.janusxr.org) | |
-| <img src="https://codeberg.org/coderofsalvation/xrforge/media/branch/master/xrforge.jpg"/><br><br> | [xrforge.isvery.ninja](https://xrforge.isvery.ninja) | [codeberg.org](https://codeberg.org/coderofsalvation/xrforge)
+| <img src="https://codeberg.org/coderofsalvation/xrforge/media/branch/master/xrforge.jpg"/><br><br> | [xrforge.isvery.ninja](https://xrforge.isvery.ninja) | [codeberg.org](https://codeberg.org/coderofsalvation/xrforge)<br>it demonstrates the janusxr.com binary of this repo with added luascripts |
 
 Visualisations of hyperlinked Janus clusters across the web:
 * [augmentedperception.com](https://augmentedperception.com) 
@@ -453,6 +487,6 @@ JanusWeb is open source, and we welcome any contributions!  Please do report bug
 and all pull requests will be considered.  We could especially use help with documentation!
 
 ## Who is responsible for this?
-JanusWeb was created by James Baicoianu, and is now an official open source project of JanusVR, Inc.
+JanusWeb was created by James Baicoianu, and is now an official open source JanusXR project of JanusVR, Inc.
 The JanusWeb software and its API are published under the MIT license, and are free to use for whatever
 uses you can think of.  If you build something cool, let us know!
