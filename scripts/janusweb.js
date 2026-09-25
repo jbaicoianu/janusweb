@@ -97,6 +97,11 @@ elation.require([
       }
       this.assetpack = elation.engine.assets.loadAssetPack(this.properties.datapath + 'assets.json', this.properties.datapath);
       this.parser = new JanusFireboxParser();
+      this.parser.parse = ((me,parse) => function(){ // wrap with event 
+        let roomdata = parse.apply( me, arguments )
+        elation.events.fire({element: null, type: 'room_load_parse', data: {roomdata, args:arguments} });
+        return roomdata
+      })(this.parser, this.parser.parse)
       this.scriptingInitialized = false;
 
       this.engine.systems.controls.addContext('janus', {
@@ -318,39 +323,65 @@ elation.require([
       }
       this.refresh();
     }
-    this.load = function(url, makeactive, baseurl, stripreferrer) {
+    this.load = function(url, makeactive, baseurl, stripreferrer, portal) {
       var roomname = url;
+      if( portal ){ 
+        if( url.match(/#$/) )  url = room.url           // # = self
+        roomname += '#'+String(Math.random()).substr(2) // allow duplicates 
+      } 
 
-      var room = this.spawn('janusroom', roomname, {
+      let newroom = this.spawn('janusroom', roomname, {
         url: url,
         janus: this,
         baseurl: baseurl,
         corsproxy: this.corsproxy,
-        deferload: true
+        deferload: true,
+        nested:          portal ? true : false,
+        defaultlights:   portal ? false : true,
+        skybox:          portal ? false : true,
+        use_local_asset: portal ? false : true,
       }, makeactive && typeof makeactive != 'undefined');
 
       if (this.currentroom && !stripreferrer) {
-        room.referrer = this.currentroom.url;
+        newroom.referrer = this.currentroom.url;
       } else {
-        room.referrer = null;
+        // to promote bidirectional networks: extract referrer from room.url hash or janusweb hash (if any)
+        if( document.referrer                              ) newroom.referrer = document.referrer
+        if( document.location.href.match('janus.referrer') ) newroom.referrer = elation.url( document.location.href )['janus.referrer']
+        if( url.match('janus.referrer=')                   ) newroom.referrer = elation.url( url )['janus.referrer'] 
       }
-      elation.events.fire({element: this, type: 'room_load_start', data: room});
-      room.load();
-      // FIXME - should be able to spawn without adding to the heirarchy yet
-      this.remove(room);
+
+      elation.events.fire({element: this, type: 'room_load_start', data: newroom});
+      newroom.load();
 
       if (this.networking) {
-        this.network.registerRoom(room, true);
+        this.network.registerRoom(newroom, true);
       }
-
-      this.rooms[room.roomid] = room;
-      //console.log('made new room', url, room);
+      this.rooms[newroom.roomid] = newroom;
+      //console.log('made new room', url, newroom);
       this.loading = false;
-      if (room && makeactive) {
-        this.setActiveRoom(url, room.referrer);
+      if (newroom && makeactive && !portal ) {
+        // FIXME - setActiveRoom should be able to spawn without adding to the heirarchy yet
+        this.remove(newroom);
+
+        this.setActiveRoom(url, newroom.referrer);
       }
       this.initScripting();
-      return room;
+      if( portal ){
+        this.remove(newroom);
+        // portal (and media/assets/webui/xrfragments) will use this event to 
+        // relocate/reparent the nested room 
+        newroom.visible = false
+        let data = {portal,room:newroom}
+        portal.add(newroom)
+        newroom.enable()
+        elation.events.add(newroom, 'room_load_processed', (e) => {
+          // wait until objects are initialized
+          elation.events.fire({element: this,   type: 'room_load_nested', data })
+          newroom.visible = true
+        })
+      }
+      return newroom;
     }
     this.loadFromSource = function(source, makeactive, baseurl) {
       var dataurl = 'data:text/html,' + encodeURIComponent(source);
@@ -409,7 +440,7 @@ elation.require([
           }
 
           player.setRoom(room);
-          this.add(this.currentroom);
+          if( !this.currentroom.parent ) this.add(this.currentroom);
           this.currentroom.setActive();
           this.properties.url = url;
           this.loading = false;
@@ -440,6 +471,9 @@ elation.require([
     this.preload = function(url, stripreferrer) {
       return this.load(url, false, null, stripreferrer);
     }
+    this.merge = function(url, stripreferrer, portal){
+      return this.load(url, false, null, stripreferrer, portal);
+    },
     this.createRoom = function(url, makeactive=true) {
       let newroom = this.spawn('janusroom', url, {
         url: url,

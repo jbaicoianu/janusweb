@@ -2,6 +2,11 @@ JanusFireboxParser = function() {
 }
 
 JanusFireboxParser.prototype.parse = function(source, baseurl, datapath) {
+  // attributes with URLs containing querystrings should not break strict XML-parser ('&')
+  source = String(source).replace(/="[^"]*"/g, (match) => {
+    return match.replace(/&(?!(amp|lt|gt|quot|apos);)/g, '&amp;');
+  })
+
   var xml = this.parseXML(source, false, true); 
   var rooms = this.getAsArray(this.arrayget(xml, 'fireboxroom._children.room', {})); 
   var room = {_children: {}};
