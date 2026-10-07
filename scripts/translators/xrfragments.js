@@ -14,6 +14,8 @@ elation.require([], function() {
             </Assets>
             <Room gravity="0">
               <object pos="0 0 0" collision_id="scene" id="scene" />
+              <!-- helper to be able to walk/teleport in VR across majority of scenes -->
+              <object id="plane" color_write="false" rotation="90 0 0" collision_id="plane" scale="100 100 1" collision_scale="100 100 1"/>
             </Room>
         </FireBoxRoom>
       `,
@@ -22,6 +24,8 @@ elation.require([], function() {
         <title>${title}</title>
         <fireboxroom>
             <room gravity="0" use_local_asset="room_plane" pos='${entries.length/2} 0 -3'>
+              <text pos="${entries.length/2} 6 0" rotation="0 180 0" col="#000000" scale="10 10 1" text="${title}" lighting="false"/>
+              <text pos="${entries.length/2} 5.3 0" rotation="0 180 0" col="#888888" scale="10 10 1" text="${room.url}" lighting="false"/>
               ${this.JML.generatePortals(entries)}
             </room>
         </fireboxroom>
@@ -32,7 +36,7 @@ elation.require([], function() {
         let i = 0;
         entries.map( (portal) => {
           const href = portal.getAttribute('href')
-          JML += `<link url='${href}' pos='${i} 0 0' shader_id='defaultportal' round="true" scale="1.5 3 1" rotation='0 180 0' title='${href.split('/').pop()}'/>`
+          JML += `<link url='${href}' pos='${i} 0 0' shader_id='defaultportal' round="true" draw_glow="false" scale="1.5 3 1" rotation='0 180 0' title='${href.split('/').pop()}'/>`
           i+=1.7
         })
         return JML
@@ -59,7 +63,8 @@ elation.require([], function() {
             zdir: "0 0 1",
           },
           object: [
-            {id: 'scene', js_id: "scene", pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1"}
+            {id: 'scene', js_id: "scene", pos: "0 0 0", xdir: "-1 0 0", zdir: "0 0 -1"},
+            {id: 'plane', color_write: false, rotation: '90 0 0', collision_id: 'plane', scale:'100 100 1', collision_scale:'100 100 1' }
           ],
           link: []
         };
@@ -147,14 +152,14 @@ elation.require([], function() {
         if( !exist.ok ) return console.warn(`[xrfragment] ${link.outerHTML} resolves to invalid url ${hrefFull}`)
 
         // return JML
-        const JML = this.JML.single( title, room, hrefNoHash )
+        const JML = this.JML.single( room, title, hrefNoHash )
         return room.parseSource(JML)
       }
 
       if( portal ){
         const entries = [ ...el.querySelectorAll('link[as=spatial-portal]') ]
         // return JML
-        const JML = this.JML.collection(title,room,entries)
+        const JML = this.JML.collection(room,title,entries)
         return room.parseSource(JML)
       }
     }
