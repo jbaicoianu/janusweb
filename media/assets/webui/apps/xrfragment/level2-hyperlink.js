@@ -49,7 +49,7 @@ elation.require([], function() {
       // patch setPlayerPosition() with shroud animations during local teleports
       room.setPlayerPosition = (
         (original) => function(room){
-          this.hyperlink.showShroud()
+          if( room?.hyperlink ) room.hyperlink.showShroud()
           return original.apply(this,room)
         }.bind(room)
       )(room.setPlayerPosition)
@@ -58,15 +58,26 @@ elation.require([], function() {
     scan(scene,cb){
       scene.traverse( (object) => {
         this.detectHUDLUT(object)
-        this.detectHref(object)
+        this.detectHrefInModelFile(object)
+        this.detectHrefInJanusObject(object)
       })
+
     }
 
-    detectHref(object){
+    detectHrefInModelFile(object){
       if( !object?.userData?.href || object.hasHref ) return
-
       const jobj = this.toJanusObject(object)
       jobj.addEventListener("click", () => this.execute(object.userData.href,{jobj,scene:this.scene}) )
+      object.hasHref = true
+    }
+    
+    detectHrefInJanusObject(object){
+      if( !object?.userData?.thing?.args?.properties?.href || object.hasHref ) return
+      const href = object.userData.thing.args.properties.href
+      const jobj = object.userData.thing._proxyobject 
+      jobj.collidable = true
+      jobj.collision_id = jobj.id 
+      jobj.addEventListener("click", () => this.execute(href,{jobj,scene:this.scene}) )
       object.hasHref = true
     }
 
@@ -97,7 +108,7 @@ elation.require([], function() {
       console.log("hyperlink: "+href)
       elation.events.fire({element: this, type: 'href', data: {href,opts}});
       if( String(url).replace(/#.*/,'') != room.getFullRoomURL(room.url) ){
-        return this.executeExternal(href,opts)
+        return this.executeExternal( room.getFullRoomURL(href),opts)
       }
       hash.forEach( (v,k) => {
         const {operator,param} = this.getOperators(k)
@@ -110,8 +121,9 @@ elation.require([], function() {
                        room.referrer = room.urlhash
                        room.urlhash = v || k
                        if( this.scene.getObjectByName(v) ){ 
+                         const oldpos = player.position.clone()
                          room.setPlayerPosition()
-                         this.spawnBackLink()
+                         this.spawnBackLink(oldpos)
                        }
                        // level2: animation triggers 
                        // https://xrfragment.org/#%F0%9F%93%9C%20level2%3A%20explicit%20hyperlinks   
@@ -139,7 +151,8 @@ elation.require([], function() {
       elation.events.fire({element: room, type: 'room_change', data: room});
     }
 
-    spawnBackLink(){
+    spawnBackLink(oldpos){
+      if( player.position.distanceTo(oldpos) < 15 ) return 
       for( let i in room.objects ){
         if( i.match(/^reciprocal-hashlink/) ) room.removeObject(i)
       }
@@ -157,13 +170,14 @@ elation.require([], function() {
     }
 
     executeExternal(href, opts){
-      if( opts.portalActivateDelay ){
-        setTimeout( () => {
-          janus.setActiveRoom( href, room.url)
-        }, opts.portalActivateDelay)
+      let data     = { href, opts }
+      data.execute = () => {
+        let exists = room.getObjectsByTagName("link")
+                         .filter( (link) => link.url == data.href )
+        if( exists.length == 0 ) player.spawnPortal(href)
       }
-      player.spawnPortal(href)
-      elation.events.fire({element: this, type: 'href_portal', data: {href,opts}});
+      elation.events.fire({element: this, type: 'href_portal', data});
+      data.execute()
     }
 
     getUrlObject = function(href){
@@ -227,13 +241,13 @@ elation.require([], function() {
 });
 
 xrf_install_hyperlinks = function(){
-  if( !room || !room?.objects?.scene?.modelasset?.loaded ) {
+  const modelasset_ready = room?.objects?.scene?.modelasset?.loaded
+  if( !room || !room.loaded || modelasset_ready === false ){
     return setTimeout( xrf_install_hyperlinks, 300 ) 
   }
-  if( !room.hyperlink     ){
-    room.hyperlink = new elation.janusweb.hyperlink(room)
-    janus.loading = false // force!
-  }
+  if( janus.hyperlink ) janus.hyperlink.cleanup()
+  janus.hyperlink = new elation.janusweb.hyperlink(room) // main room includes nested rooms
+  janus.loading = false // force!
 }
 
 xrf_install_hyperlinks()
@@ -250,16 +264,12 @@ elation.events.add(null, 'href', function(e){
 
 elation.events.add(null, 'room_load_complete', xrf_install_hyperlinks ) 
 elation.events.add(null, 'room_disable', function(e){
-  if( room?.hyperlink ) room.hyperlink.cleanup()
+  if( janus?.hyperlink ) janus.hyperlink.cleanup()
 })
 
-elation.events.add(null, 'room_enable', function(e){
-  if( room?.hyperlink ) room.hyperlink.init()
-  else xrf_install_hyperlinks()
-})
-
+elation.events.add(null, 'room_enable', xrf_install_hyperlinks )
 elation.events.add(null, 'janusweb_script_frame', function(){
-  if( room?.hyperlink ) room.hyperlink.update()
+  if( janus?.hyperlink ) janus.hyperlink.update()
 })
 
 if( room.urlhash ){ 

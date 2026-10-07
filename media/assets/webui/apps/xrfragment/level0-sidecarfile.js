@@ -6,7 +6,7 @@
  * NOTE: you can also load sidecarfiles in a roomscript manually:
  *
  *       elation.events.add(null, 'room_load_complete', function(e){
- *         if( room?.sidecarfile ) room.sidecarfile.load()
+ *         if( janus?.sidecarfile ) janus.sidecarfile.load()
  *       })
  */
 
@@ -25,10 +25,10 @@ elation.require([], function() {
 
     load(){
       this.cleanup()
-      this.loadWebVTT() // https://xrfragment.org/#sidecar%20files
-      this.loadSound()  // https://xrfragment.org/#sidecar%20files
       this.initStartButton()
       this.initSubtitle()
+      this.loadWebVTT() // https://xrfragment.org/#sidecar%20files
+      this.loadSound()  // https://xrfragment.org/#sidecar%20files
     }
 
     hideSystemFolder(o){
@@ -59,9 +59,14 @@ elation.require([], function() {
     loadWebVTT(){ // https://xrfragment.org/#sidecar%20files
       const webvtt = room.url.replace(this.extension,'.vtt') 
       fetch( webvtt )
-      .then( (res)  => res.text() ) 
+      .then( (res)  => {
+        if( !res.ok ) throw 'no webvtt found'
+        res.text() 
+      }) 
       .then( (webvtt) => {
         this.webvtt = this.parseWEBVTT(webvtt) 
+        debugger
+        this.btn.visible = true
       })
       .catch( () => false ) // no biggy (optional)
     }
@@ -76,6 +81,7 @@ elation.require([], function() {
         lighting:false,
         sync: true,
         billboard: 'y',
+        visible: false,
         collision_id: 'cube'
       })
       const label = this.btn.createObject('text',{
@@ -90,6 +96,7 @@ elation.require([], function() {
     }
 
     positionStartButton(){
+      if( !this.btn ) return
       setTimeout( () => {
         this.btn.pos = player.localToWorld( V(0,1.8,-1) )
       }, 500)
@@ -156,8 +163,8 @@ elation.require([], function() {
               ${ item.who ? `<b>${item.who}:</b><br/>` : '' }
               ${item.text.replace(/\n/g,'<br/>')}
             `)
-            if( room.hyperlink && item.href && !item.seen ){
-              room.hyperlink.execute(item.href, {portalActivateDelay:6000})
+            if( janus.hyperlink && item.href && !item.seen ){
+              janus.hyperlink.execute(item.href) 
             }
             item.seen = true
           }
@@ -250,12 +257,15 @@ elation.require([], function() {
 
 
     stop(){
+      if( !this.playing || !this.subtitle || !this.btn ) return
       this.playing = false
       this.update.id = false
       this.subtitle.visible = false 
       this.subtitle.text = ''
-      this.btn.visible = true
-      this.btn.pickable = true
+      if( this.webvtt ) {
+        this.btn.visible = true
+        this.btn.pickable = true
+      }
     }
 
     cleanup(){
@@ -271,13 +281,13 @@ elation.require([], function() {
 });
 
 xrf_install_sidecarfiles = function(){
-  if( !room.objects?.scene?.modelasset?.loaded ) {
+  if( !room.nested && !room.objects?.scene?.modelasset?.loaded ) {
     return setTimeout( xrf_install_sidecarfiles, 300 ) 
   }
-  if( !room.sidecarfile   ) room.sidecarfile = new elation.janusweb.sidecarfile(room);
+  if( !janus.sidecarfile   ) janus.sidecarfile = new elation.janusweb.sidecarfile(room);
   else{
-    room.sidecarfile.positionStartButton() // wait for user being spawned
-    room.sidecarfile.stop()
+    janus.sidecarfile.positionStartButton() // wait for user being spawned
+    janus.sidecarfile.stop()
   }
 }
 
@@ -286,23 +296,22 @@ xrf_install_sidecarfiles()
 elation.events.add(null, 'room_load_complete', xrf_install_sidecarfiles )
 elation.events.add(null, 'room_enable',        xrf_install_sidecarfiles )
 elation.events.add(null, 'janusweb_script_frame', function(){
-  if( room?.sidecarfile ) room.sidecarfile.update()
+  if( janus?.sidecarfile ) janus.sidecarfile.update()
 })
 elation.events.add(null, 'room_load_start', function(e){
   if( !e.data ) return
-  if( room?.sidecarfile?.subtitle ) room.sidecarfile.subtitle.setHTML(`<div class='loading'>🔗 ${e.data.name}<br/><br/>please wait..</div>`)
 })
 
 elation.events.add(null, 'room_disable', function(){
-  if( room?.sidecarfile?.subtitle ) room.sidecarfile.stop()
+  if( janus?.sidecarfile?.subtitle ) janus.sidecarfile.stop()
 })
 
 // some convenience WebVTT cue settings => room function mappings 
 // href:#fadeAudioOut&spawnhere => room.fadeAudioOut()
 // href:#myfunc=3               => room.myfunc(3)
 elation.events.add(null, 'href', function(e){
-  if( room?.hyperlink ){
-    const {url,hash} = room.hyperlink.getUrlObject(e.data.href)
+  if( janus?.hyperlink ){
+    const {url,hash} = janus.hyperlink.getUrlObject(e.data.href)
     hash.forEach( (v,k) => { if( room[k] ) room[k](v) })
   }
 })

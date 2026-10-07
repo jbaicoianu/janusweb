@@ -313,27 +313,12 @@ elation.require([
               spawnpoint.orientation.multiply(node.orientation);
             }
             spawnpoint.orientation.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, 0))); // Flip 180 degrees from portal orientation
-            return spawnpoint;
           }
         }
       }
-      if (this.urlhash) {
-        // XR Fragments deeplink spec (Level1: URL) https://xrfragment.org/#teleport%20camera
-        // backwards-compat: pos-names are deprecated
-        let obj
-        new URLSearchParams( this.urlhash.replace(/pos=/,'') ).forEach( (v,name) => {
-          let obj = this.getObjectById(name) || this.getObjectByDeepName(name)
-          if (obj) {
-            obj.localToWorld(spawnpoint.position.set(0,0,0));
-            if( obj.type == 'PerspectiveCamera' ){
-              spawnpoint.position.y -= 1.6 // https://xrfragment.org/#teleport%20camera%20spawnpoint
-            }
-            spawnpoint.orientation.setFromRotationMatrix(obj.objects['3d'].matrixWorld.lookAt(spawnpoint.position, obj.localToWorld(V(0,0,-1)), obj.localToWorld(V(0,1,0).sub(spawnpoint.position))));
-          }
-        })
-        if( obj ) elation.events.fire({element: this, type: 'href', data: {href,opts}});
-      }
-      return spawnpoint;
+      const data = { spawnpoint, referrer }
+      elation.events.fire({element: this, type: 'spawnpoint', data })
+      return data.spawnpoint;
     }
     // Shared box-projection uniforms for parallax-corrected envmap reflections. One
     // set of THREE uniform objects per room; every PBR material's parallax shader
