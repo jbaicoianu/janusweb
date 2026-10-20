@@ -1056,6 +1056,7 @@ elation.require([
               pos: linkpos,
               rotation: linkrot,
               url: this.referrer,
+              collidable: false,
               round: true,
               shader_id: 'defaultportal',
               js_id: 'reciprocal-link',
