@@ -782,6 +782,7 @@ elation.require([
           var roomdata = this.janus.parser.parse(source.source, this.baseurl, datapath);
           this.loadRoomAssets(roomdata);
           this.createRoomObjects(roomdata);
+          this.applyXRClasses()
           this.loaded = true;
           if (this.active) {
             this.setActive();
@@ -3255,6 +3256,62 @@ console.log('unknown material', mat);
         }
       }
     }
+    this.getContext = function(){
+      let context = this.classList
+
+      const render        = this.engine.systems.render
+      const session       = janus.engine.client?.xrplayer?.session
+      if( session && render?.renderer?.xr?.isPresenting ){
+        context = []
+        let mode = session.mode
+        // WebXR Polyfill fallback for convenient debugging 
+        if( !mode ){
+          try {
+              const symbols = Object.getOwnPropertySymbols(session);
+              for (const sym of symbols) {
+                  if (sym.toString().includes("@@webxr-polyfill/XRSession")) {
+                      const internalState = session[sym];
+                      if (internalState && internalState.mode) {
+                          mode = internalState.mode;
+                      }
+                  }
+              }
+          } catch (e) {}
+        }
+        if( mode == 'immersive-vr' ) context.push('vr')
+        if( mode == 'immersive-ar' ) context.push('ar')
+        if( this.nested ){
+          const embedded = this.nested.url_pos || this.nested.url_scale || this.nested.url_rotation
+          context.push( embedded ? 'embed' : 'portal')
+        }
+      }
+      return context
+    }
+ 
+    // universal XR classes https://xrfragment.org/#%F0%9F%93%9Clevel8%3A%20XR%20classes
+    this.applyXRClasses = function(children, state){
+      // default https://xrfragment.org/#%F0%9F%93%9Clevel8%3A%20XR%20classes
+      this.className      = this.className || 'vr ar portal embed'
+      this.classList      = this.className.split(' ')
+
+      children = children || room.children
+      state      = state || { visible: true, context: this.getContext() }
+
+      const hasOverlap    = (a,b) => a.filter( (className) => ~b.indexOf(className) ).length > 0
+      for( let i in children){
+        const child = children[i]
+        if( child.classList && child.classList.length > 0 ){
+          if( hasOverlap( child.classList, this.classList ) ){
+            state.visible = hasOverlap( child.classList, state.context )
+          }
+        }
+        if( child.visible && !state.visible ) child.visible = false // hidden in this context
+        if( Object.keys(child.children || {}).length > 0 ){
+          this.applyXRClasses(child.children)
+        }
+      }
+    }
+
   }, elation.engine.things.generic);
 });
 
