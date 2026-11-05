@@ -11,7 +11,6 @@
     "virtualgamepad": "./apps/virtualgamepad/virtualgamepad.json",
     "buttons": "./apps/buttons/buttons.json",
     "xrmenu": "./apps/xrmenu/xrmenu.json?v=14",
-    "xrfragment": "./apps/xrfragment/xrfragment.json",
     "vfs": "./apps/vfs/vfs.json"
   },
   "includes": [
