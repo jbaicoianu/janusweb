@@ -1,0 +1,37 @@
+<fireboxroom>
+  <assets>
+  </assets>
+  <room pos="4 0 -3" use_local_asset="room_plane">
+
+    <paragraph pos='4 1 0' cull_face='none' lighting="false" css='*{border-radius:15px;}' rotation='0 180 0'>
+      <![CDATA[
+        <h1>XR Fragment URI's</h1>
+
+        Local teleports via (hashtag/URI Fragment) anchors.<br>
+        Similar to HTML's href, but for camera teleports/file-loading/portalspawning.<br>
+        <br>
+        <b>For more info see spec:</b><br>https://xrfragment.org
+        <br><br>
+      ]]>
+    </paragraph>
+
+    <!-- default spawnpoint: https://xrfragment.org/#teleport%20camera%20spawnpoint -->
+    <object id="plane" js_id="spawn" pos='0 0.05 -2' col='black' rotation="90 0 0"/>
+
+    <!-- href clickable: https://xrfragment.org/#href -->
+    <object id="plane" js_id="platform1" pos='0 0.05 0' href='#platform1' col='1 0 1' rotation='-90 0 0'/>
+
+    <!-- href clickable: https://xrfragment.org/#href -->
+    <object id="plane" js_id="platform2" pos='2 0.05 0' href='#platform2' col='0 0 1' rotation='-90 0 0'/>
+
+    <!-- external href clickable: https://xrfragment.org/#href -->
+    <object id="plane"                   pos='4 0.05 0' href='https://janusxr.org' col='0 1 1' cull_face="none" rotation="90 0 0"/>
+
+    <!-- embed example glb with spawnpoint + href -->
+    <link url="https://xrfragment.org/assets/simple-a.glb" pos='6 0 0' url_pos='0 0 0' auto_load='true'/>
+
+    <!-- example glb with spawnpoint + href -->
+    <link url="https://xrforge.isvery.ninja/myverse/xrfragments/glb-as-XR-movie-demo/test.xrf.glb" pos='8 0 0' shader_id='defaultportal'/>
+
+  </room>
+</fireboxroom>

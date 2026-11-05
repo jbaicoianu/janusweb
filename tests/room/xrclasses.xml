@@ -1,0 +1,20 @@
+<fireboxroom>
+  <assets>
+    <assetscript class="vr" src="heavyscript.js"/> <!-- dont load in nested room or stencil rendering in portal -->
+  </assets>
+  <room class="vr ar nested portal"  skybox_class="vr nested portal" > <!-- defaults, can be omitted -->
+
+    <!-- view in VR and when viewed inside <link> portal -->
+    <object id="room3" class="vr portal"/>   
+    
+    <!-- view children only in AR mode -->
+    <object class="ar" js_id="aronly">
+      <text text="This is an VR experience, please re-enter in VR-mode"/>
+    </object>
+
+    <!-- view only in nested room or <link> portal  -->
+    <text class="portal nested" text="This is a preview version, click the portal to enter the full experience which loads all logic and interactions"/>
+    <link class="nested" url="#"/>
+
+  </room>
+</fireboxroom>
